@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Admin Dashboard</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Admin Dashboard</h2>
+        <ul>
+            <li><a href="#dashboard">Dashboard</a></li>
+            <li><a href="#doctors">Manage Doctors</a></li>
+            <li><a href="#patients">Manage Patients</a></li>
+            <li><a href="#appointments">Manage Appointments</a></li>
+            <li><a href="#settings">Settings</a></li>
+        </ul>
+    </div>
+    
+    <div class="main-content">
+        <div id="dashboard" class="section">
+            <div class="header">
+              <h1>Welcome to Admin Dashboard</h1>
+            </div>
+            
+            <div class="dashboard-content">
+                <div class="box">
+                    <h3>Total Doctors</h3>
+                    <p>30</p>
+                </div>
+                <div class="box">
+                    <h3>Total Patients</h3>
+                    <p>300</p>
+                </div>
+                <div class="box">
+                    <h3>Appointments Today</h3>
+                    <p>20</p>
+                </div>
+                <div class="box">
+                    <h3>Pending Approvals</h3>
+                    <p>5</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="doctors" class="section">
+            <h2>Manage Doctors</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Doctor ID</th>
+                        <th>Name</th>
+                        <th>Specialization</th>
+                        <th>Contact</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Dr. Jane Smith</td>
+                        <td>Dentist</td>
+                        <td>jane.smith@example.com</td>
+                        <td><button class="btn">Edit</button> <button class="btn danger">Delete</button></td>
+                    </tr>
+
+                    <tr>
+                      <td>2</td>
+                      <td>Dr. William Doe</td>
+                      <td>Optometrist</td>
+                      <td>william.doe@example.com</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Delete</button></td>
+                  </tr>
+                  <tr>
+                      <td>3</td>
+                      <td>Dr. Ellie John</td>
+                      <td>Psychologist</td>
+                      <td>ellie.john@example.com</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Delete</button></td>
+                  </tr>
+                  <tr>
+                      <td>4</td>
+                      <td>Dr. Sezzi Derouen</td>
+                      <td>Emergency Doctor</td>
+                      <td>sezzi.derouen@example.com</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Delete</button></td>
+                  </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="patients" class="section">
+            <h2>Manage Patients</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Patient ID</th>
+                        <th>Name</th>
+                        <th>Age</th>
+                        <th>Contact</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>John Doe</td>
+                        <td>John.Doe@example.com</td>
+                        <td>555-0100</td>
+                        <td><button class="btn">Edit</button> <button class="btn danger">Delete</button></td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>Jane Smith</td>
+                      <td>Jane.Smith@example.com</td>
+                      <td>555-0101</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Delete</button></td>
+                  </tr>
+                  <tr>
+                      <td>3</td>
+                      <td>Bassant Ahmed</td>
+                      <td>bassant.ahmed@example.com</td>
+                      <td>0123456</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Delete</button></td>
+                  </tr>
+                  <tr>
+                      <td>4</td>
+                      <td>Yasmeen Khaled</td>
+                      <td>yasmeen.khaled@example.com</td>
+                      <td>1234567</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Delete</button></td>
+                  </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="appointments" class="section">
+            <h2>Manage Appointments</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Appointment ID</th>
+                        <th>Patient Name</th>
+                        <th>Doctor Name</th>
+                        <th>Date & Time</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Jane Smith</td>
+                        <td>Dr. John Doe</td>
+                        <td>2024-09-20 10:00 AM</td>
+                        <td>Confirmed</td>
+                        <td><button class="btn">Edit</button> <button class="btn danger">Cancel</button></td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>Alex Johnson</td>
+                      <td>Dr. Ellie John</td>
+                      <td>2024-09-21 1:00 PM</td>
+                      <td>Pending</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Cancel</button></td>
+                  </tr>
+                  <tr>
+                      <td>3</td>
+                      <td>Emma Williams</td>
+                      <td>Dr. William Doe</td>
+                      <td>2024-09-22 11:00 AM</td>
+                      <td>Confirmed</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Cancel</button></td>
+                  </tr>
+                  <tr>
+                      <td>4</td>
+                      <td>Michael Brown</td>
+                      <td>Dr. Sezzi Derouen</td>
+                      <td>2024-09-23 9:00 AM</td>
+                      <td>Pending</td>
+                      <td><button class="btn">Edit</button> 
+                      <button class="btn danger">Cancel</button></td>
+                  </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="settings" class="section">
+            <h2>Settings</h2>
+            <form>
+                <label for="hospitalName">Hospital Name:</label>
+                <input type="text" id="hospitalName" name="hospitalName" placeholder="City Hospital">
+                
+                <label for="email">Admin Email:</label>
+                <input type="email" id="email" name="email" placeholder="admin@hospital.com">
+                
+                <label for="password">Change Password:</label>
+                <input type="password" id="password" name="password" placeholder="New Password">
+                
+                <button type="submit" class="btn">Save Settings</button>
+            </form>
+        </div>
+    </div>         
+
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+      }
+      
+      .sidebar {
+        width: 250px;
+        background-color: #2c3e50;
+        color: white;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        padding: 20px;
+      }
+      
+      .sidebar h2 {
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      
+      .sidebar ul {
+        list-style: none;
+      }
+      
+      .sidebar ul li {
+        padding: 15px;
+        text-align: center;
+      }
+      
+      .sidebar ul li a {
+        color: white;
+        text-decoration: none;
+        font-size: 18px;
+        display: block;
+      }
+      
+      .sidebar ul li a:hover {
+        background-color: #34495e;
+        border-radius: 5px;
+      }
+      
+      .main-content {
+        margin-left: 250px;
+        padding: 20px;
+      }
+      
+      .header {
+        background-color: #3498db;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+      
+      .header h1 {
+        margin: 0;
+      }
+      
+      .section {
+        margin-top: 30px;
+      }
+      
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      
+      .table th, .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+      
+      .table th {
+        background-color: #3498db;
+        color: white;
+      }
+      
+      .btn {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      
+      .btn:hover {
+        background-color: #2980b9;
+      }
+      
+      .btn.danger {
+        background-color: #e74c3c;
+      }
+      
+      .btn.danger:hover {
+        background-color: #c0392b;
+      }
+      
+      form {
+        margin-top: 20px;
+      }
+      
+      form label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      
+      form input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      
+      form button {
+        width: 100%;
+        padding: 10px;
+        background-color: #3498db;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      
+      form button:hover {
+        background-color: #2980b9;
+      }
+    </style>
+</body>
+</html>

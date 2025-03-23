@@ -1,0 +1,124 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}View Audit Log - Hospital Admin Dashboard{% endblock %}
+
+{% block nav_audit %}active{% endblock %}
+
+{% block header_title %}<i class="fas fa-history"></i> View Audit Log {% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Flash Messages -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <h3>Audit Log Entry #{{ log.log_id }}</h3>
+            </div>
+            <div class="card-actions">
+                <a href="{{ url_for('admin_audit.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Logs
+                </a>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <div class="info-section">
+                <h4>Action Information</h4>
+                <div class="detail-row">
+                    <div class="detail-label">Action Type:</div>
+                    <div class="detail-value">
+                        {% if log.action_type == 'user_created' %}
+                            <span class="badge bg-light-success text-success"><i class="fas fa-user-plus"></i> User Created</span>
+                        {% elif log.action_type == 'status_update' %}
+                            <span class="badge bg-light-warning text-warning"><i class="fas fa-exchange-alt"></i> Status Update</span>
+                        {% elif log.action_type == 'password_reset' %}
+                            <span class="badge bg-light-primary text-primary"><i class="fas fa-key"></i> Password Reset</span>
+                        {% elif log.action_type == 'user_deleted' %}
+                            <span class="badge bg-light-danger text-danger"><i class="fas fa-user-minus"></i> User Deleted</span>
+                        {% else %}
+                            <span class="badge bg-light-dark text-dark"><i class="fas fa-cog"></i> {{ log.action_type|replace('_', ' ')|title }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Date and Time:</div>
+                    <div class="detail-value">{{ log.performed_at }}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Details:</div>
+                    <div class="detail-value">{{ log.action_details }}</div>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h4>Affected User</h4>
+                {% if log.user_id %}
+                <div class="detail-row">
+                    <div class="detail-label">User ID:</div>
+                    <div class="detail-value">{{ log.user_id }}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Name:</div>
+                    <div class="detail-value">
+                        <a href="{{ url_for('admin_users.view_user', user_id=log.user_id) }}">{{ log.user_name }}</a>
+                    </div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Username:</div>
+                    <div class="detail-value">{{ log.user_username }}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value">{{ log.user_email }}</div>
+                </div>
+                {% else %}
+                <div class="detail-row">
+                    <div class="detail-label">User:</div>
+                    <div class="detail-value text-muted">No specific user affected or user has been deleted</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="info-section">
+                <h4>Performed By</h4>
+                <div class="detail-row">
+                    <div class="detail-label">User ID:</div>
+                    <div class="detail-value">{{ log.performed_by_id }}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Name:</div>
+                    <div class="detail-value">
+                        <a href="{{ url_for('admin_users.view_user', user_id=log.performed_by_id) }}">{{ log.performed_by_name }}</a>
+                    </div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Username:</div>
+                    <div class="detail-value">{{ log.performed_by_username }}</div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-value">{{ log.performed_by_email }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

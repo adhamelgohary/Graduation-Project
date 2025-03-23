@@ -1,0 +1,179 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Delete User Confirmation - Hospital Admin Dashboard{% endblock %}
+
+{% block nav_users %}active{% endblock %}
+
+{% block header_title %}<i class="fas fa-user-times"></i> Delete User Confirmation{% endblock %}
+
+{% block content %}
+<div class="delete-confirmation-container">
+    <!-- Flash Messages -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="confirmation-card">
+        <div class="confirmation-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h2>Delete User Confirmation</h2>
+        <p class="warning-text">Are you sure you want to delete this user? This action cannot be undone!</p>
+        
+        <div class="user-details">
+            <div class="detail-row">
+                <span class="detail-label">User ID:</span>
+                <span class="detail-value">{{ user.user_id }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">{{ user.first_name }} {{ user.last_name }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Username:</span>
+                <span class="detail-value">{{ user.username }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">{{ user.email }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">User Type:</span>
+                <span class="detail-value">
+                    {% if user.user_type == 'admin' %}
+                        <span class="badge bg-light-primary text-primary"><i class="fas fa-user-shield"></i> Admin</span>
+                    {% elif user.user_type == 'doctor' %}
+                        <span class="badge bg-light-primary text-primary"><i class="fas fa-user-md"></i> Doctor</span>
+                    {% elif user.user_type == 'patient' %}
+                        <span class="badge bg-light-success text-success"><i class="fas fa-procedures"></i> Patient</span>
+                    {% elif user.user_type == 'staff' %}
+                        <span class="badge bg-light-dark text-dark"><i class="fas fa-users-cog"></i> Staff</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <div class="delete-warning">
+            <h3>What will be deleted:</h3>
+            <ul>
+                <li>User account and credentials</li>
+                {% if user.user_type == 'doctor' %}
+                <li>Doctor profile and medical details</li>
+                <li>Relationships to patients (but not the patient records)</li>
+                <li>Future appointments (patients will need to be rescheduled)</li>
+                {% elif user.user_type == 'patient' %}
+                <li>Patient profile and health information</li>
+                <li>All scheduled appointments</li>
+                {% endif %}
+            </ul>
+        </div>
+        
+        <div class="confirmation-actions">
+            <a href="{{ url_for('admin_users.index', user_id=user.user_id) }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <form action="{{ url_for('admin_users.delete_user', user_id=user.user_id) }}" method="POST" class="delete-form">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Permanently Delete User
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+    .delete-confirmation-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .confirmation-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        text-align: center;
+    }
+    
+    .confirmation-icon {
+        font-size: 48px;
+        color: #dc3545;
+        margin-bottom: 20px;
+    }
+    
+    .warning-text {
+        font-size: 18px;
+        margin-bottom: 25px;
+        color: #dc3545;
+    }
+    
+    .user-details {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    
+    .detail-row {
+        margin-bottom: 10px;
+        display: flex;
+    }
+    
+    .detail-label {
+        font-weight: bold;
+        width: 100px;
+    }
+    
+    .delete-warning {
+        background: #fff8f8;
+        border: 1px solid #ffcccb;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 25px;
+        text-align: left;
+    }
+    
+    .delete-warning h3 {
+        color: #dc3545;
+        margin-bottom: 10px;
+        .delete-warning h3 {
+        color: #dc3545;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+    
+    .delete-warning ul {
+        margin-bottom: 0;
+    }
+    
+    .confirmation-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 25px;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .delete-form {
+        display: inline;
+    }
+}
+</style>
+{% endblock %}
+{% endblock %}

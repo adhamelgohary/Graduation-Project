@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+  />
+  <link rel="stylesheet" href="/static/Auth.css" />
+  <title>Create Account</title>
+</head>
+<body>
+  <!-- Flash Messages Section -->
+  <div class="flash-messages-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" aria-label="Close">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <div class="container">
+    <div class="register-form">
+      <h1><i>Create Account</i></h1>
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        <input type="text" name="username" placeholder="Username" required />
+        <input type="email" name="email" placeholder="Email" required />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+        />
+        <input
+          type="password"
+          name="confirm_password"
+          placeholder="Confirm Password"
+          required
+        />
+        <input
+          type="text"
+          name="first_name"
+          placeholder="First Name"
+          required
+        />
+        <input
+          type="text"
+          name="last_name"
+          placeholder="Last Name"
+          required
+        />
+        <input type="text" name="phone" placeholder="Phone Number" required />
+        <input
+          type="text"
+          name="country"
+          placeholder="Country"
+          value="United States"
+          readonly
+        />
+        <!-- Insurance Toggle at the Bottom -->
+        <div class="insurance-toggle">
+          <input type="checkbox" id="insurance-toggle" name="insurance-toggle" />
+          <label for="insurance-toggle">Add Insurance Information</label>
+        </div>
+        <!-- Insurance Fields -->
+        <div class="insurance-fields" id="insurance-fields">
+          <select name="insurance_name" required>
+            <option value="" disabled selected>Select Insurance Provider</option>
+            <option value="Provider A">Provider A</option>
+            <option value="Provider B">Provider B</option>
+            <option value="Provider C">Provider C</option>
+          </select>
+          <input
+            type="text"
+            name="insurance_id"
+            placeholder="Insurance ID Number"
+            required
+          />
+          <input
+            type="date"
+            name="insurance_expiry"
+            placeholder="Expiry Date"
+            required
+          />
+        </div>
+        <button type="submit">Sign Up</button>
+      </form>
+      <div class="redirect">
+        <p>Already have an account?</p>
+        <a href="{{ url_for('auth.login') }}" class="login-link">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // JavaScript to handle alert dismissals
+    document.addEventListener('DOMContentLoaded', function() {
+      const closeButtons = document.querySelectorAll('.btn-close');
+      closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const alert = this.closest('.alert');
+          alert.style.opacity = '0';
+          setTimeout(() => {
+            alert.style.display = 'none';
+          }, 300);
+        });
+      });
+
+      // JavaScript to handle insurance toggle
+      const insuranceToggle = document.getElementById('insurance-toggle');
+      const insuranceFields = document.getElementById('insurance-fields');
+
+      insuranceToggle.addEventListener('change', function() {
+        if (this.checked) {
+          insuranceFields.classList.add('active');
+        } else {
+          insuranceFields.classList.remove('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

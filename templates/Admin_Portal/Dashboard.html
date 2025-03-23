@@ -1,0 +1,233 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Hospital Admin Dashboard{% endblock %}
+
+{% block nav_dashboard %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="stats-overview">
+    <div class="stat-card primary">
+        <div class="stat-icon"><i class="fas fa-user-md"></i></div>
+        <div class="stat-details">
+            <h3>{{ total_doctors }}</h3>
+            <p>Total Doctors</p>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="stat-icon"><i class="fas fa-user-injured"></i></div>
+        <div class="stat-details">
+            <h3>{{ total_patients }}</h3>
+            <p>Total Patients</p>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-details">
+            <h3>{{ appointments_today }}</h3>
+            <p>Today's Appointments</p>
+        </div>
+    </div>
+    <div class="stat-card danger">
+        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+        <div class="stat-details">
+            <h3>{{ pending_approvals }}</h3>
+            <p>Pending Approvals</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Chart: Monthly Appointments -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-line"></i> Monthly Appointments</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="appointmentsChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Chart: User Type Distribution -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-users"></i> User Distribution</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="userDistributionChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Chart: Appointment Status -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-pie"></i> Appointment Status</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="appointmentStatusChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Recent Users -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h3><i class="fas fa-user-plus"></i> New Users</h3>
+        </div>
+        <div class="card-body">
+            <div class="user-list">
+                {% for user in newest_users %}
+                <div class="user-item">
+                    <div class="user-avatar">
+                        {% if user.user_type == 'doctor' %}
+                        <i class="fas fa-user-md"></i>
+                        {% elif user.user_type == 'patient' %}
+                        <i class="fas fa-user-injured"></i>
+                        {% elif user.user_type == 'admin' %}
+                        <i class="fas fa-user-shield"></i>
+                        {% else %}
+                        <i class="fas fa-user"></i>
+                        {% endif %}
+                    </div>
+                    <div class="user-info">
+                        <h4>{{ user.name }}</h4>
+                        <p>{{ user.user_type | capitalize }} • {{ user.created_at.strftime('%b %d, %Y') }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Appointments Table -->
+<div class="dashboard-card full-width">
+    <div class="card-header">
+        <h3><i class="fas fa-calendar-check"></i> Recent Appointments</h3>
+        <a href="#appointments" class="btn"><i class="fas fa-external-link-alt"></i> View All</a>
+    </div>
+    <div class="card-body">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                    <td>#{{ appointment.appointment_id }}</td>
+                    <td>{{ appointment.patient_name }}</td>
+                    <td>{{ appointment.doctor_name }}</td>
+                    <td>{{ appointment.appointment_date.strftime('%b %d, %Y') }}</td>
+                    <td>{{ appointment.start_time.strftime('%I:%M %p') }}</td>
+                    <td>
+                        <span class="badge {{ appointment.appointment_type }}">
+                            {{ appointment.appointment_type | capitalize }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ appointment.status }}">
+                            {{ appointment.status | capitalize }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn-icon view"><i class="fas fa-eye"></i></button>
+                            <button class="btn-icon edit"><i class="fas fa-edit"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Monthly Appointments Chart
+const months = JSON.parse('{{ monthly_appointments|map(attribute="month")|list|tojson|safe }}');
+const appointmentCounts = JSON.parse('{{ monthly_appointments|map(attribute="count")|list|tojson|safe }}');
+
+new Chart(document.getElementById('appointmentsChart'), {
+    type: 'line',
+    data: {
+        labels: months,
+        datasets: [{
+            label: 'Monthly Appointments',
+            data: appointmentCounts,
+            backgroundColor: 'rgba(52, 152, 219, 0.2)',
+            borderColor: 'rgba(52, 152, 219, 1)',
+            borderWidth: 2,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// User Type Distribution Chart
+const userTypes = JSON.parse('{{ user_type_distribution|map(attribute="user_type")|list|tojson|safe }}');
+const userCounts = JSON.parse('{{ user_type_distribution|map(attribute="count")|list|tojson|safe }}');
+
+new Chart(document.getElementById('userDistributionChart'), {
+    type: 'doughnut',
+    data: {
+        labels: userTypes,
+        datasets: [{
+            data: userCounts,
+            backgroundColor: [
+                'rgba(52, 152, 219, 0.7)',
+                'rgba(46, 204, 113, 0.7)',
+                'rgba(155, 89, 182, 0.7)',
+                'rgba(230, 126, 34, 0.7)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Appointment Status Chart
+const statusTypes = JSON.parse('{{ appointment_status_stats|map(attribute="status")|list|tojson|safe }}');
+const statusCounts = JSON.parse('{{ appointment_status_stats|map(attribute="count")|list|tojson|safe }}');
+
+new Chart(document.getElementById('appointmentStatusChart'), {
+    type: 'pie',
+    data: {
+        labels: statusTypes,
+        datasets: [{
+            data: statusCounts,
+            backgroundColor: [
+                'rgba(46, 204, 113, 0.7)',
+                'rgba(52, 152, 219, 0.7)',
+                'rgba(241, 196, 15, 0.7)',
+                'rgba(231, 76, 60, 0.7)',
+                'rgba(155, 89, 182, 0.7)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+</script>
+{% endblock %}

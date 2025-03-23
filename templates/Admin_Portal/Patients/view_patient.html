@@ -1,0 +1,195 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}View Patient - Hospital Admin Dashboard{% endblock %}
+{% block nav_patients %}active{% endblock %}
+{% block header_title %}<i class="fas fa-user-injured"></i> View Patient{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2><i class="fas fa-user-injured"></i> Patient Details</h2>
+    </div>
+
+    <!-- Flash Messages -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Patient Details -->
+    <div class="form-group">
+        <label for="first_name">First Name</label>
+        <input type="text" id="first_name" value="{{ patient.first_name }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="last_name">Last Name</label>
+        <input type="text" id="last_name" value="{{ patient.last_name }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" value="{{ patient.email }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="phone">Phone</label>
+        <input type="text" id="phone" value="{{ patient.phone }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="date_of_birth">Date of Birth</label>
+        <input type="date" id="date_of_birth" value="{{ patient.date_of_birth }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="gender">Gender</label>
+        <input type="text" id="gender" value="{{ patient.gender }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="blood_type">Blood Type</label>
+        <input type="text" id="blood_type" value="{{ patient.blood_type }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="height_cm">Height (cm)</label>
+        <input type="number" id="height_cm" value="{{ patient.height_cm }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="weight_kg">Weight (kg)</label>
+        <input type="number" id="weight_kg" value="{{ patient.weight_kg }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="marital_status">Marital Status</label>
+        <input type="text" id="marital_status" value="{{ patient.marital_status }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="occupation">Occupation</label>
+        <input type="text" id="occupation" value="{{ patient.occupation }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="insurance_provider">Insurance Provider</label>
+        <input type="text" id="insurance_provider" value="{{ patient.insurance_provider }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="insurance_policy_number">Insurance Policy Number</label>
+        <input type="text" id="insurance_policy_number" value="{{ patient.insurance_policy_number }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="insurance_group_number">Insurance Group Number</label>
+        <input type="text" id="insurance_group_number" value="{{ patient.insurance_group_number }}" readonly>
+    </div>
+    <div class="form-group">
+        <label for="insurance_expiration">Insurance Expiration Date</label>
+        <input type="date" id="insurance_expiration" value="{{ patient.insurance_expiration }}" readonly>
+    </div>
+
+    <!-- Allergies Section -->
+    <div class="form-header">
+        <h2><i class="fas fa-allergies"></i> Allergies</h2>
+    </div>
+    {% if allergies %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Allergy Name</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Reaction Description</th>
+                <th>Diagnosed Date</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for allergy in allergies %}
+            <tr>
+                <td>{{ allergy.allergy_name }}</td>
+                <td>{{ allergy.allergy_type }}</td>
+                <td>{{ allergy.severity }}</td>
+                <td>{{ allergy.reaction_description }}</td>
+                <td>{{ allergy.diagnosed_date }}</td>
+                <td>{{ allergy.notes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-results">
+        <p>No allergies recorded for this patient.</p>
+    </div>
+    {% endif %}
+
+    <!-- Diagnoses Section -->
+    <div class="form-header">
+        <h2><i class="fas fa-file-medical"></i> Diagnoses</h2>
+    </div>
+    {% if diagnoses %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Diagnosis Date</th>
+                <th>Diagnosis Code</th>
+                <th>Diagnosis Name</th>
+                <th>Type</th>
+                <th>Severity</th>
+                <th>Chronic</th>
+                <th>Resolved</th>
+                <th>Doctor</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for diagnosis in diagnoses %}
+            <tr>
+                <td>{{ diagnosis.diagnosis_date }}</td>
+                <td>{{ diagnosis.diagnosis_code }}</td>
+                <td>{{ diagnosis.diagnosis_name }}</td>
+                <td>{{ diagnosis.diagnosis_type }}</td>
+                <td>{{ diagnosis.severity }}</td>
+                <td>{{ "Yes" if diagnosis.is_chronic else "No" }}</td>
+                <td>{{ "Yes" if diagnosis.is_resolved else "No" }}</td>
+                <td>{{ diagnosis.doctor_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-results">
+        <p>No diagnoses recorded for this patient.</p>
+    </div>
+    {% endif %}
+
+    <!-- Upcoming Appointments Section -->
+    <div class="form-header">
+        <h2><i class="fas fa-calendar-check"></i> Upcoming Appointments</h2>
+    </div>
+    {% if appointments %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Reason</th>
+                <th>Doctor</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appointment in appointments %}
+            <tr>
+                <td>{{ appointment.appointment_date }}</td>
+                <td>{{ appointment.start_time }} - {{ appointment.end_time }}</td>
+                <td>{{ appointment.appointment_type }}</td>
+                <td><span class="status-badge {{ appointment.status|lower }}">{{ appointment.status }}</span></td>
+                <td>{{ appointment.reason }}</td>
+                <td>{{ appointment.doctor_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-results">
+        <p>No upcoming appointments for this patient.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

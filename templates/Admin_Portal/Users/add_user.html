@@ -1,0 +1,286 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Add New User - Hospital Admin Dashboard{% endblock %}
+
+{% block nav_users %}active{% endblock %}
+
+{% block header_title %}<i class="fas fa-user-plus"></i> Add New User{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .form-section {
+        margin-bottom: 20px;
+    }
+    
+    .form-section h3 {
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -10px;
+    }
+    
+    .form-group {
+        flex: 1 0 calc(50% - 20px);
+        margin: 0 10px 15px;
+    }
+    
+    .form-group.full-width {
+        flex: 1 0 calc(100% - 20px);
+    }
+    
+    .form-footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+    
+    .form-footer .btn {
+        min-width: 120px;
+    }
+    
+    .type-specific-fields {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="user-form-container">
+    <!-- Flash Messages -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <form action="{{ url_for('admin_users.add_user') }}" method="POST" id="addUserForm">
+        <div class="form-card">
+            <div class="form-section">
+                <h3><i class="fas fa-id-card"></i> Basic Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first_name">First Name <span class="required">*</span></label>
+                        <input type="text" id="first_name" name="first_name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name <span class="required">*</span></label>
+                        <input type="text" id="last_name" name="last_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fas fa-user-shield"></i> Account Details</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="username">Username <span class="required">*</span></label>
+                        <input type="text" id="username" name="username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password <span class="required">*</span></label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="user_type">User Type <span class="required">*</span></label>
+                        <select id="user_type" name="user_type" class="form-control" required>
+                            <option value="">Select Type</option>
+                            <option value="admin">Administrator</option>
+                            <option value="doctor">Doctor</option>
+                            <option value="patient">Patient</option>
+                            <option value="staff">Staff</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="account_status">Account Status</label>
+                        <select id="account_status" name="account_status" class="form-control">
+                            <option value="active">Active</option>
+                            <option value="pending">Pending</option>
+                            <option value="suspended">Suspended</option>
+                            <option value="deactivated">Deactivated</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor-specific Fields -->
+        <div class="form-card type-specific-fields" id="doctor-fields">
+            <div class="form-section">
+                <h3><i class="fas fa-stethoscope"></i> Doctor Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="specialization">Specialization <span class="required">*</span></label>
+                        <select id="specialization" name="specialization" class="form-control">
+                            <option value="">Select Specialization</option>
+                            <option value="Cardiology">Cardiology</option>
+                            <option value="Dermatology">Dermatology</option>
+                            <option value="Endocrinology">Endocrinology</option>
+                            <option value="Gastroenterology">Gastroenterology</option>
+                            <option value="Neurology">Neurology</option>
+                            <option value="Obstetrics">Obstetrics</option>
+                            <option value="Oncology">Oncology</option>
+                            <option value="Ophthalmology">Ophthalmology</option>
+                            <option value="Orthopedics">Orthopedics</option>
+                            <option value="Pediatrics">Pediatrics</option>
+                            <option value="Psychiatry">Psychiatry</option>
+                            <option value="Radiology">Radiology</option>
+                            <option value="Surgery">Surgery</option>
+                            <option value="Urology">Urology</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="license_number">License Number <span class="required">*</span></label>
+                        <input type="text" id="license_number" name="license_number" class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="license_state">License State</label>
+                        <input type="text" id="license_state" name="license_state" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="license_expiration">License Expiration</label>
+                        <input type="date" id="license_expiration" name="license_expiration" class="form-control">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <div class="checkbox">
+                            <input type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" checked>
+                            <label for="accepting_new_patients">Accepting New Patients</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient-specific Fields -->
+        <div class="form-card type-specific-fields" id="patient-fields">
+            <div class="form-section">
+                <h3><i class="fas fa-procedures"></i> Patient Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date_of_birth">Date of Birth</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" class="form-control">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="blood_type">Blood Type</label>
+                        <select id="blood_type" name="blood_type" class="form-control">
+                            <option value="">Select Blood Type</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="insurance_provider">Insurance Provider</label>
+                        <input type="text" id="insurance_provider" name="insurance_provider" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <a href="{{ url_for('admin_users.index') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Create User
+            </button>
+        </div>
+    </form>
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userTypeSelect = document.getElementById('user_type');
+        const doctorFields = document.getElementById('doctor-fields');
+        const patientFields = document.getElementById('patient-fields');
+        
+        // Handle user type change
+        userTypeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            
+            // Hide all type-specific fields first
+            doctorFields.style.display = 'none';
+            patientFields.style.display = 'none';
+            
+            // Show relevant fields based on selection
+            if (selectedType === 'doctor') {
+                doctorFields.style.display = 'block';
+            } else if (selectedType === 'patient') {
+                patientFields.style.display = 'block';
+            }
+        });
+        
+        // Form validation
+        const addUserForm = document.getElementById('addUserForm');
+        addUserForm.addEventListener('submit', function(event) {
+            const userType = userTypeSelect.value;
+            
+            if (userType === 'doctor') {
+                const specialization = document.getElementById('specialization').value;
+                const licenseNumber = document.getElementById('license_number').value;
+                
+                if (!specialization || !licenseNumber) {
+                    event.preventDefault();
+                    alert('Please fill in all required doctor fields.');
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,191 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Audit Logs - Hospital Admin Dashboard{% endblock %}
+
+{% block nav_audit %}active{% endblock %}
+
+{% block header_title %}<i class="fas fa-history"></i> Audit Logs{% endblock %}
+
+{% block content %}
+<div class="List-container">
+    <!-- Flash Messages -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-container">
+        <form action="{{ url_for('admin_audit.index') }}" method="GET" class="filters-form">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <label for="actionType">Action Type</label>
+                    <select id="actionType" name="action_type">
+                        <option value="all" {% if filter_action_type == 'all' %}selected{% endif %}>All Actions</option>
+                        {% for action in action_types %}
+                            <option value="{{ action }}" {% if filter_action_type == action %}selected{% endif %}>{{ action|replace('_', ' ')|title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="dateFrom">Date From</label>
+                    <input type="date" id="dateFrom" name="date_from" value="{{ filter_date_from }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="dateTo">Date To</label>
+                    <input type="date" id="dateTo" name="date_to" value="{{ filter_date_to }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="performedBy">Performed By</label>
+                    <select id="performedBy" name="performed_by">
+                        <option value="all" {% if filter_performed_by == 'all' %}selected{% endif %}>All Users</option>
+                        {% for admin in admins %}
+                            <option value="{{ admin.user_id }}" {% if filter_performed_by|int == admin.user_id %}selected{% endif %}>{{ admin.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="sortBy">Sort By</label>
+                    <select id="sortBy" name="sort_by">
+                        <option value="performed_at" {% if sort_by == 'performed_at' %}selected{% endif %}>Date/Time</option>
+                        <option value="action_type" {% if sort_by == 'action_type' %}selected{% endif %}>Action Type</option>
+                        <option value="user_name" {% if sort_by == 'user_name' %}selected{% endif %}>Affected User</option>
+                        <option value="performed_by" {% if sort_by == 'performed_by' %}selected{% endif %}>Performed By</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="sortOrder">Order</label>
+                    <select id="sortOrder" name="sort_order">
+                        <option value="desc" {% if sort_order == 'desc' %}selected{% endif %}>Newest First</option>
+                        <option value="asc" {% if sort_order == 'asc' %}selected{% endif %}>Oldest First</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="search-export-container">
+                <div class="search-container">
+                    <input type="text" id="searchLogs" name="search" placeholder="Search logs..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    {% if search_query or filter_action_type != 'all' or filter_performed_by != 'all' or filter_date_from or filter_date_to %}
+                    <a href="{{ url_for('admin_audit.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <a href="{{ url_for('admin_audit.export_logs', action_type=filter_action_type, user_id=filter_user_id, performed_by=filter_performed_by, date_from=filter_date_from, date_to=filter_date_to, search_query=search_query, sort_by=sort_by, sort_order=sort_order) }}" class="btn btn-success">
+                    <i class="fas fa-file-export"></i> Export to CSV
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="stats-summary">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_logs }}</div>
+            <div class="stat-label">Total Log Entries</div>
+        </div>
+        <!-- Additional stats can be added here if needed -->
+    </div>
+
+    <!-- Logs Table -->
+    {% if logs %}
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Date & Time</th>
+                    <th>Action Type</th>
+                    <th>Affected User</th>
+                    <th>Performed By</th>
+                    <th>Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.log_id }}</td>
+                    <td>{{ log.performed_at }}</td>
+                    <td>
+                        {% if log.action_type == 'user_created' %}
+                            <span class="badge bg-light-success text-success"><i class="fas fa-user-plus"></i> User Created</span>
+                        {% elif log.action_type == 'status_update' %}
+                            <span class="badge bg-light-warning text-warning"><i class="fas fa-exchange-alt"></i> Status Update</span>
+                        {% elif log.action_type == 'password_reset' %}
+                            <span class="badge bg-light-primary text-primary"><i class="fas fa-key"></i> Password Reset</span>
+                        {% elif log.action_type == 'user_deleted' %}
+                            <span class="badge bg-light-danger text-danger"><i class="fas fa-user-minus"></i> User Deleted</span>
+                        {% else %}
+                            <span class="badge bg-light-dark text-dark"><i class="fas fa-cog"></i> {{ log.action_type|replace('_', ' ')|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if log.user_id %}
+                            <a href="{{ url_for('admin_users.view_user', user_id=log.user_id) }}">{{ log.user_name }}</a>
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ log.performed_by_name }}</td>
+                    <td>{{ log.action_details }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('admin_audit.view_log', log_id=log.log_id) }}" title="View Details" class="btn-icon view"><i class="fas fa-eye"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination-container">
+        <div class="pagination">
+            {% if current_page > 1 %}
+                <a href="{{ url_for('admin_audit.index', page=current_page-1, action_type=filter_action_type, user_id=filter_user_id, performed_by=filter_performed_by, date_from=filter_date_from, date_to=filter_date_to, search_query=search_query, sort_by=sort_by, sort_order=sort_order) }}" class="page-link">&laquo; Previous</a>
+            {% endif %}
+            
+            {% for page_num in range(max(1, current_page - 2), min(total_pages + 1, current_page + 3)) %}
+                {% if page_num == current_page %}
+                    <span class="page-link active">{{ page_num }}</span>
+                {% else %}
+                    <a href="{{ url_for('admin_audit.index', page=page_num, action_type=filter_action_type, user_id=filter_user_id, performed_by=filter_performed_by, date_from=filter_date_from, date_to=filter_date_to, search_query=search_query, sort_by=sort_by, sort_order=sort_order) }}" class="page-link">{{ page_num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if current_page < total_pages %}
+                <a href="{{ url_for('admin_audit.index', page=current_page+1, action_type=filter_action_type, user_id=filter_user_id, performed_by=filter_performed_by, date_from=filter_date_from, date_to=filter_date_to, search_query=search_query, sort_by=sort_by, sort_order=sort_order) }}" class="page-link">Next &raquo;</a>
+            {% endif %}
+        </div>
+        <div class="page-info">
+            Showing page {{ current_page }} of {{ total_pages }} ({{ total_logs }} total records)
+        </div>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <div class="no-results">
+        {% if search_query or filter_action_type != 'all' or filter_performed_by != 'all' or filter_date_from or filter_date_to %}
+            <p>No audit logs found matching your filters.</p>
+        {% else %}
+            <p>No audit logs found in the system.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
