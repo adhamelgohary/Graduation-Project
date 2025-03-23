@@ -5,7 +5,7 @@ from db import get_db_connection
 from datetime import datetime
 from functools import wraps
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__, template_folder="templates")
 
 # User class for Flask-Login
 class User(UserMixin):
