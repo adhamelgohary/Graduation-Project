@@ -9,7 +9,7 @@
 {% block content %}
 <div class="content-container">
     <div class="form-container">
-        <a href="{{ url_for('admin_patients.index') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Patients List</a>
+        <a href="{{ url_for('admin_users.index') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Patients List</a>
         
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
