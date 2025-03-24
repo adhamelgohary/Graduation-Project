@@ -15,26 +15,11 @@
         <ul>
             <li class="{% block nav_dashboard %}{% endblock %}"><a href="{{ url_for('admin_main.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
             </li><li class="{% block nav_users %}{% endblock %}"><a href="{{ url_for('admin_users.index') }}"><i class="fas fa-users-cog"></i> Manage Users</a></li>
-            <li class="{% block nav_appointments %}{% endblock %}">
-                <a href="#appointments">
-                    <i class="fas fa-calendar-alt"></i> Manage Appointments
-                </a>
-            </li>
-            <li class="{% block nav_audit %}{% endblock %}">
-                <a href="{{ url_for('admin_audit.index') }}">
-                    <i class="fas fa-history"></i> Audit Logs
-                </a>
-            </li>
-            <li class="{% block nav_settings %}{% endblock %}">
-                <a href="#settings">
-                    <i class="fas fa-cogs"></i> Settings
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('auth.logout') }}">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
+            <li class="{% block nav_appointments %}{% endblock %}"><a href="#appointments"><i class="fas fa-calendar-alt"></i> Manage Appointments </a></li>
+            <li class="{% block nav_audit %}{% endblock %}"><a href="{{ url_for('admin_audit.index') }}"><i class="fas fa-history"></i> Audit Logs</a></li>
+            <li class="{% block nav_doc_app %}{% endblock %}"><a href="{{ url_for('doctor_approvals.index') }}"><i class="fas fa-history"></i> Doctor Approvals</a></li>
+            <li class="{% block nav_settings %}{% endblock %}"><a href="#settings"><i class="fas fa-cogs"></i> Settings</a></li>
+            <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
         </ul>
     </div>
     

@@ -4,6 +4,51 @@ from db import get_db_connection
 
 admin_patients = Blueprint('admin_patients', __name__)
 
+@admin_patients.route('/admin/patients', methods=['GET'])
+@login_required
+def index():
+    if current_user.user_type != "admin":
+        flash("Access denied", "danger")
+        return redirect(url_for('login.login'))
+    
+    # Get search query if present
+    search_query = request.args.get('search', '')
+    
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    if search_query:
+        # If search query exists, filter results
+        cursor.execute("""
+            SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone,
+                   p.date_of_birth, p.gender, p.blood_type, p.insurance_provider
+            FROM users u
+            JOIN patients p ON u.user_id = p.user_id
+            WHERE u.user_type = 'patient'
+            AND (
+                u.first_name LIKE %s OR 
+                u.last_name LIKE %s OR 
+                u.email LIKE %s
+            )
+            ORDER BY u.last_name, u.first_name
+        """, (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'))
+    else:
+        # Otherwise get all patients
+        cursor.execute("""
+            SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone,
+                   p.date_of_birth, p.gender, p.blood_type, p.insurance_provider
+            FROM users u
+            JOIN patients p ON u.user_id = p.user_id
+            WHERE u.user_type = 'patient'
+            ORDER BY u.last_name, u.first_name
+        """)
+    
+    patients = cursor.fetchall()
+    
+    cursor.close()
+    connection.close()
+    
+    return render_template('Admin_Portal/Patients/manage_patients.html', patients=patients, search_query=search_query)
 # Add patient form route
 @admin_patients.route('/admin/patients/add', methods=['GET'])
 @login_required

@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, session, flash, redirect,
 from flask_login import login_required, current_user
 from db import get_db_connection
 from werkzeug.security import generate_password_hash
+import os
+from werkzeug.utils import secure_filename
 
 admin_users = Blueprint('admin_users', __name__)
 
@@ -15,6 +17,7 @@ def index():
     # Get filter parameters
     user_type = request.args.get('user_type', 'all')
     status = request.args.get('status', 'all')
+    verification_status = request.args.get('verification_status', 'all')
     search_query = request.args.get('search', '')
     sort_by = request.args.get('sort_by', 'last_name')
     sort_order = request.args.get('sort_order', 'asc')
@@ -22,15 +25,19 @@ def index():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
-    # Base query without filters
+    # Updated base query to include more details and new columns
     query = """
         SELECT u.user_id, u.username, u.email, u.first_name, u.last_name, 
                u.user_type, u.phone, u.account_status, u.created_at,
-               u.last_login, 
+               u.country,
                CASE 
                    WHEN u.user_type = 'doctor' THEN d.specialization
                    ELSE NULL 
                END AS specialization,
+               CASE 
+                   WHEN u.user_type = 'doctor' THEN d.verification_status
+                   ELSE NULL 
+               END AS doctor_verification_status,
                CASE 
                    WHEN u.user_type = 'patient' THEN p.date_of_birth
                    ELSE NULL 
@@ -53,16 +60,22 @@ def index():
         query += " AND u.account_status = %s"
         params.append(status)
     
+    if user_type == 'doctor' and verification_status != 'all':
+        query += " AND d.verification_status = %s"
+        params.append(verification_status)
+    
     if search_query:
         query += """ AND (
             u.username LIKE %s OR 
             u.email LIKE %s OR 
             u.first_name LIKE %s OR 
             u.last_name LIKE %s OR 
-            u.phone LIKE %s
+            u.phone LIKE %s OR
+            u.country LIKE %s OR
+            (u.user_type = 'doctor' AND (d.specialization LIKE %s OR d.license_number LIKE %s))
         )"""
         search_param = f'%{search_query}%'
-        params.extend([search_param, search_param, search_param, search_param, search_param])
+        params.extend([search_param] * 8)
     
     # Add sorting
     valid_sort_fields = {
@@ -73,7 +86,8 @@ def index():
         'user_type': 'u.user_type',
         'account_status': 'u.account_status',
         'created_at': 'u.created_at',
-        'last_login': 'u.last_login'
+        'country': 'u.country',
+        'specialization': 'd.specialization'
     }
     
     sort_field = valid_sort_fields.get(sort_by, 'u.last_name')
@@ -89,15 +103,18 @@ def index():
     cursor.execute("""
         SELECT 
             COUNT(*) AS total_users,
-            SUM(CASE WHEN user_type = 'admin' THEN 1 ELSE 0 END) AS admin_count,
-            SUM(CASE WHEN user_type = 'doctor' THEN 1 ELSE 0 END) AS doctor_count,
-            SUM(CASE WHEN user_type = 'patient' THEN 1 ELSE 0 END) AS patient_count,
-            SUM(CASE WHEN user_type = 'staff' THEN 1 ELSE 0 END) AS staff_count,
-            SUM(CASE WHEN account_status = 'active' THEN 1 ELSE 0 END) AS active_count,
-            SUM(CASE WHEN account_status = 'pending' THEN 1 ELSE 0 END) AS pending_count,
-            SUM(CASE WHEN account_status = 'suspended' THEN 1 ELSE 0 END) AS suspended_count,
-            SUM(CASE WHEN account_status = 'deactivated' THEN 1 ELSE 0 END) AS deactivated_count
-        FROM users
+            COUNT(CASE WHEN user_type = 'admin' THEN 1 END) AS admin_count,
+            COUNT(CASE WHEN user_type = 'doctor' THEN 1 END) AS doctor_count,
+            COUNT(CASE WHEN user_type = 'patient' THEN 1 END) AS patient_count,
+            COUNT(CASE WHEN account_status = 'active' THEN 1 END) AS active_count,
+            COUNT(CASE WHEN account_status = 'pending' THEN 1 END) AS pending_count,
+            COUNT(CASE WHEN account_status = 'suspended' THEN 1 END) AS suspended_count,
+            COUNT(CASE WHEN account_status = 'inactive' THEN 1 END) AS inactive_count,
+            COUNT(CASE WHEN d.verification_status = 'pending' THEN 1 END) AS doctors_pending_verification,
+            COUNT(CASE WHEN d.verification_status = 'rejected' THEN 1 END) AS doctors_rejected_verification,
+            COUNT(CASE WHEN d.verification_status = 'approved' THEN 1 END) AS doctors_approved_verification
+        FROM users u
+        LEFT JOIN doctors d ON u.user_id = d.user_id AND u.user_type = 'doctor'
     """)
     
     user_stats = cursor.fetchone()
@@ -110,42 +127,10 @@ def index():
                            user_stats=user_stats,
                            filter_user_type=user_type,
                            filter_status=status,
+                           filter_verification_status=verification_status,
                            search_query=search_query,
                            sort_by=sort_by,
                            sort_order=sort_order)
-
-@admin_users.route('/admin/users/redirect/<int:user_id>', methods=['GET'])
-@login_required
-def redirect_user(user_id):
-    """Redirect to appropriate route based on user type"""
-    if current_user.user_type != "admin":
-        flash("Access denied", "danger")
-        return redirect(url_for('login.login'))
-    
-    connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
-    
-    # Get the user's type
-    cursor.execute("SELECT user_type FROM users WHERE user_id = %s", (user_id,))
-    user = cursor.fetchone()
-    
-    cursor.close()
-    connection.close()
-    
-    if not user:
-        flash("User not found", "danger")
-        return redirect(url_for('admin_users.index'))
-    
-    # Redirect based on user type
-    if user['user_type'] == 'doctor':
-        return redirect(url_for('admin_doctors.edit_doctor', doctor_id=user_id))
-    elif user['user_type'] == 'patient':
-        return redirect(url_for('admin_patients.edit_patient', patient_id=user_id))
-    elif user['user_type'] == 'admin':
-        return redirect(url_for('admin_management.edit_admin', admin_id=user_id))
-    else:
-        # Default to the view_user route for any other type
-        return redirect(url_for('admin_users.view_user', user_id=user_id))
 
 @admin_users.route('/admin/users/view/<int:user_id>', methods=['GET'])
 @login_required
@@ -157,11 +142,11 @@ def view_user(user_id):
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
-    # Get basic user information
+    # Updated query to include more user details
     cursor.execute("""
         SELECT u.user_id, u.username, u.email, u.first_name, u.last_name, 
                u.user_type, u.phone, u.account_status, u.created_at,
-               u.last_login
+               u.country, u.updated_at
         FROM users u
         WHERE u.user_id = %s
     """, (user_id,))
@@ -176,12 +161,30 @@ def view_user(user_id):
     if user['user_type'] == 'doctor':
         cursor.execute("""
             SELECT d.specialization, d.license_number, d.license_state, 
-                   d.license_expiration, d.accepting_new_patients
+                   d.license_expiration, d.accepting_new_patients,
+                   d.verification_status, d.rejection_reason, 
+                   d.approval_date, d.info_requested, 
+                   d.info_requested_date, d.clinic_address,
+                   d.education, d.certifications, 
+                   d.medical_school, d.graduation_year,
+                   d.npi_number, d.board_certifications,
+                   d.biography, d.profile_photo_url
             FROM doctors d
             WHERE d.user_id = %s
         """, (user_id,))
         doctor_details = cursor.fetchone()
+        
+        # Get doctor's uploaded documents
+        cursor.execute("""
+            SELECT document_id, document_type, file_name, 
+                   file_path, file_size, upload_date
+            FROM doctor_documents
+            WHERE doctor_id = %s
+        """, (user_id,))
+        doctor_documents = cursor.fetchall()
+        
         user.update(doctor_details or {})
+        user['documents'] = doctor_documents
         
         # Get appointment count
         cursor.execute("""
@@ -196,8 +199,10 @@ def view_user(user_id):
     elif user['user_type'] == 'patient':
         cursor.execute("""
             SELECT p.date_of_birth, p.gender, p.blood_type, p.height_cm, 
-                   p.weight_kg, p.insurance_provider, p.insurance_policy_number,
-                   p.insurance_expiration, p.marital_status, p.occupation
+                   p.weight_kg, p.insurance_provider, 
+                   p.insurance_policy_number, p.insurance_group_number,
+                   p.insurance_expiration, p.marital_status, 
+                   p.occupation
             FROM patients p
             WHERE p.user_id = %s
         """, (user_id,))
@@ -243,7 +248,7 @@ def update_status(user_id):
         return redirect(url_for('login.login'))
     
     new_status = request.form.get('status')
-    if new_status not in ['active', 'pending', 'suspended', 'deactivated']:
+    if new_status not in ['active', 'inactive', 'suspended', 'pending']:
         flash("Invalid status", "danger")
         return redirect(url_for('admin_users.view_user', user_id=user_id))
     
@@ -337,6 +342,7 @@ def add_user():
         phone = request.form.get('phone')
         user_type = request.form.get('user_type')
         account_status = request.form.get('account_status', 'active')
+        country = request.form.get('country', 'United States')
         
         # Validate required fields
         if not all([username, email, password, first_name, last_name, user_type]):
@@ -356,9 +362,10 @@ def add_user():
             # Insert into users table
             cursor.execute("""
                 INSERT INTO users (username, email, password_hash, first_name, last_name, 
-                                  user_type, phone, account_status)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (username, email, password_hash, first_name, last_name, user_type, phone, account_status))
+                                  user_type, phone, account_status, country)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (username, email, password_hash, first_name, last_name, 
+                  user_type, phone, account_status, country))
             
             user_id = cursor.lastrowid
             
@@ -369,13 +376,19 @@ def add_user():
                 license_state = request.form.get('license_state')
                 license_expiration = request.form.get('license_expiration')
                 accepting_new_patients = 1 if request.form.get('accepting_new_patients') else 0
+                clinic_address = request.form.get('clinic_address')
+                education = request.form.get('education')
+                certifications = request.form.get('certifications')
                 
                 cursor.execute("""
                     INSERT INTO doctors (user_id, specialization, license_number, 
-                                      license_state, license_expiration, accepting_new_patients)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                                      license_state, license_expiration, 
+                                      accepting_new_patients, clinic_address, 
+                                      education, certifications, verification_status)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """, (user_id, specialization, license_number, license_state, 
-                      license_expiration, accepting_new_patients))
+                      license_expiration, accepting_new_patients, clinic_address, 
+                      education, certifications, 'pending'))
                 
             elif user_type == 'patient':
                 date_of_birth = request.form.get('date_of_birth')
@@ -409,6 +422,210 @@ def add_user():
     # For GET request - show the form
     return render_template('Admin_Portal/Users/add_user.html')
 
+@admin_users.route('/admin/users/update-doctor-verification/<int:user_id>', methods=['POST'])
+@login_required
+def update_doctor_verification(user_id):
+    if current_user.user_type != "admin":
+        flash("Access denied", "danger")
+        return redirect(url_for('login.login'))
+    
+    verification_status = request.form.get('verification_status')
+    rejection_reason = request.form.get('rejection_reason', '')
+    info_requested = request.form.get('info_requested', '')
+    
+    if verification_status not in ['pending', 'approved', 'rejected', 'pending_info']:
+        flash("Invalid verification status", "danger")
+        return redirect(url_for('admin_users.view_user', user_id=user_id))
+    
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    
+    try:
+        # Update doctor verification status
+        if verification_status == 'approved':
+            cursor.execute("""
+                UPDATE doctors 
+                SET verification_status = %s, 
+                    approval_date = CURRENT_TIMESTAMP,
+                    rejection_reason = NULL,
+                    info_requested = NULL,
+                    info_requested_date = NULL
+                WHERE user_id = %s
+            """, (verification_status, user_id))
+        elif verification_status == 'rejected':
+            cursor.execute("""
+                UPDATE doctors 
+                SET verification_status = %s, 
+                    rejection_reason = %s,
+                    info_requested = NULL,
+                    info_requested_date = NULL
+                WHERE user_id = %s
+            """, (verification_status, rejection_reason, user_id))
+        elif verification_status == 'pending_info':
+            cursor.execute("""
+                UPDATE doctors 
+                SET verification_status = %s, 
+                    info_requested = %s,
+                    info_requested_date = CURRENT_TIMESTAMP,
+                    rejection_reason = NULL
+                WHERE user_id = %s
+            """, (verification_status, info_requested, user_id))
+        else:
+            cursor.execute("""
+                UPDATE doctors 
+                SET verification_status = %s, 
+                    rejection_reason = NULL,
+                    info_requested = NULL,
+                    info_requested_date = NULL
+                WHERE user_id = %s
+            """, (verification_status, user_id))
+        
+        # Add audit log entry
+        cursor.execute("""
+            INSERT INTO audit_log (user_id, action_type, action_details, performed_by_id)
+            VALUES (%s, 'doctor_verification_update', %s, %s)
+        """, (user_id, f"Doctor verification status changed to {verification_status}", current_user.user_id))
+        
+        connection.commit()
+        flash(f"Doctor verification status updated to {verification_status}", "success")
+        
+    except Exception as e:
+        connection.rollback()
+        flash(f"Error updating doctor verification status: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        connection.close()
+    
+    return redirect(url_for('admin_users.view_user', user_id=user_id))
+
+@admin_users.route('/admin/users/upload-doctor-document/<int:user_id>', methods=['POST'])
+@login_required
+def upload_doctor_document(user_id):
+    if current_user.user_type != "admin":
+        flash("Access denied", "danger")
+        return redirect(url_for('login.login'))
+    
+    # Check if the post request has the file part
+    if 'document' not in request.files:
+        flash('No file part', 'danger')
+        return redirect(url_for('admin_users.view_user', user_id=user_id))
+    
+    file = request.files['document']
+    document_type = request.form.get('document_type')
+    
+    # If no file is selected
+    if file.filename == '':
+        flash('No selected file', 'danger')
+        return redirect(url_for('admin_users.view_user', user_id=user_id))
+    
+    # Validate document type
+    valid_document_types = ['license', 'certification', 'identity', 'education', 'other']
+    if document_type not in valid_document_types:
+        flash('Invalid document type', 'danger')
+        return redirect(url_for('admin_users.view_user', user_id=user_id))
+    
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    
+    try:
+        # Create upload directory if it doesn't exist
+        upload_dir = os.path.join('uploads', 'doctor_documents', str(user_id))
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Secure the filename
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(upload_dir, filename)
+        
+        # Save the file
+        file.save(file_path)
+        
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Insert document record
+        cursor.execute("""
+            INSERT INTO doctor_documents 
+            (doctor_id, document_type, file_name, file_path, file_size)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (user_id, document_type, filename, file_path, file_size))
+        
+        # Add audit log entry
+        cursor.execute("""
+            INSERT INTO audit_log (user_id, action_type, action_details, performed_by_id)
+            VALUES (%s, 'document_upload', %s, %s)
+        """, (user_id, f"Uploaded {document_type} document", current_user.user_id))
+        
+        connection.commit()
+        flash(f"Document uploaded successfully", "success")
+        
+    except Exception as e:
+        connection.rollback()
+        flash(f"Error uploading document: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        connection.close()
+    
+    return redirect(url_for('admin_users.view_user', user_id=user_id))
+
+@admin_users.route('/admin/users/delete-document/<int:document_id>', methods=['POST'])
+@login_required
+def delete_doctor_document(document_id):
+    if current_user.user_type != "admin":
+        flash("Access denied", "danger")
+        return redirect(url_for('login.login'))
+    
+    connection = get_db_connection()
+    cursor = connection.cursor(dictionary=True)
+    
+    try:
+        # First, retrieve document details
+        cursor.execute("""
+            SELECT doctor_id, file_path, document_type 
+            FROM doctor_documents 
+            WHERE document_id = %s
+        """, (document_id,))
+        
+        document = cursor.fetchone()
+        
+        if not document:
+            flash("Document not found", "danger")
+            return redirect(url_for('admin_users.index'))
+        
+        # Delete file from filesystem
+        if os.path.exists(document['file_path']):
+            os.remove(document['file_path'])
+        
+        # Delete document record from database
+        cursor.execute("""
+            DELETE FROM doctor_documents 
+            WHERE document_id = %s
+        """, (document_id,))
+        
+        # Add audit log entry
+        cursor.execute("""
+            INSERT INTO audit_log (user_id, action_type, action_details, performed_by_id)
+            VALUES (%s, 'document_deleted', %s, %s)
+        """, (document['doctor_id'], 
+              f"Deleted {document['document_type']} document", 
+              current_user.user_id))
+        
+        connection.commit()
+        flash("Document deleted successfully", "success")
+        
+        return redirect(url_for('admin_users.view_user', user_id=document['doctor_id']))
+    
+    except Exception as e:
+        connection.rollback()
+        flash(f"Error deleting document: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        connection.close()
+    
+    return redirect(url_for('admin_users.index'))
+
 @admin_users.route('/admin/users/delete/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 def delete_user(user_id):
@@ -416,7 +633,7 @@ def delete_user(user_id):
         flash("Access denied", "danger")
         return redirect(url_for('login.login'))
     
-    # Prevent admins from deleting themselves
+    # Prevent admins from deleting their own account
     if user_id == current_user.id:  
         flash("Cannot delete your own account", "danger")
         return redirect(url_for('admin_users.index'))
@@ -454,29 +671,39 @@ def delete_user(user_id):
         
         user_type = user['user_type']
         
-        # No explicit transaction start - we'll assume the connection is already in transaction mode
-        # or is in auto-commit mode
-        
-        # Handle dependencies first - you should add more tables if needed
-        # Check if audit_log table references user_id
-        try:
-            cursor.execute("DELETE FROM audit_log WHERE user_id = %s", (user_id,))
-        except Exception as e:
-            # If this fails (table doesn't exist or no foreign key), continue
-            pass
+        # Handle doctor's uploaded documents
+        if user_type == 'doctor':
+            cursor.execute("""
+                SELECT file_path FROM doctor_documents WHERE doctor_id = %s
+            """, (user_id,))
+            documents = cursor.fetchall()
             
-        # Check if appointments table references user_id
+            # Delete physical files
+            for doc in documents:
+                if os.path.exists(doc['file_path']):
+                    os.remove(doc['file_path'])
+        
+        # Delete related records
+        # Order matters due to foreign key constraints
+        try:
+            cursor.execute("DELETE FROM doctor_documents WHERE doctor_id = %s", (user_id,))
+        except: pass
+        
         try:
             cursor.execute("DELETE FROM appointments WHERE doctor_id = %s OR patient_id = %s", (user_id, user_id))
-        except Exception as e:
-            # If this fails, continue
-            pass
+        except: pass
+        
+        try:
+            cursor.execute("DELETE FROM audit_log WHERE user_id = %s", (user_id,))
+        except: pass
         
         # Delete from type-specific tables
         if user_type == 'doctor':
             cursor.execute("DELETE FROM doctors WHERE user_id = %s", (user_id,))
         elif user_type == 'patient':
             cursor.execute("DELETE FROM patients WHERE user_id = %s", (user_id,))
+        elif user_type == 'admin':
+            cursor.execute("DELETE FROM admins WHERE user_id = %s", (user_id,))
         
         # Delete from users table
         cursor.execute("DELETE FROM users WHERE user_id = %s", (user_id,))

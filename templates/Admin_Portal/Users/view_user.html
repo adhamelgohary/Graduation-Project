@@ -1,249 +1,171 @@
 {% extends "Admin_Portal/base.html" %}
 
-{% block title %}View User Details - Hospital Admin Dashboard{% endblock %}
+{% block title %}View User{% endblock %}
 
 {% block nav_users %}active{% endblock %}
 
 {% block header_title %}<i class="fas fa-user"></i> User Details{% endblock %}
 
+{% block extra_css %}
+<style>
+    .user-profile {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .profile-section {
+        background-color: #f4f4f4;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    .audit-log-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .audit-log-table th, .audit-log-table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+    .documents-section {
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="user-detail-container">
-    <!-- Flash Messages -->
-    <div class="flash-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+<div class="container">
+    <div class="user-profile">
+        <div class="profile-section">
+            <h2>Basic Information</h2>
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+            <p><strong>User Type:</strong> {{ user.user_type|capitalize }}</p>
+            <p><strong>Phone:</strong> {{ user.phone or 'N/A' }}</p>
+            <p><strong>Country:</strong> {{ user.country or 'N/A' }}</p>
+            <p><strong>Account Status:</strong> {{ user.account_status|capitalize }}</p>
+
+            <!-- Additional Doctor Details -->
+            {% if user.user_type == 'doctor' %}
+            <h3>Doctor Information</h3>
+            <p><strong>Specialization:</strong> {{ user.specialization or 'N/A' }}</p>
+            <p><strong>License Number:</strong> {{ user.license_number or 'N/A' }}</p>
+            <p><strong>Verification Status:</strong> {{ user.verification_status|capitalize }}</p>
+            {% endif %}
+
+            <!-- Additional Patient Details -->
+            {% if user.user_type == 'patient' %}
+            <h3>Patient Information</h3>
+            <p><strong>Date of Birth:</strong> {{ user.date_of_birth or 'N/A' }}</p>
+            <p><strong>Gender:</strong> {{ user.gender or 'N/A' }}</p>
+            {% endif %}
+        </div>
+
+        <div class="profile-section">
+            <div class="user-actions">
+                <h2>User Actions</h2>
+                <form method="POST" action="{{ url_for('admin_users.update_status', user_id=user.user_id) }}">
+                    <select name="status" class="form-control">
+                        <option value="active" {% if user.account_status == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if user.account_status == 'inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="suspended" {% if user.account_status == 'suspended' %}selected{% endif %}>Suspended</option>
+                        <option value="pending" {% if user.account_status == 'pending' %}selected{% endif %}>Pending</option>
+                    </select>
+                    <button type="submit" class="btn btn-warning">Update Status</button>
+                </form>
+
+                <form method="POST" action="{{ url_for('admin_users.reset_password', user_id=user.user_id) }}">
+                    <input type="password" name="new_password" placeholder="New Password" required>
+                    <button type="submit" class="btn btn-danger">Reset Password</button>
+                </form>
+            </div>
+
+            {% if user.user_type == 'doctor' %}
+            <div class="doctor-verification">
+                <h2>Doctor Verification</h2>
+                <form method="POST" action="{{ url_for('admin_users.update_doctor_verification', user_id=user.user_id) }}">
+                    <select name="verification_status" class="form-control">
+                        <option value="pending" {% if user.verification_status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="approved" {% if user.verification_status == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if user.verification_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="pending_info" {% if user.verification_status == 'pending_info' %}selected{% endif %}>Pending Additional Info</option>
+                    </select>
+                    <textarea name="rejection_reason" placeholder="Rejection Reason (if rejected)"></textarea>
+                    <button type="submit" class="btn btn-primary">Update Verification</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if user.user_type == 'doctor' %}
+    <div class="documents-section profile-section">
+        <h2>Uploaded Documents</h2>
+        <form method="POST" action="{{ url_for('admin_users.upload_doctor_document', user_id=user.user_id) }}" enctype="multipart/form-data">
+            <select name="document_type" required>
+                <option value="">Select Document Type</option>
+                <option value="license">License</option>
+                <option value="certification">Certification</option>
+                <option value="identity">Identity</option>
+                <option value="education">Education</option>
+                <option value="other">Other</option>
+            </select>
+            <input type="file" name="document" required>
+            <button type="submit" class="btn btn-success">Upload Document</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Document Type</th>
+                    <th>File Name</th>
+                    <th>Size</th>
+                    <th>Upload Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in user.documents %}
+                <tr>
+                    <td>{{ doc.document_type|capitalize }}</td>
+                    <td>{{ doc.file_name }}</td>
+                    <td>{{ (doc.file_size/1024)|round(2) }} KB</td>
+                    <td>{{ doc.upload_date }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin_users.delete_doctor_document', document_id=doc.document_id) }}">
+                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
                 {% endfor %}
-            {% endif %}
-        {% endwith %}
+            </tbody>
+        </table>
     </div>
+    {% endif %}
 
-    <div class="detail-header">
-        <h2>{{ user.first_name }} {{ user.last_name }}</h2>
-        <div class="user-badges">
-            {% if user.user_type == 'admin' %}
-                <span class="badge bg-light-primary text-primary"><i class="fas fa-user-shield"></i> Admin</span>
-            {% elif user.user_type == 'doctor' %}
-                <span class="badge bg-light-primary text-primary"><i class="fas fa-user-md"></i> Doctor</span>
-            {% elif user.user_type == 'patient' %}
-                <span class="badge bg-light-success text-success"><i class="fas fa-procedures"></i> Patient</span>
-            {% elif user.user_type == 'staff' %}
-                <span class="badge bg-light-dark text-dark"><i class="fas fa-users-cog"></i> Staff</span>
-            {% endif %}
-
-            {% if user.account_status == 'active' %}
-                <span class="status-badge bg-light-success text-success"><i class="fas fa-check-circle"></i> Active</span>
-            {% elif user.account_status == 'pending' %}
-                <span class="status-badge bg-light-warning text-warning"><i class="fas fa-clock"></i> Pending</span>
-            {% elif user.account_status == 'suspended' %}
-                <span class="status-badge bg-light-danger text-danger"><i class="fas fa-ban"></i> Suspended</span>
-            {% elif user.account_status == 'deactivated' %}
-                <span class="status-badge bg-light-dark text-dark"><i class="fas fa-user-times"></i> Deactivated</span>
-            {% endif %}
-        </div>
-        <div class="actions">
-            <a href="{{ url_for('admin_users.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Users
-            </a>
-        </div>
-    </div>
-
-    <div class="detail-content">
-        <div class="detail-card">
-            <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <span class="detail-label">User ID</span>
-                    <span class="detail-value">{{ user.user_id }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Username</span>
-                    <span class="detail-value">{{ user.username }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Email</span>
-                    <span class="detail-value">{{ user.email }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Phone</span>
-                    <span class="detail-value">{{ user.phone or 'Not provided' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Created</span>
-                    <span class="detail-value">{{ user.created_at }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Last Login</span>
-                    <span class="detail-value">{{ user.last_login or 'Never' }}</span>
-                </div>
-            </div>
-        </div>
-
-        {% if user.user_type == 'doctor' %}
-        <div class="detail-card">
-            <h3><i class="fas fa-stethoscope"></i> Doctor Details</h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <span class="detail-label">Specialization</span>
-                    <span class="detail-value">{{ user.specialization or 'Not specified' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">License Number</span>
-                    <span class="detail-value">{{ user.license_number or 'Not provided' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">License State</span>
-                    <span class="detail-value">{{ user.license_state or 'Not provided' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">License Expiration</span>
-                    <span class="detail-value">{{ user.license_expiration or 'Not provided' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Accepting Patients</span>
-                    <span class="detail-value">
-                        {% if user.accepting_new_patients %}
-                            <i class="fas fa-check text-success"></i> Yes
-                        {% else %}
-                            <i class="fas fa-times text-danger"></i> No
-                        {% endif %}
-                    </span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Total Appointments</span>
-                    <span class="detail-value">{{ user.appointment_count or 0 }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Upcoming Appointments</span>
-                    <span class="detail-value">{{ user.upcoming_count or 0 }}</span>
-                </div>
-            </div>
-        </div>
-        {% elif user.user_type == 'patient' %}
-        <div class="detail-card">
-            <h3><i class="fas fa-procedures"></i> Patient Details</h3>
-            <div class="detail-grid">
-                <div class="detail-item">
-                    <span class="detail-label">Date of Birth</span>
-                    <span class="detail-value">{{ user.date_of_birth or 'Not provided' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Gender</span>
-                    <span class="detail-value">{{ user.gender or 'Not specified' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Blood Type</span>
-                    <span class="detail-value">{{ user.blood_type or 'Not provided' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Height</span>
-                    <span class="detail-value">{{ user.height_cm or 'Not provided' }} cm</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Weight</span>
-                    <span class="detail-value">{{ user.weight_kg or 'Not provided' }} kg</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Insurance Provider</span>
-                    <span class="detail-value">{{ user.insurance_provider or 'Not provided' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Insurance Policy</span>
-                    <span class="detail-value">{{ user.insurance_policy_number or 'Not provided' }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Total Appointments</span>
-                    <span class="detail-value">{{ user.appointment_count or 0 }}</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Upcoming Appointments</span>
-                    <span class="detail-value">{{ user.upcoming_count or 0 }}</span>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="action-cards">
-            <div class="detail-card">
-                <h3><i class="fas fa-user-cog"></i> Account Actions</h3>
-                <div class="action-grid">
-                    <div class="action-form">
-                        <h4>Update Account Status</h4>
-                        <form action="{{ url_for('admin_users.update_status', user_id=user.user_id) }}" method="POST">
-                            <div class="form-group">
-                                <label for="status">New Status</label>
-                                <select id="status" name="status" class="form-control">
-                                    <option value="active" {% if user.account_status == 'active' %}selected{% endif %}>Active</option>
-                                    <option value="pending" {% if user.account_status == 'pending' %}selected{% endif %}>Pending</option>
-                                    <option value="suspended" {% if user.account_status == 'suspended' %}selected{% endif %}>Suspended</option>
-                                    <option value="deactivated" {% if user.account_status == 'deactivated' %}selected{% endif %}>Deactivated</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Update Status</button>
-                        </form>
-                    </div>
-                    <div class="action-form">
-                        <h4>Reset Password</h4>
-                        <form action="{{ url_for('admin_users.reset_password', user_id=user.user_id) }}" method="POST">
-                            <div class="form-group">
-                                <label for="new_password">New Password</label>
-                                <input type="password" id="new_password" name="new_password" class="form-control" required>
-                            </div>
-                            <button type="submit" class="btn btn-warning">Reset Password</button>
-                        </form>
-                    </div>
-                </div>
-                <div class="danger-zone">
-                    <h4>Danger Zone</h4>
-                    <a href="{{ url_for('admin_users.delete_user', user_id=user.user_id) }}" class="btn btn-danger">
-                        <i class="fas fa-trash"></i> Delete User
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        {% if audit_logs %}
-        <div class="detail-card">
-            <h3><i class="fas fa-history"></i> Recent Activity</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Action</th>
-                        <th>Details</th>
-                        <th>Performed By</th>
-                        <th>Date/Time</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for log in audit_logs %}
-                    <tr>
-                        <td>
-                            {% if log.action_type == 'login' %}
-                                <span class="badge bg-light-primary"><i class="fas fa-sign-in-alt"></i> Login</span>
-                            {% elif log.action_type == 'password_change' %}
-                                <span class="badge bg-light-warning"><i class="fas fa-key"></i> Password Changed</span>
-                            {% elif log.action_type == 'password_reset' %}
-                                <span class="badge bg-light-warning"><i class="fas fa-key"></i> Password Reset</span>
-                            {% elif log.action_type == 'profile_update' %}
-                                <span class="badge bg-light-info"><i class="fas fa-edit"></i> Profile Updated</span>
-                            {% elif log.action_type == 'status_update' %}
-                                <span class="badge bg-light-info"><i class="fas fa-user-cog"></i> Status Changed</span>
-                            {% elif log.action_type == 'user_created' %}
-                                <span class="badge bg-light-success"><i class="fas fa-user-plus"></i> Account Created</span>
-                            {% else %}
-                                <span class="badge bg-light-dark">{{ log.action_type }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ log.action_details }}</td>
-                        <td>{{ log.performed_by_name }}</td>
-                        <td>{{ log.performed_at }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
+    <div class="audit-log-section profile-section">
+        <h2>Audit Logs</h2>
+        <table class="audit-log-table">
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>Performed By</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in audit_logs %}
+                <tr>
+                    <td>{{ log.action_type|replace('_', ' ')|title }}</td>
+                    <td>{{ log.action_details }}</td>
+                    <td>{{ log.performed_by_name }}</td>
+                    <td>{{ log.performed_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock %}
