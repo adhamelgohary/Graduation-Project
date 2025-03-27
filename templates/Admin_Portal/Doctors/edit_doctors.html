@@ -1,26 +1,13 @@
-{% extends "Admin_Portal/base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Edit Doctor - Hospital Admin Dashboard{% endblock %}
+{% block title %}Edit Doctor{% endblock %}
 
-{% block nav_doctors %}active{% endblock %}
-
-{% block header_title %}<i class="fas fa-edit"></i> Edit Doctor{% endblock %}
+{% block page_header %}<i class="fas fa-user-edit"></i> Edit Doctor Profile{% endblock %}
 
 {% block content %}
 <div class="form-container">
     <div class="form-header">
-        <h2><i class="fas fa-edit"></i> Edit Doctor: {{ doctor.first_name }} {{ doctor.last_name }}</h2>
-    </div>
-    
-    <!-- Flash Messages -->
-    <div class="flash-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <h2><i class="fas fa-user-md"></i> Doctor Details</h2>
     </div>
     
     <form action="{{ url_for('admin_doctors.edit_doctor', doctor_id=doctor.user_id) }}" method="POST">
@@ -34,40 +21,56 @@
                 <input type="text" id="last_name" name="last_name" value="{{ doctor.last_name }}" required>
             </div>
         </div>
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="{{ doctor.email }}" required>
-        </div>
-        <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="text" id="phone" name="phone" value="{{ doctor.phone if doctor.phone else '' }}">
-        </div>
-        <div class="form-group">
-            <label for="specialization">Specialization</label>
-            <input type="text" id="specialization" name="specialization" value="{{ doctor.specialization }}" required>
-        </div>
+
         <div class="form-row">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ doctor.email }}" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" value="{{ doctor.phone }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="specialization">Specialization</label>
+                <select id="specialization" name="specialization" required>
+                    <option value="General Practice" {% if doctor.specialization == 'General Practice' %}selected{% endif %}>General Practice</option>
+                    <option value="Cardiology" {% if doctor.specialization == 'Cardiology' %}selected{% endif %}>Cardiology</option>
+                    <option value="Pediatrics" {% if doctor.specialization == 'Pediatrics' %}selected{% endif %}>Pediatrics</option>
+                    <option value="Neurology" {% if doctor.specialization == 'Neurology' %}selected{% endif %}>Neurology</option>
+                    <option value="Orthopedics" {% if doctor.specialization == 'Orthopedics' %}selected{% endif %}>Orthopedics</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label for="license_number">License Number</label>
                 <input type="text" id="license_number" name="license_number" value="{{ doctor.license_number }}" required>
             </div>
+        </div>
+
+        <div class="form-row">
             <div class="form-group">
                 <label for="license_state">License State</label>
-                <input type="text" id="license_state" name="license_state" value="{{ doctor.license_state }}" required>
+                <input type="text" id="license_state" name="license_state" value="{{ doctor.license_state }}">
+            </div>
+            <div class="form-group">
+                <label for="license_expiration">License Expiration</label>
+                <input type="date" id="license_expiration" name="license_expiration" value="{{ doctor.license_expiration }}">
             </div>
         </div>
+
         <div class="form-group">
-            <label for="license_expiration">License Expiration Date</label>
-            <input type="date" id="license_expiration" name="license_expiration" 
-                value="{{ doctor.license_expiration.strftime('%Y-%m-%d') if doctor.license_expiration else '' }}" required>
+            <div class="checkbox-container">
+                <input type="checkbox" id="accepting_new_patients" name="accepting_new_patients" 
+                       {% if doctor.accepting_new_patients %}checked{% endif %}>
+                <label for="accepting_new_patients">Accepting New Patients</label>
+            </div>
         </div>
-        <div class="form-group checkbox-container">
-            <input type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" 
-                   {% if doctor.accepting_new_patients %}checked{% endif %}>
-            <label for="accepting_new_patients">Accepting New Patients</label>
-        </div>
+
         <div class="form-actions">
-            <a href="{{ url_for('admin_users.index') }}" class="btn btn-secondary">Cancel</a>
+            <a href="{{ url_for('admin_doctors.index') }}" class="btn btn-secondary">Cancel</a>
             <button type="submit" class="btn btn-primary">Save Changes</button>
         </div>
     </form>

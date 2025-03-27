@@ -17,39 +17,45 @@ def index():
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
-    if search_query:
-        # If search query exists, filter results
-        cursor.execute("""
-            SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone,
-                   p.date_of_birth, p.gender, p.blood_type, p.insurance_provider
-            FROM users u
-            JOIN patients p ON u.user_id = p.user_id
-            WHERE u.user_type = 'patient'
-            AND (
-                u.first_name LIKE %s OR 
-                u.last_name LIKE %s OR 
-                u.email LIKE %s
-            )
-            ORDER BY u.last_name, u.first_name
-        """, (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'))
-    else:
-        # Otherwise get all patients
-        cursor.execute("""
-            SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone,
-                   p.date_of_birth, p.gender, p.blood_type, p.insurance_provider
-            FROM users u
-            JOIN patients p ON u.user_id = p.user_id
-            WHERE u.user_type = 'patient'
-            ORDER BY u.last_name, u.first_name
-        """)
+    try:
+        if search_query:
+            # If search query exists, filter results
+            cursor.execute("""
+                SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone,
+                       p.date_of_birth, p.gender, p.blood_type, p.insurance_provider
+                FROM users u
+                JOIN patients p ON u.user_id = p.user_id
+                WHERE u.user_type = 'patient'
+                AND (
+                    u.first_name LIKE %s OR 
+                    u.last_name LIKE %s OR 
+                    u.email LIKE %s
+                )
+                ORDER BY u.last_name, u.first_name
+            """, (f'%{search_query}%', f'%{search_query}%', f'%{search_query}%'))
+        else:
+            # Otherwise get all patients
+            cursor.execute("""
+                SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone,
+                       p.date_of_birth, p.gender, p.blood_type, p.insurance_provider
+                FROM users u
+                JOIN patients p ON u.user_id = p.user_id
+                WHERE u.user_type = 'patient'
+                ORDER BY u.last_name, u.first_name
+            """)
+        
+        patients = cursor.fetchall()
+        
+        return render_template('Admin_Portal/Patients/manage_patients.html', patients=patients, search_query=search_query)
     
-    patients = cursor.fetchall()
+    except Exception as e:
+        flash(f"Database error: {str(e)}", "danger")
+        return redirect(url_for('admin_patients.index'))
     
-    cursor.close()
-    connection.close()
-    
-    return render_template('Admin_Portal/Patients/manage_patients.html', patients=patients, search_query=search_query)
-# Add patient form route
+    finally:
+        cursor.close()
+        connection.close()
+
 @admin_patients.route('/admin/patients/add', methods=['GET'])
 @login_required
 def add_patient_form():
@@ -60,14 +66,50 @@ def add_patient_form():
     # Get insurance providers for dropdown
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
-    cursor.execute("SELECT id, provider_name FROM insurance_providers WHERE is_active = TRUE ORDER BY provider_name")
-    insurance_providers = cursor.fetchall()
-    cursor.close()
-    connection.close()
     
-    return render_template('Admin_Portal/Patients/add_patient.html', insurance_providers=insurance_providers)
+    try:
+        cursor.execute("SELECT id, provider_name FROM insurance_providers WHERE is_active = TRUE ORDER BY provider_name")
+        insurance_providers = cursor.fetchall()
+        
+        # Get blood type enum values from database
+        cursor.execute("""
+            SELECT COLUMN_TYPE 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'patients' 
+            AND COLUMN_NAME = 'blood_type'
+        """)
+        
+        blood_type_enum = cursor.fetchone()['COLUMN_TYPE']
+        # Extract values from enum('value1','value2',...) format
+        blood_types = [bt.strip("'") for bt in blood_type_enum.strip('enum()').split(',')]
+        
+        # Get marital status enum values from database
+        cursor.execute("""
+            SELECT COLUMN_TYPE 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'patients' 
+            AND COLUMN_NAME = 'marital_status'
+        """)
+        
+        marital_status_enum = cursor.fetchone()['COLUMN_TYPE']
+        # Extract values from enum('value1','value2',...) format
+        marital_statuses = [ms.strip("'") for ms in marital_status_enum.strip('enum()').split(',')]
+        
+        return render_template('Admin_Portal/Patients/add_patient.html', 
+                               insurance_providers=insurance_providers,
+                               blood_types=blood_types,
+                               marital_statuses=marital_statuses)
+    
+    except Exception as e:
+        flash(f"Error loading insurance providers: {str(e)}", "danger")
+        return redirect(url_for('admin_patients.index'))
+    
+    finally:
+        cursor.close()
+        connection.close()
 
-# Process add patient form
 @admin_patients.route('/admin/patients/add', methods=['POST'])
 @login_required
 def add_patient():
@@ -94,6 +136,11 @@ def add_patient():
     marital_status = request.form.get('marital_status')
     occupation = request.form.get('occupation')
     
+    # Validate required fields
+    if not all([username, email, password, first_name, last_name]):
+        flash("Missing required fields", "danger")
+        return redirect(url_for('admin_patients.add_patient_form'))
+    
     connection = get_db_connection()
     cursor = connection.cursor()
     
@@ -103,7 +150,7 @@ def add_patient():
             INSERT INTO users (username, email, password_hash, first_name, last_name, 
                               user_type, phone)
             VALUES (%s, %s, %s, %s, %s, 'patient', %s)
-        """, (username, email, password_hash, first_name, last_name, phone))
+        """, (username, email, password, first_name, last_name, phone))
         
         # Get the auto-generated user_id
         user_id = cursor.lastrowid
@@ -125,15 +172,15 @@ def add_patient():
         flash("Patient added successfully", "success")
         
     except Exception as e:
+        connection.rollback()
         flash(f"Error adding patient: {str(e)}", "danger")
     
     finally:
         cursor.close()
         connection.close()
     
-    return redirect(url_for('admin_users.index'))
+    return redirect(url_for('admin_patients.index'))
 
-# Patient details view route
 @admin_patients.route('/admin/patients/view/<int:patient_id>', methods=['GET'])
 @login_required
 def view_patient(patient_id):
@@ -144,70 +191,75 @@ def view_patient(patient_id):
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
-    # Get patient profile details
-    cursor.execute("""
-        SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.account_status,
-               p.date_of_birth, p.gender, p.blood_type, p.height_cm, p.weight_kg,
-               p.insurance_provider, p.insurance_policy_number, p.insurance_group_number,
-               p.insurance_expiration, p.marital_status, p.occupation
-        FROM users u
-        JOIN patients p ON u.user_id = p.user_id
-        WHERE u.user_id = %s AND u.user_type = 'patient'
-    """, (patient_id,))
+    try:
+        # Get patient profile details
+        cursor.execute("""
+            SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.account_status,
+                   p.date_of_birth, p.gender, p.blood_type, p.height_cm, p.weight_kg,
+                   p.insurance_provider, p.insurance_policy_number, p.insurance_group_number,
+                   p.insurance_expiration, p.marital_status, p.occupation
+            FROM users u
+            JOIN patients p ON u.user_id = p.user_id
+            WHERE u.user_id = %s AND u.user_type = 'patient'
+        """, (patient_id,))
+        
+        patient = cursor.fetchone()
+        
+        # Get patient allergies
+        cursor.execute("""
+            SELECT a.allergy_name, a.allergy_type, pa.severity, pa.reaction_description,
+                   pa.diagnosed_date, pa.notes
+            FROM patient_allergies pa
+            JOIN allergies a ON pa.allergy_id = a.allergy_id
+            WHERE pa.patient_id = %s
+        """, (patient_id,))
+        
+        allergies = cursor.fetchall()
+        
+        # Get patient diagnoses
+        cursor.execute("""
+            SELECT d.diagnosis_id, d.diagnosis_date, d.diagnosis_code, d.diagnosis_name,
+                   d.diagnosis_type, d.severity, d.is_chronic, d.is_resolved,
+                   CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
+            FROM diagnoses d
+            JOIN users u ON d.doctor_id = u.user_id
+            WHERE d.patient_id = %s
+            ORDER BY d.diagnosis_date DESC
+        """, (patient_id,))
+        
+        diagnoses = cursor.fetchall()
+        
+        # Get upcoming appointments
+        cursor.execute("""
+            SELECT a.appointment_id, a.appointment_date, a.start_time, a.end_time,
+                   a.appointment_type, a.status, a.reason,
+                   CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
+            FROM appointments a
+            JOIN users u ON a.doctor_id = u.user_id
+            WHERE a.patient_id = %s AND a.appointment_date >= CURDATE()
+            ORDER BY a.appointment_date, a.start_time
+        """, (patient_id,))
+        
+        upcoming_appointments = cursor.fetchall()
+        
+        if not patient:
+            flash("Patient not found", "danger")
+            return redirect(url_for('admin_patients.index'))
+        
+        return render_template('Admin_Portal/Patients/view_patient.html', 
+                               patient=patient, 
+                               allergies=allergies,
+                               diagnoses=diagnoses,
+                               appointments=upcoming_appointments)
     
-    patient = cursor.fetchone()
-    
-    # Get patient allergies
-    cursor.execute("""
-        SELECT a.allergy_name, a.allergy_type, pa.severity, pa.reaction_description,
-               pa.diagnosed_date, pa.notes
-        FROM patient_allergies pa
-        JOIN allergies a ON pa.allergy_id = a.allergy_id
-        WHERE pa.patient_id = %s
-    """, (patient_id,))
-    
-    allergies = cursor.fetchall()
-    
-    # Get patient diagnoses
-    cursor.execute("""
-        SELECT d.diagnosis_id, d.diagnosis_date, d.diagnosis_code, d.diagnosis_name,
-               d.diagnosis_type, d.severity, d.is_chronic, d.is_resolved,
-               CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
-        FROM diagnoses d
-        JOIN users u ON d.doctor_id = u.user_id
-        WHERE d.patient_id = %s
-        ORDER BY d.diagnosis_date DESC
-    """, (patient_id,))
-    
-    diagnoses = cursor.fetchall()
-    
-    # Get upcoming appointments
-    cursor.execute("""
-        SELECT a.appointment_id, a.appointment_date, a.start_time, a.end_time,
-               a.appointment_type, a.status, a.reason,
-               CONCAT(u.first_name, ' ', u.last_name) AS doctor_name
-        FROM appointments a
-        JOIN users u ON a.doctor_id = u.user_id
-        WHERE a.patient_id = %s AND a.appointment_date >= CURDATE()
-        ORDER BY a.appointment_date, a.start_time
-    """, (patient_id,))
-    
-    upcoming_appointments = cursor.fetchall()
-    
-    cursor.close()
-    connection.close()
-    
-    if not patient:
-        flash("Patient not found", "danger")
+    except Exception as e:
+        flash(f"Database error: {str(e)}", "danger")
         return redirect(url_for('admin_patients.index'))
     
-    return render_template('Admin_Portal/Patients/view_patient.html', 
-                           patient=patient, 
-                           allergies=allergies,
-                           diagnoses=diagnoses,
-                           appointments=upcoming_appointments)
+    finally:
+        cursor.close()
+        connection.close()
 
-# Edit patient form route
 @admin_patients.route('/admin/patients/edit/<int:patient_id>', methods=['GET'])
 @login_required
 def edit_patient_form(patient_id):
@@ -218,63 +270,68 @@ def edit_patient_form(patient_id):
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
-    # Get patient data with join
-    cursor.execute("""
-        SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone,
-               p.date_of_birth, p.gender, p.blood_type, p.height_cm, p.weight_kg,
-               p.insurance_provider, p.insurance_policy_number, p.insurance_group_number,
-               p.insurance_expiration, p.marital_status, p.occupation
-        FROM users u
-        JOIN patients p ON u.user_id = p.user_id
-        WHERE u.user_id = %s AND u.user_type = 'patient'
-    """, (patient_id,))
+    try:
+        # Get patient data with join
+        cursor.execute("""
+            SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone,
+                   p.date_of_birth, p.gender, p.blood_type, p.height_cm, p.weight_kg,
+                   p.insurance_provider, p.insurance_policy_number, p.insurance_group_number,
+                   p.insurance_expiration, p.marital_status, p.occupation
+            FROM users u
+            JOIN patients p ON u.user_id = p.user_id
+            WHERE u.user_id = %s AND u.user_type = 'patient'
+        """, (patient_id,))
+        
+        patient = cursor.fetchone()
+        
+        # Get insurance providers for dropdown
+        cursor.execute("SELECT id, provider_name FROM insurance_providers WHERE is_active = TRUE ORDER BY provider_name")
+        insurance_providers = cursor.fetchall()
+        
+        # Get blood type enum values from database
+        cursor.execute("""
+            SELECT COLUMN_TYPE 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'patients' 
+            AND COLUMN_NAME = 'blood_type'
+        """)
+        
+        blood_type_enum = cursor.fetchone()['COLUMN_TYPE']
+        # Extract values from enum('value1','value2',...) format
+        blood_types = [bt.strip("'") for bt in blood_type_enum.strip('enum()').split(',')]
+        
+        # Get marital status enum values from database
+        cursor.execute("""
+            SELECT COLUMN_TYPE 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = DATABASE() 
+            AND TABLE_NAME = 'patients' 
+            AND COLUMN_NAME = 'marital_status'
+        """)
+        
+        marital_status_enum = cursor.fetchone()['COLUMN_TYPE']
+        # Extract values from enum('value1','value2',...) format
+        marital_statuses = [ms.strip("'") for ms in marital_status_enum.strip('enum()').split(',')]
+        
+        if not patient:
+            flash("Patient not found", "danger")
+            return redirect(url_for('admin_patients.index'))
+        
+        return render_template('Admin_Portal/Patients/edit_patient.html', 
+                               patient=patient, 
+                               insurance_providers=insurance_providers,
+                               blood_types=blood_types,
+                               marital_statuses=marital_statuses)
     
-    patient = cursor.fetchone()
-    
-    # Get insurance providers for dropdown
-    cursor.execute("SELECT id, provider_name FROM insurance_providers WHERE is_active = TRUE ORDER BY provider_name")
-    insurance_providers = cursor.fetchall()
-    
-    # Get blood type enum values from database
-    cursor.execute("""
-        SELECT COLUMN_TYPE 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-        AND TABLE_NAME = 'patients' 
-        AND COLUMN_NAME = 'blood_type'
-    """)
-    
-    blood_type_enum = cursor.fetchone()['COLUMN_TYPE']
-    # Extract values from enum('value1','value2',...) format
-    blood_types = [bt.strip("'") for bt in blood_type_enum.strip('enum()').split(',')]
-    
-    # Get marital status enum values from database
-    cursor.execute("""
-        SELECT COLUMN_TYPE 
-        FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_SCHEMA = DATABASE() 
-        AND TABLE_NAME = 'patients' 
-        AND COLUMN_NAME = 'marital_status'
-    """)
-    
-    marital_status_enum = cursor.fetchone()['COLUMN_TYPE']
-    # Extract values from enum('value1','value2',...) format
-    marital_statuses = [ms.strip("'") for ms in marital_status_enum.strip('enum()').split(',')]
-    
-    cursor.close()
-    connection.close()
-    
-    if not patient:
-        flash("Patient not found", "danger")
+    except Exception as e:
+        flash(f"Database error: {str(e)}", "danger")
         return redirect(url_for('admin_patients.index'))
     
-    return render_template('Admin_Portal/Patients/edit_patient.html', 
-                           patient=patient, 
-                           insurance_providers=insurance_providers,
-                           blood_types=blood_types,
-                           marital_statuses=marital_statuses)
+    finally:
+        cursor.close()
+        connection.close()
 
-# Process edit patient form
 @admin_patients.route('/admin/patients/edit/<int:patient_id>', methods=['POST'])
 @login_required
 def edit_patient(patient_id):
@@ -339,15 +396,15 @@ def edit_patient(patient_id):
         flash("Patient updated successfully", "success")
         
     except Exception as e:
+        connection.rollback()
         flash(f"Error updating patient: {str(e)}", "danger")
     
     finally:
         cursor.close()
         connection.close()
     
-    return redirect(url_for('admin_users.index'))
+    return redirect(url_for('admin_patients.index'))
 
-# Delete patient confirmation form
 @admin_patients.route('/admin/patients/delete/<int:patient_id>', methods=['GET'])
 @login_required
 def delete_patient_form(patient_id):
@@ -358,21 +415,69 @@ def delete_patient_form(patient_id):
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     
-    cursor.execute("""
-        SELECT u.user_id, u.first_name, u.last_name, u.email,
-               p.date_of_birth, p.gender, p.insurance_provider
-        FROM users u
-        JOIN patients p ON u.user_id = p.user_id
-        WHERE u.user_id = %s AND u.user_type = 'patient'
-    """, (patient_id,))
+    try:
+        cursor.execute("""
+            SELECT u.user_id, u.first_name, u.last_name, u.email,
+                   p.date_of_birth, p.gender, p.insurance_provider
+            FROM users u
+            JOIN patients p ON u.user_id = p.user_id
+            WHERE u.user_id = %s AND u.user_type = 'patient'
+        """, (patient_id,))
+        
+        patient = cursor.fetchone()
+        
+        if not patient:
+            flash("Patient not found", "danger")
+            return redirect(url_for('admin_patients.index'))
+        
+        return render_template('Admin_Portal/Patients/delete_confirmation.html', patient=patient)
     
-    patient = cursor.fetchone()
+    except Exception as e:
+        flash(f"Database error: {str(e)}", "danger")
+        return redirect(url_for('admin_patients.index'))
     
-    cursor.close()
-    connection.close()
+    finally:
+        cursor.close()
+        connection.close()
+
+@admin_patients.route('/admin/patients/delete/<int:patient_id>', methods=['POST'])
+@login_required
+def delete_patient(patient_id):
+    if current_user.user_type != "admin":
+        flash("Access denied", "danger")
+        return redirect(url_for('login.login'))
     
-    if not patient:
-        flash("Patient not found", "danger")
-        return redirect(url_for('admin_users.index'))
+    # Confirmation token to prevent CSRF
+    confirmation = request.form.get('confirmation')
+    if not confirmation or confirmation.lower() != 'confirm':
+        flash("Deletion must be confirmed", "danger")
+        return redirect(url_for('admin_patients.delete_patient_form', patient_id=patient_id))
     
-    return render_template('Admin_Portal/Patients/delete_confirmation.html', patient=patient)
+    connection = get_db_connection()
+    cursor = connection.cursor()
+    
+    try:
+        # First, delete related records from other tables (if needed)
+        # Example: Delete patient allergies, diagnoses, appointments
+        cursor.execute("DELETE FROM patient_allergies WHERE patient_id = %s", (patient_id,))
+        cursor.execute("DELETE FROM diagnoses WHERE patient_id = %s", (patient_id,))
+        cursor.execute("DELETE FROM appointments WHERE patient_id = %s", (patient_id,))
+        
+        # Delete from patients table first due to foreign key constraints
+        cursor.execute("DELETE FROM patients WHERE user_id = %s", (patient_id,))
+        
+        # Then delete from users table
+        cursor.execute("DELETE FROM users WHERE user_id = %s", (patient_id,))
+        
+        connection.commit()
+        flash("Patient deleted successfully", "success")
+        
+    except Exception as e:
+        connection.rollback()
+        flash(f"Error deleting patient: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        connection.close()
+    
+    return redirect(url_for('admin_patients.index'))

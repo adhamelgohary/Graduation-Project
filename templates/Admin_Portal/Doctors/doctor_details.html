@@ -1,0 +1,149 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Doctor Details</h1>
+        <div class="space-x-2">
+            <a href="{{ url_for('admin_doctors.edit_doctor_form', doctor_id=doctor.user_id) }}" 
+               class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Edit Doctor
+            </a>
+            <form action="{{ url_for('admin_doctors.delete_doctor', doctor_id=doctor.user_id) }}" 
+                  method="POST" class="inline-block" 
+                  onsubmit="return confirm('Are you sure you want to delete this doctor?');">
+                <button type="submit" 
+                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    Delete Doctor
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Personal Information</h2>
+            <div class="space-y-2">
+                <p><strong>Name:</strong> {{ doctor.first_name }} {{ doctor.last_name }}</p>
+                <p><strong>Email:</strong> {{ doctor.email }}</p>
+                <p><strong>Phone:</strong> {{ doctor.phone or 'Not provided' }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Professional Information</h2>
+            <div class="space-y-2">
+                <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+                <p><strong>License Number:</strong> {{ doctor.license_number }}</p>
+                <p><strong>License State:</strong> {{ doctor.license_state }}</p>
+                <p><strong>License Expiration:</strong> {{ doctor.license_expiration }}</p>
+                <p>
+                    <strong>Accepting New Patients:</strong> 
+                    {% if doctor.accepting_new_patients %}
+                        <span class="text-green-600">Yes</span>
+                    {% else %}
+                        <span class="text-red-600">No</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6 mt-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-semibold">Uploaded Documents</h2>
+            <button data-modal-target="upload-document-modal" 
+                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Upload Document
+            </button>
+        </div>
+
+        {% if doctor.documents %}
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border p-2">Document Type</th>
+                        <th class="border p-2">File Name</th>
+                        <th class="border p-2">Upload Date</th>
+                        <th class="border p-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in doctor.documents %}
+                    <tr>
+                        <td class="border p-2">{{ doc.document_type|capitalize }}</td>
+                        <td class="border p-2">{{ doc.file_name }}</td>
+                        <td class="border p-2">{{ doc.upload_date }}</td>
+                        <td class="border p-2 text-center">
+                            <form action="{{ url_for('admin_doctors.delete_doctor_document', document_id=doc.document_id) }}" 
+                                  method="POST" 
+                                  onsubmit="return confirm('Are you sure you want to delete this document?');">
+                                <button type="submit" 
+                                        class="text-red-500 hover:text-red-700 font-bold">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-gray-500 text-center py-4">No documents uploaded</p>
+        {% endif %}
+    </div>
+
+    <!-- Upload Document Modal (you'll need to implement the modal functionality) -->
+    <div id="upload-document-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-96">
+            <h2 class="text-2xl font-semibold mb-4">Upload Document</h2>
+            <form action="{{ url_for('admin_doctors.upload_doctor_document', doctor_id=doctor.user_id) }}" 
+                  method="POST" 
+                  enctype="multipart/form-data">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="document_type">
+                        Document Type
+                    </label>
+                    <select name="document_type" id="document_type" 
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                            required>
+                        <option value="license">License</option>
+                        <option value="certification">Certification</option>
+                        <option value="identity">Identity</option>
+                        <option value="education">Education</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="document">
+                        Document File
+                    </label>
+                    <input type="file" name="document" id="document" 
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
+                           required>
+                </div>
+                
+                <div class="flex justify-between">
+                    <button type="submit" 
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Upload
+                    </button>
+                    <button type="button" 
+                            onclick="document.getElementById('upload-document-modal').classList.add('hidden')"
+                            class="text-gray-600 hover:text-gray-800">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple modal toggle script
+    document.querySelector('[data-modal-target="upload-document-modal"]').addEventListener('click', function() {
+        document.getElementById('upload-document-modal').classList.remove('hidden');
+    });
+</script>
+{% endblock %}

@@ -1,72 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-  />
-  <link rel="stylesheet" href="/static/Auth.css" />
-  <title>Sign In</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/login.css">
+    <title>Medical Login Page</title>
 </head>
 <body>
-  <!-- Flash Messages Section -->
-  <div class="flash-messages-container">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" aria-label="Close">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  </div>
+    <div class="login-container">
+        <form method="POST" action="{{ url_for('auth.login') }}" class="login-form">
+            <div class="logo">
+                <div class="logo-circle"></div>
+                <div class="logo-text">LOGO</div>
+            </div>
+            <h1>LOGIN</h1>
 
-  <div class="container">
-    <div class="login-form">
-      <h1><i>Sign In</i></h1>
-      <div class="social-icons">
-        <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-        <a href="#"><i class="fa-brands fa-twitter"></i></a>
-        <a href="#"><i class="fa-brands fa-google"></i></a>
-        <a href="#"><i class="fa-brands fa-linkedin-in"></i></a>
-      </div>
-      <form method="POST" action="{{ url_for('auth.login') }}">
-        <input type="text" name="identifier" placeholder="Email or Username" required />
-        <input type="password" name="password" placeholder="Password" required />
-        <div class="remember-me">
-          <input type="checkbox" id="remember" name="remember">
-          <label for="remember">Remember me</label>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="form-group">
+                <label for="identifier">EMAIL ADDRESS / USERNAME / INSURANCE POLICY</label>
+                <input type="text" name="identifier" id="identifier" placeholder="yourname@email.com / username / policy number" required>
+            </div>
+            <div class="form-group">
+                <label for="password">PASSWORD</label>
+                <input type="password" name="password" id="password" placeholder="••••••••" required>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="remember"> Remember Me
+                    </label>
+                </div>
+
+                <div class="login-link">
+                    Don't have an account? <a href="{{ url_for('auth.register') }}">Register</a>
+                </div>
+            </div>
+            <button type="submit" class="login-button">LOGIN</button>
+        </form>
+        <div class="illustration">
+            <div class="curve"></div>
+            <div class="waves">
+                <div class="wave"></div>
+                <div class="wave"></div>
+            </div>
+            <div class="heartbeat">
+                <svg class="heartbeat-line" viewBox="0 0 600 100">
+                    <path d="M0,50 Q25,50 50,50 T100,50 T150,50 T200,20 T250,80 T300,50 T350,50 T400,50 T450,50 T500,50 T550,50 T600,50"
+                           stroke="white"
+                           stroke-width="2"
+                           fill="none" />
+                </svg>
+            </div>
+            <div class="medical-symbols">
+                <div class="medical-cross"></div>
+                <div class="medical-cross"></div>
+                <div class="medical-cross"></div>
+            </div>
+            <div class="caduceus">
+                <div class="caduceus-staff"></div>
+                <div class="caduceus-wings">
+                    <div class="caduceus-wing"></div>
+                    <div class="caduceus-wing"></div>
+                </div>
+                <div class="caduceus-snake">
+                    <svg class="caduceus-snake-path" viewBox="0 0 60 100">
+                        <path d="M30,0 C40,10 20,30 30,40 C40,50 20,70 30,80 C40,90 20,110 30,120" />
+                    </svg>
+                </div>
+            </div>
+            <div class="pills">
+                <div class="pill"></div>
+                <div class="pill"></div>
+                <div class="pill"></div>
+            </div>
         </div>
-        <a href="#" class="forgot-password">Forgot Your Password?</a>
-        <button type="submit">Sign In</button>
-      </form>
-      <div class="redirect">
-        <p>Don't have an account?</p>
-        <a href="{{ url_for('auth.register') }}" class="register-link">Create Account</a>
-      </div>
     </div>
-  </div>
-
-  <script>
-    // JavaScript to handle alert dismissals
-    document.addEventListener('DOMContentLoaded', function() {
-      const closeButtons = document.querySelectorAll('.btn-close');
-      closeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          const alert = this.closest('.alert');
-          alert.style.opacity = '0';
-          setTimeout(() => {
-            alert.style.display = 'none';
-          }, 300);
-        });
-      });
-    });
-  </script>
 </body>
 </html>
