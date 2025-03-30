@@ -1,0 +1,149 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Add New Patient{% endblock %}
+
+{% block nav_patient %}active{% endblock %}
+
+{% block header_title %}
+<h1 class="page-title">
+    <i class="fas fa-user-plus"></i> Add New Patient
+</h1>
+{% endblock %}
+
+{% block content %}
+<div class="form-container card"> {# Use form-container and card #}
+    <div class="form-header">
+        <h2>Patient Information</h2>
+    </div>
+
+    <form action="{{ url_for('patient_management.add_patient') }}" method="POST">
+        {# Optional: CSRF token #}
+
+        {# --- User Account Info --- #}
+        <h3 class="mb-3 fs-5 text-secondary">Account Details</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="username">Username <span class="text-danger">*</span></label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email <span class="text-danger">*</span></label>
+                <input type="email" id="email" name="email" class="form-control" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="password">Password <span class="text-danger">*</span></label>
+            <input type="password" id="password" name="password" class="form-control" required>
+             <small class="form-text text-muted">Set an initial password for the patient.</small>
+        </div>
+
+        {# --- Personal Info --- #}
+        <hr class="my-4">
+        <h3 class="mb-3 fs-5 text-secondary">Personal Information</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="first_name">First Name <span class="text-danger">*</span></label>
+                <input type="text" id="first_name" name="first_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                <input type="text" id="last_name" name="last_name" class="form-control" required>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="date_of_birth">Date of Birth</label>
+                <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
+            </div>
+             <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" class="form-control" placeholder="e.g., 123-456-7890">
+            </div>
+        </div>
+         <div class="form-row">
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender" class="form-select">
+                    <option value="" selected>-- Select --</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="marital_status">Marital Status</label>
+                <select id="marital_status" name="marital_status" class="form-select">
+                    <option value="" selected>-- Select --</option>
+                    {% for status in marital_statuses %}
+                        <option value="{{ status }}">{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+             <div class="form-group">
+                 <label for="occupation">Occupation</label>
+                <input type="text" id="occupation" name="occupation" class="form-control">
+            </div>
+        </div>
+
+         {# --- Medical Info --- #}
+         <hr class="my-4">
+         <h3 class="mb-3 fs-5 text-secondary">Medical Information</h3>
+          <div class="form-row">
+            <div class="form-group">
+                <label for="blood_type">Blood Type</label>
+                <select id="blood_type" name="blood_type" class="form-select">
+                     <option value="" selected>-- Select --</option>
+                     {% for bt in blood_types %}
+                         <option value="{{ bt }}">{{ bt }}</option>
+                     {% endfor %}
+                </select>
+            </div>
+             <div class="form-group">
+                <label for="height_cm">Height (cm)</label>
+                <input type="number" id="height_cm" name="height_cm" class="form-control" step="0.1">
+            </div>
+             <div class="form-group">
+                <label for="weight_kg">Weight (kg)</label>
+                <input type="number" id="weight_kg" name="weight_kg" class="form-control" step="0.1">
+            </div>
+        </div>
+
+         {# --- Insurance Info --- #}
+         <hr class="my-4">
+         <h3 class="mb-3 fs-5 text-secondary">Insurance Information</h3>
+         <div class="form-row">
+             <div class="form-group">
+                <label for="insurance_provider_id">Insurance Provider</label>
+                <select id="insurance_provider_id" name="insurance_provider_id" class="form-select">
+                     <option value="" selected>-- Select Provider (Optional) --</option>
+                     {% for provider in insurance_providers %}
+                        <option value="{{ provider.provider_id }}">{{ provider.provider_name }}</option>
+                     {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="insurance_policy_number">Policy Number</label>
+                <input type="text" id="insurance_policy_number" name="insurance_policy_number" class="form-control">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="insurance_group_number">Group Number</label>
+                <input type="text" id="insurance_group_number" name="insurance_group_number" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="insurance_expiration">Expiration Date</label>
+                <input type="date" id="insurance_expiration" name="insurance_expiration" class="form-control">
+            </div>
+        </div>
+
+
+        {# --- Form Actions --- #}
+        <div class="form-actions">
+            <a href="{{ url_for('patient_management.index') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Add Patient</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

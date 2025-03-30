@@ -1,0 +1,87 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Add New Administrator - Step 1{% endblock %}
+
+{% block nav_admin %}active{% endblock %} {# Assuming nav_admin highlights the admin section #}
+
+{% block header_title %}
+<i class="fas fa-user-plus"></i> Add New Administrator - Step 1: User Details
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2><i class="fas fa-user-circle"></i> New Admin Account Details</h2>
+        <p>Enter the basic user information. You will set the specific admin permissions in the next step.</p>
+    </div>
+
+    {# Submit to the Step 1 processing route #}
+    <form action="{{ url_for('admin_management.add_admin_step1') }}" method="POST">
+        {# --- User Details --- #}
+        <div class="form-row">
+            <div class="form-group">
+                <label for="username">Username</label>
+                {# Use form_data if available (on validation error), otherwise empty #}
+                <input type="text" id="username" name="username" required
+                       value="{{ form_data.username if form_data else '' }}">
+            </div>
+             <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required
+                       value="{{ form_data.email if form_data else '' }}">
+            </div>
+        </div>
+        <div class="form-row">
+           <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+                {# Don't repopulate password for security #}
+            </div>
+             <div class="form-group">
+                <label for="confirm_password">Confirm Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+        </div>
+
+
+        {# --- Personal Details --- #}
+         <div class="form-row">
+            <div class="form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" required
+                       value="{{ form_data.first_name if form_data else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" required
+                       value="{{ form_data.last_name if form_data else '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+             {# Keep phone number on its own row or pair differently if desired #}
+             <div class="form-group">
+                <label for="phone">Phone Number (Optional)</label>
+                <input type="tel" id="phone" name="phone"
+                       value="{{ form_data.phone if form_data else '' }}">
+            </div>
+             {# REMOVED the Admin Level Select Dropdown from Step 1 #}
+             {# The space previously occupied by Admin Level is now free #}
+             {# You could add another field here or leave it as is #}
+             <div class="form-group">
+                 {# Empty div to maintain alignment if needed, or remove form-row #}
+             </div>
+        </div>
+
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_management.index') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary"> {# Changed text and maybe style #}
+                <i class="fas fa-arrow-right"></i> Create User & Proceed to Step 2
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Registration Details{% endblock %}
+
+{% block header_icon %}<i class="fas fa-clipboard-list"></i>{% endblock %}
+{% block header_title %}Registration Details{% endblock %}
+
+{% block content %}
+
+<div class="card"> {# Using card for padding/shadow #}
+    <div class="card-header">
+        <h2><i class="fas fa-user-tag"></i> {{ registration.first_name }} {{ registration.last_name }} ({{ registration.user_type | capitalize }})</h2>
+        <div class="card-header-actions">
+             <span class="status-badge {{ registration.status }}">
+                {% if registration.status == 'pending' %}<i class="fas fa-hourglass-half"></i>
+                {% elif registration.status == 'approved' %}<i class="fas fa-check-circle"></i>
+                {% elif registration.status == 'rejected' %}<i class="fas fa-times-circle"></i>
+                {% endif %}
+                {{ registration.status | replace('_', ' ') | title }}
+            </span>
+            <a href="{{ url_for('registration_approval.index', status=registration.status) }}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <h3 class="info-section-header"><i class="fas fa-info-circle"></i> General Information</h3>
+        <div class="detail-row">
+            <div class="detail-label">Username</div>
+            <div class="detail-value">{{ registration.username }}</div>
+        </div>
+         <div class="detail-row">
+            <div class="detail-label">Email</div>
+            <div class="detail-value">{{ registration.email }}</div>
+        </div>
+         <div class="detail-row">
+            <div class="detail-label">Phone</div>
+            <div class="detail-value">{{ registration.phone or 'N/A' }}</div>
+        </div>
+         <div class="detail-row">
+            <div class="detail-label">Country</div>
+            <div class="detail-value">{{ registration.country or 'N/A' }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Submitted On</div>
+            <div class="detail-value">{{ registration.date_submitted.strftime('%Y-%m-%d %H:%M:%S') if registration.date_submitted else 'N/A' }}</div>
+        </div>
+    </div>
+
+    {# --- Patient Specific Section --- #}
+    {% if registration.user_type == 'patient' %}
+    <div class="info-section">
+        <h3 class="info-section-header"><i class="fas fa-procedures"></i> Patient Information</h3>
+         <div class="detail-row">
+            <div class="detail-label">Date of Birth</div>
+            <div class="detail-value">{{ registration.date_of_birth.strftime('%Y-%m-%d') if registration.date_of_birth else 'N/A' }}</div>
+        </div>
+         <div class="detail-row">
+            <div class="detail-label">Gender</div>
+            <div class="detail-value">{{ registration.gender | capitalize or 'N/A' }}</div>
+        </div>
+         <div class="detail-row">
+            <div class="detail-label">Insurance Provider (Name)</div>
+            <div class="detail-value">{{ registration.insurance_provider or 'N/A' }}</div>
+        </div>
+         <div class="detail-row">
+            <div class="detail-label">Policy Number</div>
+            <div class="detail-value">{{ registration.insurance_policy_number or 'N/A' }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Group Number</div>
+            <div class="detail-value">{{ registration.insurance_group_number or 'N/A' }}</div>
+        </div>
+         {# Add other patient fields from pending_registrations if they exist #}
+    </div>
+    {% endif %}
+
+    {# --- Doctor Specific Section --- #}
+    {% if registration.user_type == 'doctor' %}
+    <div class="info-section">
+        <h3 class="info-section-header"><i class="fas fa-stethoscope"></i> Doctor Information</h3>
+        <div class="detail-row">
+            <div class="detail-label">Specialization</div>
+            <div class="detail-value">{{ registration.specialization or 'N/A' }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">License Number</div>
+            <div class="detail-value">{{ registration.license_number or 'N/A' }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">License State</div>
+            <div class="detail-value">{{ registration.license_state or 'N/A' }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">License Expiration</div>
+            <div class="detail-value">{{ registration.license_expiration.strftime('%Y-%m-%d') if registration.license_expiration else 'N/A' }}</div>
+        </div>
+         {# Add other doctor fields from pending_registrations if they exist #}
+    </div>
+    {% endif %}
+
+     {# --- Processing Information --- #}
+     {% if registration.status != 'pending' %}
+     <div class="info-section">
+        <h3 class="info-section-header"><i class="fas fa-tasks"></i> Processing Information</h3>
+        <div class="detail-row">
+            <div class="detail-label">Processed By</div>
+            <div class="detail-value">{{ registration.processed_by_name or 'N/A' }} (ID: {{ registration.processed_by or 'N/A' }})</div>
+        </div>
+         <div class="detail-row">
+            <div class="detail-label">Processed On</div>
+            <div class="detail-value">{{ registration.date_processed.strftime('%Y-%m-%d %H:%M:%S') if registration.date_processed else 'N/A' }}</div>
+        </div>
+         {% if registration.status == 'rejected' and registration.notes %}
+         <div class="detail-row">
+            <div class="detail-label">Rejection Reason</div>
+            <div class="detail-value" style="white-space: pre-wrap;">{{ registration.notes }}</div>
+        </div>
+         {% elif registration.notes %}
+          <div class="detail-row">
+            <div class="detail-label">Processing Notes</div>
+            <div class="detail-value" style="white-space: pre-wrap;">{{ registration.notes }}</div>
+        </div>
+         {% endif %}
+     </div>
+     {% endif %}
+
+
+     {# --- Action Buttons (Only if Pending) --- #}
+     {% if registration.status == 'pending' %}
+     <div class="form-actions"> {# Use form-actions styling #}
+        {# Approve Button (triggers a simple POST) #}
+        <form action="{{ url_for('registration_approval.approve_registration', reg_id=registration.id) }}" method="POST" style="display: inline;">
+             {# Add hidden input for CSRF token if using Flask-WTF #}
+             <button type="submit" class="btn btn-success">
+                <i class="fas fa-check"></i> Approve Registration
+            </button>
+        </form>
+
+        {# Reject Button (triggers modal) #}
+        <button type="button" class="btn btn-danger" data-modal-target="rejectModal">
+            <i class="fas fa-times"></i> Reject Registration
+        </button>
+     </div>
+     {% endif %}
+
+</div> {# End card #}
+
+
+{# --- Rejection Modal --- #}
+{% if registration.status == 'pending' %}
+<div class="modal-overlay" id="rejectModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-times-circle"></i> Reject Registration</h2>
+            <button type="button" class="modal-close-btn">×</button>
+        </div>
+        <form action="{{ url_for('registration_approval.reject_registration', reg_id=registration.id) }}" method="POST">
+             {# Add hidden input for CSRF token if using Flask-WTF #}
+            <div class="modal-body">
+                 <p>Please provide a reason for rejecting the registration for <strong>{{ registration.first_name }} {{ registration.last_name }}</strong>.</p>
+                 <div class="form-group">
+                    <label for="rejection_reason">Rejection Reason <span style="color:red;">*</span></label>
+                    <textarea id="rejection_reason" name="rejection_reason" class="form-control" rows="4" required placeholder="Enter reason for rejection..."></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts_extra %}
+{# Add any page-specific JS here, e.g., for more complex modal interactions #}
+<script>
+// Add specific JS for this page if needed
+</script>
+{% endblock %}

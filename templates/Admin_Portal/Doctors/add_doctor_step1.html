@@ -1,0 +1,78 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Add New Doctor - Step 1{% endblock %}
+
+{% block nav_doctors %}active{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-user-plus"></i> Add New Doctor - Step 1: User Account
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2><i class="fas fa-user-circle"></i> Doctor's Basic Account Details</h2>
+        <p>Enter the login and contact information. You will add professional details in the next step.</p>
+        {# Note: A temporary password will be generated. #}
+    </div>
+
+    {# Submit to the Step 1 processing route #}
+    <form action="{{ url_for('Doctors_Management.add_doctor_step1') }}" method="POST">
+        {# CSRF token input removed #}
+
+        {# --- User Account Details --- #}
+        <div class="form-row">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required
+                       value="{{ form_data.username if form_data else '' }}">
+                <small>Used for logging in.</small>
+            </div>
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required
+                       value="{{ form_data.email if form_data else '' }}">
+                <small>Used for communication and login.</small>
+            </div>
+        </div>
+
+        {# --- Personal Details --- #}
+        <div class="form-row">
+            <div class="form-group">
+                <label for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" required
+                       value="{{ form_data.first_name if form_data else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" required
+                       value="{{ form_data.last_name if form_data else '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="phone">Phone Number (Optional)</label>
+                <input type="tel" id="phone" name="phone"
+                       value="{{ form_data.phone if form_data else '' }}">
+            </div>
+            <div class="form-group">
+                 {# Placeholder or remove if layout doesn't need it #}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <p class="text-muted"><small>Note: A temporary password will be generated and logged (for development/testing purposes) upon successful user creation. The doctor can change this later.</small></p>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary"> {# Use primary for next step #}
+                <i class="fas fa-arrow-right"></i> Create User & Proceed to Step 2
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

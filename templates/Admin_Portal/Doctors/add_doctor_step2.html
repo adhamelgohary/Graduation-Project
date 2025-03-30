@@ -1,0 +1,120 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Add New Doctor - Step 2{% endblock %}
+
+{% block nav_doctors %}active{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-stethoscope"></i> Add New Doctor - Step 2: Professional Details
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        <h2><i class="fas fa-user-md"></i> Doctor Specific Information for {{ user.username }}</h2>
+        <p>User: {{ user.first_name }} {{ user.last_name }} (ID: {{ user.user_id }})</p>
+    </div>
+
+    {# Submit to the Step 2 processing route, including user_id #}
+    <form action="{{ url_for('Doctors_Management.add_doctor_step2', user_id=user.user_id) }}" method="POST">
+        {# CSRF token input removed #}
+
+        {# --- Professional Details --- #}
+        <div class="form-row">
+            <div class="form-group">
+                <label for="specialization">Specialization</label>
+                {# Example dropdown - replace with actual list or keep as text input #}
+                 <select id="specialization" name="specialization" required>
+                    <option value="" disabled {% if not form_data.specialization %}selected{% endif %}>-- Select --</option>
+                    <option value="General Practice" {% if form_data.specialization == 'General Practice' %}selected{% endif %}>General Practice</option>
+                    <option value="Cardiology" {% if form_data.specialization == 'Cardiology' %}selected{% endif %}>Cardiology</option>
+                    <option value="Pediatrics" {% if form_data.specialization == 'Pediatrics' %}selected{% endif %}>Pediatrics</option>
+                    <option value="Neurology" {% if form_data.specialization == 'Neurology' %}selected{% endif %}>Neurology</option>
+                    <option value="Orthopedics" {% if form_data.specialization == 'Orthopedics' %}selected{% endif %}>Orthopedics</option>
+                    {# Add more #}
+                </select>
+                {# OR Text Input:
+                <input type="text" id="specialization" name="specialization" required
+                       value="{{ form_data.specialization if form_data else '' }}">
+                #}
+            </div>
+            <div class="form-group">
+                <label for="license_number">License Number</label>
+                <input type="text" id="license_number" name="license_number" required
+                       value="{{ form_data.license_number if form_data else '' }}">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="license_state">License State</label>
+                <input type="text" id="license_state" name="license_state" required maxlength="2" placeholder="e.g., CA"
+                       value="{{ form_data.license_state if form_data else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="license_expiration">License Expiration</label>
+                <input type="date" id="license_expiration" name="license_expiration" required
+                       value="{{ form_data.license_expiration if form_data else '' }}">
+            </div>
+        </div>
+
+        {# --- Optional Details --- #}
+        <div class="form-row">
+             <div class="form-group">
+                <label for="npi_number">NPI Number (Optional)</label>
+                <input type="text" id="npi_number" name="npi_number"
+                       value="{{ form_data.npi_number if form_data else '' }}">
+            </div>
+            <div class="form-group">
+                 <label for="medical_school">Medical School (Optional)</label>
+                <input type="text" id="medical_school" name="medical_school"
+                       value="{{ form_data.medical_school if form_data else '' }}">
+            </div>
+        </div>
+
+         <div class="form-row">
+            <div class="form-group">
+                 <label for="graduation_year">Graduation Year (Optional)</label>
+                <input type="number" id="graduation_year" name="graduation_year" min="1900" max="{{ now().year }}" step="1" placeholder="YYYY"
+                       value="{{ form_data.graduation_year if form_data else '' }}">
+            </div>
+            <div class="form-group">
+                 <label for="certifications">Certifications (Optional)</label>
+                <input type="text" id="certifications" name="certifications" placeholder="e.g., Board Certified in Cardiology"
+                       value="{{ form_data.certifications if form_data else '' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="biography">Biography (Optional)</label>
+            <textarea id="biography" name="biography" rows="3">{{ form_data.biography if form_data else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="clinic_address">Clinic Address (Optional)</label>
+            <input type="text" id="clinic_address" name="clinic_address"
+                   value="{{ form_data.clinic_address if form_data else '' }}">
+        </div>
+
+        <div class="form-group">
+            <div class="checkbox-container">
+                {# Value submitted will be 'on' if checked, check request.form.get in Flask #}
+                <input type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1"
+                       {% if form_data.accepting_new_patients == '1' or form_data.accepting_new_patients == 1 %}checked{% endif %}>
+                <label for="accepting_new_patients">Accepting New Patients</label>
+            </div>
+        </div>
+
+        <div class="form-actions">
+             {# Optional: Add a back button if desired #}
+            {# <a href="{{ url_for('Doctors_Management.add_doctor_step1_form') }}" class="btn btn-secondary">Back</a> #}
+            <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-success"> {# Use success for final add #}
+                <i class="fas fa-check"></i> Add Doctor Details & Finish
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

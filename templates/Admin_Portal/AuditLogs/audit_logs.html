@@ -136,7 +136,7 @@
                     </td>
                     <td>
                         {% if log.user_id %}
-                            <a href="{{ url_for('admin_users.view_user', user_id=log.user_id) }}">{{ log.user_name }}</a>
+                            <a href="{{ url_for('admin_doctors.view_doctor', user_id=log.id) }}">{{ log.user_name }}</a>
                         {% else %}
                             <span class="text-muted">N/A</span>
                         {% endif %}

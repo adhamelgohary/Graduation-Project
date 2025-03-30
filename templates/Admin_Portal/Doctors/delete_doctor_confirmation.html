@@ -1,0 +1,37 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Confirm Doctor Deletion{% endblock %}
+
+{% block nav_doctors %}active{% endblock %}
+
+{% block header_title %}<i class="fas fa-trash-alt"></i> Confirm Doctor Deletion{% endblock %}
+
+{% block content %}
+<div class="form-container narrow-form"> {# Use narrow-form for confirmation #}
+    <div class="form-header danger-header"> {# Optional danger header style #}
+        <h2><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h2>
+    </div>
+
+    <div class="confirmation-message">
+        <p>Are you sure you want to permanently delete the account for:</p>
+        <p class="item-to-delete">
+            <strong>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</strong>
+            (ID: {{ doctor.user_id }})
+        </p>
+        <p>This action will delete the doctor's user account, professional details, uploaded documents, and potentially related data like appointments or reviews (depending on database setup).</p>
+        <p><strong>This action cannot be undone.</strong></p>
+    </div>
+
+    <form action="{{ url_for('Doctors_Management.delete_doctor', doctor_id=doctor.user_id) }}" method="POST">
+        {# CSRF token removed #}
+        <div class="form-actions">
+            <a href="{{ request.referrer or url_for('Doctors_Management.view_doctor', doctor_id=doctor.user_id) }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash-alt"></i> Yes, Delete This Doctor
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

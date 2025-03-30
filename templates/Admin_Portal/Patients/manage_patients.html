@@ -1,0 +1,160 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Patient Management{% endblock %}
+
+{% block nav_patient %}active{% endblock %} {# Set active sidebar item #}
+
+{% block header_title %}
+{# Consistent header style #}
+<h1 class="page-title">
+    <i class="fas fa-hospital-user"></i> Patient Management
+</h1>
+{% endblock %}
+
+{# --- Define the sort_url macro specific to this blueprint --- #}
+{% macro sort_url(field, current_sort_by, current_sort_order, current_search_term, current_page) %}
+    {% set new_sort_order = 'desc' if current_sort_by == field and current_sort_order == 'asc' else 'asc' %}
+    {# Preserve search term and current page when changing sort #}
+    {{ url_for('patient_management.index', sort_by=field, sort_order=new_sort_order, q=current_search_term, page=current_page) }}
+{% endmacro %}
+
+{% block content %}
+{# Use lowercase list-container, optionally add .card #}
+<div class="list-container card">
+
+    {# --- Search and Add Controls --- #}
+    <div class="list-controls"> {# Use this as the main container #}
+        {# Search Form Section #}
+        <div class="search-filter-container">
+            <form method="GET" action="{{ url_for('patient_management.index') }}" class="d-flex flex-grow-1 gap-2"> {# Added gap-2 #}
+                 {# Hidden inputs to preserve sort order during search. Search usually resets page. #}
+                 <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                 <input type="hidden" name="sort_order" value="{{ sort_order }}">
+
+                 <input type="text" id="search-input" name="q" class="form-control flex-grow-1" placeholder="Search name, email, phone..." value="{{ search_term or '' }}">
+                 <button type="submit" class="btn btn-outline-secondary flex-shrink-0">Search</button> {# Added flex-shrink-0 #}
+            </form>
+        </div>
+        {# Add Button Section #}
+        <a href="{{ url_for('patient_management.add_patient_form') }}" class="btn btn-primary flex-shrink-0"> {# Added flex-shrink-0 #}
+            <i class="fas fa-plus"></i> Add New Patient
+        </a>
+    </div>
+
+    {# Flash messages handled in base.html #}
+
+    {# --- Table Container --- #}
+    <div class="table-container">
+        {# Use lowercase list-table #}
+        <table class="list-table">
+            <thead>
+                <tr>
+                    {# Sortable Headers - Match ALLOWED_PATIENT_SORT_COLUMNS in Flask #}
+                    <th><a href="{{ sort_url('last_name', sort_by, sort_order, search_term, page) }}">Name {% if sort_by == 'last_name' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
+                    <th><a href="{{ sort_url('email', sort_by, sort_order, search_term, page) }}">Email {% if sort_by == 'email' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
+                    <th>Phone</th> {# Not sorting phone in this example #}
+                    <th><a href="{{ sort_url('date_of_birth', sort_by, sort_order, search_term, page) }}">DOB {% if sort_by == 'date_of_birth' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
+                    <th><a href="{{ sort_url('gender', sort_by, sort_order, search_term, page) }}">Gender {% if sort_by == 'gender' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
+                    <th class="actions-cell">Actions</th> {# No sorting #}
+                </tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %} {# Loop through paginated/searched/sorted patients #}
+                <tr>
+                    <td data-label="Name">{{ patient.first_name }} {{ patient.last_name }}</td>
+                    <td data-label="Email">{{ patient.email }}</td>
+                    <td data-label="Phone">{{ patient.phone or 'N/A' }}</td>
+                    <td data-label="DOB">{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else 'N/A' }}</td> {# Format date #}
+                    <td data-label="Gender">{{ patient.gender|capitalize if patient.gender else 'N/A' }}</td>
+                    <td class="actions-cell action-buttons">
+                        <a href="{{ url_for('patient_management.view_patient', patient_id=patient.user_id) }}"
+                           class="btn btn-icon view" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ url_for('patient_management.edit_patient_form', patient_id=patient.user_id) }}"
+                           class="btn btn-icon edit" title="Edit Patient">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                         {# Delete Button Form #}
+                         <form action="{{ url_for('patient_management.delete_patient', patient_id=patient.user_id) }}"
+                               method="POST"
+                               onsubmit="return confirm('Are you sure you want to delete {{ patient.first_name }} {{ patient.last_name }}? This will also delete all associated records.');"
+                               style="display: inline;">
+                            {# Optional: CSRF token #}
+                            <button type="submit" class="btn btn-icon delete" title="Delete Patient">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %} {# End loop through patients #}
+            </tbody>
+        </table>
+    </div> {# End table-container #}
+
+    {# --- Pagination and No Results --- #}
+    <div class="pagination-summary-container mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2"> {# Wrapper #}
+        {# Pagination Summary #}
+        <div>
+            {% if total_items > 0 %}
+                <small class="text-muted">
+                    Showing {{ ((page - 1) * per_page) + 1 }}-{{ [((page - 1) * per_page) + patients|length, total_items]|min }} of {{ total_items }} Patients
+                </small>
+            {% endif %}
+        </div>
+
+        {# Pagination Controls #}
+        {% if total_pages > 1 %}
+        <nav aria-label="Patient pagination">
+            <ul class="pagination pagination-sm mb-0"> {# pagination-sm for smaller controls #}
+                {# Previous Page Link #}
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('patient_management.index', page=page-1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}" aria-label="Previous">
+                        «
+                    </a>
+                </li>
+
+                {# Page Numbers (Adapt logic for showing limited pages if needed) #}
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                        <li class="page-item active" aria-current="page"><span class="page-link">{{ p }}</span></li>
+                    {% elif p >= page - 2 and p <= page + 2 %} {# Show nearby pages #}
+                        <li class="page-item"><a class="page-link" href="{{ url_for('patient_management.index', page=p, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">{{ p }}</a></li>
+                    {% elif p == page - 3 or p == page + 3 %} {# Ellipsis #}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                 {% endfor %}
+
+                {# Next Page Link #}
+                <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('patient_management.index', page=page+1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}" aria-label="Next">
+                        »
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %} {# End if total_pages > 1 #}
+    </div> {# End pagination-summary-container #}
+
+    {# No Results Message #}
+    {% if total_items == 0 %}
+       <div class="no-results mt-4"> {# Add margin-top #}
+            <i class="fas fa-hospital-user placeholder-icon"></i> {# Patient icon #}
+            {% if search_term %}
+                <p>No patients found matching your search for "{{ search_term }}".</p>
+                <a href="{{ url_for('patient_management.index', sort_by=sort_by, sort_order=sort_order) }}" class="btn btn-sm btn-outline-secondary">Clear Search</a>
+            {% else %}
+                <p>No patients found.</p>
+                <a href="{{ url_for('patient_management.add_patient_form') }}" class="btn btn-sm btn-outline-primary">
+                     Add a new patient
+                </a>
+            {% endif %}
+       </div>
+    {% endif %} {# End if total_items == 0 #}
+
+</div> {# End list-container #}
+{% endblock %}
+
+{% block scripts %}
+    {# Keep this block empty unless page-specific JS is needed #}
+{% endblock %}

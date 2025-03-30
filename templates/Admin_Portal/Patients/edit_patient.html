@@ -1,356 +1,151 @@
 {% extends "Admin_Portal/base.html" %}
 
-{% block title %}Edit Patient - Hospital Admin Dashboard{% endblock %}
+{% block title %}Edit Patient - {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
 
-{% block nav_patients %}active{% endblock %}
+{% block nav_patient %}active{% endblock %}
 
-{% block header_title %}<i class="fas fa-user-edit"></i> Edit Patient: {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
+{% block header_title %}
+<h1 class="page-title">
+    <i class="fas fa-user-edit"></i> Edit Patient: {{ patient.first_name }} {{ patient.last_name }}
+</h1>
+{% endblock %}
 
 {% block content %}
-<div class="content-container">
-    <div class="form-container">
-        <a href="{{ url_for('admin_users.index') }}" class="back-link"><i class="fas fa-arrow-left"></i> Back to Patients List</a>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <form action="{{ url_for('admin_patients.edit_patient', patient_id=patient.user_id) }}" method="POST">
-            <div class="form-section">
-                <h3>Personal Information</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="first_name">First Name <span class="required">*</span></label>
-                        <input type="text" id="first_name" name="first_name" value="{{ patient.first_name }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="last_name">Last Name <span class="required">*</span></label>
-                        <input type="text" id="last_name" name="last_name" value="{{ patient.last_name }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email <span class="required">*</span></label>
-                        <input type="email" id="email" name="email" value="{{ patient.email }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" value="{{ patient.phone }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="date_of_birth">Date of Birth <span class="required">*</span></label>
-                        <input type="date" id="date_of_birth" name="date_of_birth" value="{{ patient.date_of_birth }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="gender">Gender</label>
-                        <select id="gender" name="gender">
-                            <option value="">Select Gender</option>
-                            <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
-                            <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
-                            <option value="Other" {% if patient.gender == 'Other' %}selected{% endif %}>Other</option>
-                            <option value="Prefer not to say" {% if patient.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="marital_status">Marital Status</label>
-                        <select id="marital_status" name="marital_status">
-                            <option value="">Select Status</option>
-                            {% for status in marital_statuses %}
-                                <option value="{{ status }}" {% if patient.marital_status == status %}selected{% endif %}>{{ status }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="occupation">Occupation</label>
-                        <input type="text" id="occupation" name="occupation" value="{{ patient.occupation }}">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-section">
-                <h3>Medical Information</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="blood_type">Blood Type</label>
-                        <select id="blood_type" name="blood_type">
-                            <option value="">Select Blood Type</option>
-                            {% for blood_type in blood_types %}
-                                <option value="{{ blood_type }}" {% if patient.blood_type == blood_type %}selected{% endif %}>{{ blood_type }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="height_cm">Height (cm)</label>
-                        <input type="number" id="height_cm" name="height_cm" min="0" step="0.1" value="{{ patient.height_cm }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="weight_kg">Weight (kg)</label>
-                        <input type="number" id="weight_kg" name="weight_kg" min="0" step="0.1" value="{{ patient.weight_kg }}">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-section" id="insurance-section">
-                <div class="section-header">
-                    <h3>Insurance Information</h3>
-                    <div class="toggle-container">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="has-insurance" name="has_insurance" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span id="insurance-status">Has Insurance</span>
-                    </div>
-                </div>
-                <div class="form-grid" id="insurance-fields">
-                    <div class="form-group">
-                        <label for="insurance_provider">Insurance Provider</label>
-                        <select id="insurance_provider" name="insurance_provider">
-                            <option value="">Select Provider</option>
-                            {% for provider in insurance_providers %}
-                                <option value="{{ provider.id }}" {% if patient.insurance_provider|string == provider.id|string %}selected{% endif %}>{{ provider.provider_name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="insurance_policy_number">Policy Number</label>
-                        <input type="text" id="insurance_policy_number" name="insurance_policy_number" value="{{ patient.insurance_policy_number }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="insurance_group_number">Group Number</label>
-                        <input type="text" id="insurance_group_number" name="insurance_group_number" value="{{ patient.insurance_group_number }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="insurance_expiration">Expiration Date</label>
-                        <input type="date" id="insurance_expiration" name="insurance_expiration" value="{{ patient.insurance_expiration }}">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-buttons">
-                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Update Patient</button>
-                <a href="{{ url_for('admin_users.index') }}" class="btn-secondary"><i class="fas fa-times"></i> Cancel</a>
-            </div>
-        </form>
+<div class="form-container card">
+    <div class="form-header">
+        <h2>Patient Information</h2>
     </div>
+
+    <form action="{{ url_for('patient_management.edit_patient', patient_id=patient.user_id) }}" method="POST">
+        {# Optional: CSRF token #}
+
+        {# --- Personal Info --- #}
+        <h3 class="mb-3 fs-5 text-secondary">Personal Information</h3>
+         <div class="form-row">
+            <div class="form-group">
+                <label for="first_name">First Name <span class="text-danger">*</span></label>
+                <input type="text" id="first_name" name="first_name" class="form-control" value="{{ patient.first_name or '' }}" required>
+            </div>
+            <div class="form-group">
+                <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                <input type="text" id="last_name" name="last_name" class="form-control" value="{{ patient.last_name or '' }}" required>
+            </div>
+        </div>
+        <div class="form-row">
+             <div class="form-group">
+                 <label for="email">Email <span class="text-danger">*</span></label>
+                 {# Make email readonly if it's tied to login and shouldn't be changed here #}
+                 {# Or ensure uniqueness check in Flask route #}
+                <input type="email" id="email" name="email" class="form-control" value="{{ patient.email or '' }}" required>
+            </div>
+             <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" class="form-control" value="{{ patient.phone or '' }}" placeholder="e.g., 123-456-7890">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="date_of_birth">Date of Birth</label>
+                <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="{{ patient.dob_formatted or '' }}">
+            </div>
+             <div class="form-group">
+                <label for="gender">Gender</label>
+                <select id="gender" name="gender" class="form-select">
+                    <option value="" {% if not patient.gender %}selected{% endif %}>-- Select --</option>
+                    <option value="Male" {% if patient.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if patient.gender == 'Female' %}selected{% endif %}>Female</option>
+                    <option value="Other" {% if patient.gender == 'Other' %}selected{% endif %}>Other</option>
+                    <option value="Prefer not to say" {% if patient.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+                </select>
+            </div>
+        </div>
+         <div class="form-row">
+            <div class="form-group">
+                <label for="marital_status">Marital Status</label>
+                <select id="marital_status" name="marital_status" class="form-select">
+                    <option value="" {% if not patient.marital_status %}selected{% endif %}>-- Select --</option>
+                    {% for status in marital_statuses %}
+                        <option value="{{ status }}" {% if patient.marital_status == status %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+             <div class="form-group">
+                 <label for="occupation">Occupation</label>
+                <input type="text" id="occupation" name="occupation" class="form-control" value="{{ patient.occupation or '' }}">
+            </div>
+        </div>
+
+         {# --- Medical Info --- #}
+         <hr class="my-4">
+         <h3 class="mb-3 fs-5 text-secondary">Medical Information</h3>
+          <div class="form-row">
+            <div class="form-group">
+                <label for="blood_type">Blood Type</label>
+                <select id="blood_type" name="blood_type" class="form-select">
+                     <option value="" {% if not patient.blood_type %}selected{% endif %}>-- Select --</option>
+                     {% for bt in blood_types %}
+                         <option value="{{ bt }}" {% if patient.blood_type == bt %}selected{% endif %}>{{ bt }}</option>
+                     {% endfor %}
+                </select>
+            </div>
+             <div class="form-group">
+                <label for="height_cm">Height (cm)</label>
+                <input type="number" id="height_cm" name="height_cm" class="form-control" step="0.1" value="{{ patient.height_cm or '' }}">
+            </div>
+             <div class="form-group">
+                <label for="weight_kg">Weight (kg)</label>
+                <input type="number" id="weight_kg" name="weight_kg" class="form-control" step="0.1" value="{{ patient.weight_kg or '' }}">
+            </div>
+        </div>
+
+         {# --- Insurance Info --- #}
+         <hr class="my-4">
+         <h3 class="mb-3 fs-5 text-secondary">Insurance Information</h3>
+         <div class="form-row">
+             <div class="form-group">
+                <label for="insurance_provider_id">Insurance Provider</label>
+                <select id="insurance_provider_id" name="insurance_provider_id" class="form-select">
+                     <option value="" {% if not patient.insurance_provider_id %}selected{% endif %}>-- Select Provider (Optional) --</option>
+                     {% for provider in insurance_providers %}
+                        <option value="{{ provider.provider_id }}" {% if patient.insurance_provider_id == provider.provider_id %}selected{% endif %}>{{ provider.provider_name }}</option>
+                     {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="insurance_policy_number">Policy Number</label>
+                <input type="text" id="insurance_policy_number" name="insurance_policy_number" class="form-control" value="{{ patient.insurance_policy_number or '' }}">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="insurance_group_number">Group Number</label>
+                <input type="text" id="insurance_group_number" name="insurance_group_number" class="form-control" value="{{ patient.insurance_group_number or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="insurance_expiration">Expiration Date</label>
+                <input type="date" id="insurance_expiration" name="insurance_expiration" class="form-control" value="{{ patient.insurance_exp_formatted or '' }}">
+            </div>
+        </div>
+
+        {# --- Password Change --- #}
+        <hr class="my-4">
+        <h3 class="mb-3 fs-5 text-secondary">Change Password (Optional)</h3>
+        <div class="form-group">
+            <label for="new_password">New Password</label>
+            <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Leave blank to keep current password">
+        </div>
+        <div class="form-group">
+            <label for="confirm_password">Confirm New Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Leave blank to keep current password">
+        </div>
+
+
+        {# --- Form Actions --- #}
+        <div class="form-actions">
+            {# Link back to patient view or list view #}
+            <a href="{{ url_for('patient_management.view_patient', patient_id=patient.user_id) }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+        </div>
+    </form>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .form-container {
-        background-color: #fff;
-        padding: 25px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    
-    .back-link {
-        display: inline-block;
-        margin-bottom: 20px;
-        color: #007bff;
-        text-decoration: none;
-    }
-    
-    .form-section {
-        margin-bottom: 30px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 20px;
-    }
-    
-    .form-section h3 {
-        margin-bottom: 15px;
-        color: #333;
-        font-size: 1.2rem;
-    }
-    
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-    
-    .toggle-container {
-        display: flex;
-        align-items: center;
-    }
-    
-    .toggle-switch {
-        position: relative;
-        display: inline-block;
-        width: 50px;
-        height: 24px;
-        margin-right: 10px;
-    }
-    
-    .toggle-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-    
-    .toggle-slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        transition: .4s;
-        border-radius: 24px;
-    }
-    
-    .toggle-slider:before {
-        position: absolute;
-        content: "";
-        height: 16px;
-        width: 16px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-    }
-    
-    input:checked + .toggle-slider {
-        background-color: #2196F3;
-    }
-    
-    input:checked + .toggle-slider:before {
-        transform: translateX(26px);
-    }
-    
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-    }
-    
-    .form-group {
-        margin-bottom: 15px;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
-    }
-    
-    .form-group input, .form-group select {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-    }
-    
-    .disabled-field {
-        opacity: 0.5;
-        pointer-events: none;
-    }
-    
-    .required {
-        color: #dc3545;
-    }
-    
-    .form-buttons {
-        display: flex;
-        gap: 10px;
-        margin-top: 20px;
-    }
-    
-    .btn-primary {
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .btn-secondary {
-        padding: 10px 20px;
-        background-color: #6c757d;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 1rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .alert {
-        padding: 12px 20px;
-        margin-bottom: 20px;
-        border-radius: 4px;
-    }
-    
-    .alert-success {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-    
-    .alert-danger {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const insuranceToggle = document.getElementById('has-insurance');
-        const insuranceFields = document.getElementById('insurance-fields');
-        const insuranceStatus = document.getElementById('insurance-status');
-        const insuranceInputs = insuranceFields.querySelectorAll('input, select');
-        
-        // Function to toggle insurance fields
-        function toggleInsuranceFields() {
-            if (insuranceToggle.checked) {
-                insuranceFields.classList.remove('disabled-field');
-                insuranceStatus.textContent = 'Has Insurance';
-                // Enable all insurance inputs
-                insuranceInputs.forEach(input => {
-                    input.disabled = false;
-                });
-            } else {
-                insuranceFields.classList.add('disabled-field');
-                insuranceStatus.textContent = 'No Insurance';
-                // Disable all insurance inputs and clear their values
-                insuranceInputs.forEach(input => {
-                    input.disabled = true;
-                    input.value = ''; // Clear the field value
-                    if (input.tagName === 'SELECT') {
-                        input.selectedIndex = 0;
-                    }
-                });
-            }
-        }
-        
-        // Initialize fields based on existing data
-        if (!document.getElementById('insurance_provider').value && 
-            !document.getElementById('insurance_policy_number').value && 
-            !document.getElementById('insurance_group_number').value && 
-            !document.getElementById('insurance_expiration').value) {
-            insuranceToggle.checked = false;
-            toggleInsuranceFields();
-        }
-        
-        // Listen for toggle changes
-        insuranceToggle.addEventListener('change', toggleInsuranceFields);
-    });
-</script>
 {% endblock %}

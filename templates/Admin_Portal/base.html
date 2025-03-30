@@ -5,24 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Hospital Admin Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/base.css') }}">
     {% block extra_css %}{% endblock %}
+    <style>
+        
+    </style>
 </head>
 <body>
     <div class="sidebar">
         <h2><i class="fas fa-hospital-user"></i> Admin Portal</h2>
         <ul>
-            <li class="{% block nav_dashboard %}{% endblock %}"><a href="{{ url_for('admin_main.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-            <li><a href="{{ url_for('admin_doctors.index') }}"><i class="fas fa-user-md"></i>Doctors</a></li>
-            <li class="{% block nav_appointments %}{% endblock %}"><a href="#appointments"><i class="fas fa-calendar-alt"></i> Manage Appointments </a></li>
-            <li class="{% block nav_audit %}{% endblock %}"><a href="{{ url_for('admin_audit.index') }}"><i class="fas fa-history"></i> Audit Logs</a></li>
-            <li class="{% block nav_doc_app %}{% endblock %}"><a href="{{ url_for('doctor_approvals.index') }}"><i class="fas fa-history"></i> Doctor Approvals</a></li>
-            <li class="{% block nav_settings %}{% endblock %}"><a href="#settings"><i class="fas fa-cogs"></i> Settings</a></li>
-            <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+            <li class="{% block nav_dashboard %}{% endblock %}">
+                <a href="{{ url_for('admin_main.dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li class="{% block nav_admin %}{% endblock %}">
+                <a href="{{ url_for('admin_management.index') }}">
+                    <i class="fas fa-user-shield"></i> Admin Management
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('Doctors_Management.index') }}">
+                    <i class="fas fa-user-md"></i> Doctor Management
+                </a>
+            </li>
+            <li class="{% block nav_patient %}{% endblock %}">
+                <a href="{{ url_for('patient_management.index') }}">
+                    <i class="fas fa-hospital-user"></i> Patient Management
+                </a>
+            </li>
+            <li class="{% block nav_user_search %}{% endblock %}">
+                <a href="#">
+                    <i class="fas fa-search"></i> User Search
+                </a>
+            </li>
+            <li class="{% block nav_appointments %}{% endblock %}">
+                <a href="#">
+                    <i class="fas fa-calendar-alt"></i> Manage Appointments
+                </a>
+            </li>
+            <li class="{% block nav_audit %}{% endblock %}">
+                <a href="{{ url_for('admin_audit.index') }}">
+                    <i class="fas fa-history"></i> Audit Logs
+                </a>
+            </li>
+            <li class="{% block nav_doc_app %}{% endblock %}">
+                <a href="{{ url_for('registration_approval.index') }}">
+                    <i class="fas fa-user-check"></i> Doctor Approvals
+                </a>
+            </li>
+            <li class="{% block nav_settings %}{% endblock %}">
+                <a href="#">
+                    <i class="fas fa-cogs"></i> Settings
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('auth.logout') }}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
         </ul>
     </div>
-    
+
     <div class="main-content">
         <div class="header">
             <h1>{% block header_title %}<i class="fas fa-tachometer-alt"></i> Admin Dashboard{% endblock %}</h1>
@@ -31,10 +78,25 @@
                 <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img">
             </div>
         </div>
-        
+
+        {# Flash Messages Section #}
+        <div class="flash-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category or 'info' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
         {% block content %}{% endblock %}
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

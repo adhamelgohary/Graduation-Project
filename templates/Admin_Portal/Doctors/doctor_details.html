@@ -1,87 +1,132 @@
 {% extends "Admin_Portal/base.html" %}
 
+{% block title %}Doctor Details - {{ doctor.first_name }} {{ doctor.last_name }}{% endblock %}
+
+{% block nav_doctors %}active{% endblock %}
+
+{% block header_title %}<i class="fas fa-user-md"></i> Doctor Details{% endblock %}
+
+{% block extra_css %}
+{# Keep CSS from original file #}
+<style>
+    .page-actions { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .page-actions .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+    .page-title { margin: 0; }
+    .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-bottom: 25px; }
+    .card .card-header h2 { font-size: 20px; font-weight: 600; margin: 0; color: var(--dark-color); }
+    .card-header-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .accepting-patients-yes { color: var(--success-color); font-weight: 500; }
+    .accepting-patients-no { color: var(--danger-color); font-weight: 500; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); z-index: 1040; overflow-y: auto; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background-color: #fff; border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 30px; max-width: 500px; width: 100%; position: relative; }
+    .modal-header { border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h2 { margin: 0; font-size: 20px; color: var(--dark-color); }
+    .modal-close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; line-height: 1; }
+    .modal-close-btn:hover { color: #333; }
+    .modal-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; border-top: 1px solid #eee; padding-top: 20px; }
+    .delete-link-btn { background: none; border: none; color: var(--danger-color); cursor: pointer; font-weight: 500; padding: 0; text-decoration: underline; font-size: 14px; }
+    .delete-link-btn:hover { color: #c0392b; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Doctor Details</h1>
-        <div class="space-x-2">
-            <a href="{{ url_for('admin_doctors.edit_doctor_form', doctor_id=doctor.user_id) }}" 
-               class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Edit Doctor
-            </a>
-            <form action="{{ url_for('admin_doctors.delete_doctor', doctor_id=doctor.user_id) }}" 
-                  method="POST" class="inline-block" 
-                  onsubmit="return confirm('Are you sure you want to delete this doctor?');">
-                <button type="submit" 
-                        class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                    Delete Doctor
-                </button>
-            </form>
+<div class="page-actions">
+    <div></div> {# Spacer #}
+    <div class="action-buttons">
+        <a href="{{ url_for('Doctors_Management.edit_doctor', doctor_id=doctor.user_id) }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-edit"></i> Edit Doctor
+        </a>
+         {# Link to confirmation page #}
+         <a href="{{ url_for('Doctors_Management.delete_doctor_confirmation', doctor_id=doctor.user_id) }}"
+            class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> Delete Doctor
+         </a>
+        {# OR Direct delete form if preferred
+        <form action="{{ url_for('Doctors_Management.delete_doctor', doctor_id=doctor.user_id) }}"
+              method="POST" class="inline-block" onsubmit="return confirm('Delete Dr. {{ doctor.last_name }}?');">
+            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete Doctor</button>
+        </form>
+         #}
+    </div>
+</div>
+
+<div class="details-grid">
+    {# Personal Information Card #}
+    <div class="card info-section">
+         <div class="card-header"><h2><i class="fas fa-user"></i> Personal Information</h2></div>
+        <div class="card-body">
+            <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">{{ doctor.first_name }} {{ doctor.last_name }}</div></div>
+            <div class="detail-row"><div class="detail-label">Username:</div><div class="detail-value">{{ doctor.username }}</div></div>
+            <div class="detail-row"><div class="detail-label">Email:</div><div class="detail-value">{{ doctor.email }}</div></div>
+            <div class="detail-row"><div class="detail-label">Phone:</div><div class="detail-value">{{ doctor.phone or 'N/A' }}</div></div>
+            <div class="detail-row"><div class="detail-label">Account Status:</div><div class="detail-value">{{ doctor.account_status | capitalize or 'N/A' }}</div></div>
+             <div class="detail-row"><div class="detail-label">Member Since:</div><div class="detail-value">{{ doctor.created_at.strftime('%Y-%m-%d') if doctor.created_at else 'N/A' }}</div></div>
         </div>
     </div>
 
-    <div class="grid md:grid-cols-2 gap-6">
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-2xl font-semibold mb-4">Personal Information</h2>
-            <div class="space-y-2">
-                <p><strong>Name:</strong> {{ doctor.first_name }} {{ doctor.last_name }}</p>
-                <p><strong>Email:</strong> {{ doctor.email }}</p>
-                <p><strong>Phone:</strong> {{ doctor.phone or 'Not provided' }}</p>
-            </div>
-        </div>
-
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h2 class="text-2xl font-semibold mb-4">Professional Information</h2>
-            <div class="space-y-2">
-                <p><strong>Specialization:</strong> {{ doctor.specialization }}</p>
-                <p><strong>License Number:</strong> {{ doctor.license_number }}</p>
-                <p><strong>License State:</strong> {{ doctor.license_state }}</p>
-                <p><strong>License Expiration:</strong> {{ doctor.license_expiration }}</p>
-                <p>
-                    <strong>Accepting New Patients:</strong> 
-                    {% if doctor.accepting_new_patients %}
-                        <span class="text-green-600">Yes</span>
-                    {% else %}
-                        <span class="text-red-600">No</span>
+    {# Professional Information Card #}
+    <div class="card info-section">
+         <div class="card-header"><h2><i class="fas fa-stethoscope"></i> Professional Information</h2></div>
+        <div class="card-body">
+            <div class="detail-row"><div class="detail-label">Specialization:</div><div class="detail-value">{{ doctor.specialization or 'N/A' }}</div></div>
+            <div class="detail-row"><div class="detail-label">License Number:</div><div class="detail-value">{{ doctor.license_number or 'N/A' }}</div></div>
+            <div class="detail-row"><div class="detail-label">License State:</div><div class="detail-value">{{ doctor.license_state or 'N/A' }}</div></div>
+             <div class="detail-row"><div class="detail-label">License Expiration:</div><div class="detail-value">{{ doctor.license_expiration_formatted or 'N/A' }}</div></div>
+             <div class="detail-row"><div class="detail-label">NPI Number:</div><div class="detail-value">{{ doctor.npi_number or 'N/A' }}</div></div>
+             <div class="detail-row"><div class="detail-label">Medical School:</div><div class="detail-value">{{ doctor.medical_school or 'N/A' }}</div></div>
+             <div class="detail-row"><div class="detail-label">Graduation Year:</div><div class="detail-value">{{ doctor.graduation_year or 'N/A' }}</div></div>
+             <div class="detail-row"><div class="detail-label">Certifications:</div><div class="detail-value">{{ doctor.certifications or 'N/A' }}</div></div>
+             <div class="detail-row"><div class="detail-label">Clinic Address:</div><div class="detail-value">{{ doctor.clinic_address or 'N/A' }}</div></div>
+             <div class="detail-row"><div class="detail-label">Biography:</div><div class="detail-value" style="white-space: pre-wrap;">{{ doctor.biography or 'N/A' }}</div></div> {# Preserve line breaks #}
+            <div class="detail-row">
+                <div class="detail-label">Accepting New Patients:</div>
+                <div class="detail-value">
+                    {% if doctor.accepting_new_patients %} <span class="accepting-patients-yes"><i class="fas fa-check-circle"></i> Yes</span>
+                    {% else %} <span class="accepting-patients-no"><i class="fas fa-times-circle"></i> No</span>
                     {% endif %}
-                </p>
+                </div>
+            </div>
+            <div class="detail-row">
+                 <div class="detail-label">Verification Status:</div>
+                 <div class="detail-value">
+                      {% set status = doctor.verification_status | lower if doctor.verification_status else 'unknown' %}
+                        {% if status == 'verified' %} <span class="status-badge active"><i class="fas fa-check-circle"></i> Verified</span>
+                        {% elif status == 'pending' %} <span class="status-badge pending"><i class="fas fa-clock"></i> Pending</span>
+                        {% elif status == 'rejected' %} <span class="status-badge rejected"><i class="fas fa-times-circle"></i> Rejected</span>
+                        {% else %} <span class="status-badge unknown"><i class="fas fa-question-circle"></i> Unknown</span>
+                        {% endif %}
+                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="bg-white shadow-md rounded-lg p-6 mt-6">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-semibold">Uploaded Documents</h2>
-            <button data-modal-target="upload-document-modal" 
-                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-                Upload Document
-            </button>
-        </div>
-
+{# Uploaded Documents Section #}
+<div class="card info-section">
+    <div class="card-header card-header-actions">
+        <h2><i class="fas fa-file-alt"></i> Uploaded Documents</h2>
+        <button data-modal-target="upload-document-modal" class="btn btn-success btn-sm">
+            <i class="fas fa-upload"></i> Upload Document
+        </button>
+    </div>
+    <div class="card-body">
         {% if doctor.documents %}
-            <table class="w-full border-collapse">
-                <thead>
-                    <tr class="bg-gray-200">
-                        <th class="border p-2">Document Type</th>
-                        <th class="border p-2">File Name</th>
-                        <th class="border p-2">Upload Date</th>
-                        <th class="border p-2">Actions</th>
-                    </tr>
-                </thead>
+            <table class="list-table">
+                <thead> <tr> <th>Type</th> <th>File Name</th> <th>Upload Date</th> <th>Size</th> <th>Actions</th> </tr> </thead>
                 <tbody>
                     {% for doc in doctor.documents %}
                     <tr>
-                        <td class="border p-2">{{ doc.document_type|capitalize }}</td>
-                        <td class="border p-2">{{ doc.file_name }}</td>
-                        <td class="border p-2">{{ doc.upload_date }}</td>
-                        <td class="border p-2 text-center">
-                            <form action="{{ url_for('admin_doctors.delete_doctor_document', document_id=doc.document_id) }}" 
-                                  method="POST" 
-                                  onsubmit="return confirm('Are you sure you want to delete this document?');">
-                                <button type="submit" 
-                                        class="text-red-500 hover:text-red-700 font-bold">
-                                    Delete
-                                </button>
+                        <td>{{ doc.document_type|capitalize }}</td>
+                        <td>{{ doc.file_name }}</td>
+                        <td>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') if doc.upload_date else 'N/A' }}</td> {# Format date #}
+                        <td>{{ (doc.file_size / 1024)|round(1) if doc.file_size else 'N/A' }} KB</td> {# Format size #}
+                        <td class="action-buttons">
+                            {# Optional: Add download link if needed - requires separate route #}
+                            {# <a href="{{ url_for('Doctors_Management.download_document', document_id=doc.document_id) }}" class="btn btn-icon download" title="Download"><i class="fas fa-download"></i></a> #}
+                            <form action="{{ url_for('Doctors_Management.delete_doctor_document', document_id=doc.document_id) }}"
+                                  method="POST" onsubmit="return confirm('Delete this document?');" style="display: inline;">
+                                <button type="submit" class="delete-link-btn" title="Delete"><i class="fas fa-trash"></i> Delete</button>
                             </form>
                         </td>
                     </tr>
@@ -89,61 +134,51 @@
                 </tbody>
             </table>
         {% else %}
-            <p class="text-gray-500 text-center py-4">No documents uploaded</p>
+            <div class="no-results"><i class="fas fa-file-excel"></i><p>No documents uploaded yet.</p></div>
         {% endif %}
-    </div>
-
-    <!-- Upload Document Modal (you'll need to implement the modal functionality) -->
-    <div id="upload-document-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-lg p-6 w-96">
-            <h2 class="text-2xl font-semibold mb-4">Upload Document</h2>
-            <form action="{{ url_for('admin_doctors.upload_doctor_document', doctor_id=doctor.user_id) }}" 
-                  method="POST" 
-                  enctype="multipart/form-data">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="document_type">
-                        Document Type
-                    </label>
-                    <select name="document_type" id="document_type" 
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                            required>
-                        <option value="license">License</option>
-                        <option value="certification">Certification</option>
-                        <option value="identity">Identity</option>
-                        <option value="education">Education</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="document">
-                        Document File
-                    </label>
-                    <input type="file" name="document" id="document" 
-                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                           required>
-                </div>
-                
-                <div class="flex justify-between">
-                    <button type="submit" 
-                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        Upload
-                    </button>
-                    <button type="button" 
-                            onclick="document.getElementById('upload-document-modal').classList.add('hidden')"
-                            class="text-gray-600 hover:text-gray-800">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
     </div>
 </div>
 
+<!-- Upload Document Modal -->
+<div id="upload-document-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+             <h2><i class="fas fa-upload"></i> Upload New Document</h2>
+             <button type="button" class="modal-close-btn" onclick="closeModal('upload-document-modal')">×</button>
+        </div>
+        <form action="{{ url_for('Doctors_Management.upload_doctor_document', doctor_id=doctor.user_id) }}"
+              method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="modal_document_type">Document Type</label>
+                <select name="document_type" id="modal_document_type" required>
+                    <option value="" disabled selected>-- Select Type --</option>
+                    <option value="license">License</option> <option value="certification">Certification</option>
+                    <option value="identity">Identity</option> <option value="education">Education</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="modal_document">Document File</label>
+                <input type="file" name="document" id="modal_document" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('upload-document-modal')">Cancel</button>
+                 <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# Keep modal JavaScript #}
 <script>
-    // Simple modal toggle script
-    document.querySelector('[data-modal-target="upload-document-modal"]').addEventListener('click', function() {
-        document.getElementById('upload-document-modal').classList.remove('hidden');
-    });
+    function openModal(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.classList.add('active'); } }
+    function closeModal(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.classList.remove('active'); } }
+    const openModalButton = document.querySelector('[data-modal-target="upload-document-modal"]');
+    if (openModalButton) { openModalButton.addEventListener('click', function() { openModal('upload-document-modal'); }); }
+    const modalOverlays = document.querySelectorAll('.modal-overlay');
+    modalOverlays.forEach(overlay => { overlay.addEventListener('click', function(event) { if (event.target === overlay) { closeModal(overlay.id); } }); });
+    document.addEventListener('keydown', function(event) { if (event.key === 'Escape') { modalOverlays.forEach(overlay => { if (overlay.classList.contains('active')) { closeModal(overlay.id); } }); } });
 </script>
 {% endblock %}

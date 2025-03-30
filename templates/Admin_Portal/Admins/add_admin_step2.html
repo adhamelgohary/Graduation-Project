@@ -1,0 +1,60 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Add Admin - Step 2{% endblock %}
+
+{% block nav_admin %}active{% endblock %}
+
+{% block header_title %}
+<i class="fas fa-user-cog"></i> Add New Administrator - Step 2
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-header">
+        {# Display user info for context #}
+        <h2><i class="fas fa-shield-alt"></i> Set Admin Level for {{ user.username }}</h2>
+        <p>User: {{ user.first_name }} {{ user.last_name }} (ID: {{ user.user_id }})</p>
+    </div>
+
+    {# Pass the user_id in the action URL #}
+    <form action="{{ url_for('admin_management.add_admin_step2', user_id=user.user_id) }}" method="POST">
+
+        <div class="form-group">
+            <label for="admin_level">Admin Level</label>
+            <select id="admin_level" name="admin_level" required>
+                {# Check if admin_levels list exists #}
+                {% if admin_levels %}
+                    {# Loop through the levels passed from the Python route #}
+                    {% for level in admin_levels %}
+                        <option value="{{ level }}"
+                                {# Select 'standard' by default, or previously invalid selection #}
+                                {% if selected_level and selected_level == level %}
+                                    selected
+                                {% elif not selected_level and level == 'standard' %}
+                                    selected
+                                {% endif %}>
+                            {{ level.replace('_', ' ').title() }} {# Display nicely #}
+                        </option>
+                    {% endfor %}
+                {% else %}
+                    {# Fallback if admin_levels list is empty #}
+                    <option value="" disabled selected>Error loading levels</option>
+                {% endif %}
+            </select>
+             {% if selected_level and selected_level not in admin_levels %}
+                <div class="validation-error">Invalid level previously selected.</div>
+             {% endif %}
+        </div>
+
+        <div class="form-actions">
+            {# Optional: Link back to index or step 1 if needed #}
+            <a href="{{ url_for('admin_management.index') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-primary"> {# Use primary for update-like action #}
+                <i class="fas fa-save"></i> Set Admin Level & Finish
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

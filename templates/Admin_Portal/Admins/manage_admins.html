@@ -1,84 +1,171 @@
 {% extends "Admin_Portal/base.html" %}
 
-{% block title %}Manage Patients - Hospital Admin Dashboard{% endblock %}
+{% block title %}Admin Management{% endblock %}
 
-{% block nav_patients %}active{% endblock %}
+{% block nav_admin %}active{% endblock %}
 
-{% block header_title %}<i class="fas fa-user-injured"></i> Manage Patients{% endblock %}
+{% block header_title %}
+{# Use standard h1.page-title structure #}
+<h1 class="page-title">
+    <i class="fas fa-user-shield"></i> Admin Management
+</h1>
+{% endblock %}
+
+{# Define the sort_url macro (or ensure it's globally available via context processor) #}
+{% macro sort_url(field, current_sort_by, current_sort_order, current_search_term, current_page) %}
+    {% set new_sort_order = 'desc' if current_sort_by == field and current_sort_order == 'asc' else 'asc' %}
+    {# Preserve search term and current page when changing sort #}
+    {{ url_for('admin_management.index', sort_by=field, sort_order=new_sort_order, q=current_search_term, page=current_page) }}
+{% endmacro %}
 
 {% block content %}
-<div class="List-container">
-    <!-- Flash Messages -->
-    <div class="flash-messages">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>
+{# Use lowercase list-container, optionally add .card #}
+<div class="list-container card">
 
-    <div class="search-add-container">
-        <form action="{{ url_for('admin_patients.index') }}" method="GET" class="search-container">
-            <input type="text" id="searchPatients" name="search" placeholder="Search patients..." value="{{ search_query }}">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-search"></i> Search
-            </button>
-            {% if search_query %}
-            <a href="{{ url_for('admin_patients.index') }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> Clear
-            </a>
-            {% endif %}
-        </form>
-        <a href="{{ url_for('admin_patients.add_patient_form') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add New Patient
+    {# --- Search and Add Controls --- #}
+    <div class="list-controls"> {# Use this as the main container #}
+        {# Search Form Section #}
+        <div class="search-filter-container">
+            <form method="GET" action="{{ url_for('admin_management.index') }}" class="d-flex flex-grow-1 gap-2"> {# Added gap-2 for spacing #}
+                 {# Hidden inputs to preserve sort order during search. Search usually resets page. #}
+                 <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                 <input type="hidden" name="sort_order" value="{{ sort_order }}">
+
+                 <input type="text" id="search-input" name="q" class="form-control flex-grow-1" placeholder="Search name or email..." value="{{ search_term or '' }}">
+                 <button type="submit" class="btn btn-outline-secondary flex-shrink-0">Search</button> {# Added flex-shrink-0 #}
+            </form>
+        </div>
+        {# Add Button Section #}
+        <a href="{{ url_for('admin_management.add_admin_step1_form') }}" class="btn btn-primary flex-shrink-0"> {# Added flex-shrink-0 #}
+            <i class="fas fa-plus"></i> Add New Admin
         </a>
     </div>
 
-    {% if patients %}
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Date of Birth</th>
-                <th>Gender</th>
-                <th>Blood Type</th>
-                <th>Insurance</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for patient in patients %}
-            <tr>
-                <td>{{ patient.user_id }}</td>
-                <td>{{ patient.first_name }} {{ patient.last_name }}</td>
-                <td>{{ patient.email }}</td>
-                <td>{{ patient.phone }}</td>
-                <td>{{ patient.date_of_birth }}</td>
-                <td>{{ patient.gender }}</td>
-                <td>{{ patient.blood_type }}</td>
-                <td>{{ patient.insurance_provider }}</td>
-                <td class="actions">
-                    <a href="{{ url_for('admin_patients.view_patient', patient_id=patient.user_id) }}" title="View Details" class="btn-icon view"><i class="fas fa-eye"></i></a>
-                    <a href="{{ url_for('admin_patients.edit_patient_form', patient_id=patient.user_id) }}" title="Edit" class="btn-icon edit"><i class="fas fa-edit"></i></a>
-                    <a href="{{ url_for('admin_patients.delete_patient_form', patient_id=patient.user_id) }}" title="Delete" class="btn-icon btn-danger"><i class="fas fa-trash"></i></a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <div class="no-results">
-        {% if search_query %}
-            <p>No patients found matching "{{ search_query }}".</p>
-        {% else %}
-            <p>No patients found in the system.</p>
-        {% endif %}
-    </div>
-    {% endif %}
-</div>
+    {# Flash messages handled in base.html #}
+
+    {# --- Table Container --- #}
+    <div class="table-container">
+        {# Use lowercase list-table #}
+        <table class="list-table">
+            <thead>
+                <tr>
+                    {# Sortable Headers #}
+                    <th><a href="{{ sort_url('last_name', sort_by, sort_order, search_term, page) }}">Name {% if sort_by == 'last_name' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
+                    <th><a href="{{ sort_url('email', sort_by, sort_order, search_term, page) }}">Email {% if sort_by == 'email' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
+                    <th>Phone</th> {# Not sorted #}
+                    <th><a href="{{ sort_url('admin_level', sort_by, sort_order, search_term, page) }}">Admin Level {% if sort_by == 'admin_level' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
+                    <th class="actions-cell">Actions</th> {# No sorting #}
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in admins %} {# Loop through paginated/searched/sorted admins #}
+                <tr>
+                    <td data-label="Name">{{ admin.first_name }} {{ admin.last_name }}</td>
+                    <td data-label="Email">{{ admin.email }}</td>
+                    <td data-label="Phone">{{ admin.phone or 'N/A' }}</td>
+                    <td data-label="Admin Level">{{ admin.admin_level|capitalize }}</td>
+                    <td class="actions-cell action-buttons">
+                        <a href="{{ url_for('admin_management.edit_admin_form', admin_id=admin.user_id) }}"
+                           class="btn btn-icon edit" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        {# Prevent deleting self - link could be disabled or hidden in template too #}
+                        {% if admin.user_id != current_user.id %}
+                            <a href="{{ url_for('admin_management.delete_admin_form', admin_id=admin.user_id) }}"
+                               class="btn btn-icon delete" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        {% else %}
+                            {# Optionally show a disabled button or nothing #}
+                             <span class="btn btn-icon disabled" title="Cannot delete self">
+                                <i class="fas fa-trash"></i>
+                            </span>
+                        {% endif %}
+                        {# Add view button if applicable #}
+                        {# <a href="{{ url_for('admin_management.view_admin', admin_id=admin.user_id) }}"
+                           class="btn btn-icon view" title="View">
+                            <i class="fas fa-eye"></i>
+                        </a> #}
+                    </td>
+                </tr>
+                {% endfor %} {# End loop through admins #}
+
+                {# This {% else %} block inside tbody is usually for when the *entire query* returns nothing,
+                   but we now handle the "no results found" message below the table
+                   based on the total_items count after filtering/searching.
+                   So, we can remove this specific {% else %} block inside the loop. #}
+                {# {% else %}
+                <tr>
+                    <td colspan="5">
+                        <div class="no-results"> ... </div>
+                    </td>
+                </tr>
+                {% endfor %} #}
+
+            </tbody>
+        </table>
+    </div> {# End table-container #}
+
+    {# --- Pagination and No Results --- #}
+    <div class="pagination-summary-container mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2"> {# Wrapper for summary and pagination #}
+        {# Pagination Summary #}
+        <div>
+            {% if total_items > 0 %}
+                <small class="text-muted">
+                    Showing {{ ((page - 1) * per_page) + 1 }}-{{ [((page - 1) * per_page) + admins|length, total_items]|min }} of {{ total_items }} Admins
+                </small>
+            {% endif %}
+        </div>
+
+        {# Pagination Controls #}
+        {% if total_pages > 1 %}
+        <nav aria-label="Admin pagination">
+            <ul class="pagination pagination-sm mb-0"> {# pagination-sm for smaller controls #}
+                {# Previous Page Link #}
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin_management.index', page=page-1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}" aria-label="Previous">
+                        «
+                    </a>
+                </li>
+
+                {# Page Numbers (Basic Example - Consider a macro for more complex logic) #}
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                        <li class="page-item active" aria-current="page"><span class="page-link">{{ p }}</span></li>
+                    {% elif p >= page - 2 and p <= page + 2 %} {# Show nearby pages #}
+                        <li class="page-item"><a class="page-link" href="{{ url_for('admin_management.index', page=p, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">{{ p }}</a></li>
+                    {% elif p == page - 3 or p == page + 3 %} {# Ellipsis #}
+                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                 {% endfor %}
+
+
+                {# Next Page Link #}
+                <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin_management.index', page=page+1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}" aria-label="Next">
+                        »
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %} {# End if total_pages > 1 #}
+    </div> {# End pagination-summary-container #}
+
+    {# No Results Message (Displayed if search/filters yield nothing OR if table is initially empty) #}
+    {% if total_items == 0 %}
+       <div class="no-results mt-4"> {# Add margin-top #}
+            <i class="fas fa-user-shield placeholder-icon"></i>
+            {% if search_term %}
+                <p>No administrators found matching your search for "{{ search_term }}".</p>
+                {# Optional: Link to clear search #}
+                <a href="{{ url_for('admin_management.index', sort_by=sort_by, sort_order=sort_order) }}" class="btn btn-sm btn-outline-secondary">Clear Search</a>
+            {% else %}
+                <p>No administrators have been added yet.</p>
+                <a href="{{ url_for('admin_management.add_admin_form') }}" class="btn btn-sm btn-outline-primary">Add your first admin</a>
+            {% endif %}
+       </div>
+    {% endif %} {# End if total_items == 0 #}
+
+
+</div> {# End list-container #}
 {% endblock %}
