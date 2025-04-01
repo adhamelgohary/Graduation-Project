@@ -47,11 +47,6 @@
                     <i class="fas fa-calendar-alt"></i> Manage Appointments
                 </a>
             </li>
-            <li class="{% block nav_audit %}{% endblock %}">
-                <a href="{{ url_for('admin_audit.index') }}">
-                    <i class="fas fa-history"></i> Audit Logs
-                </a>
-            </li>
             <li class="{% block nav_doc_app %}{% endblock %}">
                 <a href="{{ url_for('registration_approval.index') }}">
                     <i class="fas fa-user-check"></i> Doctor Approvals

@@ -11,19 +11,28 @@
     <div class="card-header">
         <h2><i class="fas fa-user-tag"></i> {{ registration.first_name }} {{ registration.last_name }} ({{ registration.user_type | capitalize }})</h2>
         <div class="card-header-actions">
+             {# --- STATUS BADGE UPDATED --- #}
              <span class="status-badge {{ registration.status }}">
-                {% if registration.status == 'pending' %}<i class="fas fa-hourglass-half"></i>
-                {% elif registration.status == 'approved' %}<i class="fas fa-check-circle"></i>
-                {% elif registration.status == 'rejected' %}<i class="fas fa-times-circle"></i>
+                {% if registration.status == 'pending' %}
+                    <i class="fas fa-hourglass-half"></i> Pending Review
+                {% elif registration.status == 'approved_user_created' %}
+                    <i class="fas fa-user-check"></i> Step 1 Approved (User Created)
+                {% elif registration.status == 'approved' %}
+                    <i class="fas fa-check-circle"></i> Approved & Active
+                {% elif registration.status == 'rejected' %}
+                    <i class="fas fa-times-circle"></i> Rejected
+                {% else %}
+                     {{ registration.status | replace('_', ' ') | title }} {# Fallback #}
                 {% endif %}
-                {{ registration.status | replace('_', ' ') | title }}
             </span>
+             {# --- END STATUS BADGE UPDATE --- #}
             <a href="{{ url_for('registration_approval.index', status=registration.status) }}" class="btn btn-sm btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to List
             </a>
         </div>
     </div>
 
+    {# --- General Information (No changes needed) --- #}
     <div class="info-section">
         <h3 class="info-section-header"><i class="fas fa-info-circle"></i> General Information</h3>
         <div class="detail-row">
@@ -48,7 +57,7 @@
         </div>
     </div>
 
-    {# --- Patient Specific Section --- #}
+    {# --- Patient Specific Section (No changes needed) --- #}
     {% if registration.user_type == 'patient' %}
     <div class="info-section">
         <h3 class="info-section-header"><i class="fas fa-procedures"></i> Patient Information</h3>
@@ -62,7 +71,7 @@
         </div>
          <div class="detail-row">
             <div class="detail-label">Insurance Provider (Name)</div>
-            <div class="detail-value">{{ registration.insurance_provider or 'N/A' }}</div>
+            <div class="detail-value">{{ registration.insurance_provider or 'N/A' }}</div> {# Assumes this field exists in pending_registrations #}
         </div>
          <div class="detail-row">
             <div class="detail-label">Policy Number</div>
@@ -72,11 +81,10 @@
             <div class="detail-label">Group Number</div>
             <div class="detail-value">{{ registration.insurance_group_number or 'N/A' }}</div>
         </div>
-         {# Add other patient fields from pending_registrations if they exist #}
     </div>
     {% endif %}
 
-    {# --- Doctor Specific Section --- #}
+    {# --- Doctor Specific Section (No changes needed) --- #}
     {% if registration.user_type == 'doctor' %}
     <div class="info-section">
         <h3 class="info-section-header"><i class="fas fa-stethoscope"></i> Doctor Information</h3>
@@ -96,11 +104,11 @@
             <div class="detail-label">License Expiration</div>
             <div class="detail-value">{{ registration.license_expiration.strftime('%Y-%m-%d') if registration.license_expiration else 'N/A' }}</div>
         </div>
-         {# Add other doctor fields from pending_registrations if they exist #}
     </div>
     {% endif %}
 
-     {# --- Processing Information --- #}
+     {# --- Processing Information (Updated logic for notes) --- #}
+     {# Show if status is NOT pending #}
      {% if registration.status != 'pending' %}
      <div class="info-section">
         <h3 class="info-section-header"><i class="fas fa-tasks"></i> Processing Information</h3>
@@ -112,29 +120,40 @@
             <div class="detail-label">Processed On</div>
             <div class="detail-value">{{ registration.date_processed.strftime('%Y-%m-%d %H:%M:%S') if registration.date_processed else 'N/A' }}</div>
         </div>
+         {# Show notes based on status #}
          {% if registration.status == 'rejected' and registration.notes %}
          <div class="detail-row">
             <div class="detail-label">Rejection Reason</div>
             <div class="detail-value" style="white-space: pre-wrap;">{{ registration.notes }}</div>
         </div>
-         {% elif registration.notes %}
+         {% elif registration.status == 'approved_user_created' %}
+         <div class="detail-row">
+             <div class="detail-label">Next Step</div>
+             <div class="detail-value">
+                 <strong class="text-warning"><i class="fas fa-exclamation-triangle"></i> Awaiting Activation (Step 2)</strong><br>
+                 The basic user record has been created. Final activation and password setup are required.
+                 {# Optionally add a button/link here to trigger Step 2 if you have that workflow #}
+                 {# <a href="{{ url_for('some_activation_route', reg_id=registration.id) }}" class="btn btn-sm btn-warning mt-2"><i class="fas fa-key"></i> Proceed to Activation</a> #}
+            </div>
+         </div>
+         {% elif registration.notes %} {# Generic notes for 'approved' or other statuses #}
           <div class="detail-row">
             <div class="detail-label">Processing Notes</div>
             <div class="detail-value" style="white-space: pre-wrap;">{{ registration.notes }}</div>
-        </div>
+          </div>
          {% endif %}
      </div>
      {% endif %}
 
 
-     {# --- Action Buttons (Only if Pending) --- #}
+     {# --- Action Buttons (Only if Pending) --- UPDATED --- #}
      {% if registration.status == 'pending' %}
      <div class="form-actions"> {# Use form-actions styling #}
-        {# Approve Button (triggers a simple POST) #}
-        <form action="{{ url_for('registration_approval.approve_registration', reg_id=registration.id) }}" method="POST" style="display: inline;">
-             {# Add hidden input for CSRF token if using Flask-WTF #}
+        {# Approve Button (Step 1) #}
+        <form action="{{ url_for('registration_approval.approve_registration', reg_id=registration.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('This will create the basic user record (Step 1). Activation (Step 2) will be required afterwards. Proceed?');">
+             {# Add hidden input for CSRF token if using Flask-WTF: {{ form.csrf_token }} #}
              <button type="submit" class="btn btn-success">
-                <i class="fas fa-check"></i> Approve Registration
+                <i class="fas fa-user-plus"></i> Approve Step 1 (Create User)
             </button>
         </form>
 
@@ -143,42 +162,81 @@
             <i class="fas fa-times"></i> Reject Registration
         </button>
      </div>
-     {% endif %}
+     {% endif %} {# End action buttons for pending status #}
 
 </div> {# End card #}
 
 
-{# --- Rejection Modal --- #}
+{# --- Rejection Modal (Only shown if Pending) --- #}
 {% if registration.status == 'pending' %}
 <div class="modal-overlay" id="rejectModal">
     <div class="modal-content">
         <div class="modal-header">
             <h2><i class="fas fa-times-circle"></i> Reject Registration</h2>
-            <button type="button" class="modal-close-btn">×</button>
+            <button type="button" class="modal-close-btn">×</button> {# Assumes you have JS to handle modal close #}
         </div>
         <form action="{{ url_for('registration_approval.reject_registration', reg_id=registration.id) }}" method="POST">
-             {# Add hidden input for CSRF token if using Flask-WTF #}
+             {# Add hidden input for CSRF token if using Flask-WTF: {{ form.csrf_token }} #}
             <div class="modal-body">
                  <p>Please provide a reason for rejecting the registration for <strong>{{ registration.first_name }} {{ registration.last_name }}</strong>.</p>
                  <div class="form-group">
-                    <label for="rejection_reason">Rejection Reason <span style="color:red;">*</span></label>
+                    <label for="rejection_reason">Rejection Reason <span class="text-danger">*</span></label> {# Use text-danger for bootstrap-like styling #}
                     <textarea id="rejection_reason" name="rejection_reason" class="form-control" rows="4" required placeholder="Enter reason for rejection..."></textarea>
                 </div>
             </div>
             <div class="modal-actions">
-                <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button>
+                <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button> {# Assumes you have JS to handle modal close/cancel #}
                 <button type="submit" class="btn btn-danger">Confirm Rejection</button>
             </div>
         </form>
     </div>
 </div>
-{% endif %}
+{% endif %} {# End rejection modal #}
 
 {% endblock %}
 
 {% block scripts_extra %}
-{# Add any page-specific JS here, e.g., for more complex modal interactions #}
+{# Basic JS for Modal - Adapt if using a JS framework like Bootstrap #}
 <script>
-// Add specific JS for this page if needed
+document.addEventListener('DOMContentLoaded', () => {
+    const modalTriggers = document.querySelectorAll('[data-modal-target]');
+    const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-cancel-btn');
+    const overlays = document.querySelectorAll('.modal-overlay');
+
+    modalTriggers.forEach(button => {
+        button.addEventListener('click', () => {
+            const modalId = button.getAttribute('data-modal-target');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex'; // Or 'block', depending on your CSS for centering
+            }
+        });
+    });
+
+    const closeModal = (modal) => {
+        if (modal) {
+            modal.style.display = 'none';
+            // Reset textarea if needed
+            const textarea = modal.querySelector('textarea[name="rejection_reason"]');
+            if (textarea) textarea.value = '';
+        }
+    };
+
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const modal = button.closest('.modal-overlay');
+            closeModal(modal);
+        });
+    });
+
+    // Close modal if clicking outside the modal content
+    overlays.forEach(overlay => {
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) { // Check if the click was directly on the overlay
+                closeModal(overlay);
+            }
+        });
+    });
+});
 </script>
 {% endblock %}

@@ -6,7 +6,6 @@ from routes.Admin_Portal.Dashboard import admin_main
 from routes.Admin_Portal.Admins_Management import admin_management
 from routes.Admin_Portal.Doctors_Management import Doctors_Management
 from routes.Admin_Portal.Patient_Management import patient_management
-from routes.Admin_Portal.Audit_Logs import admin_audit
 from routes.Admin_Portal.Registiration_Approval_System import registration_approval
 
 
@@ -34,7 +33,6 @@ app.register_blueprint(admin_main)
 app.register_blueprint(admin_management)
 app.register_blueprint(Doctors_Management)
 app.register_blueprint(patient_management)
-app.register_blueprint(admin_audit)
 app.register_blueprint(registration_approval)
 
 # Initialize login manager
