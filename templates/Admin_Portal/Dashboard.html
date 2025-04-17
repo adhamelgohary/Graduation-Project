@@ -13,35 +13,41 @@
     <div class="stat-card primary">
         <div class="stat-icon"><i class="fas fa-user-md"></i></div>
         <div class="stat-details">
-            <h3>{{ total_doctors }}</h3>
+            <h3>{{ total_doctors | default(0) }}</h3>
             <p>Total Doctors</p>
         </div>
     </div>
     <div class="stat-card success">
         <div class="stat-icon"><i class="fas fa-user-injured"></i></div>
         <div class="stat-details">
-            <h3>{{ total_patients }}</h3>
+            <h3>{{ total_patients | default(0) }}</h3>
             <p>Total Patients</p>
         </div>
     </div>
     <div class="stat-card warning">
         <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
         <div class="stat-details">
-            <h3>{{ appointments_today }}</h3>
+            <h3>{{ appointments_today | default(0) }}</h3>
             <p>Today's Appointments</p>
         </div>
     </div>
     <div class="stat-card danger">
         <div class="stat-icon"><i class="fas fa-clock"></i></div>
         <div class="stat-details">
-            <h3>{{ pending_approvals }}</h3>
-            <p>Pending Approvals</p>
+            <h3>{{ pending_appointment_approvals | default(0) }}</h3>
+            <p>Pending Appt. Approvals</p>
+        </div>
+    </div>
+     <div class="stat-card info">
+        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
+        <div class="stat-details">
+            <h3>{{ pending_doctor_verification | default(0) }}</h3>
+            <p>Pending Doctor Verifications</p>
         </div>
     </div>
 </div>
 
 <div class="dashboard-grid">
-    <!-- Chart: Monthly Appointments -->
     <div class="dashboard-card">
         <div class="card-header">
             <h3><i class="fas fa-chart-line"></i> Monthly Appointments</h3>
@@ -50,8 +56,7 @@
             <canvas id="appointmentsChart"></canvas>
         </div>
     </div>
-    
-    <!-- Chart: User Type Distribution -->
+
     <div class="dashboard-card">
         <div class="card-header">
             <h3><i class="fas fa-users"></i> User Distribution</h3>
@@ -60,8 +65,7 @@
             <canvas id="userDistributionChart"></canvas>
         </div>
     </div>
-    
-    <!-- Chart: Appointment Status -->
+
     <div class="dashboard-card">
         <div class="card-header">
             <h3><i class="fas fa-chart-pie"></i> Appointment Status</h3>
@@ -70,45 +74,48 @@
             <canvas id="appointmentStatusChart"></canvas>
         </div>
     </div>
-    
-    <!-- Recent Users -->
+
     <div class="dashboard-card">
         <div class="card-header">
             <h3><i class="fas fa-user-plus"></i> New Users</h3>
         </div>
         <div class="card-body">
             <div class="user-list">
-                {% for user in newest_users %}
-                <div class="user-item">
-                    <div class="user-avatar">
-                        {% if user.user_type == 'doctor' %}
-                        <i class="fas fa-user-md"></i>
-                        {% elif user.user_type == 'patient' %}
-                        <i class="fas fa-user-injured"></i>
-                        {% elif user.user_type == 'admin' %}
-                        <i class="fas fa-user-shield"></i>
-                        {% else %}
-                        <i class="fas fa-user"></i>
-                        {% endif %}
+                {% if newest_users %}
+                    {% for user in newest_users %}
+                    <div class="user-item">
+                        <div class="user-avatar">
+                            {% if user.user_type == 'doctor' %}
+                            <i class="fas fa-user-md"></i>
+                            {% elif user.user_type == 'patient' %}
+                            <i class="fas fa-user-injured"></i>
+                            {% elif user.user_type == 'admin' %}
+                            <i class="fas fa-user-shield"></i>
+                            {% else %}
+                            <i class="fas fa-user"></i>
+                            {% endif %}
+                        </div>
+                        <div class="user-info">
+                            <h4>{{ user.name }}</h4>
+                            <p>{{ user.user_type | capitalize }} • {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}</p>
+                        </div>
                     </div>
-                    <div class="user-info">
-                        <h4>{{ user.name }}</h4>
-                        <p>{{ user.user_type | capitalize }} • {{ user.created_at.strftime('%b %d, %Y') }}</p>
-                    </div>
-                </div>
-                {% endfor %}
+                    {% endfor %}
+                {% else %}
+                    <p>No recent users found.</p>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Appointments Table -->
 <div class="dashboard-card full-width">
     <div class="card-header">
         <h3><i class="fas fa-calendar-check"></i> Recent Appointments</h3>
-        <a href="#appointments" class="btn"><i class="fas fa-external-link-alt"></i> View All</a>
+        <a href="{{ url_for('admin_appointments.view_appointments') if false else '#' }}" class="btn"><i class="fas fa-external-link-alt"></i> View All</a>
     </div>
     <div class="card-body">
+        {% if appointments %}
         <table class="data-table">
             <thead>
                 <tr>
@@ -128,106 +135,166 @@
                     <td>#{{ appointment.appointment_id }}</td>
                     <td>{{ appointment.patient_name }}</td>
                     <td>{{ appointment.doctor_name }}</td>
-                    <td>{{ appointment.appointment_date.strftime('%b %d, %Y') }}</td>
-                    <td>{{ appointment.start_time.strftime('%I:%M %p') }}</td>
+                    <td>{{ appointment.appointment_date.strftime('%b %d, %Y') if appointment.appointment_date else 'N/A' }}</td>
+                    <td>{{ appointment.start_time.strftime('%I:%M %p') if appointment.start_time else 'N/A' }}</td>
                     <td>
-                        <span class="badge {{ appointment.appointment_type }}">
-                            {{ appointment.appointment_type | capitalize }}
+                        <span class="badge {{ appointment.appointment_type | lower | replace(' ', '-') | default('unknown') }}">
+                            {{ appointment.appointment_type | capitalize | default('N/A') }}
                         </span>
                     </td>
                     <td>
-                        <span class="status-badge {{ appointment.status }}">
-                            {{ appointment.status | capitalize }}
+                         <span class="status-badge {{ appointment.status | lower | replace(' ', '-') | default('unknown') }}">
+                            {{ appointment.status | capitalize | default('N/A') }}
                         </span>
                     </td>
                     <td>
                         <div class="actions">
-                            <button class="btn-icon view"><i class="fas fa-eye"></i></button>
-                            <button class="btn-icon edit"><i class="fas fa-edit"></i></button>
+                            <button class="btn-icon view" title="View Details"><i class="fas fa-eye"></i></button>
+                            <button class="btn-icon edit" title="Edit Appointment"><i class="fas fa-edit"></i></button>
                         </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% else %}
+            <p>No recent appointments found.</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // Monthly Appointments Chart
-const months = JSON.parse('{{ monthly_appointments|map(attribute="month")|list|tojson|safe }}');
-const appointmentCounts = JSON.parse('{{ monthly_appointments|map(attribute="count")|list|tojson|safe }}');
+document.addEventListener('DOMContentLoaded', function() {
 
-new Chart(document.getElementById('appointmentsChart'), {
-    type: 'line',
-    data: {
-        labels: months,
-        datasets: [{
-            label: 'Monthly Appointments',
-            data: appointmentCounts,
-            backgroundColor: 'rgba(52, 152, 219, 0.2)',
-            borderColor: 'rgba(52, 152, 219, 1)',
-            borderWidth: 2,
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false
-    }
-});
+  const appointmentsCtx = document.getElementById('appointmentsChart');
+  if (appointmentsCtx) {
+      try {
+          const months = JSON.parse('{{ monthly_appointments|map(attribute="month")|list|tojson|safe }}');
+          const appointmentCounts = JSON.parse('{{ monthly_appointments|map(attribute="count")|list|tojson|safe }}');
 
-// User Type Distribution Chart
-const userTypes = JSON.parse('{{ user_type_distribution|map(attribute="user_type")|list|tojson|safe }}');
-const userCounts = JSON.parse('{{ user_type_distribution|map(attribute="count")|list|tojson|safe }}');
+          if (months.length > 0) {
+              new Chart(appointmentsCtx, {
+                  type: 'line',
+                  data: {
+                      labels: months,
+                      datasets: [{
+                          label: 'Monthly Appointments',
+                          data: appointmentCounts,
+                          backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                          borderColor: 'rgba(52, 152, 219, 1)',
+                          borderWidth: 2,
+                          tension: 0.4,
+                          fill: true
+                      }]
+                  },
+                  options: {
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: { y: { beginAtZero: true } }
+                  }
+              });
+          } else {
+              appointmentsCtx.parentElement.innerHTML = '<p class="text-center">No monthly appointment data available.</p>';
+          }
+      } catch (e) {
+          console.error("Error parsing monthly appointments data:", e);
+          appointmentsCtx.parentElement.innerHTML = '<p class="text-center text-danger">Error loading chart data.</p>';
+      }
+  } else {
+      console.warn("Element with ID 'appointmentsChart' not found.");
+  }
 
-new Chart(document.getElementById('userDistributionChart'), {
-    type: 'doughnut',
-    data: {
-        labels: userTypes,
-        datasets: [{
-            data: userCounts,
-            backgroundColor: [
-                'rgba(52, 152, 219, 0.7)',
-                'rgba(46, 204, 113, 0.7)',
-                'rgba(155, 89, 182, 0.7)',
-                'rgba(230, 126, 34, 0.7)'
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false
-    }
-});
+  const userDistCtx = document.getElementById('userDistributionChart');
+  if (userDistCtx) {
+      try {
+          const userTypes = JSON.parse('{{ user_type_distribution|map(attribute="user_type")|list|tojson|safe }}');
+          const userCounts = JSON.parse('{{ user_type_distribution|map(attribute="count")|list|tojson|safe }}');
+          const backgroundColorsUser = [
+              'rgba(52, 152, 219, 0.7)',
+              'rgba(46, 204, 113, 0.7)',
+              'rgba(155, 89, 182, 0.7)',
+              'rgba(230, 126, 34, 0.7)',
+              'rgba(241, 196, 15, 0.7)',
+              'rgba(231, 76, 60, 0.7)'
+          ];
 
-// Appointment Status Chart
-const statusTypes = JSON.parse('{{ appointment_status_stats|map(attribute="status")|list|tojson|safe }}');
-const statusCounts = JSON.parse('{{ appointment_status_stats|map(attribute="count")|list|tojson|safe }}');
+          if (userTypes.length > 0) {
+              new Chart(userDistCtx, {
+                  type: 'doughnut',
+                  data: {
+                      labels: userTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)),
+                      datasets: [{
+                          label: 'User Distribution',
+                          data: userCounts,
+                          backgroundColor: backgroundColorsUser.slice(0, userCounts.length),
+                          borderColor: '#ffffff',
+                          borderWidth: 2
+                      }]
+                  },
+                  options: {
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: { legend: { position: 'top' } }
+                  }
+              });
+          } else {
+              userDistCtx.parentElement.innerHTML = '<p class="text-center">No user distribution data available.</p>';
+          }
+      } catch (e) {
+           console.error("Error parsing user distribution data:", e);
+           userDistCtx.parentElement.innerHTML = '<p class="text-center text-danger">Error loading chart data.</p>';
+      }
+  } else {
+      console.warn("Element with ID 'userDistributionChart' not found.");
+  }
 
-new Chart(document.getElementById('appointmentStatusChart'), {
-    type: 'pie',
-    data: {
-        labels: statusTypes,
-        datasets: [{
-            data: statusCounts,
-            backgroundColor: [
-                'rgba(46, 204, 113, 0.7)',
-                'rgba(52, 152, 219, 0.7)',
-                'rgba(241, 196, 15, 0.7)',
-                'rgba(231, 76, 60, 0.7)',
-                'rgba(155, 89, 182, 0.7)'
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false
-    }
+  const apptStatusCtx = document.getElementById('appointmentStatusChart');
+  if (apptStatusCtx) {
+      try {
+          const statusTypes = JSON.parse('{{ appointment_status_stats|map(attribute="status")|list|tojson|safe }}');
+          const statusCounts = JSON.parse('{{ appointment_status_stats|map(attribute="count")|list|tojson|safe }}');
+          const backgroundColorsStatus = [
+              'rgba(241, 196, 15, 0.7)',
+              'rgba(46, 204, 113, 0.7)',
+              'rgba(52, 152, 219, 0.7)',
+              'rgba(231, 76, 60, 0.7)',
+              'rgba(149, 165, 166, 0.7)',
+              'rgba(155, 89, 182, 0.7)'
+          ];
+
+          if (statusTypes.length > 0) {
+              new Chart(apptStatusCtx, {
+                  type: 'pie',
+                  data: {
+                      labels: statusTypes.map(status => status.replace('-', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')),
+                      datasets: [{
+                          label: 'Appointment Status',
+                          data: statusCounts,
+                          backgroundColor: backgroundColorsStatus.slice(0, statusCounts.length),
+                          borderColor: '#ffffff',
+                          borderWidth: 2
+                      }]
+                  },
+                  options: {
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: { legend: { position: 'top' } }
+                  }
+              });
+          } else {
+               apptStatusCtx.parentElement.innerHTML = '<p class="text-center">No appointment status data available.</p>';
+          }
+      } catch (e) {
+           console.error("Error parsing appointment status data:", e);
+           apptStatusCtx.parentElement.innerHTML = '<p class="text-center text-danger">Error loading chart data.</p>';
+      }
+  } else {
+      console.warn("Element with ID 'appointmentStatusChart' not found.");
+  }
+
 });
 </script>
 {% endblock %}

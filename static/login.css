@@ -32,6 +32,9 @@ body {
     z-index: 1;
     background-color: #05152a;
 }
+.alert alert-error{
+    color: #ff4d4d;
+}
 
 .illustration {
     position: absolute;
