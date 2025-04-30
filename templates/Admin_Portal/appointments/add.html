@@ -1,0 +1,154 @@
+{% extends "Admin_Portal/base_admin.html" %}
+
+{% block title %}Add New Appointment{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment_management.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Add New Appointment</h1>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin_appointments.list_appointments') }}">Appointments List</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Add Appointment</li>
+  </ol>
+</nav>
+<hr>
+
+{% if errors.get('conflict') %}<div class="alert alert-danger">{{ errors.get('conflict') }}</div>{% endif %}
+{% if errors.get('general') %}<div class="alert alert-danger">{{ errors.get('general') }}</div>{% endif %}
+
+<div class="card shadow-sm">
+<div class="card-body">
+<form method="POST" action="{{ url_for('admin_appointments.add_appointment') }}">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="patient_id" class="form-label">Patient <span class="text-danger">*</span></label>
+            <select class="form-select {% if errors.get('patient_id') %}is-invalid{% endif %}" id="patient_id" name="patient_id" required>
+                <option value="" {% if not appointment.patient_id %}selected{% endif %} disabled>-- Select Patient --</option>
+                {% for pat in patients %}
+                <option value="{{ pat.user_id }}" {% if appointment.patient_id|int == pat.user_id %}selected{% endif %}>{{ pat.full_name }} (ID: {{ pat.user_id }})</option>
+                {% endfor %}
+            </select>
+            {% if errors.get('patient_id') %}<div class="invalid-feedback">{{ errors.get('patient_id') }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="doctor_id" class="form-label">Doctor <span class="text-danger">*</span></label>
+            <select class="form-select {% if errors.get('doctor_id') %}is-invalid{% endif %}" id="doctor_id" name="doctor_id" required>
+                 <option value="" {% if not appointment.doctor_id %}selected{% endif %} disabled>-- Select Doctor --</option>
+                {% for doc in doctors %}
+                <option value="{{ doc.user_id }}" {% if appointment.doctor_id|int == doc.user_id %}selected{% endif %}>{{ doc.full_name }} (ID: {{ doc.user_id }})</option>
+                {% endfor %}
+            </select>
+             {% if errors.get('doctor_id') %}<div class="invalid-feedback">{{ errors.get('doctor_id') }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+             <label for="appointment_date" class="form-label">Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control {% if errors.get('appointment_date') %}is-invalid{% endif %}" id="appointment_date" name="appointment_date" value="{{ appointment.appointment_date or '' }}" required>
+             {% if errors.get('appointment_date') %}<div class="invalid-feedback">{{ errors.get('appointment_date') }}</div>{% endif %}
+        </div>
+
+         <div class="col-md-4">
+            <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+            <input type="time" class="form-control {% if errors.get('start_time') %}is-invalid{% endif %}" id="start_time" name="start_time" value="{{ appointment.start_time or '' }}" required step="300"> {# step="300" for 5 min intervals #}
+             {% if errors.get('start_time') %}<div class="invalid-feedback">{{ errors.get('start_time') }}</div>{% endif %}
+        </div>
+
+         <div class="col-md-4">
+            <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
+            <input type="time" class="form-control {% if errors.get('end_time') %}is-invalid{% endif %}" id="end_time" name="end_time" value="{{ appointment.end_time or '' }}" required step="300">
+             {% if errors.get('end_time') %}<div class="invalid-feedback">{{ errors.get('end_time') }}</div>{% endif %}
+        </div>
+
+         <div class="col-md-6">
+             <label for="appointment_type" class="form-label">Appointment Type <span class="text-danger">*</span></label>
+             <select class="form-select {% if errors.get('appointment_type') %}is-invalid{% endif %}" id="appointment_type" name="appointment_type" required>
+                 <option value="" {% if not appointment.appointment_type %}selected{% endif %} disabled>-- Select Type --</option>
+                 {# Use dynamic types from DB #}
+                 {% for type in appointment_types %}
+                 <option value="{{ type.type_name }}" data-duration="{{ type.default_duration_minutes }}" {% if appointment.appointment_type == type.type_name %}selected{% endif %}>{{ type.type_name | replace('-', ' ') | title }} ({{ type.default_duration_minutes }} min)</option>
+                 {% endfor %}
+             </select>
+             {% if errors.get('appointment_type') %}<div class="invalid-feedback">{{ errors.get('appointment_type') }}</div>{% endif %}
+        </div>
+
+         <div class="col-md-6">
+            <label for="status" class="form-label">Initial Status</label>
+             {# Default status set, maybe make read-only or use hidden field? Displaying it for clarity. #}
+            <input type="text" class="form-control" id="status_display" value="{{ default_status | replace('-', ' ') | title }}" readonly disabled>
+            <input type="hidden" name="status" value="{{ default_status }}"> {# Actual value submitted #}
+             <div class="form-text">Default status based on system settings.</div>
+        </div>
+
+        <div class="col-12">
+            <label for="reason" class="form-label">Reason for Visit</label>
+            <textarea class="form-control" id="reason" name="reason" rows="2">{{ appointment.reason or '' }}</textarea>
+        </div>
+
+        <div class="col-12">
+            <label for="notes" class="form-label">Internal Notes (Admin/Doctor)</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ appointment.notes or '' }}</textarea>
+        </div>
+
+        <div class="col-12 mt-3">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="override_restrictions" name="override_restrictions" {% if appointment.override_restrictions %}checked{% endif %}>
+                <label class="form-check-label" for="override_restrictions">
+                    Override Scheduling Restrictions (e.g., conflicts, past dates)
+                </label>
+            </div>
+            <div class="form-text text-warning small">Use with caution. This bypasses conflict checks and past date validation.</div>
+        </div>
+
+    </div>
+
+    <hr class="my-4">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-check me-1"></i> Create Appointment</button>
+    <a href="{{ url_for('admin_appointments.list_appointments') }}" class="btn btn-secondary">Cancel</a>
+</form>
+</div> {# End card-body #}
+</div> {# End card #}
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+    // Optional JS: Auto-fill end time based on type duration
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeSelect = document.getElementById('appointment_type');
+        const startTimeInput = document.getElementById('start_time');
+        const endTimeInput = document.getElementById('end_time');
+
+        if (typeSelect && startTimeInput && endTimeInput) {
+            typeSelect.addEventListener('change', updateEndTime);
+            startTimeInput.addEventListener('change', updateEndTime);
+        }
+
+        function updateEndTime() {
+            const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+            const duration = parseInt(selectedOption.dataset.duration, 10);
+            const startTimeValue = startTimeInput.value; // HH:MM
+
+            if (!isNaN(duration) && duration > 0 && startTimeValue) {
+                try {
+                    const [startHour, startMinute] = startTimeValue.split(':').map(Number);
+                    const startDate = new Date(); // Use temporary date object
+                    startDate.setHours(startHour, startMinute, 0, 0);
+
+                    const endDate = new Date(startDate.getTime() + duration * 60000); // Add duration in milliseconds
+
+                    const endHour = String(endDate.getHours()).padStart(2, '0');
+                    const endMinute = String(endDate.getMinutes()).padStart(2, '0');
+
+                    endTimeInput.value = `${endHour}:${endMinute}`;
+                } catch (e) {
+                    console.error("Error calculating end time:", e);
+                    // Don't automatically set end time if start time is invalid
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

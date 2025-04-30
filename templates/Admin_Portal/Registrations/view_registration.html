@@ -1,242 +1,286 @@
-{% extends "Admin_Portal/base.html" %}
+{# Admin_Portal/Registrations/view_registration.html #}
+{% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Registration Details{% endblock %}
-
-{% block header_icon %}<i class="fas fa-clipboard-list"></i>{% endblock %}
-{% block header_title %}Registration Details{% endblock %}
+{% block title %}View {{ registration_type }} Registration - {{ registration.username }}{% endblock %}
 
 {% block content %}
+<div class="container-fluid mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin_main.dashboard') }}">Admin Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('registration_approval.index') }}">{{ registration_type }} Registrations</a></li>
+            <li class="breadcrumb-item active" aria-current="page">View Registration #{{ registration.id }}</li>
+        </ol>
+    </nav>
 
-<div class="card"> {# Using card for padding/shadow #}
-    <div class="card-header">
-        <h2><i class="fas fa-user-tag"></i> {{ registration.first_name }} {{ registration.last_name }} ({{ registration.user_type | capitalize }})</h2>
-        <div class="card-header-actions">
-             {# --- STATUS BADGE UPDATED --- #}
-             <span class="status-badge {{ registration.status }}">
-                {% if registration.status == 'pending' %}
-                    <i class="fas fa-hourglass-half"></i> Pending Review
-                {% elif registration.status == 'approved_user_created' %}
-                    <i class="fas fa-user-check"></i> Step 1 Approved (User Created)
-                {% elif registration.status == 'approved' %}
-                    <i class="fas fa-check-circle"></i> Approved & Active
-                {% elif registration.status == 'rejected' %}
-                    <i class="fas fa-times-circle"></i> Rejected
-                {% else %}
-                     {{ registration.status | replace('_', ' ') | title }} {# Fallback #}
-                {% endif %}
-            </span>
-             {# --- END STATUS BADGE UPDATE --- #}
-            <a href="{{ url_for('registration_approval.index', status=registration.status) }}" class="btn btn-sm btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-        </div>
-    </div>
+    <h2>View {{ registration_type }} Registration Details</h2>
+    <hr>
 
-    {# --- General Information (No changes needed) --- #}
-    <div class="info-section">
-        <h3 class="info-section-header"><i class="fas fa-info-circle"></i> General Information</h3>
-        <div class="detail-row">
-            <div class="detail-label">Username</div>
-            <div class="detail-value">{{ registration.username }}</div>
-        </div>
-         <div class="detail-row">
-            <div class="detail-label">Email</div>
-            <div class="detail-value">{{ registration.email }}</div>
-        </div>
-         <div class="detail-row">
-            <div class="detail-label">Phone</div>
-            <div class="detail-value">{{ registration.phone or 'N/A' }}</div>
-        </div>
-         <div class="detail-row">
-            <div class="detail-label">Country</div>
-            <div class="detail-value">{{ registration.country or 'N/A' }}</div>
-        </div>
-        <div class="detail-row">
-            <div class="detail-label">Submitted On</div>
-            <div class="detail-value">{{ registration.date_submitted.strftime('%Y-%m-%d %H:%M:%S') if registration.date_submitted else 'N/A' }}</div>
-        </div>
-    </div>
+    {% include '_flash_messages.html' %}
 
-    {# --- Patient Specific Section (No changes needed) --- #}
-    {% if registration.user_type == 'patient' %}
-    <div class="info-section">
-        <h3 class="info-section-header"><i class="fas fa-procedures"></i> Patient Information</h3>
-         <div class="detail-row">
-            <div class="detail-label">Date of Birth</div>
-            <div class="detail-value">{{ registration.date_of_birth.strftime('%Y-%m-%d') if registration.date_of_birth else 'N/A' }}</div>
+    <div class="card mb-4">
+        <div class="card-header">
+            Registration Information (ID: {{ registration.id }}) - Status: <span class="badge bg-{{ registration.status|status_badge }}">{{ registration.status|title }}</span>
         </div>
-         <div class="detail-row">
-            <div class="detail-label">Gender</div>
-            <div class="detail-value">{{ registration.gender | capitalize or 'N/A' }}</div>
-        </div>
-         <div class="detail-row">
-            <div class="detail-label">Insurance Provider (Name)</div>
-            <div class="detail-value">{{ registration.insurance_provider or 'N/A' }}</div> {# Assumes this field exists in pending_registrations #}
-        </div>
-         <div class="detail-row">
-            <div class="detail-label">Policy Number</div>
-            <div class="detail-value">{{ registration.insurance_policy_number or 'N/A' }}</div>
-        </div>
-        <div class="detail-row">
-            <div class="detail-label">Group Number</div>
-            <div class="detail-value">{{ registration.insurance_group_number or 'N/A' }}</div>
-        </div>
-    </div>
-    {% endif %}
-
-    {# --- Doctor Specific Section (No changes needed) --- #}
-    {% if registration.user_type == 'doctor' %}
-    <div class="info-section">
-        <h3 class="info-section-header"><i class="fas fa-stethoscope"></i> Doctor Information</h3>
-        <div class="detail-row">
-            <div class="detail-label">Specialization</div>
-            <div class="detail-value">{{ registration.specialization or 'N/A' }}</div>
-        </div>
-        <div class="detail-row">
-            <div class="detail-label">License Number</div>
-            <div class="detail-value">{{ registration.license_number or 'N/A' }}</div>
-        </div>
-        <div class="detail-row">
-            <div class="detail-label">License State</div>
-            <div class="detail-value">{{ registration.license_state or 'N/A' }}</div>
-        </div>
-        <div class="detail-row">
-            <div class="detail-label">License Expiration</div>
-            <div class="detail-value">{{ registration.license_expiration.strftime('%Y-%m-%d') if registration.license_expiration else 'N/A' }}</div>
-        </div>
-    </div>
-    {% endif %}
-
-     {# --- Processing Information (Updated logic for notes) --- #}
-     {# Show if status is NOT pending #}
-     {% if registration.status != 'pending' %}
-     <div class="info-section">
-        <h3 class="info-section-header"><i class="fas fa-tasks"></i> Processing Information</h3>
-        <div class="detail-row">
-            <div class="detail-label">Processed By</div>
-            <div class="detail-value">{{ registration.processed_by_name or 'N/A' }} (ID: {{ registration.processed_by or 'N/A' }})</div>
-        </div>
-         <div class="detail-row">
-            <div class="detail-label">Processed On</div>
-            <div class="detail-value">{{ registration.date_processed.strftime('%Y-%m-%d %H:%M:%S') if registration.date_processed else 'N/A' }}</div>
-        </div>
-         {# Show notes based on status #}
-         {% if registration.status == 'rejected' and registration.notes %}
-         <div class="detail-row">
-            <div class="detail-label">Rejection Reason</div>
-            <div class="detail-value" style="white-space: pre-wrap;">{{ registration.notes }}</div>
-        </div>
-         {% elif registration.status == 'approved_user_created' %}
-         <div class="detail-row">
-             <div class="detail-label">Next Step</div>
-             <div class="detail-value">
-                 <strong class="text-warning"><i class="fas fa-exclamation-triangle"></i> Awaiting Activation (Step 2)</strong><br>
-                 The basic user record has been created. Final activation and password setup are required.
-                 {# Optionally add a button/link here to trigger Step 2 if you have that workflow #}
-                 {# <a href="{{ url_for('some_activation_route', reg_id=registration.id) }}" class="btn btn-sm btn-warning mt-2"><i class="fas fa-key"></i> Proceed to Activation</a> #}
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Username:</strong> {{ registration.username }}</p>
+                    <p><strong>Email:</strong> {{ registration.email }}</p>
+                    <p><strong>Full Name:</strong> {{ registration.first_name }} {{ registration.last_name }}</p>
+                    <p><strong>Phone:</strong> {{ registration.phone or 'N/A' }}</p>
+                    <p><strong>Country:</strong> {{ registration.country or 'N/A' }}</p>
+                    <p><strong>Date Submitted:</strong> {{ registration.date_submitted.strftime('%Y-%m-%d %H:%M:%S') if registration.date_submitted else 'N/A' }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Specialization:</strong> {{ registration.specialization or 'N/A' }}</p>
+                    <p><strong>License Number:</strong> {{ registration.license_number or 'N/A' }}</p>
+                    <p><strong>License State:</strong> {{ registration.license_state or 'N/A' }}</p>
+                    <p><strong>License Expiration:</strong> {{ registration.license_expiration.strftime('%Y-%m-%d') if registration.license_expiration else 'N/A' }}</p>
+                    {% if registration.status != 'pending' %}
+                    <p><strong>Date Processed:</strong> {{ registration.date_processed.strftime('%Y-%m-%d %H:%M:%S') if registration.date_processed else 'N/A' }}</p>
+                    <p><strong>Processed By:</strong> {{ registration.processed_by_name or (registration.processed_by if registration.processed_by else 'N/A') }}</p>
+                    {% endif %}
+                    {% if registration.user_id %}
+                        <p><strong>Linked User ID:</strong> <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=registration.user_id) }}">{{ registration.user_id }}</a></p>
+                        <p><strong>Linked Acct Status:</strong> <span class="badge bg-secondary">{{ registration.linked_account_status or 'N/A' }}</span></p>
+                        <p><strong>Doctor Verification:</strong> <span class="badge bg-secondary">{{ registration.doctor_verification_status or 'N/A' }}</span></p>
+                    {% endif %}
+                 </div>
             </div>
-         </div>
-         {% elif registration.notes %} {# Generic notes for 'approved' or other statuses #}
-          <div class="detail-row">
-            <div class="detail-label">Processing Notes</div>
-            <div class="detail-value" style="white-space: pre-wrap;">{{ registration.notes }}</div>
-          </div>
-         {% endif %}
-     </div>
-     {% endif %}
-
-
-     {# --- Action Buttons (Only if Pending) --- UPDATED --- #}
-     {% if registration.status == 'pending' %}
-     <div class="form-actions"> {# Use form-actions styling #}
-        {# Approve Button (Step 1) #}
-        <form action="{{ url_for('registration_approval.approve_registration', reg_id=registration.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('This will create the basic user record (Step 1). Activation (Step 2) will be required afterwards. Proceed?');">
-             {# Add hidden input for CSRF token if using Flask-WTF: {{ form.csrf_token }} #}
-             <button type="submit" class="btn btn-success">
-                <i class="fas fa-user-plus"></i> Approve Step 1 (Create User)
-            </button>
-        </form>
-
-        {# Reject Button (triggers modal) #}
-        <button type="button" class="btn btn-danger" data-modal-target="rejectModal">
-            <i class="fas fa-times"></i> Reject Registration
-        </button>
-     </div>
-     {% endif %} {# End action buttons for pending status #}
-
-</div> {# End card #}
-
-
-{# --- Rejection Modal (Only shown if Pending) --- #}
-{% if registration.status == 'pending' %}
-<div class="modal-overlay" id="rejectModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2><i class="fas fa-times-circle"></i> Reject Registration</h2>
-            <button type="button" class="modal-close-btn">×</button> {# Assumes you have JS to handle modal close #}
+            {% if registration.notes %}
+            <div class="mt-3">
+                <strong>Processing Notes:</strong>
+                <pre class="bg-light p-2 rounded">{{ registration.notes }}</pre>
+            </div>
+            {% endif %}
         </div>
-        <form action="{{ url_for('registration_approval.reject_registration', reg_id=registration.id) }}" method="POST">
-             {# Add hidden input for CSRF token if using Flask-WTF: {{ form.csrf_token }} #}
-            <div class="modal-body">
-                 <p>Please provide a reason for rejecting the registration for <strong>{{ registration.first_name }} {{ registration.last_name }}</strong>.</p>
-                 <div class="form-group">
-                    <label for="rejection_reason">Rejection Reason <span class="text-danger">*</span></label> {# Use text-danger for bootstrap-like styling #}
-                    <textarea id="rejection_reason" name="rejection_reason" class="form-control" rows="4" required placeholder="Enter reason for rejection..."></textarea>
+    </div>
+
+    <!-- Section for Viewing Documents -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Uploaded Documents
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ID Document:
+                    {% if registration.id_doc_path %}
+                        {# *** IMPORTANT: Use the correct column name from your DB query *** #}
+                        {# Construct the URL using url_for('static', filename=...) assumes files are in static folder #}
+                        {# Adjust path if stored elsewhere and served differently #}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.id_doc_path) }}" data-doc-title="ID Document">
+                            <i class="bi bi-eye-fill me-1"></i> View Document
+                        </button>
+                    {% else %}
+                        <span class="text-muted">Not Provided</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Medical License:
+                    {% if registration.license_doc_path %}
+                        {# *** IMPORTANT: Use the correct column name from your DB query *** #}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.license_doc_path) }}" data-doc-title="Medical License">
+                           <i class="bi bi-eye-fill me-1"></i> View Document
+                        </button>
+                    {% else %}
+                        <span class="text-muted">Not Provided</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Proof of Specialization:
+                    {% if registration.specialization_doc_path %}
+                        {# *** IMPORTANT: Use the correct column name from your DB query *** #}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.specialization_doc_path) }}" data-doc-title="Proof of Specialization">
+                           <i class="bi bi-eye-fill me-1"></i> View Document
+                        </button>
+                    {% else %}
+                        <span class="text-muted">Not Provided</span>
+                    {% endif %}
+                </li>
+                 {# Add more document types as needed (e.g., other_doc_path) #}
+                 <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Other Document:
+                    {% if registration.other_doc_path %} {# Example #}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.other_doc_path) }}" data-doc-title="Other Document">
+                           <i class="bi bi-eye-fill me-1"></i> View Document
+                        </button>
+                    {% else %}
+                        <span class="text-muted">Not Provided</span>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+    <!-- Action Buttons -->
+    <div class="mt-4">
+        {% if registration.status == 'pending' %}
+            <div class="row g-2">
+                <div class="col-auto">
+                    <form action="{{ url_for('registration_approval.approve_registration', reg_id=registration.id) }}" method="POST" class="d-inline needs-validation" novalidate onsubmit="return confirm('Are you sure you want to APPROVE this registration and create the user account?');">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle-fill me-1"></i> Approve Registration
+                        </button>
+                    </form>
+                </div>
+                <div class="col-auto">
+                     <!-- Button trigger reject modal -->
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <i class="bi bi-x-circle-fill me-1"></i> Reject Registration
+                    </button>
                 </div>
             </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary modal-cancel-btn">Cancel</button> {# Assumes you have JS to handle modal close/cancel #}
-                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
-            </div>
-        </form>
+
+        {% elif registration.status == 'rejected' %}
+             <p class="text-danger">This registration has been rejected.</p>
+             <!-- Optionally add a button to re-review or delete -->
+
+        {% elif registration.status == 'approved' or registration.status == 'approved_user_created' %}
+             <p class="text-success">This registration has been approved.</p>
+             {% if registration.user_id %}
+              <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=registration.user_id) }}" class="btn btn-primary">View Doctor Profile</a>
+             {% endif %}
+        {% endif %}
+
+        <a href="{{ url_for('registration_approval.index', status=request.args.get('status', 'pending')) }}" class="btn btn-secondary mt-3">Back to List</a>
     </div>
+
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="rejectModalLabel">Reject Registration #{{ registration.id }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form action="{{ url_for('registration_approval.reject_registration', reg_id=registration.id) }}" method="POST" class="needs-validation" novalidate>
+              <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" required></textarea>
+                        <div class="invalid-feedback">
+                            Please provide a reason for rejection.
+                        </div>
+                    </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+              </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Document View Modal -->
+    <div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered"> {# Use modal-xl for larger view #}
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="documentModalLabel">View Document</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" style="height: 80vh;"> {# Set height for scroll #}
+            {# Use an iframe to display PDFs or other embeddable docs #}
+            {# For images, you might conditionally use an <img> tag or let iframe handle it #}
+            <iframe id="docViewerFrame" src="about:blank" style="width:100%; height: 100%;" frameborder="0">
+                Your browser does not support iframes.
+            </iframe>
+            {# Fallback or alternative for images:
+               <img id="docViewerImage" src="" style="max-width: 100%; height: auto;" alt="Document Preview">
+             #}
+          </div>
+        </div>
+      </div>
+    </div>
+
 </div>
-{% endif %} {# End rejection modal #}
 
-{% endblock %}
-
-{% block scripts_extra %}
-{# Basic JS for Modal - Adapt if using a JS framework like Bootstrap #}
+{# Add Bootstrap validation script if not already in base template #}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const modalTriggers = document.querySelectorAll('[data-modal-target]');
-    const closeButtons = document.querySelectorAll('.modal-close-btn, .modal-cancel-btn');
-    const overlays = document.querySelectorAll('.modal-overlay');
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    (function () {
+    'use strict'
 
-    modalTriggers.forEach(button => {
-        button.addEventListener('click', () => {
-            const modalId = button.getAttribute('data-modal-target');
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'flex'; // Or 'block', depending on your CSS for centering
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.querySelectorAll('.needs-validation')
+
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
             }
-        });
-    });
 
-    const closeModal = (modal) => {
-        if (modal) {
-            modal.style.display = 'none';
-            // Reset textarea if needed
-            const textarea = modal.querySelector('textarea[name="rejection_reason"]');
-            if (textarea) textarea.value = '';
-        }
-    };
-
-    closeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const modal = button.closest('.modal-overlay');
-            closeModal(modal);
-        });
-    });
-
-    // Close modal if clicking outside the modal content
-    overlays.forEach(overlay => {
-        overlay.addEventListener('click', (event) => {
-            if (event.target === overlay) { // Check if the click was directly on the overlay
-                closeModal(overlay);
-            }
-        });
-    });
-});
+            form.classList.add('was-validated')
+        }, false)
+        })
+    })()
 </script>
+
+{# JavaScript for Document Modal #}
+<script>
+    var documentModal = document.getElementById('documentModal');
+    if (documentModal) {
+        documentModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            var docUrl = button.getAttribute('data-doc-url');
+            var docTitle = button.getAttribute('data-doc-title');
+
+            var modalTitle = documentModal.querySelector('.modal-title');
+            var iframe = documentModal.querySelector('#docViewerFrame');
+            // var img = documentModal.querySelector('#docViewerImage'); // If using separate img tag
+
+            modalTitle.textContent = 'View: ' + docTitle;
+
+            // Simple approach: Set iframe src. Browser will handle PDF/Image display.
+            if (iframe && docUrl) {
+                iframe.src = docUrl;
+            }
+            /*
+            // More complex: Detect file type if needed
+            if (docUrl) {
+                if (docUrl.toLowerCase().endsWith('.pdf')) {
+                     iframe.src = docUrl;
+                     iframe.style.display = 'block';
+                     // img.style.display = 'none'; // Hide image tag if using both
+                } else if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'].some(ext => docUrl.toLowerCase().endsWith(ext))) {
+                     iframe.src = docUrl; // Modern browsers often render images in iframes too
+                     iframe.style.display = 'block';
+                     // Or use the img tag:
+                     // img.src = docUrl;
+                     // img.style.display = 'block';
+                     // iframe.style.display = 'none'; // Hide iframe
+                } else {
+                    // Handle unsupported types or provide a download link
+                    iframe.src = 'about:blank'; // Clear iframe
+                    iframe.style.display = 'none';
+                    // Optionally display a message or download link here
+                    console.warn("Unsupported document type for preview:", docUrl);
+                }
+            }
+            */
+        });
+
+        // Clear iframe/img src when modal is hidden to stop loading/potential audio/video
+        documentModal.addEventListener('hidden.bs.modal', function (event) {
+             var iframe = documentModal.querySelector('#docViewerFrame');
+             // var img = documentModal.querySelector('#docViewerImage');
+             if (iframe) {
+                 iframe.src = 'about:blank'; // Use about:blank to clear
+             }
+             // if (img) {
+             //     img.src = '';
+             // }
+        });
+    }
+
+</script>
+
 {% endblock %}

@@ -1,0 +1,32 @@
+{# templates/Doctor_Portal/Diseases/_association_list_items.html #}
+{#
+    Renders list items for associations.
+    Expects:
+    - items: List of item dictionaries
+    - id_field: Name of the ID field (e.g., 'symptom_id')
+    - name_field: Name of the name field (e.g., 'symptom_name')
+    - type: Type string (e.g., 'symptom', 'risk_factor')
+    - details_template (optional): Format string for details (e.g., '(W: %g, Req: %s)')
+    - link_field (optional): Field containing an external URL
+#}
+{% for item in items %}
+    <li class="association-item" id="link-{{ type }}-{{ item[id_field] }}">
+        <span>
+            <strong>{{ item[name_field] }}</strong>
+            {# Format details based on type #}
+            {% set item_details = '' %}
+            {% if type == 'symptom' %}
+                {% set item_details = details_template|format(item.weight, 'Yes' if item.is_required else 'No') %}
+            {% elif type == 'risk_factor' %}
+                 {% set item_details = details_template|format(item.factor_type | title, item.weight) %}
+            {% elif type == 'protocol' %}
+                 {% set item_details = details_template|format(item.relevance | title) %}
+            {% endif %}
+            <small> {{ item_details }}</small>
+            {% if link_field and item[link_field] %}
+                 <a href="{{ item[link_field] }}" target="_blank" title="View Link" class="ms-2"><i class="fas fa-external-link-alt fa-xs"></i></a>
+            {% endif %}
+        </span>
+        <button class="remove-association-btn" data-type="{{ type }}" data-link-id="{{ item[id_field] }}" title="Remove Link">×</button>
+    </li>
+{% endfor %}

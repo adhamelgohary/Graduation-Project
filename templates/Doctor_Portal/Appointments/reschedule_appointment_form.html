@@ -1,0 +1,77 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}Reschedule Appointment{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/appointments.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reschedule Appointment</h1>
+    {# Back uses secondary outline #}
+     <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="button button-outline button-secondary button-small">
+         <i class="fas fa-arrow-left fa-fw"></i> Back to Details
+     </a>
+</div>
+
+<div class="flash-messages-container alert-container-fixed">
+    {% include '_flash_messages.html' %}
+</div>
+
+<div class="card shadow-sm content-section appointment-form">
+    <div class="card-header"><h4 class="mb-0">Reschedule for: <strong>{{ appointment.patient_first_name }} {{ appointment.patient_last_name }}</strong></h4></div>
+    <div class="card-body">
+        <div class="alert alert-info small mb-4" role="alert">
+            <i class="fas fa-info-circle me-1"></i> <strong>Current Appointment:</strong> {{ appointment.appointment_date.strftime('%B %d, %Y') }} at {{ appointment.start_time }} ({{ appointment.appointment_type | title }})
+        </div>
+
+        <form action="{{ url_for('.reschedule_appointment', appointment_id=appointment.appointment_id) }}" method="POST" class="data-form">
+            {# {{ form.csrf_token }} #}
+
+            <div class="row g-3">
+                <div class="col-md-6 form-group">
+                    <label for="appointment_date" class="form-label">New Date <span class="text-danger">*</span></label>
+                    <input type="text" id="appointment_date" name="appointment_date" class="form-control flatpickr-date-future" value="{{ request.form.get('appointment_date', appointment.appointment_date.strftime('%Y-%m-%d')) }}" placeholder="Select New Date" required>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="start_time" class="form-label">New Start Time <span class="text-danger">*</span></label>
+                     <input type="text" id="start_time" name="start_time" class="form-control flatpickr-time" value="{{ request.form.get('start_time', appointment.start_time.strftime('%H:%M')) }}" placeholder="Select New Time" required>
+                </div>
+            </div>
+
+            <p class="text-muted small mt-2 mb-3">Duration is based on original appointment type: <strong>{{ appointment.appointment_type | title }}</strong></p>
+
+
+             <div class="form-group mb-3">
+                <label for="reason" class="form-label">Reason for Visit <span class="text-muted">(Optional, Edit if changed)</span></label>
+                <input type="text" id="reason" name="reason" class="form-control" value="{{ request.form.get('reason', appointment.reason or '') }}" maxlength="250" placeholder="Reason unchanged unless edited">
+             </div>
+
+             <div class="form-group mb-3">
+                <label for="notes" class="form-label">Internal Notes <span class="text-muted">(Staff only, Optional, Edit if changed)</span></label>
+                <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Notes unchanged unless edited">{{ request.form.get('notes', appointment.notes or '') }}</textarea>
+             </div>
+
+            <div class="form-actions">
+                {# Cancel uses secondary outline #}
+                 <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="button button-outline button-secondary">Cancel</a>
+                {# Reschedule uses primary style #}
+                <button type="submit" class="button button-primary"> {# Kept primary for reschedule action #}
+                    <i class="fas fa-calendar-check fa-fw"></i> Reschedule Appointment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".flatpickr-date-future", { /* ... options ... */ });
+         flatpickr(".flatpickr-time", { /* ... options ... */ });
+    });
+</script>
+{% endblock %}

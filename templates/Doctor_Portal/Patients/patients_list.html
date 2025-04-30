@@ -1,0 +1,98 @@
+{% extends "Doctor_Portal/base.html" %}
+
+{% block title %}My Patients{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/patients_list.css') }}">
+    {# Font Awesome needed for icons #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+     <h1>My Patients</h1>
+     {# Optional: Add New Patient Button #}
+     {# <a href="#" class="button button-primary"><i class="fas fa-user-plus fa-fw"></i> Add Patient</a> #}
+</div>
+
+{# Search Form #}
+<form method="GET" action="{{ url_for('patients.patients_list') }}" class="search-form">
+    <div class="row g-2 align-items-center"> {# Use align-items-center for vertical alignment #}
+        <div class="col flex-grow-1">
+            <label for="search" class="form-label visually-hidden">Search Patients</label>
+            <div class="input-group input-group-sm"> {# Input group for icon #}
+                 <span class="input-group-text"><i class="fas fa-search fa-fw"></i></span>
+                <input type="search" class="form-control" id="search" name="search" placeholder="Search by Name, Email, ID..." value="{{ search_term | default('') }}">
+            </div>
+        </div>
+         {% if search_term %}
+            <div class="col-auto">
+                <a href="{{ url_for('patients.patients_list') }}" class="button button-outline button-secondary button-small">Clear Search</a>
+            </div>
+        {% endif %}
+        {# Submit button might be implicit on enter, but can add if desired #}
+        {# <div class="col-auto"> <button type="submit" class="button button-primary button-small">Search</button> </div> #}
+    </div>
+</form>
+
+{# Patient List Grid #}
+<div class="row patient-card-list">
+    {% if patients %}
+        {% for patient in patients %}
+        <div class="col-sm-6 col-lg-4 col-xl-3"> {# Adjust column counts for density #}
+            <div class="card patient-card shadow-sm">
+                <div class="card-body">
+                    <div class="patient-card-header">
+                         <div class="patient-avatar patient-avatar-initials">
+                            {# Display initials #}
+                            {{ patient.first_name[0] | upper if patient.first_name else '?' }}{{ patient.last_name[0] | upper if patient.last_name else '?' }}
+                         </div>
+                         <h5>
+                            <a href="{{ url_for('patients.view_patient_profile', patient_id=patient.user_id) }}" title="View {{ patient.first_name }} {{ patient.last_name }}'s Profile">
+                                {{ patient.last_name }}, {{ patient.first_name }} {# Last Name First format #}
+                            </a>
+                        </h5>
+                    </div>
+
+                    {# Use Definition List (dl) for key info #}
+                    <div class="patient-info">
+                        <dl>
+                            <dt>ID:</dt><dd>{{ patient.user_id }}</dd>
+                            <dt>DOB:</dt><dd>{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else 'N/A' }} <span class="text-muted">({{ patient.age if patient.age is not none else 'N/A' }}y)</span></dd>
+                            <dt>Gender:</dt><dd>{{ patient.gender | title | replace('_', ' ') if patient.gender else 'N/A' }}</dd>
+                            {% if patient.phone %}
+                            <dt>Phone:</dt><dd><a href="tel:{{ patient.phone }}" title="Call {{ patient.first_name }}">{{ patient.phone }}</a></dd>
+                             {% endif %}
+                            {% if patient.email %}
+                            <dt>Email:</dt><dd><a href="mailto:{{ patient.email }}" title="Email {{ patient.first_name }}">{{ patient.email }}</a></dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+                <div class="card-footer text-end">
+                     <a href="{{ url_for('patients.view_patient_profile', patient_id=patient.user_id) }}" class="button button-outline button-small">
+                         View Profile <i class="fas fa-angle-right ms-1"></i>
+                     </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col">
+            <div class="card no-patients-card">
+                <div class="card-body">
+                     <i class="fas fa-user-slash"></i>
+                    {% if search_term %}
+                        No patients found matching your search criteria: "{{ search_term }}".
+                    {% else %}
+                        No patients associated with your account yet.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{# TODO: Add Pagination Controls Here if needed #}
+
+{% endblock %}

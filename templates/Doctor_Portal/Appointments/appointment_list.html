@@ -1,0 +1,282 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}Appointments{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    {# <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/appointments.css') }}">
+    <style>
+        .status-update-dropdown .dropdown-toggle { min-width: 120px; text-align: left; }
+        .status-update-dropdown .dropdown-toggle::after { margin-left: auto; }
+        .appointments-table th:last-child, .appointments-table td:last-child { min-width: 210px; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>My Appointments</h1>
+    <div class="header-actions">
+        {# Calendar view uses info style #}
+        <a href="{{ url_for('appointments.calendar_view') }}" class="button button-outline button-info button-small" title="Switch to Calendar View">
+            <i class="fas fa-calendar-alt fa-fw"></i> Calendar View
+        </a>
+        {# New uses primary style #}
+        <a href="{{ url_for('appointments.create_appointment') }}" class="button button-primary button-small" title="Create a New Appointment">
+            <i class="fas fa-plus fa-fw"></i> New Appointment
+        </a>
+    </div>
+</div>
+
+<div class="flash-messages-container alert-container-fixed">
+    {% include '_flash_messages.html' %}
+</div>
+
+
+{# --- Filters Form --- #}
+<form method="GET" action="{{ url_for('appointments.list_appointments') }}" class="search-form card card-body mb-4 shadow-sm">
+    <div class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label for="search" class="form-label small mb-1">Search Patient/Reason</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="fas fa-search fa-fw"></i></span>
+                <input type="search" class="form-control" id="search" name="search" placeholder="Name or Reason..." value="{{ request.args.get('search', '') }}">
+            </div>
+        </div>
+        <div class="col-lg-2 col-md-3 col-sm-6">
+            <label for="start_date" class="form-label small mb-1">Start Date</label>
+            <input type="text" id="start_date" name="start_date" class="form-control form-control-sm flatpickr-date" placeholder="From..." value="{{ request.args.get('start_date', '') }}">
+        </div>
+        <div class="col-lg-2 col-md-3 col-sm-6">
+            <label for="end_date" class="form-label small mb-1">End Date</label>
+             <input type="text" id="end_date" name="end_date" class="form-control form-control-sm flatpickr-date" placeholder="To..." value="{{ request.args.get('end_date', '') }}">
+        </div>
+         <div class="col-lg-2 col-md-4 col-sm-6">
+            <label for="status" class="form-label small mb-1">Status</label>
+            <select id="status" name="status" class="form-select form-select-sm" multiple size="{{ 3 if request.args.getlist('status') else 1 }}">
+                 {% set filter_statuses = request.args.getlist('status') %}
+                 {% for status in appointment_statuses %}
+                    <option value="{{ status }}" {% if status in filter_statuses %}selected{% endif %}>{{ status | title | replace('-', ' ') }}</option>
+                 {% endfor %}
+            </select>
+             <small class="text-muted d-block mt-1">Ctrl+Click to multi-select</small>
+        </div>
+         <div class="col-lg-2 col-md-4 col-sm-6">
+            <label for="appointment_type" class="form-label small mb-1">Type</label>
+            <select id="appointment_type" name="appointment_type" class="form-select form-select-sm">
+                {% set filter_type = request.args.get('appointment_type', '') %}
+                <option value="" {% if not filter_type %}selected{% endif %}>Any Type</option>
+                {% for type in appointment_types %}
+                   <option value="{{ type }}" {% if filter_type == type %}selected{% endif %}>{{ type | title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-lg-1 col-md-4 col-sm-12 d-flex justify-content-start justify-content-md-end gap-2 mt-3 mt-md-0">
+            <input type="hidden" name="view" value="custom">
+            {# Filter uses primary style #}
+            <button type="submit" class="button button-primary button-small w-100 w-md-auto" title="Apply Filters"><i class="fas fa-filter"></i> Filter</button>
+            {# Reset uses secondary style #}
+            <a href="{{ url_for('.list_appointments') }}" class="button button-outline button-secondary button-small w-100 w-md-auto" title="Reset Filters"><i class="fas fa-undo-alt"></i> Reset</a>
+        </div>
+    </div>
+     <div class="mt-3 pt-2 quick-views">
+         <span class="text-muted me-2 small">Quick Views:</span>
+         {% set view_mode = request.args.get('view', 'upcoming') %}
+         <a href="{{ url_for('.list_appointments', view='today') }}" class="{% if view_mode=='today'%}active{% endif %}">Today</a>
+         <a href="{{ url_for('.list_appointments', view='week') }}" class="{% if view_mode=='week'%}active{% endif %}">This Week</a>
+         <a href="{{ url_for('.list_appointments', view='month') }}" class="{% if view_mode=='month'%}active{% endif %}">This Month</a>
+         <a href="{{ url_for('.list_appointments', view='upcoming') }}" class="{% if view_mode=='upcoming'%}active{% endif %}">Upcoming</a>
+         <a href="{{ url_for('.list_appointments', view='past') }}" class="{% if view_mode=='past'%}active{% endif %}">Past</a>
+     </div>
+</form>
+
+{# --- Appointments Table --- #}
+<div class="card shadow-sm appointments-table-container">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 appointments-table">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Date & Time</th>
+                        <th scope="col">Patient</th>
+                        <th scope="col">Type</th>
+                        <th scope="col">Reason</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr id="appt-row-{{ appt.appointment_id }}" class="align-middle">
+                        <td class="text-nowrap">
+                            {{ appt.appointment_date.strftime('%a, %b %d, %Y') if appt.appointment_date else 'N/A' }}<br>
+                            <small class="text-muted">{{ appt.start_time }} - {{ appt.end_time }}</small>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('.view_appointment', appointment_id=appt.appointment_id) }}" class="fw-bold" title="View Appointment Details">
+                                {{ appt.patient_last_name }}, {{ appt.patient_first_name }}
+                            </a>
+                            <small class="d-block text-muted">
+                                <a href="{{ url_for('patients.view_patient_profile', patient_id=appt.patient_user_id) }}" class="text-muted" title="View Patient Profile (ID: {{ appt.patient_user_id }})">
+                                    <i class="fas fa-user-circle fa-fw"></i> ID: {{ appt.patient_user_id }}
+                                </a>
+                            </small>
+                        </td>
+                        <td>{{ appt.appointment_type | title }}</td>
+                        <td class="text-wrap" style="min-width: 150px;">
+                            {{ appt.reason | default('N/A') | truncate(70) }}
+                        </td>
+                        <td id="status-cell-{{ appt.appointment_id }}">
+                            {# Use badge-* class now #}
+                            {% set status_class = appt.status | lower | replace(' ', '-') | replace('no-show','danger') | replace('scheduled','info') | replace('confirmed','primary') | replace('completed','secondary') | replace('canceled','secondary') | replace('rescheduled','warning') %}
+                            <span class="badge badge-{{ status_class }} status-badge">
+                                {{ appt.status | title | replace('-', ' ') }}
+                            </span>
+                        </td>
+                        <td class="action-buttons text-end text-nowrap">
+
+                            {# Status Update Dropdown uses secondary style #}
+                            {% if appt.status not in ['completed', 'canceled', 'no-show'] %}
+                                <div class="dropdown d-inline-block align-middle status-update-dropdown">
+                                    <button class="button button-outline button-secondary button-small dropdown-toggle" type="button" id="statusDropdown{{ appt.appointment_id }}" data-bs-toggle="dropdown" aria-expanded="false" title="Update Status">
+                                        Update Status
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="statusDropdown{{ appt.appointment_id }}">
+                                        {% for status_option in appointment_statuses %}
+                                            <li>
+                                                <a class="dropdown-item status-update-item {% if status_option == appt.status %}active disabled{% endif %}"
+                                                   href="#"
+                                                   data-appt-id="{{ appt.appointment_id }}"
+                                                   data-new-status="{{ status_option }}">
+                                                   {{ status_option | title | replace('-', ' ') }}
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                            {# View uses info style #}
+                            <a href="{{ url_for('.view_appointment', appointment_id=appt.appointment_id) }}" class="button button-outline button-info button-small" title="View Details"><i class="fas fa-eye fa-fw"></i></a>
+                            {% if appt.status not in ['completed', 'canceled', 'no-show'] %}
+                                {# Reschedule uses secondary style #}
+                                <a href="{{ url_for('.reschedule_appointment', appointment_id=appt.appointment_id) }}" class="button button-outline button-secondary button-small" title="Reschedule"><i class="fas fa-calendar-day fa-fw"></i></a>
+                                {# Cancel uses danger style #}
+                                <form action="{{ url_for('.cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                    <button type="submit" class="button button-outline button-danger button-small" title="Cancel Appointment"><i class="fas fa-ban fa-fw"></i></button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <div class="mb-3"><i class="fas fa-calendar-times fa-3x text-secondary"></i></div>
+                            <h5 class="mb-1 fw-normal">No Appointments Found</h5>
+                            <p class="mb-0 small">Try adjusting your filters or <a href="{{ url_for('appointments.create_appointment') }}">create a new appointment</a>.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {# --- Pagination --- #}
+    {% if pagination and pagination.total > pagination.per_page %}
+         <div class="card-footer bg-light d-flex flex-wrap justify-content-center justify-content-md-between align-items-center border-top py-2 gap-2">
+             <span class="text-muted small">Showing {{ pagination.first }} - {{ pagination.last }} of {{ pagination.total }} appointments</span>
+             <nav aria-label="Appointments navigation">
+                 <ul class="pagination pagination-sm mb-0">
+                     <li class="page-item {{ 'disabled' if not pagination.has_prev else '' }}">
+                         <a class="page-link" href="{{ url_for(request.endpoint, page=pagination.prev_num, **request.args) }}" aria-label="Previous">
+                             <span aria-hidden="true">«</span>
+                         </a>
+                     </li>
+                     {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                         {% if page_num %}
+                             <li class="page-item {{ 'active' if page_num == pagination.page else '' }}" {% if page_num == pagination.page %}aria-current="page"{% endif %}>
+                                 <a class="page-link" href="{{ url_for(request.endpoint, page=page_num, **request.args) }}">{{ page_num }}</a>
+                             </li>
+                         {% else %}
+                             <li class="page-item disabled"><span class="page-link">…</span></li>
+                         {% endif %}
+                     {% endfor %}
+                     <li class="page-item {{ 'disabled' if not pagination.has_next else '' }}">
+                          <a class="page-link" href="{{ url_for(request.endpoint, page=pagination.next_num, **request.args) }}" aria-label="Next">
+                              <span aria-hidden="true">»</span>
+                          </a>
+                     </li>
+                 </ul>
+             </nav>
+         </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{# <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> #}
+{# <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> #}
+{# Ensure Bootstrap 5 JS is loaded #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".flatpickr-date", { altInput: true, altFormat: "M j, Y", dateFormat: "Y-m-d", allowInput: true });
+        let flashContainer = document.querySelector('.flash-messages-container');
+        if (!flashContainer) { /* ... flash container creation ... */ }
+        function flashMessage(message, category = 'info', duration = 4000) { /* ... flash message function ... */ }
+
+        // --- AJAX Status Update via Dropdown ---
+        document.querySelectorAll('.status-update-item').forEach(item => {
+            item.addEventListener('click', async function(event) {
+                event.preventDefault();
+                if (this.classList.contains('active') || this.classList.contains('disabled')) return;
+
+                const appointmentId = this.dataset.apptId;
+                const newStatus = this.dataset.newStatus;
+                const dropdownElement = this.closest('.dropdown');
+                const triggerButton = dropdownElement ? dropdownElement.querySelector('.dropdown-toggle') : null;
+                const clickedItem = this;
+
+                if (!appointmentId || !newStatus || !triggerButton) return;
+
+                clickedItem.classList.add('disabled');
+                triggerButton.disabled = true;
+                const originalButtonHtml = triggerButton.innerHTML;
+                triggerButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Wait...`;
+
+
+                try {
+                    const response = await fetch(`{{ url_for('.update_appointment_status', appointment_id=0) }}`.replace('/0', `/${appointmentId}`), { /* ... fetch options ... */ });
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        flashMessage(result.message, 'success');
+                        const statusCell = document.getElementById(`status-cell-${appointmentId}`);
+                        if (statusCell) {
+                            // ** UPDATE BADGE CLASS **
+                            const statusClass = (newStatus || '').toLowerCase().replace(' ', '-').replace('no-show','danger') .replace('scheduled','info') .replace('confirmed','primary') .replace('completed','secondary') .replace('canceled','secondary') .replace('rescheduled','warning'); // Mapped canceled to secondary
+                            statusCell.innerHTML = `<span class="badge badge-${statusClass} status-badge">${newStatus.charAt(0).toUpperCase() + newStatus.slice(1).replace('-', ' ')}</span>`; // Use badge-*
+                        }
+                        const siblingItems = dropdownElement.querySelectorAll('.status-update-item');
+                        siblingItems.forEach(sibling => {
+                            sibling.classList.remove('active', 'disabled');
+                            if (sibling.dataset.newStatus === newStatus) {
+                                sibling.classList.add('active', 'disabled');
+                            }
+                        });
+                    } else {
+                        flashMessage(result.message || 'Failed to update status.', 'danger');
+                        clickedItem.classList.remove('disabled');
+                    }
+                } catch (error) {
+                    flashMessage('Network error updating status.', 'danger');
+                    console.error("Status Update Error:", error);
+                    clickedItem.classList.remove('disabled');
+                } finally {
+                    triggerButton.disabled = false;
+                    triggerButton.innerHTML = originalButtonHtml;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

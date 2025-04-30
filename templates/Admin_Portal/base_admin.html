@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hospital Admin Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    {# Use Bootstrap 5.1.3 as per original #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/base.css') }}">
+    {% block extra_css %}{% endblock %}
+    
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2><i class="fas fa-hospital-user"></i> Admin Portal</h2>
+        <ul>
+            {# Dashboard Link #}
+            <li class="{% if request.endpoint == 'admin_main.dashboard' %}active{% endif %}">
+                <a href="{{ url_for('admin_main.dashboard') }}">
+                    <i class="fas fa-tachometer-alt fa-fw me-2"></i> Dashboard
+                </a>
+            </li>
+
+            {# --- User & Role Management Section (Collapsible) --- #}
+            <li> {# Active state handled by inner items and parent toggle class below #}
+                 {# Parent Toggle Link #}
+                 <a href="#userRoleSubmenu" data-bs-toggle="collapse" aria-expanded="{% if request.endpoint.startswith('admin_management.') or request.endpoint.startswith('Doctors_Management.') or request.endpoint.startswith('patient_management.') or request.endpoint.startswith('search_users.') %}true{% else %}false{% endif %}" class="dropdown-toggle {% if request.endpoint.startswith('admin_management.') or request.endpoint.startswith('Doctors_Management.') or request.endpoint.startswith('patient_management.') or request.endpoint.startswith('search_users.') %}active{% endif %}">
+                     <i class="fas fa-users-cog fa-fw me-2"></i> User Management
+                 </a>
+                 {# Submenu Content #}
+                 <ul class="collapse list-unstyled {% if request.endpoint.startswith('admin_management.') or request.endpoint.startswith('Doctors_Management.') or request.endpoint.startswith('patient_management.') or request.endpoint.startswith('search_users.') %}show{% endif %}" id="userRoleSubmenu">
+                      {# Admin Management Sub-section (Optional Inner Collapse) #}
+                      <li>
+                          <a href="#adminMgmtSubSubmenu" data-bs-toggle="collapse" aria-expanded="{% if request.endpoint.startswith('admin_management.') %}true{% else %}false{% endif %}" class="dropdown-toggle ps-3 {% if request.endpoint.startswith('admin_management.') %}active{% endif %}">
+                             <i class="fas fa-user-shield fa-fw me-2"></i> Admins & Roles
+                          </a>
+                          <ul class="collapse list-unstyled {% if request.endpoint.startswith('admin_management.') %}show{% endif %}" id="adminMgmtSubSubmenu">
+                               <li class="{% if request.endpoint == 'admin_management.index' %}active{% endif %}">
+                                  <a class="ps-4" href="{{ url_for('admin_management.index') }}"><i class="fas fa-user-tie fa-fw me-2"></i>Admin List</a>
+                              </li>
+                               <li class="{% if request.endpoint == 'admin_management.manage_roles' %}active{% endif %}">
+                                  <a class="ps-4" href="{{ url_for('admin_management.manage_roles') }}"><i class="fas fa-tags fa-fw me-2"></i>Role Definitions</a>
+                              </li>
+                          </ul>
+                      </li>
+                      {# Doctor Management #}
+                      <li class="{% if request.endpoint.startswith('Doctors_Management.') %}active{% endif %}">
+                          <a class="ps-3" href="{{ url_for('Doctors_Management.index') }}">
+                              <i class="fas fa-user-md fa-fw me-2"></i> Doctors
+                          </a>
+                      </li>
+                      {# Patient Management #}
+                      <li class="{% if request.endpoint.startswith('patient_management.') %}active{% endif %}">
+                          <a class="ps-3" href="{{ url_for('patient_management.index') }}">
+                              <i class="fas fa-procedures fa-fw me-2"></i> Patients {# Changed icon #}
+                          </a>
+                      </li>
+                      {# User Search #}
+                      <li class="{% if request.endpoint.startswith('search_users.') %}active{% endif %}">
+                          <a class="ps-3" href="{{ url_for('search_users.search_users') }}">
+                              <i class="fas fa-search fa-fw me-2"></i> Search All Users
+                          </a>
+                      </li>
+                 </ul>
+            </li>
+            {# --- End User & Role Management --- #}
+
+            {# --- Appointments Section (Collapsible) --- #}
+            <li> {# Active state handled by inner items and parent toggle class below #}
+                 {# Parent Toggle Link #}
+                 <a href="#appointmentsSubmenu" data-bs-toggle="collapse" aria-expanded="{% if request.endpoint.startswith('admin_appointments.') %}true{% else %}false{% endif %}" class="dropdown-toggle {% if request.endpoint.startswith('admin_appointments.') %}active{% endif %}">
+                     <i class="fas fa-calendar-alt fa-fw me-2"></i> Appointments
+                 </a>
+                 {# Submenu Content #}
+                 <ul class="collapse list-unstyled {% if request.endpoint.startswith('admin_appointments.') %}show{% endif %}" id="appointmentsSubmenu">
+                     {# Appointments List #}
+                     <li class="{% if request.endpoint.startswith('admin_appointments.') and 'config' not in request.endpoint and 'reports' not in request.endpoint %}active{% endif %}">
+                          <a class="ps-3" href="{{ url_for('admin_appointments.list_appointments') }}">
+                              <i class="fas fa-calendar-check fa-fw me-2"></i> List & Edit
+                          </a>
+                      </li>
+                      {# Configuration Sub-section (Inner Collapse) #}
+                      <li>
+                           <a href="#apptConfigSubSubmenu" data-bs-toggle="collapse" aria-expanded="{% if request.endpoint.startswith('admin_appointments.configure_') %}true{% else %}false{% endif %}" class="dropdown-toggle ps-3 {% if request.endpoint.startswith('admin_appointments.configure_') %}active{% endif %}">
+                               <i class="fas fa-cogs fa-fw me-2"></i> Configuration
+                           </a>
+                           <ul class="collapse list-unstyled {% if request.endpoint.startswith('admin_appointments.configure_') %}show{% endif %}" id="apptConfigSubSubmenu">
+                                <li class="{% if request.endpoint == 'admin_appointments.configure_appointment_types' %}active{% endif %}">
+                                   <a class="ps-4" href="{{ url_for('admin_appointments.configure_appointment_types') }}"><i class="fas fa-tags fa-fw me-2"></i>Types</a>
+                                </li>
+                                 <li class="{% if request.endpoint == 'admin_appointments.configure_scheduling_rules' %}active{% endif %}">
+                                   <a class="ps-4" href="{{ url_for('admin_appointments.configure_scheduling_rules') }}"><i class="fas fa-clipboard-list fa-fw me-2"></i>Rules</a>
+                                </li>
+                           </ul>
+                      </li>
+                      {# Reports Link #}
+                      <li class="{% if request.endpoint == 'admin_appointments.view_reports' %}active{% endif %}">
+                          <a class="ps-3" href="{{ url_for('admin_appointments.view_reports') }}">
+                              <i class="fas fa-chart-bar fa-fw me-2"></i> Reports
+                          </a>
+                      </li>
+                 </ul>
+            </li>
+            {# --- End Appointments Section --- #}
+
+            {# Doctor Approvals Link #}
+            <li class="{% if request.endpoint.startswith('registration_approval.') %}active{% endif %}">
+                <a href="{{ url_for('registration_approval.index') }}">
+                    <i class="fas fa-user-check fa-fw me-2"></i> Doctor Approvals
+                </a>
+            </li>
+
+            {# Settings Link (Example) #}
+            <li>
+                <a href="#"> {# Link to actual settings page when available #}
+                    <i class="fas fa-sliders-h fa-fw me-2"></i> Settings
+                </a>
+            </li>
+
+            {# Logout Link #}
+            <li>
+                <a href="{{ url_for('login.logout_route') }}">
+                    <i class="fas fa-sign-out-alt fa-fw me-2"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>{% block header_title %}{% endblock %}</h1>
+            <div class="user-info">
+                {# Ensure current_user is available and has first_name #}
+                <span>Welcome, {{ current_user.first_name if current_user else 'Admin' }}</span>
+                <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img"> {# Replace with actual profile image URL #}
+            </div>
+        </div>
+
+        {# Flash Messages Section #}
+        <div class="flash-container container-fluid"> {# Added container-fluid for better spacing #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'secondary' }} alert-dismissible fade show mt-3" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        {# Ensure content block has padding/margins if needed #}
+        <div class="content-wrapper p-3"> {# Added a wrapper with padding #}
+             {% block content %}{% endblock %}
+        </div>
+
+    </div>
+
+    {# Ensure Bootstrap JS is included for collapse component to work #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

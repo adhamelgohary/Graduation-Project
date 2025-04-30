@@ -1,0 +1,99 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}Create New Appointment{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    {# <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/appointments.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Create New Appointment</h1>
+    {# Back uses secondary outline #}
+     <a href="{{ url_for('appointments.list_appointments') }}" class="button button-outline button-secondary button-small">
+         <i class="fas fa-arrow-left fa-fw"></i> Back to List
+     </a>
+</div>
+
+<div class="flash-messages-container alert-container-fixed">
+    {% include '_flash_messages.html' %}
+</div>
+
+<div class="card shadow-sm content-section appointment-form">
+    <div class="card-header"><h4 class="mb-0">Enter Appointment Details</h4></div>
+    <div class="card-body">
+        <form action="{{ url_for('appointments.create_appointment') }}" method="POST" class="data-form">
+            {# {{ form.csrf_token }} #}
+
+            <div class="row g-3">
+                <div class="col-md-6 form-group">
+                    <label for="patient_id" class="form-label">Patient <span class="text-danger">*</span></label>
+                    <select id="patient_id" name="patient_id" class="form-select" required>
+                        <option value="" disabled selected>-- Select Patient --</option>
+                        {% for patient in patients %}
+                        <option value="{{ patient.user_id }}" {% if request.form.get('patient_id')|int == patient.user_id %}selected{% endif %}>
+                            {{ patient.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+             <div class="row g-3 mt-1">
+                <div class="col-md-4 form-group">
+                    <label for="appointment_date" class="form-label">Date <span class="text-danger">*</span></label>
+                    <input type="text" id="appointment_date" name="appointment_date" class="form-control flatpickr-date-future" value="{{ request.form.get('appointment_date', '') }}" placeholder="Select Date" required>
+                </div>
+                <div class="col-md-4 form-group">
+                    <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+                     <input type="text" id="start_time" name="start_time" class="form-control flatpickr-time" value="{{ request.form.get('start_time', '') }}" placeholder="Select Time (HH:MM)" required>
+                     <small class="text-muted">Duration based on Type.</small>
+                </div>
+                 <div class="col-md-4 form-group">
+                    <label for="appointment_type" class="form-label">Type <span class="text-danger">*</span></label>
+                     <select id="appointment_type" name="appointment_type" class="form-select" required>
+                        <option value="" disabled selected>-- Select Type --</option>
+                        {% set selected_type = request.form.get('appointment_type', '') %}
+                         {% for type in appointment_types %}
+                        <option value="{{ type }}" {% if selected_type == type %}selected{% endif %}>{{ type | title }}</option>
+                        {% endfor %}
+                     </select>
+                </div>
+             </div>
+
+             <div class="form-group mt-3">
+                <label for="reason" class="form-label">Reason for Visit <span class="text-muted">(Optional)</span></label>
+                <input type="text" id="reason" name="reason" class="form-control" value="{{ request.form.get('reason', '') }}" maxlength="250" placeholder="e.g., Annual Checkup, Follow-up, Consultation">
+             </div>
+
+             <div class="form-group mt-3">
+                <label for="notes" class="form-label">Internal Notes <span class="text-muted">(Staff only, Optional)</span></label>
+                <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Add any internal notes relevant to this appointment...">{{ request.form.get('notes', '') }}</textarea>
+             </div>
+
+            <div class="form-actions">
+                {# Cancel uses secondary outline #}
+                 <a href="{{ url_for('appointments.list_appointments') }}" class="button button-outline button-secondary">Cancel</a>
+                {# Create uses success style #}
+                <button type="submit" class="button button-success"> {# Changed to success #}
+                    <i class="fas fa-calendar-plus fa-fw"></i> Create Appointment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{# <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> #}
+{# <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".flatpickr-date-future", { /* ... options ... */ });
+        flatpickr(".flatpickr-time", { /* ... options ... */ });
+        // Select2 init if used
+    });
+</script>
+{% endblock %}

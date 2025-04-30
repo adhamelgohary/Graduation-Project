@@ -1,0 +1,144 @@
+{# templates/Admin_Portal/Search/search_page_with_results.html #}
+{% extends "Admin_Portal/base_admin.html" %} {# Or your main admin layout template #}
+
+{% block title %}User Search{% endblock %}
+
+{% block nav_user_search %}active{% endblock %} {# Highlight the sidebar item #}
+
+{% block header_title %}
+{# Use standard h1.page-title structure #}
+<h1 class="page-title">
+    <i class="fas fa-search"></i> User Search
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    {# Page Heading is handled by block header_title now #}
+    <ol class="breadcrumb mb-4 mt-4"> {# Add margin top #}
+        <li class="breadcrumb-item"><a href="{{ url_for('admin_main.dashboard') }}">Dashboard</a></li> {# Adjust link #}
+        <li class="breadcrumb-item active">User Search</li>
+    </ol>
+
+    {# --- Search Form (Always Visible) --- #}
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-search me-1"></i>
+            Find Users
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('search_users.search_users') }}">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search by name, email, username, phone..." value="{{ search_term or '' }}" aria-label="Search Term">
+                    <button class="btn btn-primary" type="submit" aria-label="Search"><i class="fas fa-search"></i> Search</button>
+                    {# Optional: Add a clear button #}
+                    {% if search_term %}
+                    <a href="{{ url_for('search_users.search_users') }}" class="btn btn-outline-secondary" title="Clear Search"><i class="fas fa-times"></i> Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# --- Conditional Results Section --- #}
+    {# Only display the results section if a search was actually performed #}
+    {% if executed_search %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-users me-1"></i>
+                Search Results for "{{ search_term }}"
+                <span class="badge bg-secondary float-end">{{ total_items }} total result(s)</span>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>User Type</th>
+                                <th>Phone</th>
+                                <th>Registered</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.first_name }}</td>
+                                <td>{{ user.last_name }}</td>
+                                <td>{{ user.email }}</td>
+                                <td><span class="badge bg-info text-dark">{{ user.user_type|capitalize }}</span></td>
+                                <td>{{ user.phone or 'N/A' }}</td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</td>
+                                <td>
+                                    {# Dynamic Link Generation (same as before) #}
+                                    {% if user.user_type == 'admin' %}
+                                        <a href="{{ url_for('admin_management.edit_admin_form', admin_id=user.user_id) }}" class="btn btn-sm btn-outline-primary" title="View/Edit Admin">
+                                            <i class="fas fa-user-shield"></i> View/Edit
+                                        </a>
+                                    {% elif user.user_type == 'doctor' %}
+                                        <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=user.user_id) }}" class="btn btn-sm btn-outline-success" title="View Doctor Details">
+                                            <i class="fas fa-user-md"></i> View Details
+                                        </a>
+                                    {% elif user.user_type == 'patient' %}
+                                        <a href="{{ url_for('patient_management.view_patient', patient_id=user.user_id) }}" class="btn btn-sm btn-outline-info" title="View Patient Details">
+                                            <i class="fas fa-user-injured"></i> View Details
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">Unknown Type</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {# --- Pagination --- #}
+                {% if total_pages > 1 %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {# Previous Page Link #}
+                        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('search_users.search_users', q=search_term, page=page-1) }}">Previous</a>
+                        </li>
+                        {# Page Number Links - Consider adding logic for many pages (ellipsis) #}
+                        {% for p in range(1, total_pages + 1) %}
+                            <li class="page-item {% if p == page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('search_users.search_users', q=search_term, page=p) }}">{{ p }}</a>
+                            </li>
+                        {% endfor %}
+                        {# Next Page Link #}
+                        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('search_users.search_users', q=search_term, page=page+1) }}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+
+                {% else %}
+                    {# Message when search executed but no users found #}
+                    <div class="alert alert-warning" role="alert">
+                        No users found matching your search criteria: "{{ search_term }}".
+                    </div>
+                {% endif %} {# End of if users #}
+            </div> {# End card-body #}
+        </div> {# End results card #}
+    {% elif request.args.get('q') is not none %}
+         {# Case where 'q' was in URL but empty after stripping whitespace #}
+         <div class="alert alert-info" role="alert">
+            Please enter a search term to find users.
+        </div>
+    {% else %}
+        {# Initial page load message (no 'q' parameter in URL) #}
+        <div class="alert alert-info" role="alert">
+            Enter a search term above to find users.
+        </div>
+    {% endif %} {# End of if executed_search #}
+
+</div> {# End container-fluid #}
+{% endblock %}

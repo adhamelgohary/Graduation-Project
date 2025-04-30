@@ -1,0 +1,206 @@
+/* Base Variables (Ensure these are defined in base.css or here for standalone use) */
+/* It's often better practice to define variables in a base/global CSS file */
+/* but including them here ensures this file works if base.css doesn't have them */
+:root {
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --color-primary: #007bff; /* Example */
+    --color-secondary: #6c757d; /* Example */
+    --color-accent: #28a745;  /* Example */
+    --color-info: #17a2b8;    /* Example */
+    --color-warning: #ffc107; /* Example */
+    --color-danger: #dc3545;  /* Example */
+    --color-text: #212529;      /* Example */
+    --color-text-muted: #6c757d; /* Example */
+    --color-text-light: #ffffff; /* Example */
+    --border-radius: 0.25rem;   /* Example */
+}
+
+/* Utility classes often found in base.css, included here for completeness if needed */
+.mb-2 { margin-bottom: var(--spacing-sm); }
+.mb-3 { margin-bottom: var(--spacing-md); }
+.mt-2 { margin-top: var(--spacing-sm); }
+.mt-3 { margin-top: var(--spacing-md); }
+.p-3 { padding: var(--spacing-md); }
+.text-muted { color: var(--color-text-muted); }
+.text-center { text-align: center; }
+
+/* Dashboard Specific Styles */
+.dashboard-header h1 {
+    margin-bottom: var(--spacing-xs);
+}
+
+.dashboard-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+}
+.summary-card {
+    padding: var(--spacing-md);
+    border: 1px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    background-color: #fff;
+    /* Add other card styles if needed */
+}
+.summary-card h3 {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-xs);
+    font-weight: 500;
+    text-transform: uppercase;
+}
+.summary-card .summary-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    line-height: 1.2;
+}
+ .summary-card .summary-value .badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.2em 0.5em;
+    margin-left: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    background-color: var(--color-danger); /* Example badge color */
+    color: var(--color-text-light);
+ }
+.summary-card .card-link {
+    font-size: 0.85rem;
+    text-decoration: none;
+    color: var(--color-secondary);
+    font-weight: 500;
+}
+ .summary-card .card-link:hover {
+    color: var(--color-primary);
+    text-decoration: underline;
+ }
+
+/* Status Badges for appointments */
+.status-badge {
+    padding: 0.25em 0.6em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 10px;
+    color: var(--color-text-light);
+    white-space: nowrap;
+    text-transform: capitalize;
+    display: inline-block;
+    line-height: 1.2;
+}
+.status-scheduled { background-color: var(--color-info); }
+.status-confirmed { background-color: var(--color-primary); }
+.status-completed { background-color: var(--color-accent); }
+.status-canceled, .status-cancelled { background-color: var(--color-secondary); } /* Handle both spellings */
+.status-no-show { background-color: var(--color-danger); }
+.status-rescheduled { background-color: var(--color-warning); color: var(--color-text); }
+
+/* Table styling */
+.table-responsive {
+    overflow-x: auto;
+    width: 100%;
+    margin-bottom: var(--spacing-md);
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+}
+th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+}
+tbody tr:hover {
+    background-color: #f8f9fa;
+}
+/* REMOVED: td .button-small */
+
+
+.dashboard-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+}
+.action-card {
+    padding: var(--spacing-md);
+    border: 1px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    background-color: #fff;
+    /* Add other card styles if needed */
+}
+.action-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-md);
+    font-weight: 600;
+}
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+.form-control {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
+}
+.quick-links {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+ .quick-links li {
+    margin-bottom: var(--spacing-sm);
+ }
+ .quick-links a {
+    text-decoration: none;
+    color: var(--color-primary);
+ }
+ .quick-links a:hover {
+    text-decoration: underline;
+ }
+
+ /* Responsive adjustments */
+ @media (max-width: 768px) {
+    .summary-card .summary-value {
+        font-size: 1.5rem;
+    }
+    th, td {
+         padding: var(--spacing-sm);
+    }
+ }
+
+ @media (max-width: 576px) {
+    .dashboard-summary-grid {
+        grid-template-columns: 1fr;
+    }
+     .dashboard-actions-grid {
+        grid-template-columns: 1fr;
+    }
+ }
+
+ /*
+ The following rules related to button styling have been removed:
+ - .button { ... }
+ - .button:hover { ... }
+ - .button i { ... }
+ - .button-outline { ... }
+ - .button-outline:hover { ... }
+ - .button-small { ... }
+ - td .button-small { ... } (Specifically targeting small buttons in tables)
+ */

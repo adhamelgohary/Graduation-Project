@@ -1,0 +1,103 @@
+/* static/css/appointment_management.css */
+/* Inherits from base.css */
+
+/* Filter Form Enhancements */
+.filter-form {
+    background-color: var(--light-color); /* Use base light color */
+    border: 1px solid var(--border-color);
+    box-shadow: var(--box-shadow-sm); /* Use base variable */
+    border-radius: var(--border-radius);
+    padding: 1rem 1.25rem; /* Consistent padding */
+}
+.filter-form h5 {
+    color: var(--heading-color); /* Use base heading color */
+    margin-bottom: 1rem;
+    font-size: 1.1rem; /* Consistent header size */
+}
+/* Filter labels are handled by base.css .form-label */
+/* Filter input/select sizes handled by base.css .form-control-sm/.form-select-sm */
+
+/* Appointment Table Specifics */
+/* Base table styles come from base.css (.table, .table-striped, etc.) */
+.appointment-table .badge {
+    /* Use base badge styles, maybe just override colors */
+    font-weight: 500; /* Slightly less bold than default */
+}
+/* Add custom badge colors if needed */
+.appointment-table .badge.bg-purple {
+    color: #fff;
+    background-color: #6f42c1; /* Bootstrap purple */
+}
+/* Small adjustments to action buttons if needed */
+.appointment-table td.actions .btn {
+    padding: 0.25rem 0.5rem; /* Slightly adjust if base btn-sm isn't right */
+    font-size: 0.85rem;
+}
+
+/* Edit Appointment Info Box */
+.edit-appointment-info {
+    background-color: var(--primary-color-lighter); /* Use theme variable */
+    border-left: 4px solid var(--primary-color); /* Use theme variable */
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border-radius: var(--border-radius);
+    font-size: 0.95rem;
+}
+.edit-appointment-info p {
+    margin-bottom: 0.5rem;
+}
+.edit-appointment-info small {
+    color: var(--secondary-color); /* Use theme variable */
+    font-size: 0.85em;
+}
+ .edit-appointment-info small i.fa-fw {
+     opacity: 0.7;
+     margin-right: 0.3em !important; /* Override me-2 slightly */
+     width: 16px; /* Smaller icon width */
+ }
+.edit-appointment-info .border-top {
+    border-color: rgba(0, 0, 0, 0.1) !important; /* Subtle border */
+}
+
+/* Report Navigation / Sections */
+.report-nav .btn {
+    margin-bottom: 5px; /* Keep for wrapping */
+}
+.report-section h6 { /* Use h6 for sub-headers in reports */
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--heading-color);
+    font-size: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.4rem;
+}
+.report-section .list-group-item {
+    font-size: 0.9rem;
+    padding: 0.6rem 0; /* Adjust padding for flush list */
+    border-color: var(--border-color);
+}
+.report-section .list-group-flush .list-group-item:first-child { border-top: none;}
+.report-section .list-group-flush .list-group-item:last-child { border-bottom: none;}
+
+/* Report table specific styles (if needed beyond base .table-sm) */
+.report-section .table-sm {
+    /* Base styles apply, add specifics if needed */
+}
+.report-section .table-sm th {
+     font-size: 0.8rem; /* Smaller header text */
+     padding: 0.5rem 0.75rem;
+}
+.report-section .table-sm td {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Styling for Follow-up Update Form */
+.followup-actions .input-group-sm .form-select,
+.followup-actions .input-group-sm .form-control {
+    /* Base input group small styles apply */
+}
+.followup-actions .input-group-sm .btn {
+     /* Base button small styles apply */
+}

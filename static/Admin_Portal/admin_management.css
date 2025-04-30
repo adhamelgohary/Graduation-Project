@@ -1,0 +1,46 @@
+/* static/css/admin_management.css */
+/* Inherits from base.css */
+
+/* Flash Messages with Font Awesome Icons (Keep if desired) */
+/* Ensure Font Awesome is loaded in base_admin.html */
+.flash-container .alert-success::before { content: "\f00c "; font-family: "Font Awesome 6 Free"; font-weight: 900; margin-right: 8px; }
+.flash-container .alert-danger::before { content: "\f071 "; font-family: "Font Awesome 6 Free"; font-weight: 900; margin-right: 8px; }
+.flash-container .alert-warning::before { content: "\f06a "; font-family: "Font Awesome 6 Free"; font-weight: 900; margin-right: 8px; }
+.flash-container .alert-info::before { content: "\f05a "; font-family: "Font Awesome 6 Free"; font-weight: 900; margin-right: 8px; }
+
+/* Table Specifics */
+/* Base table styles come from base.css */
+
+/* Sorting links in table headers */
+.table thead th a.sort-link { /* Renamed from th a.sort-link for clarity */
+    text-decoration: none;
+    color: var(--heading-color); /* Use heading color */
+    display: inline-block;
+    transition: color 0.2s ease;
+}
+.table thead th a.sort-link:hover {
+    color: var(--primary-color);
+}
+/* Icons for sorting are expected to be added in the template now */
+
+/* Action Buttons Spacing (Only if base .actions class isn't sufficient) */
+/* If using <td class="actions">, base.css might handle it. If not: */
+/*
+.table td .btn {
+    margin: 2px;
+}
+*/
+
+/* Specific styles for Role Management Table (if needed) */
+.role-management-table {
+    /* Add specific styles here if different from standard table */
+}
+
+/* Delete Confirmation Specifics (if any) */
+.delete-confirmation-details li {
+    margin-bottom: 0.5rem;
+    font-size: 1.05rem;
+}
+.delete-confirmation-details strong {
+    color: var(--dark-color);
+}

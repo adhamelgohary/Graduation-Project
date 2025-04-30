@@ -1,0 +1,135 @@
+{% extends "Admin_Portal/base.html" %}
+
+{% block title %}Admin - Appointment Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Appointment Reports</h1>
+
+    {# --- Flash Messages --- #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {# --- Report Type Selection --- #}
+    <div class="mb-4">
+        <span class="me-2">Select Report:</span>
+        <div class="btn-group" role="group" aria-label="Report types">
+            <a href="{{ url_for('.view_reports', type='summary') }}" class="btn btn-outline-primary {% if report_type == 'summary' %}active{% endif %}">Summary</a>
+            <a href="{{ url_for('.view_reports', type='utilization') }}" class="btn btn-outline-primary {% if report_type == 'utilization' %}active{% endif %}">Utilization</a>
+            <a href="{{ url_for('.view_reports', type='no-show') }}" class="btn btn-outline-primary {% if report_type == 'no-show' %}active{% endif %}">No-Show Rates</a>
+            {# Add links for other report types as you implement them #}
+        </div>
+    </div>
+
+    {# --- Display Report Data --- #}
+    <div class="card">
+        <div class="card-header">{{ report_data.get('report_title', 'Report Details') }}</div>
+        <div class="card-body">
+            {% if report_data.get('error') %}
+                <div class="alert alert-danger">Error generating report: {{ report_data.error }}</div>
+            {% elif not report_data %}
+                 <p>No report data available.</p>
+            {% else %}
+
+                {# --- Conditional display based on report_type --- #}
+
+                {# Example: Summary Report #}
+                {% if report_type == 'summary' %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Status Summary (Last 30 Days)</h5>
+                            {% if report_data.status_summary_30d %}
+                            <ul class="list-group">
+                                {% for item in report_data.status_summary_30d %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ item.status|title }}
+                                    <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p>No status summary data found.</p>
+                            {% endif %}
+                        </div>
+                         <div class="col-md-6">
+                            <h5>Type Summary (Last 30 Days)</h5>
+                             {% if report_data.type_summary_30d %}
+                            <ul class="list-group">
+                                {% for item in report_data.type_summary_30d %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ item.appointment_type|title }}
+                                    <span class="badge bg-secondary rounded-pill">{{ item.count }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p>No type summary data found.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {# Example: Utilization Report #}
+                {% elif report_type == 'utilization' %}
+                     <h5>Utilization by Doctor/Month (Last 6 Months)</h5>
+                     {% if report_data.utilization_by_doctor_month %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead><tr><th>Doctor</th><th>Month</th><th>Status</th><th>Count</th></tr></thead>
+                                <tbody>
+                                {% for row in report_data.utilization_by_doctor_month %}
+                                    <tr>
+                                        <td>{{ row.doctor_name }}</td>
+                                        <td>{{ row.month }}</td>
+                                        <td>{{ row.status|title }}</td>
+                                        <td>{{ row.appointment_count }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                     {% else %}
+                        <p>No utilization data found.</p>
+                     {% endif %}
+
+                {# Example: No-Show Report #}
+                {% elif report_type == 'no-show' %}
+                     <h5>No-Show Rate by Doctor (Last 3 Months)</h5>
+                     {% if report_data.no_show_rate_by_doctor %}
+                        <div class="table-responsive">
+                             <table class="table table-sm table-striped">
+                                <thead><tr><th>Doctor</th><th>No-Shows</th><th>Total Relevant Appts</th><th>No-Show Rate</th></tr></thead>
+                                <tbody>
+                                {% for row in report_data.no_show_rate_by_doctor %}
+                                    <tr>
+                                        <td>{{ row.doctor_name }}</td>
+                                        <td>{{ row.no_show_count }}</td>
+                                        <td>{{ row.total_appointments }}</td>
+                                        <td>{{ "%.2f"|format(row.no_show_rate) }}%</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                     {% else %}
+                        <p>No no-show data found.</p>
+                     {% endif %}
+
+                {# Fallback for unknown report types #}
+                {% else %}
+                    <p>Report display for type '{{ report_type }}' is not implemented yet.</p>
+                    <pre>{{ report_data|tojson(indent=2) }}</pre> {# Display raw data for debugging #}
+                {% endif %}
+
+            {% endif %} {# End check for report_data #}
+        </div>
+    </div>
+</div>
+{% endblock %}

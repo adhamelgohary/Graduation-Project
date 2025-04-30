@@ -1,0 +1,126 @@
+{# templates/Admin_Portal/appointments/_form.html #}
+
+{# --- Patient Selection --- #}
+<div class="mb-3">
+    <label for="patient_id" class="form-label">Patient <span class="text-danger">*</span></label>
+    <select class="form-select {% if errors and 'patient_id' in errors %}is-invalid{% endif %}" id="patient_id" name="patient_id" required>
+        <option value="" {% if not appointment.patient_id %}selected{% endif %} disabled>-- Select Patient --</option>
+        {% for p in patients %}
+            <option value="{{ p.user_id }}" {% if appointment.patient_id == p.user_id %}selected{% endif %}>
+                {{ p.full_name }} (ID: {{ p.user_id }})
+            </option>
+        {% endfor %}
+    </select>
+    {% if errors and 'patient_id' in errors %}
+        <div class="invalid-feedback">{{ errors['patient_id'] }}</div>
+    {% endif %}
+</div>
+
+{# --- Doctor Selection --- #}
+<div class="mb-3">
+    <label for="doctor_id" class="form-label">Doctor <span class="text-danger">*</span></label>
+    <select class="form-select {% if errors and 'doctor_id' in errors %}is-invalid{% endif %}" id="doctor_id" name="doctor_id" required>
+        <option value="" {% if not appointment.doctor_id %}selected{% endif %} disabled>-- Select Doctor --</option>
+        {% for d in doctors %}
+            <option value="{{ d.user_id }}" {% if appointment.doctor_id == d.user_id %}selected{% endif %}>
+                {{ d.full_name }} (ID: {{ d.user_id }})
+            </option>
+        {% endfor %}
+    </select>
+    {% if errors and 'doctor_id' in errors %}
+        <div class="invalid-feedback">{{ errors['doctor_id'] }}</div>
+    {% endif %}
+</div>
+
+{# --- Date and Time --- #}
+<div class="row mb-3">
+    <div class="col-md-4">
+        <label for="appointment_date" class="form-label">Date <span class="text-danger">*</span></label>
+        <input type="date" class="form-control {% if errors and 'appointment_date' in errors %}is-invalid{% endif %}" id="appointment_date" name="appointment_date" value="{{ appointment.appointment_date_str or '' }}" required>
+        {% if errors and 'appointment_date' in errors %}
+            <div class="invalid-feedback">{{ errors['appointment_date'] }}</div>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+        <input type="time" class="form-control {% if errors and 'start_time' in errors %}is-invalid{% endif %}" id="start_time" name="start_time" value="{{ appointment.start_time_str or '' }}" required>
+        {% if errors and 'start_time' in errors %}
+            <div class="invalid-feedback">{{ errors['start_time'] }}</div>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
+        <input type="time" class="form-control {% if errors and 'end_time' in errors or errors and 'conflict' in errors %}is-invalid{% endif %}" id="end_time" name="end_time" value="{{ appointment.end_time_str or '' }}" required>
+         {% if errors and 'end_time' in errors %}
+            <div class="invalid-feedback">{{ errors['end_time'] }}</div>
+        {% endif %}
+        {# Show conflict error near relevant fields #}
+         {% if errors and 'conflict' in errors %}
+            <div class="invalid-feedback d-block">{{ errors['conflict'] }}</div>
+        {% endif %}
+    </div>
+</div>
+
+{# --- Appointment Type --- #}
+<div class="mb-3">
+    <label for="appointment_type" class="form-label">Appointment Type <span class="text-danger">*</span></label>
+    <select class="form-select {% if errors and 'appointment_type' in errors %}is-invalid{% endif %}" id="appointment_type" name="appointment_type" required>
+        <option value="" {% if not appointment.appointment_type %}selected{% endif %} disabled>-- Select Type --</option>
+        {% for type in appointment_types %}
+            <option value="{{ type }}" {% if appointment.appointment_type == type %}selected{% endif %}>
+                {{ type|title }}
+            </option>
+        {% endfor %}
+    </select>
+     {% if errors and 'appointment_type' in errors %}
+        <div class="invalid-feedback">{{ errors['appointment_type'] }}</div>
+    {% endif %}
+</div>
+
+{# --- Status (Show on Edit, maybe pre-fill default on Add if needed) --- #}
+{% if appointment.appointment_id %} {# Only show status dropdown clearly on edit form #}
+<div class="mb-3">
+    <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+    <select class="form-select {% if errors and 'status' in errors %}is-invalid{% endif %}" id="status" name="status" required>
+        {% for stat in appointment_statuses %}
+            <option value="{{ stat }}" {% if appointment.status == stat %}selected{% endif %}>
+                {{ stat|title }}
+            </option>
+        {% endfor %}
+    </select>
+     {% if errors and 'status' in errors %}
+        <div class="invalid-feedback">{{ errors['status'] }}</div>
+    {% endif %}
+</div>
+{% else %}
+    {# On Add form, status is usually set automatically to 'scheduled' by backend, hidden or display only #}
+    <input type="hidden" name="status" value="{{ appointment.status or 'scheduled' }}">
+    <p><small>Initial Status: Scheduled (can be changed after creation)</small></p>
+{% endif %}
+
+
+{# --- Reason --- #}
+<div class="mb-3">
+    <label for="reason" class="form-label">Reason for Visit</label>
+    <textarea class="form-control {% if errors and 'reason' in errors %}is-invalid{% endif %}" id="reason" name="reason" rows="2">{{ appointment.reason or '' }}</textarea>
+     {% if errors and 'reason' in errors %}
+        <div class="invalid-feedback">{{ errors['reason'] }}</div>
+    {% endif %}
+</div>
+
+{# --- Notes --- #}
+<div class="mb-3">
+    <label for="notes" class="form-label">Internal Notes</label>
+    <textarea class="form-control {% if errors and 'notes' in errors %}is-invalid{% endif %}" id="notes" name="notes" rows="3">{{ appointment.notes or '' }}</textarea>
+     {% if errors and 'notes' in errors %}
+        <div class="invalid-feedback">{{ errors['notes'] }}</div>
+    {% endif %}
+    <div class="form-text">Notes visible only to staff/admin.</div>
+</div>
+
+{# --- Override Restrictions --- #}
+<div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" id="override_restrictions" name="override_restrictions" value="true" {% if request.form.override_restrictions %}checked{% endif %}>
+    <label class="form-check-label" for="override_restrictions">Override Scheduling Restrictions</label>
+    <div class="form-text text-warning">Check this box to ignore time conflicts or schedule in the past (use with caution).</div>
+</div>

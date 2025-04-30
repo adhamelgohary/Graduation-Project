@@ -1,0 +1,51 @@
+{% extends "Admin_Portal/base_admin.html" %}
+
+{% block title %}Manage Roles{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Manage Role Definitions</h1>
+    <a href="{{ url_for('admin_management.add_role') }}" class="btn btn-primary">Add New Role</a>
+</div>
+
+{% if roles %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th scope="col">Role Name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Created</th>
+                <th scope="col">Updated</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for role in roles %}
+            <tr>
+                <td><strong>{{ role.role_name }}</strong></td>
+                <td>{{ role.description | default('(No description)', true) }}</td>
+                <td><small>{{ role.created_at.strftime('%Y-%m-%d %H:%M') if role.created_at else 'N/A' }}</small></td>
+                <td><small>{{ role.updated_at.strftime('%Y-%m-%d %H:%M') if role.updated_at else 'N/A' }}</small></td>
+                <td>
+                    <a href="{{ url_for('admin_management.edit_role', role_id=role.role_id) }}" class="btn btn-sm btn-outline-primary" title="Edit">Edit</a>
+                    {# Prevent deleting core Admin role #}
+                    {% if role.role_name.lower() != 'admin' %}
+                    <form method="POST" action="{{ url_for('admin_management.delete_role', role_id=role.role_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete the role \'{{ role.role_name }}\'? This cannot be undone and might affect users with this role.');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">Delete</button>
+                    </form>
+                    {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary" title="Cannot delete core Admin role" disabled>Delete</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info" role="alert">
+    No roles defined yet. <a href="{{ url_for('admin_management.add_role') }}">Add the first role?</a>
+</div>
+{% endif %}
+{% endblock %}

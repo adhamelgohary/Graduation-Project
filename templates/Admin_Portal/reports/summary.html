@@ -1,0 +1,210 @@
+{% extends "Admin_Portal/base_admin.html" %}
+
+{% block title %}Appointment Reports{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment_management.css') }}">
+    {# Optional: Add Chart.js CSS/JS if needed #}
+{% endblock %}
+
+{% block content %}
+<h1>Appointment Reports</h1>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin_appointments.list_appointments') }}">Appointments</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Reports</li>
+  </ol>
+</nav>
+<hr>
+
+{# Report Type Navigation #}
+<div class="mb-3 report-nav">
+    <a href="{{ url_for('admin_appointments.view_reports', type='summary', report_date_from=report_date_from, report_date_to=report_date_to) }}" class="btn btn-sm {% if report_type == 'summary' %}btn-primary{% else %}btn-outline-primary{% endif %}">Summary</a>
+    <a href="{{ url_for('admin_appointments.view_reports', type='utilization', report_date_from=report_date_from, report_date_to=report_date_to) }}" class="btn btn-sm {% if report_type == 'utilization' %}btn-primary{% else %}btn-outline-primary{% endif %}">Utilization</a>
+    <a href="{{ url_for('admin_appointments.view_reports', type='no-show', report_date_from=report_date_from, report_date_to=report_date_to) }}" class="btn btn-sm {% if report_type == 'no-show' %}btn-primary{% else %}btn-outline-primary{% endif %}">No-Show Rates</a>
+    <a href="{{ url_for('admin_appointments.view_reports', type='cancellation', report_date_from=report_date_from, report_date_to=report_date_to) }}" class="btn btn-sm {% if report_type == 'cancellation' %}btn-primary{% else %}btn-outline-primary{% endif %}">Cancellations</a>
+    <a href="{{ url_for('admin_appointments.view_reports', type='wait_time', report_date_from=report_date_from, report_date_to=report_date_to) }}" class="btn btn-sm {% if report_type == 'wait_time' %}btn-primary{% else %}btn-outline-primary{% endif %}">Wait Times</a>
+</div>
+
+{# Date Range Filter Form #}
+<form method="GET" action="{{ url_for('admin_appointments.view_reports') }}" class="mb-4 p-3 border rounded bg-light filter-form">
+    <input type="hidden" name="type" value="{{ report_type }}"> {# Preserve current report type #}
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4">
+            <label for="report_date_from" class="form-label">Report Date From</label>
+            <input type="date" class="form-control form-control-sm" id="report_date_from" name="report_date_from" value="{{ report_date_from }}">
+        </div>
+         <div class="col-md-4">
+            <label for="report_date_to" class="form-label">Report Date To</label>
+            <input type="date" class="form-control form-control-sm" id="report_date_to" name="report_date_to" value="{{ report_date_to }}">
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-sm btn-secondary w-100"><i class="fas fa-sync-alt me-1"></i> Update Report Range</button>
+        </div>
+    </div>
+</form>
+
+
+{% if report_data.error %}
+    <div class="alert alert-danger">Error generating report: {{ report_data.error }}</div>
+{% else %}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5 class="mb-0">{{ report_data.get('report_title', report_type | replace('-', ' ') | title + ' Report') }}</h5>
+    </div>
+    <div class="card-body">
+
+    {# Display data based on report type #}
+    <div class="report-section">
+        {% if report_type == 'summary' %}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <h6>Status Summary</h6>
+                    {% if report_data.get('status_summary') %}
+                        <ul class="list-group list-group-flush">
+                        {% for item in report_data.status_summary %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                {{ item.status | replace('-', ' ') | title }}
+                                <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
+                            </li>
+                        {% else %}
+                             <li class="list-group-item px-0 text-muted">No status data for this period.</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %} <p class="text-muted">No status data available.</p> {% endif %}
+                </div>
+                 <div class="col-md-6 mb-3">
+                    <h6>Type Summary</h6>
+                     {% if report_data.get('type_summary') %}
+                        <ul class="list-group list-group-flush">
+                        {% for item in report_data.type_summary %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                {{ item.appointment_type | replace('-', ' ') | title }}
+                                <span class="badge bg-secondary rounded-pill">{{ item.count }}</span>
+                            </li>
+                         {% else %}
+                             <li class="list-group-item px-0 text-muted">No type data for this period.</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %} <p class="text-muted">No appointment type data available.</p> {% endif %}
+                </div>
+            </div>
+
+        {% elif report_type == 'utilization' %}
+            <h6>Utilization by Doctor/Month</h6>
+            {% if report_data.get('utilization_by_doctor_month') %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr><th>Doctor</th><th>Month</th><th>Status</th><th>Count</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for item in report_data.utilization_by_doctor_month %}
+                            <tr>
+                                <td>{{ item.doctor_name }}</td>
+                                <td>{{ item.month }}</td>
+                                <td>{{ item.status | title }}</td>
+                                <td class="text-end">{{ item.appointment_count }}</td>
+                            </tr>
+                        {% else %}
+                             <tr><td colspan="4" class="text-center text-muted">No utilization data found for this period.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %} <p class="text-muted">No utilization data available.</p> {% endif %}
+
+         {% elif report_type == 'no-show' %}
+            <h6>No-Show Rate by Doctor</h6>
+             {% if report_data.get('no_show_rate_by_doctor') %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr><th>Doctor</th><th>Considered Appts</th><th>No-Shows</th><th>Rate</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for item in report_data.no_show_rate_by_doctor %}
+                            <tr>
+                                <td>{{ item.doctor_name }}</td>
+                                <td class="text-end">{{ item.total_appointments }}</td>
+                                <td class="text-end">{{ item.no_show_count }}</td>
+                                <td class="text-end fw-bold">{{ "%.1f%%"|format(item.no_show_rate) }}</td>
+                            </tr>
+                        {% else %}
+                             <tr><td colspan="4" class="text-center text-muted">No no-show data found for this period.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                     <small class="text-muted d-block mt-1">*Rate based on 'Completed' and 'No-Show' appointments in the selected period.</small>
+                </div>
+            {% else %} <p class="text-muted">No no-show data available.</p> {% endif %}
+
+        {% elif report_type == 'cancellation' %}
+             <h6>Cancellation Patterns</h6>
+              <div class="row">
+                  <div class="col-md-6 mb-3">
+                      <h6>Cancellations by Type</h6>
+                       {% if report_data.get('cancellation_by_type') %}
+                           <ul class="list-group list-group-flush">
+                           {% for item in report_data.cancellation_by_type %}
+                               <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                   {{ item.appointment_type | replace('-', ' ') | title }}
+                                   <span class="badge bg-danger rounded-pill">{{ item.count }}</span>
+                               </li>
+                           {% else %}
+                                <li class="list-group-item px-0 text-muted">No cancellations by type found.</li>
+                           {% endfor %}
+                           </ul>
+                       {% else %} <p class="text-muted">No cancellation type data.</p> {% endif %}
+                  </div>
+                  <div class="col-md-6 mb-3">
+                      <h6>Cancellations by Doctor</h6>
+                      {% if report_data.get('cancellation_by_doctor') %}
+                           <ul class="list-group list-group-flush">
+                           {% for item in report_data.cancellation_by_doctor %}
+                               <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                   {{ item.doctor_name }}
+                                   <span class="badge bg-danger rounded-pill">{{ item.count }}</span>
+                               </li>
+                            {% else %}
+                                <li class="list-group-item px-0 text-muted">No cancellations by doctor found.</li>
+                           {% endfor %}
+                           </ul>
+                       {% else %} <p class="text-muted">No cancellation doctor data.</p> {% endif %}
+                  </div>
+              </div>
+
+        {% elif report_type == 'wait_time' %}
+             <h6>Average Wait Times by Doctor</h6>
+             {% if report_data.get('avg_wait_by_doctor') %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr><th>Doctor</th><th>Completed Appts Measured</th><th>Avg. Wait (Minutes)</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for item in report_data.avg_wait_by_doctor %}
+                            <tr>
+                                <td>{{ item.doctor_name }}</td>
+                                <td class="text-end">{{ item.completed_with_times }}</td>
+                                <td class="text-end fw-bold">{{ "%.1f"|format(item.avg_wait_minutes if item.avg_wait_minutes is not none else 0) }}</td>
+                            </tr>
+                         {% else %}
+                             <tr><td colspan="3" class="text-center text-muted">No wait time data found for this period (requires check-in & treatment start times).</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                     <small class="text-muted d-block mt-1">*Average wait time calculated from Check-In time to Start Treatment time for 'Completed' appointments.</small>
+                </div>
+             {% else %} <p class="text-muted">No wait time data available.</p> {% endif %}
+
+        {% else %}
+            <p>Report type '{{ report_type }}' display not fully implemented yet.</p>
+        {% endif %}
+    </div> {# End report-section #}
+
+    </div> {# End card-body #}
+</div> {# End card #}
+{% endif %} {# End error check #}
+
+{% endblock %}

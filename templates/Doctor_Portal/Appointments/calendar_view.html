@@ -1,0 +1,61 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}Appointment Calendar{% endblock %}
+
+{% block head_extra %}
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css' rel='stylesheet' />
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/appointments.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Appointment Calendar</h1>
+    <div class="header-actions">
+        {# List view uses secondary style #}
+        <a href="{{ url_for('appointments.list_appointments') }}" class="button button-outline button-secondary button-small">
+            <i class="fas fa-list fa-fw"></i> List View
+        </a>
+        {# New uses primary style #}
+         <a href="{{ url_for('appointments.create_appointment') }}" class="button button-primary button-small ms-2">
+             <i class="fas fa-plus fa-fw"></i> New Appointment
+         </a>
+    </div>
+</div>
+
+<div class="flash-messages-container alert-container-fixed">
+    {% include '_flash_messages.html' %}
+</div>
+
+<div id="calendar-container" class="card shadow-sm content-section">
+     <div class="card-body p-lg-4">
+         <div id='calendar'>Loading Calendar...</div>
+     </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.js'></script>
+    {# Ensure Bootstrap JS is loaded #}
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var calendarEl = document.getElementById('calendar');
+        if (!calendarEl) { /* ... error handling ... */ }
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'timeGridWeek',
+          headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+          editable: false,
+          selectable: false,
+          events: { /* ... events feed ... */ },
+          eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
+          eventClick: function(info) { /* ... event click handler ... */ },
+          slotMinTime: '08:00:00',
+          slotMaxTime: '19:00:00',
+          expandRows: true,
+          navLinks: true,
+          dayMaxEvents: true,
+          nowIndicator: true,
+        });
+        calendar.render();
+      });
+    </script>
+{% endblock %}

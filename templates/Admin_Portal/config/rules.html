@@ -1,0 +1,70 @@
+{% extends "Admin_Portal/base_admin.html" %}
+
+{% block title %}Configure Scheduling Rules{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment_management.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Configure Scheduling Rules</h1>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin_appointments.list_appointments') }}">Appointments</a></li>
+    <li class="breadcrumb-item">Configuration</li>
+    <li class="breadcrumb-item active" aria-current="page">Scheduling Rules</li>
+  </ol>
+</nav>
+<hr>
+
+<div class="card shadow-sm">
+<div class="card-header"><h5 class="mb-0">System-Wide Scheduling Settings</h5></div>
+<div class="card-body">
+<form method="POST" action="{{ url_for('admin_appointments.configure_scheduling_rules') }}">
+    <div class="row g-3">
+         <div class="col-md-6">
+            <label for="allow_double_booking" class="form-label">Allow Double Booking</label>
+            <select class="form-select" id="allow_double_booking" name="allow_double_booking">
+                <option value="false" {% if not settings.allow_double_booking %}selected{% endif %}>No (Prevent Conflicts)</option>
+                <option value="true" {% if settings.allow_double_booking %}selected{% endif %}>Yes (Allow Overlap)</option>
+            </select>
+            <div class="form-text">Allows multiple appointments for the same doctor at the same time. Requires manual override checkbox in Add/Edit forms otherwise.</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="default_appointment_status" class="form-label">Default New Appointment Status</label>
+            <select class="form-select" id="default_appointment_status" name="default_appointment_status">
+                 {% for s in statuses %}
+                    <option value="{{ s }}" {% if settings.default_appointment_status == s %}selected{% endif %}>{{ s | replace('-', ' ') | title }}</option>
+                 {% endfor %}
+             </select>
+             <div class="form-text">The status assigned when a new appointment is created.</div>
+        </div>
+
+         <div class="col-md-6">
+            <label for="reschedule_limit" class="form-label">Reschedule Limit</label>
+            <input type="number" class="form-control" id="reschedule_limit" name="reschedule_limit" value="{{ settings.reschedule_limit }}" min="0" step="1" required>
+            <div class="form-text">Maximum times an appointment can be rescheduled (0 for unlimited). Admins can override this limit.</div>
+        </div>
+
+         <div class="col-md-6">
+            <label for="min_reschedule_notice_hours" class="form-label">Minimum Reschedule Notice (Hours)</label>
+            <input type="number" class="form-control" id="min_reschedule_notice_hours" name="min_reschedule_notice_hours" value="{{ settings.min_reschedule_notice_hours }}" min="0" step="1" required>
+             <div class="form-text">Minimum hours *before* an appointment that a patient can reschedule/cancel (0 for no limit). Not yet enforced in backend logic.</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="missed_appt_followup_days" class="form-label">Create Follow-up After Missed (Days)</label>
+            <input type="number" class="form-control" id="missed_appt_followup_days" name="missed_appt_followup_days" value="{{ settings.missed_appt_followup_days }}" min="0" step="1" required>
+            <div class="form-text">Days after a 'No-Show' status is set to automatically create a follow-up task (0 to disable). Backend task runner needed for automation. Current implementation creates task immediately on status change.</div>
+        </div>
+
+    </div> {# End row #}
+
+    <hr class="my-4">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Rules</button>
+</form>
+</div> {# End card-body #}
+</div> {# End card #}
+
+{% endblock %}

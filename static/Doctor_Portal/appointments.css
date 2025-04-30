@@ -1,0 +1,303 @@
+/* static/Doctor_Portal/appointments.css */
+
+/* --- Appointment List Specific Styles --- */
+
+/* Filter Form Adjustments */
+.search-form .form-select[multiple] {
+    /* Basic height adjustment. For better UX, consider a JS library (e.g., Select2, Choices.js) */
+    min-height: 60px; /* Allow space for a few options */
+    /* You might add more specific styling here if not using a JS library */
+}
+
+.search-form small.text-muted {
+    font-size: 0.8rem; /* Slightly larger hint text for readability */
+    display: block; /* Ensure it takes its own line if needed */
+    margin-top: var(--spacing-xs);
+}
+
+/* Quick Views Navigation */
+.quick-views {
+    margin-bottom: var(--spacing-md); /* Add some space below */
+    padding-bottom: var(--spacing-sm); /* Add padding for the border */
+    border-bottom: 1px solid var(--color-border);
+}
+.quick-views a {
+    margin: 0 var(--spacing-sm);
+    padding: var(--spacing-xs) 0; /* Add vertical padding */
+    font-size: 0.9rem;
+    text-decoration: none; /* Ensure link style override */
+    color: var(--color-secondary);
+    border-bottom: 3px solid transparent; /* Placeholder for active border */
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+.quick-views a:hover {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+.quick-views a.active, /* Use .active class from JS/backend */
+.quick-views a.fw-bold { /* Keep fw-bold for potential static highlighting */
+    color: var(--color-primary);
+    font-weight: 600; /* Use font-weight */
+    border-bottom-color: var(--color-primary);
+}
+
+/* Table Specifics */
+/* .appointments-table uses base table styles */
+.appointments-table tbody tr {
+    transition: background-color 0.15s ease; /* Inherited from base.css */
+}
+.appointments-table tbody tr:hover {
+     background-color: #f1f4f6; /* Inherited from base.css, ensure consistency */
+}
+.appointments-table td .text-nowrap { white-space: nowrap; }
+.appointments-table small { color: var(--color-text-muted); font-size: 0.85em; display: block; } /* Ensure small text takes its own line */
+.appointments-table .action-buttons {
+    white-space: nowrap;
+    text-align: right; /* Align actions to the right */
+}
+/* Button styling (.button, .button-small, .button-outline, color classes) comes from base.css */
+
+
+/* Status Badges */
+/* Styling (colors, shape) comes from base.css using .badge and .color-* classes */
+/* Ensure your HTML uses classes like: <span class="badge color-info status-badge">Scheduled</span> */
+.status-badge {
+    text-transform: capitalize;
+    font-weight: 600; /* Already in base.css */
+    /* Add any non-color specific styles here if needed */
+}
+
+
+/* Quick Status Select (If used alongside buttons) */
+.update-status-select {
+    /* Base .form-select styling applies */
+    display: inline-block; /* Align with buttons */
+    width: auto; /* Adjust width */
+    min-width: 120px;
+    font-size: 0.85rem; /* Match small buttons */
+    padding-top: 0.3rem; /* Adjust vertical padding */
+    padding-bottom: 0.3rem;
+    height: auto; /* Override potential fixed height */
+    vertical-align: middle; /* Align with buttons */
+    margin-right: var(--spacing-xs);
+}
+
+
+/* --- Appointment Detail Specific Styles --- */
+
+.detail-card { /* Use card styling for better visual separation */
+    margin-bottom: var(--spacing-lg);
+}
+
+.section-header {
+    margin-top: var(--spacing-lg); /* Consistent spacing */
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border); /* Use standard border */
+    color: var(--color-primary); /* Keep primary color */
+    font-size: 1.15rem; /* Slightly adjusted size */
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+.detail-card .section-header:first-of-type, /* Target first header inside the card */
+.tab-content > .section-header:first-child { /* Target first header directly in tab content */
+    margin-top: 0;
+}
+
+.detail-grid { /* Optional: Use grid for better alignment */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive columns */
+    gap: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-md); /* Space below grid items */
+}
+.detail-item { /* Container for label + value */
+    margin-bottom: 0; /* Remove margin from individual items if using grid */
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--color-text-muted); /* Muted color */
+    font-size: 0.8em;
+    margin-bottom: var(--spacing-xs); /* Smaller gap */
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.detail-value {
+    margin-bottom: 0; /* Remove margin if using grid/detail-item */
+    color: var(--color-text);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+.detail-value.pre-wrap { white-space: pre-wrap; word-wrap: break-word; }
+.detail-value a { font-weight: 500; } /* Make links slightly bolder */
+
+#update-status-form .form-label {
+    margin-bottom: 0; /* Align label better */
+}
+#appointment-notes {
+    min-height: 100px;
+    font-size: 0.95rem; /* Standard form size */
+}
+
+
+/* --- Appointment Create/Reschedule Forms --- */
+/* Generally uses base form styling (.form-control, .form-label, etc.) */
+/* Use .card or other containers for structure */
+.appointment-form .card-footer {
+    display: flex;
+    justify-content: flex-end; /* Align actions right */
+    gap: var(--spacing-sm);
+}
+/* Button styling comes from base.css */
+
+
+/* --- Calendar View --- */
+#calendar-container { /* Wrap calendar for consistent padding/styling */
+    background-color: var(--color-surface);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--box-shadow);
+}
+
+#calendar {
+    max-width: 1100px; /* Or remove for fluid */
+    margin: 0 auto; /* Center if max-width is set */
+}
+
+/* FullCalendar Customizations */
+.fc-event {
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.2) !important; /* Add subtle border */
+    padding: 3px 6px !important; /* Adjust padding */
+    font-size: 0.8rem !important;
+    line-height: 1.4 !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    /* Event background colors should be set dynamically via JS based on status/type */
+    /* Example default */
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary-dark) !important;
+}
+.fc-event:hover {
+    filter: brightness(110%); /* Subtle brightness increase */
+}
+
+.fc-event-main {
+    color: var(--color-text-light) !important; /* Ensure text is light */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.fc-daygrid-event {
+    white-space: normal !important; /* Allow wrapping in month view */
+}
+.fc-event-time {
+    font-weight: 600;
+}
+
+.fc .fc-toolbar {
+    margin-bottom: var(--spacing-lg) !important; /* More space */
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+.fc .fc-toolbar-title {
+    font-size: 1.5rem !important; /* Standardize size */
+    color: var(--color-text); /* Use standard text color */
+    font-weight: 600;
+}
+
+/* Adapt FC buttons to base button styles */
+.fc .fc-button {
+    /* Mimic base .button structure */
+    display: inline-block;
+    padding: 0.4rem 0.8rem !important; /* Use button-small padding */
+    font-size: 0.85rem !important; /* Use button-small font-size */
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    border-radius: var(--border-radius) !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important; /* Remove FC default shadow */
+    text-transform: none !important; /* Override FC default */
+
+    /* Default Look (mimics button-outline color-secondary) */
+    background-color: transparent !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-secondary) !important;
+}
+.fc .fc-button:hover {
+    /* Hover for default (mimics outline secondary hover) */
+    background-color: var(--color-secondary) !important;
+    border-color: var(--color-secondary) !important;
+    color: var(--color-text-light) !important;
+    transform: translateY(-1px); /* Add subtle lift */
+}
+.fc .fc-button-primary { /* Active button (mimics solid primary) */
+    background-color: var(--color-primary) !important;
+    border-color: var(--color-primary) !important;
+    color: var(--color-text-light) !important;
+}
+.fc .fc-button-primary:hover {
+     /* Hover for active (mimics solid primary hover) */
+     background-color: var(--color-primary-dark) !important;
+     border-color: var(--color-primary-dark) !important;
+     color: var(--color-text-light) !important;
+}
+.fc .fc-button-primary:disabled {
+    /* Disabled state */
+    background-color: var(--color-border) !important;
+    border-color: var(--color-border) !important;
+    color: var(--color-text-muted) !important;
+    opacity: 0.65 !important;
+    cursor: not-allowed !important;
+}
+
+
+/* --- Add Entry Tab Enhancements --- */
+/* Use card styling for sections within the tab */
+.add-form-section {
+    margin-bottom: var(--spacing-lg); /* Use standard spacing */
+    padding: var(--spacing-lg);
+    background-color: var(--color-surface); /* Use standard surface */
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-sm, 0 1px 2px rgba(0,0,0,0.05)); /* Subtle shadow */
+}
+.add-form-section h4 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm); /* Add padding */
+    border-bottom: 1px solid var(--color-border); /* Add separator */
+    font-size: 1.1rem; /* Adjust size */
+    color: var(--color-text); /* Standard heading color */
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 600;
+}
+.add-form-section .form-control-sm,
+.add-form-section .form-select-sm {
+    /* Base form styling applies, these might not be needed */
+    /* font-size: 0.875rem; */
+    /* padding: 0.4rem 0.6rem; */
+}
+.add-form-section .form-check-label {
+    font-size: 0.95rem; /* Slightly larger */
+}
+.add-form-section hr {
+    display: none; /* Remove hr if using cards/sections */
+}
+.add-form-section .form-actions { /* Add styling for action buttons if needed */
+     margin-top: var(--spacing-lg);
+     padding-top: var(--spacing-lg);
+     border-top: 1px solid var(--color-border);
+     display: flex;
+     justify-content: flex-end;
+     gap: var(--spacing-sm);
+}

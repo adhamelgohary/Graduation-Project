@@ -1,4 +1,4 @@
-{% extends "Admin_Portal/base.html" %}
+{% extends "Admin_Portal/base_admin.html" %}
 
 {% block title %}Hospital Admin Dashboard{% endblock %}
 
@@ -8,43 +8,30 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/dashboard.css') }}">
 {% endblock %}
 
+{% block header_title %}
+{# Use standard h1.page-title structure #}
+<h1 class="page-title">
+    <i class="fas fa-tachometer-alt"></i> Admin Dashboard
+</h1>
+{% endblock %}
+
 {% block content %}
 <div class="stats-overview">
-    <div class="stat-card primary">
-        <div class="stat-icon"><i class="fas fa-user-md"></i></div>
+    {% macro stat_card(type, icon_class, value, label, link=None) %}
+    <{% if link %}a href="{{ link }}"{% else %}div{% endif %} class="stat-card {{ type }}">
+        <div class="stat-icon"><i class="{{ icon_class }}"></i></div>
         <div class="stat-details">
-            <h3>{{ total_doctors | default(0) }}</h3>
-            <p>Total Doctors</p>
+            <h3>{{ value | default(0) }}</h3>
+            <p>{{ label }}</p>
         </div>
-    </div>
-    <div class="stat-card success">
-        <div class="stat-icon"><i class="fas fa-user-injured"></i></div>
-        <div class="stat-details">
-            <h3>{{ total_patients | default(0) }}</h3>
-            <p>Total Patients</p>
-        </div>
-    </div>
-    <div class="stat-card warning">
-        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
-        <div class="stat-details">
-            <h3>{{ appointments_today | default(0) }}</h3>
-            <p>Today's Appointments</p>
-        </div>
-    </div>
-    <div class="stat-card danger">
-        <div class="stat-icon"><i class="fas fa-clock"></i></div>
-        <div class="stat-details">
-            <h3>{{ pending_appointment_approvals | default(0) }}</h3>
-            <p>Pending Appt. Approvals</p>
-        </div>
-    </div>
-     <div class="stat-card info">
-        <div class="stat-icon"><i class="fas fa-user-check"></i></div>
-        <div class="stat-details">
-            <h3>{{ pending_doctor_verification | default(0) }}</h3>
-            <p>Pending Doctor Verifications</p>
-        </div>
-    </div>
+    </{% if link %}a{% else %}div{% endif %}>
+    {% endmacro %}
+
+    {{ stat_card('primary', 'fas fa-user-md', total_doctors, 'Total Doctors', url_for('admin_users.view_doctors') if false else '#') }} {# Replace '#' with actual link later #}
+    {{ stat_card('success', 'fas fa-user-injured', total_patients, 'Total Patients', url_for('admin_users.view_patients') if false else '#') }} {# Replace '#' with actual link later #}
+    {{ stat_card('warning', 'fas fa-calendar-day', appointments_today, "Today's Appointments", url_for('admin_appointments.view_appointments', filter='today') if false else '#') }} {# Replace '#' with actual link later #}
+    {{ stat_card('danger', 'fas fa-clock', pending_appointment_approvals, 'Pending Appt. Approvals', url_for('admin_appointments.view_appointments', status='pending-approval') if false else '#') }} {# Replace '#' with actual link later #}
+    {{ stat_card('info', 'fas fa-user-check', pending_doctor_verification, 'Pending Doctor Verifications', url_for('admin_users.view_doctors', status='pending') if false else '#') }} {# Replace '#' with actual link later #}
 </div>
 
 <div class="dashboard-grid">
@@ -52,8 +39,14 @@
         <div class="card-header">
             <h3><i class="fas fa-chart-line"></i> Monthly Appointments</h3>
         </div>
-        <div class="card-body">
-            <canvas id="appointmentsChart"></canvas>
+        <div class="card-body chart-container">
+            <div class="chart-loading" id="appointmentsChartLoader">
+                <div class="spinner"></div>
+                <p>Loading Chart...</p>
+            </div>
+            <canvas id="appointmentsChart" style="display: none;"></canvas>
+            <p class="chart-no-data" id="appointmentsChartNoData" style="display: none;">No monthly appointment data available.</p>
+            <p class="chart-error" id="appointmentsChartError" style="display: none;">Error loading chart data.</p>
         </div>
     </div>
 
@@ -61,8 +54,14 @@
         <div class="card-header">
             <h3><i class="fas fa-users"></i> User Distribution</h3>
         </div>
-        <div class="card-body">
-            <canvas id="userDistributionChart"></canvas>
+        <div class="card-body chart-container">
+            <div class="chart-loading" id="userDistributionChartLoader">
+                <div class="spinner"></div>
+                <p>Loading Chart...</p>
+            </div>
+            <canvas id="userDistributionChart" style="display: none;"></canvas>
+            <p class="chart-no-data" id="userDistributionChartNoData" style="display: none;">No user distribution data available.</p>
+            <p class="chart-error" id="userDistributionChartError" style="display: none;">Error loading chart data.</p>
         </div>
     </div>
 
@@ -70,21 +69,29 @@
         <div class="card-header">
             <h3><i class="fas fa-chart-pie"></i> Appointment Status</h3>
         </div>
-        <div class="card-body">
-            <canvas id="appointmentStatusChart"></canvas>
+        <div class="card-body chart-container">
+            <div class="chart-loading" id="appointmentStatusChartLoader">
+                <div class="spinner"></div>
+                <p>Loading Chart...</p>
+            </div>
+            <canvas id="appointmentStatusChart" style="display: none;"></canvas>
+            <p class="chart-no-data" id="appointmentStatusChartNoData" style="display: none;">No appointment status data available.</p>
+            <p class="chart-error" id="appointmentStatusChartError" style="display: none;">Error loading chart data.</p>
         </div>
     </div>
 
     <div class="dashboard-card">
         <div class="card-header">
             <h3><i class="fas fa-user-plus"></i> New Users</h3>
+            {# Optional: Link to user management page #}
+            {# <a href="{{ url_for('admin_users.view_users') }}" class="btn btn-sm"><i class="fas fa-external-link-alt"></i> View All</a> #}
         </div>
         <div class="card-body">
             <div class="user-list">
                 {% if newest_users %}
                     {% for user in newest_users %}
                     <div class="user-item">
-                        <div class="user-avatar">
+                        <div class="user-avatar user-type-{{ user.user_type | lower | default('unknown') }}">
                             {% if user.user_type == 'doctor' %}
                             <i class="fas fa-user-md"></i>
                             {% elif user.user_type == 'patient' %}
@@ -97,12 +104,14 @@
                         </div>
                         <div class="user-info">
                             <h4>{{ user.name }}</h4>
-                            <p>{{ user.user_type | capitalize }} • {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}</p>
+                            <p>{{ user.user_type | capitalize }} • Joined: {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}</p>
                         </div>
+                         {# Optional: Link to user profile #}
+                         {# <a href="{{ url_for('admin_users.view_user_profile', user_id=user.id) }}" class="btn-icon view" title="View Profile"><i class="fas fa-eye"></i></a> #}
                     </div>
                     {% endfor %}
                 {% else %}
-                    <p>No recent users found.</p>
+                    <p class="text-center">No recent users found.</p>
                 {% endif %}
             </div>
         </div>
@@ -112,53 +121,61 @@
 <div class="dashboard-card full-width">
     <div class="card-header">
         <h3><i class="fas fa-calendar-check"></i> Recent Appointments</h3>
-        <a href="{{ url_for('admin_appointments.view_appointments') if false else '#' }}" class="btn"><i class="fas fa-external-link-alt"></i> View All</a>
+        {# Ensure this route exists in your Flask app #}
+        <a href="{{ url_for('admin_appointments.list_appointments') }}" class="btn btn-outline"><i class="fas fa-external-link-alt"></i> View All</a>
     </div>
     <div class="card-body">
         {% if appointments %}
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Patient</th>
-                    <th>Doctor</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for appointment in appointments %}
-                <tr>
-                    <td>#{{ appointment.appointment_id }}</td>
-                    <td>{{ appointment.patient_name }}</td>
-                    <td>{{ appointment.doctor_name }}</td>
-                    <td>{{ appointment.appointment_date.strftime('%b %d, %Y') if appointment.appointment_date else 'N/A' }}</td>
-                    <td>{{ appointment.start_time.strftime('%I:%M %p') if appointment.start_time else 'N/A' }}</td>
-                    <td>
-                        <span class="badge {{ appointment.appointment_type | lower | replace(' ', '-') | default('unknown') }}">
-                            {{ appointment.appointment_type | capitalize | default('N/A') }}
-                        </span>
-                    </td>
-                    <td>
-                         <span class="status-badge {{ appointment.status | lower | replace(' ', '-') | default('unknown') }}">
-                            {{ appointment.status | capitalize | default('N/A') }}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="actions">
-                            <button class="btn-icon view" title="View Details"><i class="fas fa-eye"></i></button>
-                            <button class="btn-icon edit" title="Edit Appointment"><i class="fas fa-edit"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td>#{{ appointment.appointment_id }}</td>
+                        <td>{{ appointment.patient_name }}</td>
+                        <td>{{ appointment.doctor_name }}</td>
+                        <td>{{ appointment.appointment_date.strftime('%b %d, %Y') if appointment.appointment_date else 'N/A' }}</td>
+                        <td>{{ appointment.start_time.strftime('%I:%M %p') if appointment.start_time else 'N/A' }}</td>
+                        <td>
+                            {# Using appointment_type for class, assuming values like 'routine', 'emergency' etc. #}
+                            <span class="badge type-{{ appointment.appointment_type | lower | replace(' ', '-') | default('unknown') }}">
+                                {{ appointment.appointment_type | capitalize | default('N/A') }}
+                            </span>
+                        </td>
+                        <td>
+                            {# Using status for class, assuming values like 'pending-approval', 'confirmed', 'cancelled' etc. #}
+                             <span class="status-badge status-{{ appointment.status | lower | replace(' ', '-') | default('unknown') }}">
+                                {{ appointment.status | replace('-', ' ') | title | default('N/A') }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                {# Replace '#' with actual action URLs later #}
+                                <a href="#" class="btn-icon view" title="View Details"><i class="fas fa-eye"></i></a>
+                                <a href="#" class="btn-icon edit" title="Edit Appointment"><i class="fas fa-edit"></i></a>
+                                {# Optional: Add more actions like cancel #}
+                                {# <button class="btn-icon danger" title="Cancel Appointment"><i class="fas fa-times-circle"></i></button> #}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
-            <p>No recent appointments found.</p>
+            <p class="text-center">No recent appointments found.</p>
         {% endif %}
     </div>
 </div>
@@ -169,13 +186,49 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
+  // Helper function to show/hide chart elements
+  function handleChartState(chartId, state, message = '') {
+      const loader = document.getElementById(`${chartId}Loader`);
+      const canvas = document.getElementById(chartId);
+      const noData = document.getElementById(`${chartId}NoData`);
+      const error = document.getElementById(`${chartId}Error`);
+
+      if (!loader || !canvas || !noData || !error) return;
+
+      loader.style.display = 'none';
+      canvas.style.display = 'none';
+      noData.style.display = 'none';
+      error.style.display = 'none';
+
+      switch (state) {
+          case 'loading':
+              loader.style.display = 'flex';
+              break;
+          case 'success':
+              canvas.style.display = 'block';
+              break;
+          case 'nodata':
+              noData.style.display = 'block';
+              if (message) noData.textContent = message;
+              break;
+          case 'error':
+              error.style.display = 'block';
+              if (message) error.textContent = message;
+              break;
+      }
+  }
+
+  // --- Appointments Chart ---
   const appointmentsCtx = document.getElementById('appointmentsChart');
   if (appointmentsCtx) {
+      handleChartState('appointmentsChart', 'loading');
       try {
+          // Ensure the data from Jinja is valid JSON or handle potential errors server-side first
           const months = JSON.parse('{{ monthly_appointments|map(attribute="month")|list|tojson|safe }}');
           const appointmentCounts = JSON.parse('{{ monthly_appointments|map(attribute="count")|list|tojson|safe }}');
 
-          if (months.length > 0) {
+          if (months && appointmentCounts && months.length > 0) {
+              handleChartState('appointmentsChart', 'success');
               new Chart(appointmentsCtx, {
                   type: 'line',
                   data: {
@@ -183,113 +236,166 @@ document.addEventListener('DOMContentLoaded', function() {
                       datasets: [{
                           label: 'Monthly Appointments',
                           data: appointmentCounts,
-                          backgroundColor: 'rgba(52, 152, 219, 0.2)',
-                          borderColor: 'rgba(52, 152, 219, 1)',
+                          backgroundColor: 'rgba(52, 152, 219, 0.2)', // Example: Use CSS var if desired: getComputedStyle(document.documentElement).getPropertyValue('--primary-color-alpha')
+                          borderColor: 'rgba(52, 152, 219, 1)', // Example: getComputedStyle(document.documentElement).getPropertyValue('--primary-color')
                           borderWidth: 2,
                           tension: 0.4,
-                          fill: true
+                          fill: true,
+                          pointBackgroundColor: 'rgba(52, 152, 219, 1)',
+                          pointRadius: 4,
+                          pointHoverRadius: 6
                       }]
                   },
                   options: {
                       responsive: true,
                       maintainAspectRatio: false,
-                      scales: { y: { beginAtZero: true } }
+                      scales: { y: { beginAtZero: true, grid: { color: '#e0e0e0' } }, x: { grid: { display: false } } },
+                      plugins: { legend: { display: false } } // Keep it clean, label is in dataset
                   }
               });
           } else {
-              appointmentsCtx.parentElement.innerHTML = '<p class="text-center">No monthly appointment data available.</p>';
+              handleChartState('appointmentsChart', 'nodata');
           }
       } catch (e) {
-          console.error("Error parsing monthly appointments data:", e);
-          appointmentsCtx.parentElement.innerHTML = '<p class="text-center text-danger">Error loading chart data.</p>';
+          console.error("Error processing appointmentsChart data:", e);
+          handleChartState('appointmentsChart', 'error', 'Error loading chart data. Check console.');
       }
   } else {
       console.warn("Element with ID 'appointmentsChart' not found.");
   }
 
+  // --- User Distribution Chart ---
   const userDistCtx = document.getElementById('userDistributionChart');
   if (userDistCtx) {
+      handleChartState('userDistributionChart', 'loading');
       try {
           const userTypes = JSON.parse('{{ user_type_distribution|map(attribute="user_type")|list|tojson|safe }}');
           const userCounts = JSON.parse('{{ user_type_distribution|map(attribute="count")|list|tojson|safe }}');
+          // Define more colors if you have more user types
           const backgroundColorsUser = [
-              'rgba(52, 152, 219, 0.7)',
-              'rgba(46, 204, 113, 0.7)',
-              'rgba(155, 89, 182, 0.7)',
-              'rgba(230, 126, 34, 0.7)',
-              'rgba(241, 196, 15, 0.7)',
-              'rgba(231, 76, 60, 0.7)'
+              'rgba(52, 152, 219, 0.8)',  // Primary
+              'rgba(46, 204, 113, 0.8)',  // Success
+              'rgba(155, 89, 182, 0.8)',  // Purple (Admin?)
+              'rgba(230, 126, 34, 0.8)',  // Orange
+              'rgba(241, 196, 15, 0.8)',  // Warning
+              'rgba(231, 76, 60, 0.8)',   // Danger
+              'rgba(149, 165, 166, 0.8)'   // Grey
           ];
 
-          if (userTypes.length > 0) {
+          if (userTypes && userCounts && userTypes.length > 0) {
+              handleChartState('userDistributionChart', 'success');
               new Chart(userDistCtx, {
                   type: 'doughnut',
                   data: {
-                      labels: userTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)),
+                      labels: userTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)), // Capitalize
                       datasets: [{
                           label: 'User Distribution',
                           data: userCounts,
                           backgroundColor: backgroundColorsUser.slice(0, userCounts.length),
                           borderColor: '#ffffff',
-                          borderWidth: 2
+                          borderWidth: 3,
+                          hoverOffset: 4
                       }]
                   },
                   options: {
                       responsive: true,
                       maintainAspectRatio: false,
-                      plugins: { legend: { position: 'top' } }
+                      cutout: '65%', // Make it a thinner doughnut
+                      plugins: {
+                          legend: { position: 'bottom', labels: { padding: 15 } },
+                          tooltip: {
+                              callbacks: {
+                                  label: function(context) {
+                                      let label = context.label || '';
+                                      if (label) { label += ': '; }
+                                      if (context.parsed !== null) {
+                                          label += context.parsed;
+                                          // Calculate percentage
+                                          const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                          const percentage = ((context.parsed / total) * 100).toFixed(1) + '%';
+                                          label += ` (${percentage})`;
+                                      }
+                                      return label;
+                                  }
+                              }
+                          }
+                      }
                   }
               });
           } else {
-              userDistCtx.parentElement.innerHTML = '<p class="text-center">No user distribution data available.</p>';
+               handleChartState('userDistributionChart', 'nodata');
           }
       } catch (e) {
-           console.error("Error parsing user distribution data:", e);
-           userDistCtx.parentElement.innerHTML = '<p class="text-center text-danger">Error loading chart data.</p>';
+           console.error("Error processing userDistributionChart data:", e);
+           handleChartState('userDistributionChart', 'error', 'Error loading chart data. Check console.');
       }
   } else {
       console.warn("Element with ID 'userDistributionChart' not found.");
   }
 
+  // --- Appointment Status Chart ---
   const apptStatusCtx = document.getElementById('appointmentStatusChart');
   if (apptStatusCtx) {
+      handleChartState('appointmentStatusChart', 'loading');
       try {
           const statusTypes = JSON.parse('{{ appointment_status_stats|map(attribute="status")|list|tojson|safe }}');
           const statusCounts = JSON.parse('{{ appointment_status_stats|map(attribute="count")|list|tojson|safe }}');
-          const backgroundColorsStatus = [
-              'rgba(241, 196, 15, 0.7)',
-              'rgba(46, 204, 113, 0.7)',
-              'rgba(52, 152, 219, 0.7)',
-              'rgba(231, 76, 60, 0.7)',
-              'rgba(149, 165, 166, 0.7)',
-              'rgba(155, 89, 182, 0.7)'
-          ];
+          // Map statuses to colors (adjust colors as needed)
+          const statusColorMap = {
+                'pending-approval': 'rgba(241, 196, 15, 0.8)', // Warning
+                'confirmed': 'rgba(46, 204, 113, 0.8)',        // Success
+                'completed': 'rgba(52, 152, 219, 0.8)',        // Primary
+                'cancelled': 'rgba(231, 76, 60, 0.8)',         // Danger
+                'no-show': 'rgba(149, 165, 166, 0.8)',         // Grey
+                'rescheduled': 'rgba(155, 89, 182, 0.8)'       // Purple
+          };
+          const backgroundColorsStatus = statusTypes.map(status => statusColorMap[status.toLowerCase().replace(' ','-')] || 'rgba(189, 195, 199, 0.8)'); // Default grey
 
-          if (statusTypes.length > 0) {
+          if (statusTypes && statusCounts && statusTypes.length > 0) {
+              handleChartState('appointmentStatusChart', 'success');
               new Chart(apptStatusCtx, {
                   type: 'pie',
                   data: {
+                      // Format labels nicely (e.g., 'pending-approval' -> 'Pending Approval')
                       labels: statusTypes.map(status => status.replace('-', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')),
                       datasets: [{
                           label: 'Appointment Status',
                           data: statusCounts,
-                          backgroundColor: backgroundColorsStatus.slice(0, statusCounts.length),
+                          backgroundColor: backgroundColorsStatus,
                           borderColor: '#ffffff',
-                          borderWidth: 2
+                          borderWidth: 3,
+                          hoverOffset: 4
                       }]
                   },
                   options: {
                       responsive: true,
                       maintainAspectRatio: false,
-                      plugins: { legend: { position: 'top' } }
+                      plugins: {
+                          legend: { position: 'bottom', labels: { padding: 15 } },
+                          tooltip: { // Add percentage to tooltip
+                             callbacks: {
+                                  label: function(context) {
+                                      let label = context.label || '';
+                                      if (label) { label += ': '; }
+                                      if (context.parsed !== null) {
+                                          label += context.parsed;
+                                          const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                          const percentage = ((context.parsed / total) * 100).toFixed(1) + '%';
+                                          label += ` (${percentage})`;
+                                      }
+                                      return label;
+                                  }
+                              }
+                          }
+                      }
                   }
               });
           } else {
-               apptStatusCtx.parentElement.innerHTML = '<p class="text-center">No appointment status data available.</p>';
+               handleChartState('appointmentStatusChart', 'nodata');
           }
       } catch (e) {
-           console.error("Error parsing appointment status data:", e);
-           apptStatusCtx.parentElement.innerHTML = '<p class="text-center text-danger">Error loading chart data.</p>';
+           console.error("Error processing appointmentStatusChart data:", e);
+           handleChartState('appointmentStatusChart', 'error', 'Error loading chart data. Check console.');
       }
   } else {
       console.warn("Element with ID 'appointmentStatusChart' not found.");

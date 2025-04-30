@@ -1,247 +1,137 @@
-{% extends "Admin_Portal/base.html" %}
+{% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Edit Doctor - {{ form_data.first_name }} {{ form_data.last_name }}{% endblock %} {# Use form_data for consistency #}
+{% block title %}Edit Doctor: {{ doctor.first_name }} {{ doctor.last_name }}{% endblock %}
 
-{% block nav_doctors %}active{% endblock %}
-
-{% block header_title %}<i class="fas fa-user-edit"></i> Edit Doctor Profile{% endblock %}
-
-{% block extra_css %}
-{# Keep the CSS from your original edit_doctor.html (includes modal styles) #}
-<style>
-    .page-actions { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
-    .card .card-header h2 { font-size: 20px; font-weight: 600; margin: 0; color: var(--dark-color); }
-    .card-header-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .modal-overlay { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.6); z-index: 1040; overflow-y: auto; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.active { display: flex; }
-    .modal-content { background-color: #fff; border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 30px; max-width: 500px; width: 100%; position: relative; }
-    .modal-header { border-bottom: 1px solid #eee; margin-bottom: 20px; padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .modal-header h2 { margin: 0; font-size: 20px; color: var(--dark-color); }
-    .modal-close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #888; line-height: 1; }
-    .modal-close-btn:hover { color: #333; }
-    .modal-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; border-top: 1px solid #eee; padding-top: 20px; }
-    .delete-link-btn { background: none; border: none; color: var(--danger-color); cursor: pointer; font-weight: 500; padding: 0; text-decoration: underline; font-size: 14px; }
-    .delete-link-btn:hover { color: #c0392b; }
-    .password-section { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-    .password-section h3 { font-size: 18px; margin-bottom: 15px; color: var(--dark-color); }
-</style>
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_management.css') }}">
 {% endblock %}
-
 
 {% block content %}
-{# Main Edit Form - Use form_data primarily for repopulation on error #}
-{# Use doctor.user_id from the initially loaded data for the action URL #}
-<form action="{{ url_for('Doctors_Management.edit_doctor', doctor_id=doctor.user_id) }}" method="POST">
-    {# CSRF token removed #}
-    <div class="form-container">
-        <div class="form-header">
-            <h2><i class="fas fa-user-md"></i> Edit Doctor Details for {{ doctor.username }}</h2>
-        </div>
+<h1>Edit Doctor: {{ doctor.first_name }} {{ doctor.last_name }} ({{ doctor.username }})</h1>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.index') }}">Manage Doctors</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=doctor.user_id) }}">Doctor Details</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Edit Doctor</li>
+  </ol>
+</nav>
+<hr>
 
-        {# --- User and Personal Details --- #}
-        <div class="form-row">
-            <div class="form-group">
-                <label for="first_name">First Name</label>
-                <input type="text" id="first_name" name="first_name" value="{{ form_data.first_name }}" required>
-            </div>
-            <div class="form-group">
-                <label for="last_name">Last Name</label>
-                <input type="text" id="last_name" name="last_name" value="{{ form_data.last_name }}" required>
-            </div>
-        </div>
+<div class="card shadow-sm">
+<div class="card-body">
+<form method="POST" action="{{ url_for('Doctors_Management.edit_doctor', doctor_id=doctor.user_id) }}" class="edit-doctor-form">
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" value="{{ form_data.email }}" required>
-            </div>
-            <div class="form-group">
-                <label for="phone">Phone</label>
-                <input type="text" id="phone" name="phone" value="{{ form_data.phone or '' }}"> {# Use or '' #}
-            </div>
+    <h5 class="mb-3 border-bottom pb-2">Account Information</h5>
+    <div class="row g-3">
+        <div class="col-md-6 mb-3">
+            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ form_data.first_name }}" required>
         </div>
+        <div class="col-md-6 mb-3">
+            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ form_data.last_name }}" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ form_data.email }}" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="phone" class="form-label">Phone Number (Optional)</label>
+            <input type="tel" class="form-control" id="phone" name="phone" value="{{ form_data.phone or '' }}">
+        </div>
+        {# --- Account Status Dropdown --- #}
+        <div class="col-md-6 mb-3">
+            <label for="account_status" class="form-label">Account Status <span class="text-danger">*</span></label>
+            <select class="form-select" id="account_status" name="account_status" required>
+                 <option value="" disabled>-- Select Status --</option>
+                 {% for status in account_statuses %}
+                 <option value="{{ status }}" {% if form_data.account_status == status %}selected{% endif %}>
+                     {{ status.replace('_', ' ') | title }}
+                 </option>
+                 {% endfor %}
+            </select>
+        </div>
+         {# --- End Account Status Dropdown --- #}
+    </div>
 
-        {# --- Professional Details --- #}
-        <div class="form-row">
-            <div class="form-group">
-                <label for="specialization">Specialization</label>
-                 <select id="specialization" name="specialization" required>
-                    {# Check form_data first, then original doctor data if needed #}
-                    <option value="General Practice" {% if form_data.specialization == 'General Practice' %}selected{% endif %}>General Practice</option>
-                    <option value="Cardiology" {% if form_data.specialization == 'Cardiology' %}selected{% endif %}>Cardiology</option>
-                    <option value="Pediatrics" {% if form_data.specialization == 'Pediatrics' %}selected{% endif %}>Pediatrics</option>
-                    <option value="Neurology" {% if form_data.specialization == 'Neurology' %}selected{% endif %}>Neurology</option>
-                    <option value="Orthopedics" {% if form_data.specialization == 'Orthopedics' %}selected{% endif %}>Orthopedics</option>
-                    {# Add more #}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="license_number">License Number</label>
-                <input type="text" id="license_number" name="license_number" value="{{ form_data.license_number or '' }}" required>
+    <h5 class="mt-4 mb-3 border-bottom pb-2">Professional Details</h5>
+     <div class="row g-3">
+         <div class="col-md-6 mb-3">
+            <label for="specialization" class="form-label">Specialization <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="specialization" name="specialization" value="{{ form_data.specialization }}" required>
+         </div>
+         <div class="col-md-6 mb-3">
+             <label for="npi_number" class="form-label">NPI Number (Optional)</label>
+            <input type="text" class="form-control" id="npi_number" name="npi_number" value="{{ form_data.npi_number or '' }}">
+         </div>
+    </div>
+     <div class="row g-3">
+        <div class="col-md-4 mb-3">
+            <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="license_number" name="license_number" value="{{ form_data.license_number }}" required>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="license_state" class="form-label">License State <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="license_state" name="license_state" value="{{ form_data.license_state or '' }}" required>
+        </div>
+         <div class="col-md-4 mb-3">
+            <label for="license_expiration" class="form-label">License Expiration <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="license_expiration" name="license_expiration" value="{{ form_data.license_expiration_formatted }}" required>
+        </div>
+     </div>
+      <div class="row g-3">
+        <div class="col-md-8 mb-3">
+            <label for="medical_school" class="form-label">Medical School (Optional)</label>
+            <input type="text" class="form-control" id="medical_school" name="medical_school" value="{{ form_data.medical_school or '' }}">
+        </div>
+        <div class="col-md-4 mb-3">
+             <label for="graduation_year" class="form-label">Graduation Year (Optional)</label>
+            <input type="number" class="form-control" id="graduation_year" name="graduation_year" value="{{ form_data.graduation_year or '' }}" min="1900" max="{{ current_year }}">
+        </div>
+         <div class="col-12 mb-3">
+            <label for="certifications" class="form-label">Certifications (Optional, comma-separated)</label>
+            <input type="text" class="form-control" id="certifications" name="certifications" value="{{ form_data.certifications or '' }}">
+        </div>
+        <div class="col-12 mb-3">
+             <label for="biography" class="form-label">Biography (Optional)</label>
+            <textarea class="form-control" id="biography" name="biography" rows="4">{{ form_data.biography or '' }}</textarea>
+        </div>
+    </div>
+     <div class="row g-3">
+        <div class="col-md-9 mb-3">
+            <label for="clinic_address" class="form-label">Clinic Address (Optional)</label>
+            <input type="text" class="form-control" id="clinic_address" name="clinic_address" value="{{ form_data.clinic_address or '' }}">
+        </div>
+         <div class="col-md-3 mb-3 align-self-center">
+             <div class="form-check form-switch mt-3">
+                <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" {% if form_data.accepting_new_patients %}checked{% endif %}>
+                <label class="form-check-label" for="accepting_new_patients">
+                    Accepting New Patients?
+                </label>
             </div>
         </div>
+     </div>
 
-        <div class="form-row">
-            <div class="form-group">
-                <label for="license_state">License State</label>
-                <input type="text" id="license_state" name="license_state" value="{{ form_data.license_state or '' }}" required maxlength="2">
-            </div>
-            <div class="form-group">
-                <label for="license_expiration">License Expiration</label>
-                {# Use the potentially updated formatted date from form_data #}
-                <input type="date" id="license_expiration" name="license_expiration" value="{{ form_data.license_expiration_formatted or '' }}" required>
-            </div>
+    <h5 class="mt-4 mb-3 border-bottom pb-2">Reset Password (Optional)</h5>
+    <div class="alert alert-warning small">
+        <i class="fas fa-exclamation-triangle me-1"></i> <strong>Security Warning:</strong> Leave fields blank to keep current password. If setting a new password, it will be stored as **plain text** in the database. This is insecure.
+    </div>
+     <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="new_password" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="new_password" name="new_password" autocomplete="new-password">
         </div>
+        <div class="col-md-6 mb-3">
+            <label for="confirm_password" class="form-label">Confirm New Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" autocomplete="new-password">
+        </div>
+    </div>
 
-        {# --- Optional Details --- #}
-         <div class="form-row">
-             <div class="form-group">
-                <label for="npi_number">NPI Number</label>
-                <input type="text" id="npi_number" name="npi_number" value="{{ form_data.npi_number or '' }}">
-            </div>
-            <div class="form-group">
-                 <label for="medical_school">Medical School</label>
-                <input type="text" id="medical_school" name="medical_school" value="{{ form_data.medical_school or '' }}">
-            </div>
-        </div>
-         <div class="form-row">
-            <div class="form-group">
-                 <label for="graduation_year">Graduation Year</label>
-                 {# Use the current_year variable passed from the Flask route #}
-                 <input type="number" id="graduation_year" name="graduation_year" min="1900" max="{{ current_year }}" step="1" placeholder="YYYY" value="{{ form_data.graduation_year or '' }}">
-            </div>
-            <div class="form-group">
-                 <label for="certifications">Certifications</label>
-                <input type="text" id="certifications" name="certifications" value="{{ form_data.certifications or '' }}">
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="biography">Biography</label>
-            <textarea id="biography" name="biography" rows="3">{{ form_data.biography or '' }}</textarea>
-        </div>
-        <div class="form-group">
-            <label for="clinic_address">Clinic Address</label>
-            <input type="text" id="clinic_address" name="clinic_address" value="{{ form_data.clinic_address or '' }}">
-        </div>
-        <div class="form-group">
-            <div class="checkbox-container">
-                {# Check based on the potentially updated form_data value #}
-                <input type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1"
-                       {% if form_data.accepting_new_patients == 1 %}checked{% endif %}>
-                <label for="accepting_new_patients">Accepting New Patients</label>
-            </div>
-        </div>
 
-        {# --- Password Change Section --- #}
-        <div class="password-section">
-             <h3>Change Password (Optional)</h3>
-             <div class="form-row">
-                 <div class="form-group">
-                     <label for="new_password">New Password</label>
-                     <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current">
-                 </div>
-                 <div class="form-group">
-                     <label for="confirm_password">Confirm New Password</label>
-                     <input type="password" id="confirm_password" name="confirm_password" placeholder="Leave blank to keep current">
-                 </div>
-             </div>
-        </div>
-
-        {# --- Form Actions --- #}
-        <div class="form-actions">
-             {# Use doctor.user_id for the cancel link #}
-            <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=doctor.user_id) }}" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
-        </div>
-    </div> {# End form-container #}
+    <hr class="my-4">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
+    <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=doctor.user_id) }}" class="btn btn-secondary">Cancel</a>
 </form>
-
-
-{# --- Uploaded Documents Section --- #}
-<div class="card info-section" style="margin-top: 30px;">
-    <div class="card-header card-header-actions">
-        <h2><i class="fas fa-file-alt"></i> Uploaded Documents</h2>
-        <button data-modal-target="upload-document-modal" class="btn btn-success btn-sm">
-            <i class="fas fa-upload"></i> Upload Document
-        </button>
-    </div>
-    <div class="card-body">
-        {% if form_data.documents %} {# Check documents from form_data #}
-            <table class="list-table">
-                <thead>
-                    <tr>
-                        <th>Document Type</th>
-                        <th>File Name</th>
-                        <th>Upload Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for doc in form_data.documents %}
-                    <tr>
-                        <td>{{ doc.document_type|capitalize }}</td>
-                        <td>{{ doc.file_name }}</td>
-                        <td>{{ doc.upload_date.strftime('%Y-%m-%d %H:%M') if doc.upload_date else 'N/A' }}</td> {# Format date #}
-                        <td class="action-buttons">
-                            <form action="{{ url_for('Doctors_Management.delete_doctor_document', document_id=doc.document_id) }}"
-                                  method="POST" onsubmit="return confirm('Delete this document?');" style="display: inline;">
-                                <button type="submit" class="delete-link-btn" title="Delete"><i class="fas fa-trash"></i> Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <div class="no-results"><i class="fas fa-file-excel"></i><p>No documents uploaded yet.</p></div>
-        {% endif %}
-    </div>
-</div>
-
-{# --- Upload Document Modal --- #}
-<div id="upload-document-modal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-             <h2><i class="fas fa-upload"></i> Upload New Document</h2>
-             <button type="button" class="modal-close-btn" onclick="closeModal('upload-document-modal')">×</button>
-        </div>
-         {# Use doctor.user_id for the modal action URL #}
-        <form action="{{ url_for('Doctors_Management.upload_doctor_document', doctor_id=doctor.user_id) }}"
-              method="POST" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="modal_document_type">Document Type</label>
-                <select name="document_type" id="modal_document_type" required>
-                    <option value="" disabled selected>-- Select Type --</option>
-                    <option value="license">License</option>
-                    <option value="certification">Certification</option>
-                    <option value="identity">Identity</option>
-                    <option value="education">Education</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="modal_document">Document File</label>
-                <input type="file" name="document" id="modal_document" required accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="closeModal('upload-document-modal')">Cancel</button>
-                 <button type="submit" class="btn btn-primary"><i class="fas fa-upload"></i> Upload</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-{% endblock %}
-
-{% block scripts %}
-{# Keep the modal JavaScript #}
-<script>
-    function openModal(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.classList.add('active'); } }
-    function closeModal(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.classList.remove('active'); } }
-    const openModalButton = document.querySelector('[data-modal-target="upload-document-modal"]');
-    if (openModalButton) { openModalButton.addEventListener('click', function() { openModal('upload-document-modal'); }); }
-    const modalOverlays = document.querySelectorAll('.modal-overlay');
-    modalOverlays.forEach(overlay => { overlay.addEventListener('click', function(event) { if (event.target === overlay) { closeModal(overlay.id); } }); });
-    document.addEventListener('keydown', function(event) { if (event.key === 'Escape') { modalOverlays.forEach(overlay => { if (overlay.classList.contains('active')) { closeModal(overlay.id); } }); } });
-</script>
+</div> {# End card-body #}
+</div> {# End card #}
 {% endblock %}

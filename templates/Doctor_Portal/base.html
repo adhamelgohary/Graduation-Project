@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Medical Portal{% endblock %} - HealthApp</title> {# More generic title #}
+
+    {# Link Base CSS #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/base.css') }}">
+
+    {# Favicon #}
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+    {# Font Awesome for Icons - Make sure this is included #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    {# Google Fonts (Keep as is) #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    {# Block for extra head elements #}
+    {% block head_extra %}{% endblock %}
+
+</head>
+<body>
+    <div class="app-layout">
+        <header class="app-header">
+            <div class="header-brand">
+                 <a href="{{ url_for('doctor_main.dashboard') }}" style="text-decoration: none; color: inherit;"> {# Link logo to dashboard #}
+                    {# Placeholder for Logo or App Name #}
+                    <span style="font-weight: bold; font-size: 1.2em;">HealthApp Portal</span>
+                 </a>
+                 {# Example using image: <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo"> #}
+            </div>
+            <div class="header-user">
+                {# Use current_user from Flask-Login as the primary source #}
+                {% if current_user and current_user.is_authenticated %}
+                    <span class="user-greeting">
+                        Welcome,
+                        {# Display title based on user_type #}
+                        {% if current_user.user_type == 'doctor' %}
+                            Dr. {{ current_user.last_name or 'User' }}
+                        {% elif current_user.user_type == 'nutritionist' %}
+                             {{ current_user.first_name or '' }} {{ current_user.last_name or 'Nutritionist' }} {# Using full name for nutritionist #}
+                        {% else %}
+                             {{ current_user.username or 'User' }} {# Fallback for other potential types #}
+                        {% endif %}
+                    </span>
+                     <a href="{{ url_for('login.logout_route') }}" class="button button-outline button-small"> <i class="fas fa-sign-out-alt fa-fw"></i> Logout</a> {# Added icon #}
+                {% else %}
+                     {# Fallback if not logged in #}
+                     <a href="{{ url_for('auth.login') }}" class="button button-small"><i class="fas fa-sign-in-alt fa-fw"></i> Login</a> {# Added icon #}
+                {% endif %}
+            </div>
+        </header>
+
+        <aside class="app-sidebar">
+            <nav>
+                {% if current_user and current_user.is_authenticated %} {# Only show nav if logged in #}
+                <ul>
+                    {# === Common Links (For Both Doctor & Nutritionist) === #}
+                    <li>
+                        {# Assuming dashboard route is accessible by both #}
+                        <a href="{{ url_for('doctor_main.dashboard') }}"
+                           class="{% if request.endpoint == 'doctor_main.dashboard' %}active{% endif %}">
+                            <i class="fas fa-tachometer-alt fa-fw"></i> Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        {# Assuming appointments route is accessible by both - UPDATE URL_FOR #}
+                        <a href="{{ url_for('appointments.list_appointments') if true else '#' }}" {# UPDATE 'appointments.list_appointments' #}
+                           class="{% if request.endpoint.startswith('appointments.') %}active{% endif %}"> {# UPDATE blueprint name 'appointments.' #}
+                            <i class="fas fa-calendar-alt fa-fw"></i> Appointments
+                        </a>
+                    </li>
+                    <li>
+                         {# Assuming patients route is accessible by both #}
+                        <a href="{{ url_for('patients.patients_list') }}"
+                           class="{% if request.endpoint.startswith('patients.') %}active{% endif %}">
+                            <i class="fas fa-users fa-fw"></i> Patients
+                        </a>
+                     </li>
+
+                    {# === Doctor-Specific Links === #}
+                    {% if current_user.user_type == 'doctor' %}
+                    <li>
+                        <a href="{{ url_for('disease_management.list_diseases') }}"
+                           class="{% if request.endpoint.startswith('disease_management.') %}active{% endif %}">
+                            <i class="fas fa-book-medical fa-fw"></i> Disease Catalog
+                        </a>
+                    </li>
+                    {# Add other doctor-only links here #}
+                    {% endif %}
+
+                    {# === Nutritionist-Specific Links === #}
+                    {% if current_user.user_type == 'nutritionist' %}
+                    <li>
+                        {# Define your diet plan route, e.g., in a 'diet_plans' blueprint #}
+                        <a href="{{ url_for('diet_plans.list_diet_plans') }}" {# UPDATE 'diet_plans.list_diet_plans' #}
+                           class="{% if request.endpoint.startswith('diet_plans.') %}active{% endif %}"> {# UPDATE blueprint name 'diet_plans.' #}
+                            <i class="fas fa-utensils fa-fw"></i> Diet Plans
+                        </a>
+                    </li>
+                     {# Add other nutritionist-only links here, e.g., Meal Management, Nutrient Database #}
+                     {#
+                     <li>
+                        <a href="{{ url_for('meals.list_meals') }}"
+                           class="{% if request.endpoint.startswith('meals.') %}active{% endif %}">
+                            <i class="fas fa-apple-alt fa-fw"></i> Meal Library
+                        </a>
+                     </li>
+                     #}
+                    {% endif %}
+
+
+                    {# === Common Links (Continued) === #}
+                    <li>
+                         {# Assuming settings route is accessible by both #}
+                        <a href="{{ url_for('settings.view_settings') }}"
+                           class="{% if request.endpoint.startswith('settings.') %}active{% endif %}">
+                            <i class="fas fa-user-cog fa-fw"></i> Profile & Settings
+                        </a>
+                    </li>
+                </ul>
+                {% endif %} {# End logged-in check for nav #}
+            </nav>
+        </aside>
+
+        <main class="app-main-content">
+            {# --- Flash Messages (Keep as is) --- #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {# Consider moving flash messages to a fixed position container if preferred #}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                             {# Map categories for better styling consistency #}
+                            <div class="alert alert-{{ category|replace('danger', 'error')|replace('warning', 'warning')|replace('success', 'success')|default('info') }}" role="alert">
+                                {{ message }}
+                                <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';" aria-label="Close">×</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {# --- Main Page Content Block --- #}
+            {% block content %}
+                {# Default content if a child template doesn't override #}
+                 <div class="page-header">
+                     <h1>Dashboard</h1> {# Default header #}
+                 </div>
+                 <div class="card content-section">
+                     <div class="card-body">
+                         <p>Welcome to your portal.</p>
+                     </div>
+                 </div>
+            {% endblock %}
+        </main>
+
+        {# Optional Footer #}
+        {#
+        <footer class="app-footer">
+             <p>© {{ now().year }} HealthApp. All rights reserved.</p> {# Simpler year filter #}
+        {#</footer> #}
+
+    </div> {# End .app-layout #}
+
+    {# Block for JavaScript files at the end of body #}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

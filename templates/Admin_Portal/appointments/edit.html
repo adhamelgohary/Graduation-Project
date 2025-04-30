@@ -1,0 +1,146 @@
+{% extends "Admin_Portal/base_admin.html" %}
+
+{% block title %}Edit Appointment #{{ appointment.appointment_id }}{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment_management.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Edit Appointment #{{ appointment.appointment_id }}</h1>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin_appointments.list_appointments') }}">Appointments List</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Edit Appointment #{{ appointment.appointment_id }}</li>
+  </ol>
+</nav>
+
+{# Enhanced Info Box #}
+<div class="mb-3 p-3 bg-light border rounded edit-appointment-info">
+    <div class="row">
+        <div class="col-md-6">
+            <p class="mb-1"><strong>Patient:</strong> {{ appointment.patient_name or '(Not Set)' }} (ID: {{ appointment.patient_id }})</p>
+             <p class="mb-1"><small><i class="fas fa-envelope fa-fw me-1"></i> <a href="mailto:{{ appointment.patient_email }}">{{ appointment.patient_email or 'No Email' }}</a></small></p>
+             <p class="mb-0"><small><i class="fas fa-history fa-fw me-1"></i> Rescheduled: {{ appointment.reschedule_count }} / {{ reschedule_limit }} times</small></p>
+        </div>
+         <div class="col-md-6">
+             <p class="mb-1"><strong>Doctor:</strong> {{ appointment.doctor_name or '(Not Set)' }} (ID: {{ appointment.doctor_id }})</p>
+            <p class="mb-1"><small><i class="fas fa-envelope fa-fw me-1"></i> <a href="mailto:{{ appointment.doctor_email }}">{{ appointment.doctor_email or 'No Email' }}</a></small></p>
+            <p class="mb-0"><small><i class="fas fa-info-circle fa-fw me-1"></i> Created: {{ appointment.created_at.strftime('%Y-%m-%d %H:%M') if appointment.created_at else 'N/A' }} | Last Updated: {{ appointment.updated_at.strftime('%Y-%m-%d %H:%M') if appointment.updated_at else 'N/A' }} (By ID: {{ appointment.updated_by or 'N/A' }})</small></p>
+         </div>
+         {# Display Timestamps Conditionally #}
+         {% if appointment.check_in_time_str or appointment.start_treatment_time_str or appointment.end_treatment_time_str %}
+         <div class="col-12 mt-2 pt-2 border-top">
+             <small>
+                 <strong>Timestamps:</strong>
+                 {% if appointment.check_in_time_str %} Check-In: {{ appointment.check_in_time_str }} |{% endif %}
+                 {% if appointment.start_treatment_time_str %} Start Tx: {{ appointment.start_treatment_time_str }} |{% endif %}
+                 {% if appointment.end_treatment_time_str %} End Tx: {{ appointment.end_treatment_time_str }} {% endif %}
+             </small>
+         </div>
+         {% endif %}
+    </div>
+</div>
+<hr>
+
+{% if errors.get('conflict') %}<div class="alert alert-danger">{{ errors.get('conflict') }}</div>{% endif %}
+{% if errors.get('general') %}<div class="alert alert-danger">{{ errors.get('general') }}</div>{% endif %}
+{% if errors.get('reschedule') %}<div class="alert alert-danger">{{ errors.get('reschedule') }}</div>{% endif %}
+{% if errors.get('reschedule_notice') %}<div class="alert alert-danger">{{ errors.get('reschedule_notice') }}</div>{% endif %}
+
+
+<div class="card shadow-sm">
+<div class="card-body">
+<form method="POST" action="{{ url_for('admin_appointments.edit_appointment', appointment_id=appointment.appointment_id) }}">
+    <div class="row g-3">
+         <div class="col-md-6">
+            <label for="patient_id" class="form-label">Patient <span class="text-danger">*</span></label>
+            <select class="form-select {% if errors.get('patient_id') %}is-invalid{% endif %}" id="patient_id" name="patient_id" required>
+                <option value="" disabled>-- Select Patient --</option>
+                {% for pat in patients %}
+                <option value="{{ pat.user_id }}" {% if appointment.patient_id|int == pat.user_id %}selected{% endif %}>{{ pat.full_name }} (ID: {{ pat.user_id }})</option>
+                {% endfor %}
+            </select>
+            {% if errors.get('patient_id') %}<div class="invalid-feedback">{{ errors.get('patient_id') }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="doctor_id" class="form-label">Doctor <span class="text-danger">*</span></label>
+            <select class="form-select {% if errors.get('doctor_id') %}is-invalid{% endif %}" id="doctor_id" name="doctor_id" required>
+                 <option value="" disabled>-- Select Doctor --</option>
+                {% for doc in doctors %}
+                <option value="{{ doc.user_id }}" {% if appointment.doctor_id|int == doc.user_id %}selected{% endif %}>{{ doc.full_name }} (ID: {{ doc.user_id }})</option>
+                {% endfor %}
+            </select>
+             {% if errors.get('doctor_id') %}<div class="invalid-feedback">{{ errors.get('doctor_id') }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-4">
+             <label for="appointment_date" class="form-label">Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control {% if errors.get('appointment_date') %}is-invalid{% endif %}" id="appointment_date" name="appointment_date" value="{{ appointment.appointment_date_str or '' }}" required>
+             {% if errors.get('appointment_date') %}<div class="invalid-feedback">{{ errors.get('appointment_date') }}</div>{% endif %}
+        </div>
+
+         <div class="col-md-4">
+            <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+            <input type="time" class="form-control {% if errors.get('start_time') %}is-invalid{% endif %}" id="start_time" name="start_time" value="{{ appointment.start_time_str or '' }}" required step="300">
+             {% if errors.get('start_time') %}<div class="invalid-feedback">{{ errors.get('start_time') }}</div>{% endif %}
+        </div>
+
+         <div class="col-md-4">
+            <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
+            <input type="time" class="form-control {% if errors.get('end_time') %}is-invalid{% endif %}" id="end_time" name="end_time" value="{{ appointment.end_time_str or '' }}" required step="300">
+             {% if errors.get('end_time') %}<div class="invalid-feedback">{{ errors.get('end_time') }}</div>{% endif %}
+        </div>
+
+         <div class="col-md-6">
+             <label for="appointment_type" class="form-label">Appointment Type <span class="text-danger">*</span></label>
+             <select class="form-select {% if errors.get('appointment_type') %}is-invalid{% endif %}" id="appointment_type" name="appointment_type" required>
+                 <option value="" disabled>-- Select Type --</option>
+                 {% for type in appointment_types %}
+                 <option value="{{ type.type_name }}" {% if appointment.appointment_type == type.type_name %}selected{% endif %}>{{ type.type_name | replace('-', ' ') | title }} ({{ type.default_duration_minutes }} min)</option>
+                 {% endfor %}
+             </select>
+             {% if errors.get('appointment_type') %}<div class="invalid-feedback">{{ errors.get('appointment_type') }}</div>{% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+            <select class="form-select {% if errors.get('status') %}is-invalid{% endif %}" id="status" name="status" required>
+                {% for s in appointment_statuses %}
+                <option value="{{ s }}" {% if appointment.status == s %}selected{% endif %}>{{ s | replace('-', ' ') | title }}</option>
+                {% endfor %}
+            </select>
+             {% if errors.get('status') %}<div class="invalid-feedback">{{ errors.get('status') }}</div>{% endif %}
+        </div>
+
+         <div class="col-12">
+            <label for="reason" class="form-label">Reason for Visit</label>
+            <textarea class="form-control" id="reason" name="reason" rows="2">{{ appointment.reason or '' }}</textarea>
+        </div>
+
+        <div class="col-12">
+            <label for="notes" class="form-label">Internal Notes (Admin/Doctor)</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ appointment.notes or '' }}</textarea>
+        </div>
+
+        <div class="col-12 mt-3">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="true" id="override_restrictions" name="override_restrictions" {% if request.form.override_restrictions %}checked{% endif %}>
+                <label class="form-check-label" for="override_restrictions">
+                    Override Scheduling Restrictions (Conflicts, Reschedule Limit, Past Dates etc.)
+                </label>
+            </div>
+             <div class="form-text text-warning small">Check this box to bypass scheduling conflict checks and reschedule limits. Use with caution.</div>
+        </div>
+
+    </div>
+
+    <hr class="my-4">
+    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
+    <a href="{{ url_for('admin_appointments.list_appointments') }}" class="btn btn-secondary">Cancel</a>
+    {# Maybe add a Delete button here? Would need a dedicated delete route #}
+</form>
+</div> {# End card-body #}
+</div> {# End card #}
+{% endblock %}

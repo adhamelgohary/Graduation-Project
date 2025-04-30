@@ -1,80 +1,91 @@
 # registration_approval.py
 
 from flask import (Blueprint, render_template, request, flash,
-                   redirect, url_for, current_app)
+                   redirect, url_for, current_app, jsonify)
 from flask_login import login_required, current_user
 from db import get_db_connection
 from math import ceil
-import datetime # For setting approval/processed dates
+import datetime # For setting approval/processed dates and getting current time
 import mysql.connector # Specifically for error handling
+import os # For os.path operations (basename, join, getsize, exists)
 
 registration_approval = Blueprint('registration_approval', __name__)
 
 # --- Constants ---
 PER_PAGE_REGISTRATIONS = 15
-# Allowed sort columns now reflect the new table structure
+# Added specialization_id to allowed sorts
 ALLOWED_REG_SORT_COLUMNS = {
-    'date_submitted', 'last_name', 'email', 'specialization', 'status', 'date_processed'
+    'date_submitted', 'last_name', 'email', 'username',
+    'specialization_id', 'status', 'date_processed', 'user_id'
 }
-# Define allowed statuses if filtering needs to be specific
-ALLOWED_STATUS_FILTERS = ['pending', 'approved_user_created', 'rejected', 'info_requested', 'all']
+ALLOWED_STATUS_FILTERS = ['pending', 'approved', 'rejected', 'all']
 
-# --- Helper to get Current User ID ---
+# --- Helper ---
 def get_current_user_id():
-    """Safely gets the user ID from Flask-Login's current_user."""
-    return getattr(current_user, 'user_id', getattr(current_user, 'id', None))
+    """Safely gets the user ID as an integer from Flask-Login's current_user."""
+    user_id_str = getattr(current_user, 'id', None)
+    user_id_int = None
+    if user_id_str is not None:
+        try:
+            user_id_int = int(user_id_str)
+        except (ValueError, TypeError):
+            current_app.logger.error(f"Could not convert current_user.id '{user_id_str}' to integer.")
+    return user_id_int
 
 # --- Routes ---
 
 # List Pending/Processed DOCTOR Registrations
-@registration_approval.route('/admin/registrations/doctors', methods=['GET']) # Renamed route slightly for clarity
+@registration_approval.route('/admin/registrations/doctors', methods=['GET'])
 @login_required
 def index():
-    # Only admins can access this doctor approval workflow
-    if current_user.user_type != "admin":
+    if getattr(current_user, 'user_type', None) != "admin":
         flash("Access denied", "danger")
-        return redirect(url_for('login.login')) # Or redirect to admin dashboard if appropriate
+        return redirect(url_for('login.login_route'))
 
     page = request.args.get('page', 1, type=int)
     search_term = request.args.get('q', '').strip()
-    status_filter = request.args.get('status', 'pending') # Default to pending
+    status_filter = request.args.get('status', 'pending').lower()
     sort_by = request.args.get('sort_by', 'date_submitted').lower()
+    # Default sort by specialization_id if chosen
+    if sort_by == 'specialization': sort_by = 'specialization_id'
     if sort_by not in ALLOWED_REG_SORT_COLUMNS: sort_by = 'date_submitted'
+
     sort_order = request.args.get('sort_order', 'desc').lower()
     if sort_order not in ['asc', 'desc']: sort_order = 'desc'
+    if status_filter not in ALLOWED_STATUS_FILTERS: status_filter = 'pending'
 
-    connection = None
-    cursor = None
+    connection = None; cursor = None
     registrations, stats = [], {}
     total_items, total_pages = 0, 0
 
     try:
         connection = get_db_connection()
+        if not connection or not connection.is_connected(): raise ConnectionError("Database connection failed")
         cursor = connection.cursor(dictionary=True)
 
-        # Querying the modified pending_registrations table (which now ONLY contains doctors)
-        base_query = """ FROM pending_registrations pr """
+        # Join with specializations to allow sorting/filtering by name if needed later
+        base_query = """
+            FROM pending_registrations pr
+            LEFT JOIN specializations s ON pr.specialization_id = s.specialization_id
+        """
         params = []
-        where_clauses = [] # No need to filter by user_type='doctor' anymore
+        where_clauses = ["pr.user_type_requested = 'doctor'"]
 
         if status_filter != 'all':
-            if status_filter in ALLOWED_STATUS_FILTERS:
-                 # Make sure the status enum in the DB matches these values
-                where_clauses.append("pr.status = %s")
-                params.append(status_filter)
-            else: # Default back to pending if invalid status given
-                status_filter = 'pending'
-                where_clauses.append("pr.status = %s")
-                params.append(status_filter)
+            if status_filter == 'approved':
+                 where_clauses.append("pr.status IN ('approved', 'approved_user_created')")
+            else:
+                 where_clauses.append("pr.status = %s")
+                 params.append(status_filter)
 
         if search_term:
-            # Search relevant doctor pending fields
+            # Search specialization name as well
             where_clauses.append("""(pr.first_name LIKE %s OR pr.last_name LIKE %s OR pr.email LIKE %s
-                                   OR pr.username LIKE %s OR pr.specialization LIKE %s OR pr.license_number LIKE %s)""")
+                                   OR pr.username LIKE %s OR s.name LIKE %s OR pr.license_number LIKE %s)""")
             like_term = f"%{search_term}%"
-            params.extend([like_term] * 6) # Adjust count based on fields searched
+            params.extend([like_term] * 6)
 
-        if where_clauses: base_query += " WHERE " + " AND ".join(where_clauses)
+        base_query += " WHERE " + " AND ".join(where_clauses)
 
         count_query = f"SELECT COUNT(pr.id) as total {base_query}"
         cursor.execute(count_query, tuple(params)); result = cursor.fetchone()
@@ -82,68 +93,89 @@ def index():
         total_pages = ceil(total_items / PER_PAGE_REGISTRATIONS) if total_items > 0 else 0
         offset = (page - 1) * PER_PAGE_REGISTRATIONS
 
-        sort_column = f"pr.{sort_by}"
+        # Determine actual sort column (handle specialization name if needed)
+        sort_column_sql = f"pr.{sort_by}" # Use ID for sorting by default
+        # If you wanted to sort by specialization *name*:
+        # if sort_by == 'specialization_name': sort_column_sql = 's.name'
+        # else: sort_column_sql = f"pr.{sort_by}"
 
-        # Select columns available in the new pending_registrations table
         data_query = f""" SELECT pr.id, pr.first_name, pr.last_name, pr.email, pr.username,
-                                 pr.specialization, pr.license_state, pr.date_submitted, pr.status
-                          {base_query} ORDER BY {sort_column} {sort_order}
+                                 s.name AS specialization_name, -- Fetch name for display
+                                 pr.license_number, pr.license_state,
+                                 pr.license_expiration, pr.date_submitted, pr.status,
+                                 pr.date_processed, pr.user_id
+                          {base_query} ORDER BY {sort_column_sql} {sort_order}
                           LIMIT %s OFFSET %s """
         final_params = params + [PER_PAGE_REGISTRATIONS, offset]
         cursor.execute(data_query, tuple(final_params)); registrations = cursor.fetchall()
 
-        # Get Stats (counts statuses within the doctor-only pending table)
+        # Get Stats
         cursor.execute(""" SELECT status, COUNT(*) as count FROM pending_registrations
-                           GROUP BY status """)
+                           WHERE user_type_requested = 'doctor' GROUP BY status """)
         stats_raw = cursor.fetchall()
-        stats = {s['status']: s['count'] for s in stats_raw}
-        stats['all'] = sum(stats.values())
+        stats = {status: 0 for status in ALLOWED_STATUS_FILTERS if status != 'all'}
+        total_calculated = 0
+        for s in stats_raw:
+            current_status = s['status']
+            if current_status == 'approved_user_created': current_status = 'approved'
+            if current_status in stats:
+                 stats[current_status] += s['count']
+                 total_calculated += s['count']
+        stats['all'] = total_calculated
 
     except mysql.connector.Error as db_err:
         flash(f"Database error fetching doctor registrations: {db_err}", "danger")
         current_app.logger.error(f"Database error fetching doctor registrations list: {db_err}")
     except Exception as e:
         flash(f"An unexpected error occurred: {str(e)}", "danger")
-        current_app.logger.error(f"Unexpected error fetching doctor registrations list: {e}")
+        current_app.logger.error(f"Unexpected error fetching doctor registrations list: {e}", exc_info=True)
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
-    # Update template path if desired (e.g., Admin_Portal/Registrations/manage_doctor_registrations.html)
     return render_template(
         'Admin_Portal/Registrations/manage_registrations.html',
         registrations=registrations, stats=stats, page=page, total_pages=total_pages,
         per_page=PER_PAGE_REGISTRATIONS, total_items=total_items, search_term=search_term,
         current_status=status_filter, sort_by=sort_by, sort_order=sort_order,
-        registration_type='Doctor' # Pass type to template if needed for headings etc.
+        registration_type='Doctor',
+        allowed_statuses=ALLOWED_STATUS_FILTERS
     )
 
 # View DOCTOR Registration Details
-@registration_approval.route('/admin/registrations/doctors/view/<int:reg_id>', methods=['GET']) # Renamed route slightly
+@registration_approval.route('/admin/registrations/doctors/view/<int:reg_id>', methods=['GET'])
 @login_required
 def view_registration(reg_id):
-    if current_user.user_type != "admin":
-        flash("Access denied", "danger")
-        return redirect(url_for('login.login'))
+    if getattr(current_user, 'user_type', None) != "admin":
+        flash("Access denied", "danger"); return redirect(url_for('login.login_route'))
 
-    connection = None
-    cursor = None
-    registration = None
+    connection = None; cursor = None; registration = None
     try:
         connection = get_db_connection()
+        if not connection or not connection.is_connected(): raise ConnectionError("Database connection failed")
         cursor = connection.cursor(dictionary=True)
-        # Fetch from the modified pending_registrations table
-        # Join users table to get processed_by admin's name
-        cursor.execute("""
-            SELECT pr.*, CONCAT(u.first_name, ' ', u.last_name) as processed_by_name
+
+        # Fetch details including document paths and specialization name
+        query = """
+            SELECT
+                pr.*, -- Select all columns from pending_registrations
+                s.name as specialization_name, -- Fetch specialization name
+                CONCAT(u_proc.first_name, ' ', u_proc.last_name) as processed_by_name,
+                u_linked.account_status AS linked_account_status,
+                d.verification_status AS doctor_verification_status
             FROM pending_registrations pr
-            LEFT JOIN users u ON pr.processed_by = u.user_id
-            WHERE pr.id = %s
-        """, (reg_id,))
+            LEFT JOIN specializations s ON pr.specialization_id = s.specialization_id -- Join for name
+            LEFT JOIN users u_proc ON pr.processed_by = u_proc.user_id
+            LEFT JOIN users u_linked ON pr.user_id = u_linked.user_id
+            LEFT JOIN doctors d ON pr.user_id = d.user_id
+            WHERE pr.id = %s AND pr.user_type_requested = 'doctor'
+        """
+        cursor.execute(query, (reg_id,))
         registration = cursor.fetchone()
+
         if not registration:
             flash("Doctor registration record not found.", "danger")
-            return redirect(url_for('registration_approval.index')) # Redirect back to the doctor list
+            return redirect(url_for('registration_approval.index'))
 
     except mysql.connector.Error as db_err:
         flash(f"Error fetching doctor registration details: {db_err}", "danger")
@@ -151,218 +183,298 @@ def view_registration(reg_id):
         return redirect(url_for('registration_approval.index'))
     except Exception as e:
         flash(f"An unexpected error occurred: {str(e)}", "danger")
-        current_app.logger.error(f"Unexpected error fetching doctor registration {reg_id}: {e}")
+        current_app.logger.error(f"Unexpected error fetching doctor registration {reg_id}: {e}", exc_info=True)
         return redirect(url_for('registration_approval.index'))
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
-    # Update template path if desired
     return render_template(
         'Admin_Portal/Registrations/view_registration.html',
         registration=registration,
-        registration_type='Doctor' # Pass type to template
+        registration_type='Doctor'
     )
 
-
-# Approve DOCTOR Registration (Step 1: Create User, Link Pending, Rely on Triggers for Role)
-@registration_approval.route('/admin/registrations/doctors/approve/<int:reg_id>', methods=['POST']) # Renamed route slightly
+# Approve DOCTOR Registration
+@registration_approval.route('/admin/registrations/doctors/approve/<int:reg_id>', methods=['POST'])
 @login_required
 def approve_registration(reg_id):
-    """
-    Performs Step 1 of DOCTOR registration approval:
-    1. Creates the basic user record (type='doctor', status='inactive', no password).
-    2. Relies on database triggers to create corresponding doctors record.
-    3. Updates the 'pending_registrations' status and links the new user_id.
-    Requires a Step 2 process to set password and activate the account.
-    Uses explicit transactions for atomicity.
-    """
-    if current_user.user_type != "admin":
+    # --- Authorization and Admin ID Check ---
+    if getattr(current_user, 'user_type', None) != "admin":
         flash("Access denied", "danger")
-        return redirect(url_for('login.login'))
-
+        return redirect(url_for('login.login_route'))
     current_admin_id = get_current_user_id()
     if not current_admin_id:
-        flash("Could not identify performing admin.", "danger")
-        return redirect(url_for('registration_approval.index'))
+        flash("Could not identify performing admin. Action aborted.", "danger")
+        return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
 
-    connection = None
-    cursor_dict = None
-    cursor_check = None
-    cursor_update = None
-    new_user_id = None
+    # --- Initialize Variables ---
+    connection = None; cursor = None
+    new_user_id = None; reg_data = None
 
     try:
         connection = get_db_connection()
-        connection.start_transaction()
+        if not connection or not connection.is_connected(): raise ConnectionError("Database connection failed")
+        connection.start_transaction() # Start transaction
+        cursor = connection.cursor(dictionary=True) # Use dictionary cursor initially
 
-        # 1. Fetch the pending DOCTOR registration record
-        cursor_dict = connection.cursor(dictionary=True)
-        # Fetching from the modified pending_registrations table
-        cursor_dict.execute("SELECT * FROM pending_registrations WHERE id = %s AND status = 'pending'", (reg_id,))
-        reg_data = cursor_dict.fetchone()
-        cursor_dict.close()
-        cursor_dict = None
+        # 1. Lock pending registration, check status, and fetch required data including department_id
+        cursor.execute("""
+            SELECT pr.*, s.department_id
+            FROM pending_registrations pr
+            LEFT JOIN specializations s ON pr.specialization_id = s.specialization_id
+            WHERE pr.id = %s AND pr.status = 'pending' AND pr.user_type_requested = 'doctor'
+            FOR UPDATE
+        """, (reg_id,))
+        reg_data = cursor.fetchone()
 
         if not reg_data:
-            flash("Doctor registration not found or already processed.", "warning")
+            flash("Doctor registration not found in 'pending' state, or already processed.", "warning")
             connection.rollback()
-            if connection and connection.is_connected(): connection.close()
             return redirect(url_for('registration_approval.index'))
 
+        # --- Transaction continues ---
+        # Switch to standard cursor if needed for inserts/updates (though dictionary usually works fine)
+        # cursor.close(); cursor = connection.cursor()
+
         # 2. Check if username/email already exists in the main users table
-        cursor_check = connection.cursor()
-        # Check using data fetched from pending_registrations
-        cursor_check.execute("SELECT user_id FROM users WHERE email = %s OR username = %s",
-                             (reg_data['email'], reg_data['username']))
-        if cursor_check.fetchone():
+        cursor.execute("SELECT user_id FROM users WHERE email = %s OR username = %s",
+                       (reg_data['email'], reg_data['username']))
+        if cursor.fetchone():
             flash(f"Cannot approve: Username '{reg_data['username']}' or Email '{reg_data['email']}' already exists.", "danger")
             connection.rollback()
-            cursor_check.close()
-            if connection and connection.is_connected(): connection.close()
-            # Redirect to view this specific registration
             return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
-        cursor_check.close()
-        cursor_check = None
 
-        # --- Transaction continues ---
-        cursor_update = connection.cursor()
+        # 3. Insert into users table (triggers should fire here)
+        insert_user_sql = """
+            INSERT INTO users (username, email, password, first_name, last_name,
+                              user_type, phone, country, account_status, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, 'doctor', %s, %s, 'active', %s, %s)
+        """
+        # Generate a temporary, unusable password hash
+        temp_unusable_password_hash = f"needs_reset_{reg_id}_{datetime.datetime.now().timestamp()}" # Or use generate_password_hash("...")
+        now_time = datetime.datetime.now()
+        user_params = (
+            reg_data['username'], reg_data['email'], temp_unusable_password_hash,
+            reg_data['first_name'], reg_data['last_name'],
+            reg_data.get('phone'), reg_data.get('country', 'United States'),
+            now_time, now_time
+        )
+        cursor.execute(insert_user_sql, user_params)
+        new_user_id = cursor.lastrowid
+        if not new_user_id:
+             connection.rollback(); raise Exception("Failed to get new user ID after insert into users table.")
+        current_app.logger.info(f"Created ACTIVE user ID {new_user_id} for registration {reg_id}. Trigger should create doctor record.")
 
-        # 3. Insert into users table (user_type='doctor', status='inactive', NO password)
-        #    Data comes from the pending_registrations table
-        cursor_update.execute("""
-            INSERT INTO users (username, email, first_name, last_name,
-                              user_type, phone, country, account_status, created_at)
-            VALUES (%s, %s, %s, %s, 'doctor', %s, %s, 'inactive', %s)
-        """, (reg_data['username'], reg_data['email'],
-              reg_data['first_name'], reg_data['last_name'],
-              reg_data.get('phone'), reg_data.get('country', 'United States'), # Use .get for optional fields
-              reg_data['date_submitted']))
-        new_user_id = cursor_update.lastrowid
+        # 4. UPDATE the DOCTORS table (created by trigger) with specific data from pending_registrations
+        update_doctor_sql = """
+            UPDATE doctors
+            SET verification_status = 'approved',
+                specialization_id = %s,          -- Set correct specialization ID
+                department_id = %s,              -- Set correct department ID
+                license_number = COALESCE(%s, license_number), -- Update if provided
+                license_state = COALESCE(%s, license_state),   -- Update if provided
+                license_expiration = COALESCE(%s, license_expiration), -- Update if provided
+                approval_date = CURRENT_TIMESTAMP, -- Set approval date
+                rejection_reason = NULL,           -- Clear rejection reason
+                updated_at = CURRENT_TIMESTAMP     -- Update timestamp
+            WHERE user_id = %s
+        """
+        cursor.execute(update_doctor_sql, (
+            reg_data.get('specialization_id'), # Use the ID from pending data
+            reg_data.get('department_id'),    # Use the department_id fetched via JOIN
+            reg_data.get('license_number'),
+            reg_data.get('license_state'),
+            reg_data.get('license_expiration'),
+            new_user_id
+        ))
+        if cursor.rowcount == 0:
+             # This is critical - means the trigger likely failed or the user wasn't found
+             connection.rollback()
+             current_app.logger.error(f"Failed to find/update doctor record for user_id {new_user_id} during approval of reg {reg_id}. Trigger might have failed or record missing.")
+             flash("Critical Error: Could not find or update the corresponding doctor profile record. Approval aborted.", "danger")
+             return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
+        current_app.logger.info(f"Updated doctors table for user {new_user_id} with specific details and set verification_status='approved'.")
 
-        # 4. Doctor-specific table insertion is handled by SQL TRIGGER 'after_users_insert_doctor'.
-        #    It will use the default/placeholder values defined in the trigger initially.
-        #    The detailed license info etc. from pending_registrations is NOT automatically transferred by the basic trigger.
-        #    Step 2 activation process should potentially update the doctors table with details from pending_registrations.
+        # 5. INSERT Document Records into doctor_documents
+        doc_path_map = {
+            # Map pending_registration column name to document_type ENUM value
+            'id_document_path': 'identity',
+            'license_document_path': 'license',
+            'specialization_document_path': 'certification', # Or 'education' based on what it represents
+            'other_document_path': 'other'
+        }
+        insert_doc_sql = """
+            INSERT INTO doctor_documents
+            (doctor_id, document_type, file_name, file_path, file_size, upload_date)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        docs_inserted_count = 0
+        for path_col, doc_type in doc_path_map.items():
+            file_path = reg_data.get(path_col) # Get the relative path from pending_reg
+            if file_path:
+                file_name = os.path.basename(file_path) # Extract simple filename
+                file_size = -1 # Default size if check fails
+                upload_date = reg_data.get('date_submitted', now_time) # Use submission date
 
-        # 5. Update pending_registrations: set status, processed_by, and link user_id
-        new_pending_status = 'approved_user_created'
-        cursor_update.execute("""
+                try:
+                    # Construct full path to check existence and size
+                    # IMPORTANT: Assumes file_path is relative to the app's static folder root
+                    if not current_app.static_folder:
+                        current_app.logger.error("Cannot determine static folder path to check document size.")
+                    else:
+                        full_file_path = os.path.join(current_app.static_folder, file_path)
+                        if os.path.exists(full_file_path):
+                            file_size = os.path.getsize(full_file_path)
+                        else:
+                             current_app.logger.warning(f"Document file for approval not found at {full_file_path} (Reg {reg_id}, Col {path_col}). Cannot get size.")
+                except Exception as size_err:
+                     current_app.logger.error(f"Error getting size for file {file_path} (Reg {reg_id}): {size_err}")
+
+                try:
+                    cursor.execute(insert_doc_sql, (
+                        new_user_id,  # The doctor's user_id (same as new_user_id)
+                        doc_type,     # The determined document type
+                        file_name,    # Extracted filename (could use original if stored)
+                        file_path,    # The relative path from pending_reg
+                        file_size if file_size >= 0 else 0, # Ensure non-negative size
+                        upload_date
+                    ))
+                    docs_inserted_count += 1
+                    current_app.logger.info(f"Inserted document record for user {new_user_id}, type '{doc_type}', path '{file_path}'")
+                except mysql.connector.Error as doc_insert_err:
+                     # Log error but maybe don't fail the whole approval? Or maybe do? Decide policy.
+                     current_app.logger.error(f"Failed to insert document record for user {new_user_id}, type '{doc_type}': {doc_insert_err}")
+                     # Optionally re-raise or flash a warning:
+                     # flash(f"Warning: Could not save record for document type '{doc_type}'.", "warning")
+                     # If failing is desired:
+                     # connection.rollback(); raise Exception(f"Failed to insert document record for type '{doc_type}'.")
+
+        current_app.logger.info(f"Inserted {docs_inserted_count} document records for doctor {new_user_id}.")
+
+
+        # 6. Update pending_registrations status
+        new_pending_status = 'approved'
+        update_pending_sql = """
             UPDATE pending_registrations
-            SET status = %s, user_id = %s, processed_by = %s, date_processed = CURRENT_TIMESTAMP
-            WHERE id = %s
-        """, (new_pending_status, new_user_id, current_admin_id, reg_id))
+            SET status = %s, user_id = %s, processed_by = %s, date_processed = CURRENT_TIMESTAMP,
+                notes = 'Doctor approved and account activated. Password setup required.'
+            WHERE id = %s AND status = 'pending'
+        """
+        cursor.execute(update_pending_sql, (new_pending_status, new_user_id, current_admin_id, reg_id))
+        if cursor.rowcount == 0:
+             connection.rollback() # Rollback ALL changes if this fails
+             current_app.logger.error(f"Failed to update pending registration status for {reg_id} to 'approved' (Concurrency?).")
+             raise Exception("Failed to update pending registration status to 'approved'.")
 
-        # 6. Add Audit Log entry for Step 1 DOCTOR approval
-        audit_details = f"Doctor user record created (Step 1 approval) for {reg_data['first_name']} {reg_data['last_name']} (Email: {reg_data['email']}). Awaiting activation (Step 2)."
-        cursor_update.execute("""
+        # 7. Add Audit Log entry
+        audit_details = f"Approved doctor registration; User account ACTIVATED (ID: {new_user_id}). Doctor details updated. Documents linked: {docs_inserted_count}. (Reg ID: {reg_id})"
+        audit_sql = """
             INSERT INTO audit_log (user_id, action_type, action_details, performed_by_id, target_table, target_record_id)
-            VALUES (%s, 'doctor_registration_step1_approved', %s, %s, 'pending_registrations', %s)
-        """, (new_user_id, audit_details, current_admin_id, reg_id))
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(audit_sql, (new_user_id, 'doctor_registration_approved', audit_details, current_admin_id, 'users', new_user_id))
 
-        # 7. Commit Transaction
+        # 8. Commit Transaction
         connection.commit()
-        flash(f"Doctor user record for {reg_data['first_name']} {reg_data['last_name']}' created (Step 1). Account requires activation (Step 2).", "success")
+        current_app.logger.info(f"Successfully approved registration {reg_id}, activated user {new_user_id}, updated pending_reg, added audit log.")
+        flash(f"Doctor '{reg_data['username']}' approved and user account activated. Inform doctor to set/reset their password.", "success")
+        return redirect(url_for('registration_approval.index', status=new_pending_status)) # Redirect to approved list
 
     except mysql.connector.Error as db_err:
-        if connection and connection.in_transaction: connection.rollback()
-        # Check specific error: Modify if password_hash column name is different
-        if db_err.errno == 1364 and 'password_hash' in db_err.msg: # Or check for 'password' if that's the name
-             flash("Database Error: The 'password_hash' column in the 'users' table does not allow NULL values or have a default. Please run 'ALTER TABLE users MODIFY COLUMN password_hash VARCHAR(255) NULL DEFAULT NULL;' on your database.", "danger")
-             current_app.logger.error(f"Schema Error during Step 1 approval for registration {reg_id}: {db_err}")
-        else:
-             flash(f"Database error during Step 1 approval: {db_err}.", "danger")
-             current_app.logger.error(f"Database error during Step 1 approval for registration {reg_id}: {db_err}. New User ID (if created): {new_user_id}")
-        # Redirect back to the specific registration view on error
+        if connection and connection.is_connected(): connection.rollback()
+        flash(f"Database error during approval: {db_err}.", "danger")
+        current_app.logger.error(f"Database error during approval for reg {reg_id}: {db_err}. New User ID (if created): {new_user_id}", exc_info=True)
         return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
     except Exception as e:
-        if connection and connection.in_transaction: connection.rollback()
-        flash(f"An unexpected error occurred during Step 1 approval: {str(e)}.", "danger")
-        current_app.logger.error(f"Unexpected error during Step 1 approval for registration {reg_id}: {e}. New User ID (if created): {new_user_id}")
+        if connection and connection.is_connected(): connection.rollback()
+        flash(f"An unexpected error occurred during approval: {str(e)}.", "danger")
+        current_app.logger.error(f"Unexpected error during approval for reg {reg_id}: {e}. New User ID (if created): {new_user_id}", exc_info=True)
         return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
     finally:
-        # Ensure all cursors are closed
-        if cursor_update: cursor_update.close()
-        if cursor_check: cursor_check.close()
-        if cursor_dict: cursor_dict.close()
+        if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
-
-    # Redirect showing the new status in the doctor list
-    return redirect(url_for('registration_approval.index', status=new_pending_status))
 
 
 # Reject DOCTOR Registration
-@registration_approval.route('/admin/registrations/doctors/reject/<int:reg_id>', methods=['POST']) # Renamed route slightly
+@registration_approval.route('/admin/registrations/doctors/reject/<int:reg_id>', methods=['POST'])
 @login_required
 def reject_registration(reg_id):
-    if current_user.user_type != "admin":
+    # --- Authorization and Input Validation ---
+    if getattr(current_user, 'user_type', None) != "admin":
         flash("Access denied", "danger")
-        return redirect(url_for('login.login'))
-
+        return redirect(url_for('login.login_route'))
     rejection_reason = request.form.get('rejection_reason', '').strip()
     current_admin_id = get_current_user_id()
-
     if not rejection_reason:
         flash("Rejection reason is required.", "danger")
         return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
     if not current_admin_id:
-        flash("Could not identify performing admin.", "danger")
-        return redirect(url_for('registration_approval.index'))
+        flash("Could not identify performing admin. Action aborted.", "danger")
+        return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
 
-    connection = None
-    cursor = None
-    cursor_dict = None
-
+    # --- DB Operation ---
+    connection = None; cursor = None; reg_info = None
     try:
         connection = get_db_connection()
+        if not connection or not connection.is_connected(): raise ConnectionError("Database connection failed")
         connection.start_transaction()
+        cursor = connection.cursor(dictionary=True)
 
-        # Fetch username/email for logging before update
-        cursor_dict = connection.cursor(dictionary=True)
-        cursor_dict.execute("SELECT username, email FROM pending_registrations WHERE id=%s", (reg_id,))
-        reg_info = cursor_dict.fetchone()
-        cursor_dict.close()
-        cursor_dict = None
+        # Lock and fetch pending record
+        cursor.execute("""
+            SELECT id, username, email, status, user_id
+            FROM pending_registrations
+            WHERE id=%s AND status = 'pending' AND user_type_requested = 'doctor'
+            FOR UPDATE
+        """, (reg_id,))
+        reg_info = cursor.fetchone()
+
+        if not reg_info:
+            flash("Registration not found in 'pending' state, or already processed.", "warning")
+            connection.rollback()
+            return redirect(url_for('registration_approval.index'))
 
         # --- Transaction continues ---
-        cursor = connection.cursor()
-
-        # Update pending_registrations status and notes
-        # Ensure status='pending' to avoid race conditions/double processing
-        cursor.execute("""
+        # 1. Update pending_registrations status
+        update_sql = """
             UPDATE pending_registrations SET status = 'rejected', processed_by = %s,
                    date_processed = CURRENT_TIMESTAMP, notes = %s
             WHERE id = %s AND status = 'pending'
-        """, (current_admin_id, rejection_reason, reg_id))
-        updated_rows = cursor.rowcount
+        """
+        cursor.execute(update_sql, (current_admin_id, rejection_reason, reg_id))
 
-        if updated_rows > 0:
-            # Add Audit Log entry
-            log_details = f"Doctor registration rejected. Reason: {rejection_reason}"
-            if reg_info: log_details += f" (User: {reg_info.get('username','N/A')}, Email: {reg_info.get('email','N/A')})"
-            cursor.execute("""
+        if cursor.rowcount > 0:
+            # 2. Add Audit Log
+            log_details = f"Rejected doctor registration. Reason: {rejection_reason} (Reg ID: {reg_id}, User: {reg_info.get('username','N/A')})"
+            audit_sql = """
                 INSERT INTO audit_log (user_id, action_type, action_details, performed_by_id, target_table, target_record_id)
-                VALUES (NULL, 'doctor_registration_rejected', %s, %s, 'pending_registrations', %s)
-            """, (log_details, current_admin_id, reg_id))
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(audit_sql, (None, 'doctor_registration_rejected', log_details, current_admin_id, 'pending_registrations', reg_id))
 
+            # 3. Commit
             connection.commit()
+            current_app.logger.info(f"Successfully rejected registration {reg_id}.")
             flash("Doctor registration rejected successfully.", "success")
+            return redirect(url_for('registration_approval.index', status='rejected'))
         else:
-            connection.rollback() # Rollback if no rows were updated
-            flash("Doctor registration not found in 'pending' state or already processed.", "warning")
+            # Should not happen if locked correctly, but handle defensively
+            connection.rollback()
+            flash("Failed to update registration status during rejection.", "danger")
+            current_app.logger.error(f"Failed to update registration {reg_id} to rejected state after locking.")
+            return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
 
     except mysql.connector.Error as db_err:
-        if connection and connection.in_transaction: connection.rollback()
+        if connection and connection.is_connected(): connection.rollback()
         flash(f"Database error rejecting doctor registration: {db_err}", "danger")
         current_app.logger.error(f"Database error rejecting doctor registration {reg_id}: {db_err}")
+        return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
     except Exception as e:
-        if connection and connection.in_transaction: connection.rollback()
+        if connection and connection.is_connected(): connection.rollback()
         flash(f"An unexpected error occurred rejecting doctor registration: {str(e)}", "danger")
-        current_app.logger.error(f"Unexpected error rejecting doctor registration {reg_id}: {e}")
+        current_app.logger.error(f"Unexpected error rejecting doctor registration {reg_id}: {e}", exc_info=True)
+        return redirect(url_for('registration_approval.view_registration', reg_id=reg_id))
     finally:
-        if cursor_dict: cursor_dict.close()
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
-
-    # Redirect back to the doctor list, showing rejected status
-    return redirect(url_for('registration_approval.index', status='rejected'))

@@ -1,9 +1,9 @@
-{% extends "Admin_Portal/base.html" %}
+{% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Manage User Registrations{% endblock %}
+{% block title %}Manage Doctor Registrations{% endblock %}
 
 {% block header_icon %}<i class="fas fa-clipboard-check"></i>{% endblock %}
-{% block header_title %}Manage User Registrations{% endblock %}
+{% block header_title %}Manage Doctor Registrations{% endblock %}
 
 {% block content %}
 
@@ -11,22 +11,22 @@
 
     <form method="GET" action="{{ url_for('registration_approval.index') }}" class="search-add-container">
         <div class="search-container">
-            <select name="status" onchange="this.form.submit()">
-                <option value="all" {% if current_status == 'all' %}selected{% endif %}>All Statuses</option>
-                <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending ({{ stats.get('pending', 0) }})</option>
-                <option value="approved_user_created" {% if current_status == 'approved_user_created' %}selected{% endif %}>
-                    Step 1 Approved ({{ stats.get('approved_user_created', 0) }})
-                </option>
-                <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved & Active ({{ stats.get('approved', 0) }})</option>
-                <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected ({{ stats.get('rejected', 0) }})</option>
+            {# --- Status Filter (Uses updated allowed_statuses from Python) --- #}
+            <select name="status" onchange="this.form.submit()" class="form-select form-select-sm me-2" style="width: auto;">
+                {# Use ALLOWED_STATUS_FILTERS passed from backend #}
+                {% for status_key in allowed_statuses %}
+                 <option value="{{ status_key }}" {% if current_status == status_key %}selected{% endif %}>
+                     {{ status_key | replace('_', ' ') | title }} ({{ stats.get(status_key, 0) }})
+                 </option>
+                {% endfor %}
             </select>
 
-            <input type="text" name="q" placeholder="Search name, email, username..." value="{{ search_term or '' }}">
+            <input type="text" name="q" placeholder="Search name, email, username, license..." value="{{ search_term or '' }}" class="form-control form-control-sm me-2" style="width: auto;">
 
             <input type="hidden" name="sort_by" value="{{ sort_by or 'date_submitted' }}">
             <input type="hidden" name="sort_order" value="{{ sort_order or 'desc' }}">
 
-            <button type="submit" class="btn btn-primary btn-sm">
+            <button type="submit" class="btn btn-primary btn-sm me-2">
                 <i class="fas fa-search"></i> Search
             </button>
              {% if search_term or current_status != 'pending' %}
@@ -38,10 +38,11 @@
     </form>
 
     {% if registrations %}
-    <div style="overflow-x: auto;">
-        <table class="list-table">
+    <div class="table-responsive">
+        <table class="list-table table table-striped table-hover">
             <thead>
                 <tr>
+                    {# --- Sort Macro (no changes needed) --- #}
                     {% macro sort_link(col_key, col_name) %}
                         {% set next_order = 'asc' if sort_by == col_key and sort_order == 'desc' else 'desc' %}
                         <a href="{{ url_for('registration_approval.index', sort_by=col_key, sort_order=next_order, status=current_status, q=search_term, page=page) }}">
@@ -54,40 +55,50 @@
                         </a>
                     {% endmacro %}
 
+                    {# --- Table Headers --- #}
                     <th>{{ sort_link('last_name', 'Name') }}</th>
                     <th>{{ sort_link('email', 'Email') }}</th>
-                    <th>{{ sort_link('user_type', 'User Type') }}</th>
+                    <th>{{ sort_link('specialization', 'Specialization') }}</th>
                     <th>{{ sort_link('date_submitted', 'Submitted') }}</th>
                     <th>{{ sort_link('status', 'Status') }}</th>
+                    <th>{{ sort_link('date_processed', 'Processed') }}</th>
+                     <th>{{ sort_link('user_id', 'User ID') }}</th> {# Added User ID sort #}
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for reg in registrations %}
                 <tr>
-                    <td data-label="Name">{{ reg.first_name }} {{ reg.last_name }}</td>
+                    <td data-label="Name">{{ reg.first_name }} {{ reg.last_name }}<br><small class="text-muted">{{ reg.username }}</small></td>
                     <td data-label="Email">{{ reg.email }}</td>
-                    <td data-label="User Type">{{ reg.user_type | capitalize }}</td>
+                    <td data-label="Specialization">{{ reg.specialization | default('N/A', true) }}</td>
                     <td data-label="Submitted">{{ reg.date_submitted.strftime('%Y-%m-%d %H:%M') if reg.date_submitted else 'N/A' }}</td>
                     <td data-label="Status">
-                         <span class="status-badge {{ reg.status }}">
+                         {# --- Status Badge Logic (REMOVED info_requested) --- #}
+                         <span class="status-badge status-{{ reg.status }}">
                             {% if reg.status == 'pending' %}
                                 <i class="fas fa-hourglass-half"></i> Pending
-                            {% elif reg.status == 'approved_user_created' %}
-                                <i class="fas fa-user-check"></i> Step 1 Approved
-                            {% elif reg.status == 'approved' %}
-                                <i class="fas fa-check-circle"></i> Approved & Active
+                            {% elif reg.status == 'approved' or reg.status == 'approved_user_created' %} {# Show final state #}
+                                <i class="fas fa-check-circle"></i> Approved
                             {% elif reg.status == 'rejected' %}
                                 <i class="fas fa-times-circle"></i> Rejected
                             {% else %}
-                                {{ reg.status | replace('_', ' ') | title }}
+                                {{ reg.status | replace('_', ' ') | title }} {# Fallback #}
                             {% endif %}
                         </span>
                     </td>
+                    <td data-label="Processed">{{ reg.date_processed.strftime('%Y-%m-%d %H:%M') if reg.date_processed else '-' }}</td>
+                    <td data-label="User ID">{{ reg.user_id | default('-', true) }}</td> {# Display User ID #}
                     <td class="action-buttons" data-label="Actions">
-                        <a href="{{ url_for('registration_approval.view_registration', reg_id=reg.id) }}" class="btn-icon view" title="View Details">
-                            <i class="fas fa-eye"></i>
+                        <a href="{{ url_for('registration_approval.view_registration', reg_id=reg.id, status=current_status, q=search_term, sort_by=sort_by, sort_order=sort_order, page=page) }}" class="btn btn-sm btn-outline-primary" title="View Details">
+                            <i class="fas fa-eye"></i> View
                         </a>
+                        {# Link to doctor profile if user ID exists #}
+                        {% if reg.user_id %}
+                         <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=reg.user_id) }}" class="btn btn-sm btn-outline-info" title="View Doctor Profile">
+                            <i class="fas fa-user-md"></i> Profile
+                        </a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -95,8 +106,8 @@
         </table>
     </div>
     {% else %}
-        <div class="no-results">
-            <i class="fas fa-folder-open placeholder-icon"></i>
+        <div class="no-results alert alert-info text-center">
+            <i class="fas fa-folder-open fa-3x mb-3 d-block"></i>
             <p>No registrations found matching your criteria.</p>
              {% if search_term or current_status != 'pending' %}
              <a href="{{ url_for('registration_approval.index', status='pending') }}" class="btn btn-secondary btn-sm">
@@ -106,17 +117,37 @@
         </div>
     {% endif %}
 
+    {# --- Pagination (No changes needed) --- #}
     {% if total_pages > 1 %}
     <nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
         <ul class="pagination">
             <li class="page-item {% if page <= 1 %}disabled{% endif %}">
                 <a class="page-link" href="{{ url_for('registration_approval.index', page=page-1, status=current_status, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">«</a>
             </li>
-            {% for p in range(1, total_pages + 1) %}
+            {% set page_window = 2 %}
+            {% set start_page = [1, page - page_window] | max %}
+            {% set end_page = [total_pages, page + page_window] | min %}
+
+            {% if start_page > 1 %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('registration_approval.index', page=1, status=current_status, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">1</a></li>
+                {% if start_page > 2 %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endif %}
+
+            {% for p in range(start_page, end_page + 1) %}
                 <li class="page-item {% if p == page %}active{% endif %}">
                     <a class="page-link" href="{{ url_for('registration_approval.index', page=p, status=current_status, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">{{ p }}</a>
                 </li>
             {% endfor %}
+
+             {% if end_page < total_pages %}
+                {% if end_page < total_pages - 1 %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('registration_approval.index', page=total_pages, status=current_status, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">{{ total_pages }}</a></li>
+            {% endif %}
+
             <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
                 <a class="page-link" href="{{ url_for('registration_approval.index', page=page+1, status=current_status, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">»</a>
             </li>
@@ -130,4 +161,5 @@
 {% endblock %}
 
 {% block scripts_extra %}
+{# Add any specific JS for this page if needed #}
 {% endblock %}

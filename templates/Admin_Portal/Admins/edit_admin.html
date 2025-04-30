@@ -1,92 +1,74 @@
-{% extends "Admin_Portal/base.html" %}
+{% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Edit Administrator{% endblock %}
-
-{% block nav_admin %}active{% endblock %}
-
-{% block header_title %}
-<i class="fas fa-user-edit"></i> Edit Administrator
-{% endblock %}
+{% block title %}Edit Admin{% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <div class="form-header">
-        <h2><i class="fas fa-user-shield"></i> Edit Admin Account</h2>
+<h1>Edit Admin: {{ admin.first_name }} {{ admin.last_name }} ({{ admin.username }})</h1>
+<hr>
+
+<form method="POST" action="{{ url_for('admin_management.edit_admin', admin_id=admin.user_id) }}">
+
+     <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ admin.first_name }}" required>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ admin.last_name }}" required>
+        </div>
     </div>
 
-    {# Pass the admin_id to the action URL #}
-    <form action="{{ url_for('admin_management.edit_admin', admin_id=admin.user_id) }}" method="POST">
-        <div class="form-row">
-            <div class="form-group">
-                <label for="first_name">First Name</label>
-                {# Use admin.first_name from the passed admin object #}
-                <input type="text" id="first_name" name="first_name"
-                       value="{{ admin.first_name }}" required>
-            </div>
-            <div class="form-group">
-                <label for="last_name">Last Name</label>
-                <input type="text" id="last_name" name="last_name"
-                       value="{{ admin.last_name }}" required>
-            </div>
+     <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ admin.email }}" required>
         </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email"
-                       value="{{ admin.email }}" required>
-            </div>
-            <div class="form-group">
-                <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone"
-                       value="{{ admin.phone or '' }}"> {# Handles None values #}
-            </div>
+         <div class="col-md-6 mb-3">
+            <label for="phone" class="form-label">Phone Number (Optional)</label>
+            <input type="tel" class="form-control" id="phone" name="phone" value="{{ admin.phone or '' }}">
         </div>
+    </div>
 
-        <div class="form-group">
-            <label for="admin_level">Admin Level</label>
-            <select id="admin_level" name="admin_level">
-                {# Check if admin_levels list exists and is not empty #}
-                {% if admin_levels %}
-                    {# Loop through the levels passed from the Python route #}
-                    {% for level in admin_levels %}
-                        <option value="{{ level }}"
-                                {# Check if the current admin's level matches this loop item #}
-                                {% if admin.admin_level == level %}selected{% endif %}>
-                            {# Display the level nicely (e.g., 'read_only' becomes 'Read Only') #}
-                            {{ level.replace('_', ' ').title() }}
-                        </option>
-                    {% endfor %}
-                {% else %}
-                    {# Fallback if admin_levels list is empty or wasn't passed #}
-                    <option value="" disabled selected>Error loading levels</option>
-                    {# You might include static fallbacks here if essential #}
-                    {# <option value="standard">Standard Admin</option> ... #}
-                {% endif %}
+     <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="admin_level" class="form-label">Admin Level <span class="text-danger">*</span></label>
+            <select class="form-select" id="admin_level" name="admin_level" required>
+                {% for level in admin_levels %}
+                <option value="{{ level }}" {% if admin.admin_level == level %}selected{% endif %}>
+                    {{ level.capitalize() }}
+                </option>
+                {% endfor %}
             </select>
         </div>
-
-        <hr>
-        <h3 class="form-section-header">Change Password (Optional)</h3>
-
-        <div class="form-group">
-            <label for="new_password">New Password</label>
-            {# Removed form-control unless you are using Bootstrap classes elsewhere #}
-            <input type="password" id="new_password" name="new_password" placeholder="Leave blank to keep current password">
+        <div class="col-md-6 mb-3">
+            <label for="account_status" class="form-label">Account Status <span class="text-danger">*</span></label>
+            <select class="form-select" id="account_status" name="account_status" required>
+                {% for status in account_statuses %}
+                <option value="{{ status }}" {% if admin.account_status == status %}selected{% endif %}>
+                    {{ status.capitalize() }}
+                </option>
+                {% endfor %}
+            </select>
         </div>
-        <div class="form-group">
-            <label for="confirm_password">Confirm New Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" placeholder="Leave blank to keep current password">
-        </div>
+     </div>
 
-        <div class="form-actions">
-            <a href="{{ url_for('admin_management.index') }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> Cancel
-            </a>
-             <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Update Admin Account
-            </button>
+    <h5 class="mt-4">Reset Password (Optional)</h5>
+    <p><small class="text-muted">Leave blank to keep the current password. Fill both fields to set a new password.</small></p>
+    <small class="text-warning d-block mb-2">Warning: New password will be stored insecurely as plain text.</small>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="new_password" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="new_password" name="new_password">
         </div>
-    </form>
-</div>
+        <div class="col-md-6 mb-3">
+            <label for="confirm_password" class="form-label">Confirm New Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+        </div>
+    </div>
+
+    <hr>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <a href="{{ url_for('admin_management.index') }}" class="btn btn-secondary">Cancel</a>
+</form>
 {% endblock %}

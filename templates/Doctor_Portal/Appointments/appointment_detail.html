@@ -1,0 +1,233 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}Appointment Details{% endblock %}
+
+ {% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/appointments.css') }}">
+ {% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Appointment Details</h1>
+    <div class="header-actions">
+        {% if appointment.status not in ['completed', 'canceled', 'no-show'] %}
+            {# Reschedule uses secondary style #}
+            <a href="{{ url_for('.reschedule_appointment', appointment_id=appointment.appointment_id) }}" class="button button-outline button-secondary button-small"><i class="fas fa-calendar-day fa-fw"></i> Reschedule</a>
+            {# Cancel uses danger style #}
+            <form action="{{ url_for('.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                {# <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> #}
+                <button type="submit" class="button button-outline button-danger button-small" title="Cancel Appointment">
+                    <i class="fas fa-ban fa-fw"></i> Cancel
+                </button>
+            </form>
+        {% endif %}
+        {# Back uses secondary outline style #}
+        <a href="{{ url_for('.list_appointments', **request.args) }}" class="button button-outline button-secondary button-small ms-1">
+            <i class="fas fa-arrow-left fa-fw"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="flash-messages-container alert-container-fixed">
+    {% include '_flash_messages.html' %}
+</div>
+
+<div class="row g-lg-4">
+    <div class="col-lg-7 mb-4 mb-lg-0">
+        <div class="card shadow-sm h-100 detail-card">
+             <div class="card-header">
+                 <h4 class="mb-0"><i class="fas fa-calendar-check fa-fw me-2"></i> Appointment Info</h4>
+             </div>
+            <div class="card-body">
+                 <div class="row">
+                     <div class="col-md-4 mb-3 detail-item">
+                         <span class="detail-label">Date</span>
+                         <div class="detail-value">{{ appointment.appointment_date.strftime('%B %d, %Y (%A)') }}</div>
+                     </div>
+                     <div class="col-md-4 mb-3 detail-item">
+                         <span class="detail-label">Time</span>
+                         <div class="detail-value">{{ appointment.start_time }} - {{ appointment.end_time }}</div>
+                     </div>
+                      <div class="col-md-4 mb-3 detail-item">
+                         <span class="detail-label">Type</span>
+                         <div class="detail-value">{{ appointment.appointment_type | title }}</div>
+                     </div>
+                </div>
+
+                 <div class="row align-items-center mb-3">
+                    <div class="col-md-4 detail-item">
+                         <span class="detail-label">Status</span>
+                         <div class="detail-value">
+                            {# Use badge-* classes now #}
+                            {% set status_class = appointment.status | lower | replace(' ', '-') | replace('no-show','danger') | replace('scheduled','info') | replace('confirmed','primary') | replace('completed','secondary') | replace('canceled','secondary') | replace('rescheduled','warning') %} {# Mapped canceled to secondary #}
+                            <span id="status-badge-{{ appointment.appointment_id }}" class="badge badge-{{ status_class }} status-badge">
+                                {{ appointment.status | title | replace('-', ' ') }}
+                            </span>
+                         </div>
+                     </div>
+                     {% if appointment.status not in ['completed', 'canceled', 'no-show'] %}
+                         <div class="col-md-8">
+                             <form id="update-status-form" class="d-flex align-items-center gap-2">
+                                <label for="status-select" class="form-label text-nowrap mb-0 me-2"><small>Update:</small></label>
+                                <select id="status-select" name="status" class="form-select form-select-sm flex-grow-1 update-status-select">
+                                     {% for status in appointment_statuses %}
+                                        <option value="{{ status }}" {% if appointment.status == status %}selected{% endif %}>{{ status | title | replace('-', ' ') }}</option>
+                                     {% endfor %}
+                                </select>
+                                {# Update uses success style #}
+                                <button type="submit" class="button button-success button-small flex-shrink-0">Update</button>
+                            </form>
+                         </div>
+                     {% endif %}
+                </div>
+
+                <div class="mb-3 detail-item">
+                    <span class="detail-label">Reason for Visit</span>
+                    <div class="detail-value pre-wrap">{{ appointment.reason | default('N/A') }}</div>
+                </div>
+
+                <div class="section-header">
+                    <i class="fas fa-notes-medical fa-fw"></i> Provider Notes
+                </div>
+                <div class="mb-3 detail-item">
+                    <form id="update-notes-form">
+                        <textarea name="notes" id="appointment-notes" class="form-control form-control-sm mb-2" rows="5" placeholder="Enter clinical notes here...">{{ appointment.notes | default('') }}</textarea>
+                        <div class="text-end">
+                             {# Save uses success style #}
+                             <button type="submit" class="button button-success button-small"><i class="fas fa-save fa-fw"></i> Save Notes</button>
+                        </div>
+                    </form>
+                </div>
+
+                <hr class="my-4">
+                 <p class="small text-muted mb-0">Created: {{ appointment.created_at.strftime('%Y-%m-%d %H:%M') }} | Last Updated: {{ appointment.updated_at.strftime('%Y-%m-%d %H:%M') if appointment.updated_at else 'Never' }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100 detail-card">
+             <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-user-injured fa-fw me-2"></i> Patient Information</h4>
+             </div>
+            <div class="card-body">
+                <div class="mb-3 detail-item">
+                    <span class="detail-label">Name</span>
+                    <div class="detail-value">
+                         <a href="{{ url_for('patients.view_patient_profile', patient_id=appointment.patient_user_id) }}">
+                            <strong>{{ appointment.patient_first_name }} {{ appointment.patient_last_name }}</strong>
+                         </a>
+                         <span class="text-muted ms-1">(ID: {{ appointment.patient_user_id }})</span>
+                     </div>
+                </div>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Date of Birth</span>
+                        <div class="detail-value">{{ appointment.date_of_birth.strftime('%B %d, %Y') if appointment.date_of_birth else 'N/A' }}</div>
+                    </div>
+                     <div class="detail-item">
+                        <span class="detail-label">Gender</span>
+                        <div class="detail-value">{{ appointment.gender | title | default('N/A') }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone</span>
+                        <div class="detail-value">{{ appointment.patient_phone | default('N/A') }}</div>
+                    </div>
+                     <div class="detail-item">
+                        <span class="detail-label">Email</span>
+                        <div class="detail-value">{{ appointment.patient_email | default('N/A') }}</div>
+                    </div>
+                </div>
+
+                 <div class="section-header">
+                    <i class="fas fa-id-card-alt fa-fw"></i> Insurance Details
+                 </div>
+                 <div class="mb-3 detail-item">
+                    <span class="detail-label">Provider</span>
+                    <div class="detail-value">{{ appointment.insurance_provider_name | default('N/A') }}</div>
+                </div>
+                 <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Policy Number</span>
+                        <div class="detail-value">{{ appointment.insurance_policy_number | default('N/A') }}</div>
+                    </div>
+                     <div class="detail-item">
+                        <span class="detail-label">Group Number</span>
+                        <div class="detail-value">{{ appointment.insurance_group_number | default('N/A') }}</div>
+                    </div>
+                     <div class="detail-item">
+                        <span class="detail-label">Expiration Date</span>
+                        <div class="detail-value">{{ appointment.insurance_expiration.strftime('%Y-%m-%d') if appointment.insurance_expiration else 'N/A' }}</div>
+                     </div>
+                 </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# Ensure Bootstrap JS loaded in base.html #}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const appointmentId = '{{ appointment.appointment_id }}';
+    let flashContainer = document.querySelector('.flash-messages-container');
+    if (!flashContainer) { /* ... flash container creation ... */ }
+    function flashMessage(message, category = 'info', duration = 4000) { /* ... flash message function ... */ }
+
+    // --- Update Status via AJAX ---
+    const statusForm = document.getElementById('update-status-form');
+    if (statusForm) {
+        statusForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const statusSelect = document.getElementById('status-select');
+            const newStatus = statusSelect.value;
+            const submitButton = statusForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin fa-fw"></i> Updating...';
+
+            try {
+                const response = await fetch(`{{ url_for('.update_appointment_status', appointment_id=appointment.appointment_id) }}`, { /* ... fetch options ... */ });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    flashMessage(result.message, 'success');
+                    const badge = document.getElementById(`status-badge-${appointmentId}`);
+                    // ** UPDATE BADGE CLASS **
+                    const statusClass = (newStatus || '').toLowerCase().replace(' ', '-').replace('no-show','danger') .replace('scheduled','info') .replace('confirmed','primary') .replace('completed','secondary') .replace('canceled','secondary') .replace('rescheduled','warning');
+                    if (badge) {
+                        badge.className = `badge badge-${statusClass} status-badge`; // Use badge-*
+                        badge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).replace('-', ' ');
+                    }
+                    statusSelect.value = newStatus;
+                } else { flashMessage(result.message || 'Failed to update status.', 'danger'); }
+            } catch (error) { flashMessage('Network error updating status.', 'danger'); console.error("Status Update Error:", error); }
+            finally {
+                 submitButton.disabled = false; submitButton.innerHTML = 'Update';
+            }
+        });
+    }
+
+    // --- Update Notes via AJAX ---
+    const notesForm = document.getElementById('update-notes-form');
+    if(notesForm) {
+        notesForm.addEventListener('submit', async function(event) {
+             event.preventDefault();
+             const notesTextarea = document.getElementById('appointment-notes');
+             const newNotes = notesTextarea.value;
+             const saveButton = notesForm.querySelector('button[type="submit"]');
+             saveButton.disabled = true; saveButton.innerHTML = '<i class="fas fa-spinner fa-spin fa-fw"></i> Saving...';
+
+             try {
+                 const response = await fetch(`{{ url_for('.update_appointment_notes', appointment_id=appointment.appointment_id) }}`, { /* ... fetch options ... */ });
+                 const result = await response.json();
+                 if (response.ok && result.success) { flashMessage(result.message, 'success'); }
+                 else { flashMessage(result.message || 'Failed to save notes.', 'danger'); }
+             } catch (error) { flashMessage('Network error saving notes.', 'danger'); console.error("Notes Update Error:", error); }
+             finally {
+                 saveButton.disabled = false; saveButton.innerHTML = '<i class="fas fa-save fa-fw"></i> Save Notes';
+             }
+        });
+    }
+});
+</script>
+{% endblock %}

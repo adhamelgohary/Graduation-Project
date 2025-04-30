@@ -1,151 +1,131 @@
-{% extends "Admin_Portal/base.html" %}
+{% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Doctors List{% endblock %}
+{% block title %}Manage Doctors{% endblock %}
 
-{% block nav_doctors %}active{% endblock %}
-
-{% block header_title %}
-<h1 class="page-title">
-    <i class="fas fa-user-md"></i> Doctors Management
-</h1>
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/doctors_management.css') }}">
 {% endblock %}
-
-{# --- Sort URL Macro --- #}
-{% macro sort_url(field, current_sort_by, current_sort_order, current_search_term, current_page) %}
-    {% set new_sort_order = 'desc' if current_sort_by == field and current_sort_order == 'asc' else 'asc' %}
-    {{ url_for('Doctors_Management.index', sort_by=field, sort_order=new_sort_order, q=current_search_term, page=current_page) }}
-{% endmacro %}
 
 {% block content %}
-<div class="list-container card">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h1>Manage Doctors</h1>
+    <a href="{{ url_for('Doctors_Management.add_doctor_step1_form') }}" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Add New Doctor</a>
+</div>
 
-    {# --- Search and Add Controls --- #}
-    <div class="list-controls">
-        <div class="search-filter-container">
-            {# Server-side search form #}
-            <form method="GET" action="{{ url_for('Doctors_Management.index') }}" class="d-flex flex-grow-1 gap-2">
-                 <input type="hidden" name="sort_by" value="{{ sort_by }}">
-                 <input type="hidden" name="sort_order" value="{{ sort_order }}">
-                 <input type="text" id="search-input" name="q" class="form-control flex-grow-1" placeholder="Search name, email, specialty..." value="{{ search_term or '' }}">
-                 <button type="submit" class="btn btn-outline-secondary flex-shrink-0">Search</button>
-            </form>
+<!-- Search Form -->
+<form method="GET" action="{{ url_for('Doctors_Management.index') }}" class="mb-4 p-3 border rounded bg-light filter-form">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-8">
+            <label for="q" class="form-label">Search Term</label>
+            <input type="text" class="form-control form-control-sm" id="q" name="q" placeholder="Name, Email, Specialization, License, Status..." value="{{ search_term or '' }}">
         </div>
-        {# Link to the new Step 1 Add route #}
-        <a href="{{ url_for('Doctors_Management.add_doctor_step1_form') }}" class="btn btn-primary flex-shrink-0">
-            <i class="fas fa-plus"></i> Add New Doctor
-        </a>
+        <div class="col-md-4 d-flex">
+             <button class="btn btn-sm btn-secondary flex-grow-1 me-2" type="submit"><i class="fas fa-search me-1"></i> Search</button>
+             {% if search_term %}
+                <a href="{{ url_for('Doctors_Management.index', sort_by=sort_by, sort_order=sort_order) }}" class="btn btn-sm btn-outline-danger" title="Clear Search"><i class="fas fa-times"></i></a>
+             {% endif %}
+        </div>
     </div>
+</form>
 
-    {# --- Table Container --- #}
-    <div class="table-container">
-        <table class="list-table">
-            <thead>
-                <tr>
-                    {# Use the macro for sortable headers #}
-                    <th><a href="{{ sort_url('last_name', sort_by, sort_order, search_term, page) }}">Name {% if sort_by == 'last_name' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
-                    <th><a href="{{ sort_url('email', sort_by, sort_order, search_term, page) }}">Email {% if sort_by == 'email' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
-                    <th><a href="{{ sort_url('specialization', sort_by, sort_order, search_term, page) }}">Specialization {% if sort_by == 'specialization' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
-                    <th><a href="{{ sort_url('license_number', sort_by, sort_order, search_term, page) }}">License Number {% if sort_by == 'license_number' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
-                    <th><a href="{{ sort_url('verification_status', sort_by, sort_order, search_term, page) }}">Verification Status {% if sort_by == 'verification_status' %}<i class="fas fa-sort-{{ sort_order }}"></i>{% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}</a></th>
-                    <th class="actions-cell">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for doctor in doctors %}
-                <tr>
-                    <td data-label="Name">{{ doctor.first_name }} {{ doctor.last_name }}</td>
-                    <td data-label="Email">{{ doctor.email }}</td>
-                    <td data-label="Specialization">{{ doctor.specialization or 'N/A' }}</td>
-                    <td data-label="License Number">{{ doctor.license_number or 'N/A' }}</td>
-                    <td data-label="Verification Status">
-                        {% set status = doctor.verification_status | lower if doctor.verification_status else 'unknown' %}
-                        {% if status == 'verified' %}
-                            <span class="status-badge active"><i class="fas fa-check-circle"></i> Verified</span>
-                        {% elif status == 'pending' %}
-                            <span class="status-badge pending"><i class="fas fa-clock"></i> Pending</span>
-                        {% elif status == 'rejected' %}
-                            <span class="status-badge rejected"><i class="fas fa-times-circle"></i> Rejected</span>
+{% if doctors %}
+<p class="text-muted mb-2">Total doctors found: {{ total_items }}</p>
+<div class="card shadow-sm">
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-sm doctor-table mb-0">
+        <thead class="table-light">
+             <tr>
+                {# Sortable Headers Macro (similar to appointments list) #}
+                {% macro sort_link(col, display, current_sort, current_order) %}
+                    {% set order_icon = '' %}
+                    {% set next_order = 'asc' %}
+                    {% if current_sort == col %}
+                        {% if current_order == 'asc' %}
+                            {% set order_icon = ' <i class="fas fa-sort-up small"></i>' %}
+                            {% set next_order = 'desc' %}
                         {% else %}
-                            <span class="status-badge unknown"><i class="fas fa-question-circle"></i> Unknown</span>
+                             {% set order_icon = ' <i class="fas fa-sort-down small"></i>' %}
+                             {% set next_order = 'asc' %}
                         {% endif %}
-                    </td>
-                    <td class="actions-cell action-buttons">
-                        <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=doctor.user_id) }}"
-                           class="btn btn-icon view" title="View">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="{{ url_for('Doctors_Management.edit_doctor', doctor_id=doctor.user_id) }}"
-                           class="btn btn-icon edit" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                         {# Link to confirmation page OR direct delete form #}
-                         <a href="{{ url_for('Doctors_Management.delete_doctor_confirmation', doctor_id=doctor.user_id) }}"
-                            class="btn btn-icon delete" title="Delete">
-                                <i class="fas fa-trash"></i>
-                         </a>
-                         {# OR Direct Delete Form (use only one delete method)
-                         <form action="{{ url_for('Doctors_Management.delete_doctor', doctor_id=doctor.user_id) }}"
-                               method="POST" onsubmit="return confirm('Delete Dr. {{ doctor.last_name }}?');" style="display: inline;">
-                            <button type="submit" class="btn btn-icon delete" title="Delete"><i class="fas fa-trash"></i></button>
-                         </form>
-                         #}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    {# --- Pagination and No Results --- #}
-    <div class="pagination-summary-container mt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div>
-            {% if total_items > 0 %}
-                <small class="text-muted">
-                    Showing {{ ((page - 1) * per_page) + 1 }}-{{ [((page - 1) * per_page) + doctors|length, total_items]|min }} of {{ total_items }} Doctors
-                </small>
-            {% endif %}
-        </div>
-
-        {# Pagination Controls (pass search/sort params) #}
-        {% if total_pages > 1 %}
-        <nav aria-label="Doctor pagination">
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('Doctors_Management.index', page=page-1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">«</a>
-                </li>
-                {% for p in range(1, total_pages + 1) %}
-                    {# Logic to show limited page numbers #}
-                    {% if p == page %} <li class="page-item active"><span class="page-link">{{ p }}</span></li>
-                    {% elif p >= page - 2 and p <= page + 2 %} <li class="page-item"><a class="page-link" href="{{ url_for('Doctors_Management.index', page=p, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">{{ p }}</a></li>
-                    {% elif p == page - 3 or p == page + 3 %} <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% else %}
+                         {% set order_icon = ' <i class="fas fa-sort text-muted small"></i>' %}
                     {% endif %}
-                 {% endfor %}
-                <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-                    <a class="page-link" href="{{ url_for('Doctors_Management.index', page=page+1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">»</a>
-                </li>
-            </ul>
-        </nav>
-        {% endif %}
-    </div>
+                    <th><a href="{{ url_for('Doctors_Management.index', q=search_term, page=page, sort_by=col, sort_order=next_order) }}" class="text-decoration-none text-dark">{{ display | safe }}{{ order_icon | safe }}</a></th>
+                {% endmacro %}
 
-    {# No Results Message #}
-    {% if total_items == 0 %}
-       <div class="no-results mt-4">
-            <i class="fas fa-user-md placeholder-icon"></i>
-            {% if search_term %}
-                <p>No doctors found matching "{{ search_term }}".</p>
-                <a href="{{ url_for('Doctors_Management.index', sort_by=sort_by, sort_order=sort_order) }}" class="btn btn-sm btn-outline-secondary">Clear Search</a>
-            {% else %}
-                <p>No doctors found.</p>
-                {# Link to the new Step 1 Add route #}
-                <a href="{{ url_for('Doctors_Management.add_doctor_step1_form') }}" class="btn btn-sm btn-outline-primary">Add a new doctor</a>
-            {% endif %}
-       </div>
-    {% endif %}
+                {{ sort_link('last_name', 'Name', sort_by, sort_order) }}
+                {{ sort_link('email', 'Email', sort_by, sort_order) }}
+                <th>Phone</th> {# Not sorting phone typically #}
+                {{ sort_link('specialization', 'Specialization', sort_by, sort_order) }}
+                {{ sort_link('license_number', 'License #', sort_by, sort_order) }}
+                {{ sort_link('verification_status', 'Verification', sort_by, sort_order) }}
+                {{ sort_link('account_status', 'Account', sort_by, sort_order) }}
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doctor in doctors %}
+            <tr>
+                <td>{{ doctor.last_name }}, {{ doctor.first_name }}</td>
+                <td><a href="mailto:{{ doctor.email }}">{{ doctor.email }}</a></td>
+                <td>{{ doctor.phone or 'N/A' }}</td>
+                <td>{{ doctor.specialization | default('N/A', true) }}</td>
+                <td>{{ doctor.license_number | default('N/A', true) }}</td>
+                <td>
+                    {# Verification Status Badge #}
+                    {% set v_status_class = 'secondary' %}
+                    {% if doctor.verification_status == 'verified' %}{% set v_status_class = 'success' %}
+                    {% elif doctor.verification_status == 'pending' %}{% set v_status_class = 'warning text-dark' %}
+                    {% elif doctor.verification_status == 'rejected' %}{% set v_status_class = 'danger' %}
+                    {% endif %}
+                    <span class="badge bg-{{ v_status_class }}">{{ doctor.verification_status | replace('_', ' ') | title }}</span>
+                </td>
+                 <td>
+                    {# Account Status Badge #}
+                    {% set acc_status_class = 'secondary' %}
+                    {% if doctor.account_status == 'active' %}{% set acc_status_class = 'success' %}
+                    {% elif doctor.account_status == 'inactive' %}{% set acc_status_class = 'secondary' %}
+                    {% elif doctor.account_status == 'suspended' %}{% set acc_status_class = 'danger' %}
+                    {% elif doctor.account_status == 'pending' %}{% set acc_status_class = 'warning text-dark' %}
+                    {% endif %}
+                    <span class="badge bg-{{ acc_status_class }}">{{ doctor.account_status | replace('_', ' ') | title }}</span>
+                </td>
+                <td class="actions text-nowrap text-center">
+                     <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=doctor.user_id) }}" class="btn btn-sm btn-outline-info" title="View Details"><i class="fas fa-eye"></i></a>
+                    <a href="{{ url_for('Doctors_Management.edit_doctor', doctor_id=doctor.user_id) }}" class="btn btn-sm btn-outline-primary" title="Edit Doctor"><i class="fas fa-edit"></i></a>
+                    <a href="{{ url_for('Doctors_Management.delete_doctor_confirmation', doctor_id=doctor.user_id) }}" class="btn btn-sm btn-outline-danger" title="Delete Doctor"><i class="fas fa-trash-alt"></i></a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div> {# End card #}
 
-</div> {# End list-container #}
-{% endblock %}
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav aria-label="Doctor List Navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('Doctors_Management.index', page=page-1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}" aria-label="Previous"><span aria-hidden="true">«</span></a>
+        </li>
+        {% for p in range(1, total_pages + 1) %} {# Basic pagination links #}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('Doctors_Management.index', page=p, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">{{ p }}</a>
+            </li>
+        {% endfor %}
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('Doctors_Management.index', page=page+1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}" aria-label="Next"><span aria-hidden="true">»</span></a>
+        </li>
+    </ul>
+</nav>
+<p class="text-center text-muted small">Showing page {{ page }} of {{ total_pages }}.</p>
+{% endif %}
 
-{% block scripts %}
-{# No client-side JS needed for search/sort anymore #}
+{% else %}
+<div class="alert alert-info" role="alert">
+    No doctors found{% if search_term %} matching your search criteria "{{ search_term }}"{% endif %}. <a href="{{ url_for('Doctors_Management.add_doctor_step1_form') }}">Add one?</a>
+</div>
+{% endif %}
+
 {% endblock %}

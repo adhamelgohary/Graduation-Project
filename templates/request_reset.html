@@ -1,0 +1,95 @@
+<!-- templates/request_reset.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Link to the shared login.css (assuming it's identical to register.css) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <title>Request Password Reset - Health Portal</title>
+    <script>
+        (function() { const storedTheme = localStorage.getItem('theme'); const root = document.documentElement; if (storedTheme === 'light') { root.classList.add('light-mode'); } else { root.classList.remove('light-mode'); } })();
+    </script>
+</head>
+<body class="{{ 'light-mode' if request.cookies.get('theme') == 'light' else '' }}">
+
+    <button id="theme-toggle" title="Toggle Light/Dark Mode"><span class="theme-icon">☀️</span></button>
+
+    <!-- Copy full-page-background div and its contents from Login.html -->
+    <div class="full-page-background">
+        <!-- ... EKG, illustrations, waves etc. ... -->
+        <div class="heartbeat-wrapper"> <div class="heartbeat-lines"> <svg viewBox="0 0 600 100" preserveAspectRatio="none"><path d="M0,50 C20,50 40,20 60,50 S100,80 120,50 S160,30 180,50 S220,70 240,50 S280,40 300,50 S340,60 360,50 S400,35 420,50 S460,75 480,50 S520,45 540,50 S580,50 600,50" /></svg> <svg viewBox="0 0 600 100" preserveAspectRatio="none"><path d="M0,50 C20,50 40,20 60,50 S100,80 120,50 S160,30 180,50 S220,70 240,50 S280,40 300,50 S340,60 360,50 S400,35 420,50 S460,75 480,50 S520,45 540,50 S580,50 600,50" /></svg> </div> </div>
+        <div class="medical-symbols"> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> </div>
+        <div class="pills"> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> </div>
+        <div class="caduceus"> <div class="caduceus-staff"></div> <div class="caduceus-wings"><div class="caduceus-wing"></div><div class="caduceus-wing"></div></div> <div class="caduceus-snake"><svg class="caduceus-snake-path" viewBox="0 0 60 100"><path d="M30,0 C40,10 20,30 30,40 C40,50 20,70 30,80 C40,90 20,110 30,120" /></svg></div> </div>
+        <div class="caduceus caduceus-2"> <div class="caduceus-staff"></div> <div class="caduceus-wings"><div class="caduceus-wing"></div><div class="caduceus-wing"></div></div> <div class="caduceus-snake"><svg class="caduceus-snake-path" viewBox="0 0 60 100"><path d="M30,0 C40,10 20,30 30,40 C40,50 20,70 30,80 C40,90 20,110 30,120" /></svg></div> </div>
+        <div class="floating-icon stethoscope-icon"> <svg class="stethoscope-svg" viewBox="0 0 50 50"> <path d="M25,3 C18,3 14,8 14,15 C14,22 18,27 25,27 S36,22 36,15 C36,8 32,3 25,3 Z M25,25 C20,25 16,21 16,15 C16,9 20,5 25,5 C30,5 34,9 34,15 C34,21 30,25 25,25 Z"/><circle class="chestpiece-fill" cx="25" cy="15" r="8"/><path d="M14,15 Q14,35 8,40"/><path d="M36,15 Q36,35 42,40"/><circle cx="8" cy="42" r="3.5"/><circle cx="42" cy="42" r="3.5"/> </svg> </div>
+        <div class="floating-icon dna-icon"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
+        <div class="floating-icon molecule-icon"> <div class="css-icon-wrapper"> <div class="atom atom-1"></div> <div class="atom atom-2"></div> <div class="atom atom-3"></div> </div> </div>
+        <div class="floating-icon stethoscope-icon stethoscope-icon-2"> <svg class="stethoscope-svg" viewBox="0 0 50 50"><path d="M25,3 C18,3 14,8 14,15 C14,22 18,27 25,27 S36,22 36,15 C36,8 32,3 25,3 Z M25,25 C20,25 16,21 16,15 C16,9 20,5 25,5 C30,5 34,9 34,15 C34,21 30,25 25,25 Z"/><circle class="chestpiece-fill" cx="25" cy="15" r="8"/><path d="M14,15 Q14,35 8,40"/><path d="M36,15 Q36,35 42,40"/><circle cx="8" cy="42" r="3.5"/><circle cx="42" cy="42" r="3.5"/> </svg> </div>
+        <div class="floating-icon dna-icon dna-icon-2"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
+        <div class="floating-icon molecule-icon molecule-icon-2"> <div class="css-icon-wrapper"> <div class="atom atom-1"></div> <div class="atom atom-2"></div> <div class="atom atom-3"></div> </div> </div>
+        <div class="floating-icon bandage-icon"> <div class="bandage-strip"></div> <div class="bandage-pad"></div> </div>
+        <div class="floating-icon microscope-icon"> <svg viewBox="0 0 100 100"> <path d="M 40 95 L 60 95 L 60 85 L 40 85 Z M 50 85 L 50 65 M 40 65 L 60 65 M 50 65 Q 30 60 30 40 L 30 15 M 30 15 L 70 15 Q 70 30 60 30 L 60 50 Q 75 55 75 65 L 50 65 M 30 15 L 20 5 M 20 5 L 15 10 M 20 5 L 25 10" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="50" cy="57.5" r="5" fill="currentColor"/> </svg> </div>
+        <div class="floating-icon test-tube-icon"> <svg viewBox="0 0 50 100"> <path d="M 10 0 L 10 80 Q 10 100 25 100 Q 40 100 40 80 L 40 0 Z" stroke="currentColor" stroke-width="4" fill="var(--illustration-element-fill)"/> <path d="M 10 50 L 40 50 L 40 80 Q 40 95 25 95 Q 10 95 10 80 Z" fill="var(--accent-primary)" opacity="0.5"/> </svg> </div>
+        <div class="floating-icon syringe-icon"> <svg viewBox="0 0 100 30"> <path d="M 0 10 L 70 10 L 70 20 L 0 20 Z M 70 5 L 80 15 L 70 25 Z M 75 15 L 95 15 M 95 10 L 100 10 L 100 20 L 95 20 Z" fill="var(--illustration-element-fill)" stroke="currentColor" stroke-width="2"/> </svg> </div>
+        <div class="floating-icon clipboard-icon"> <svg viewBox="0 0 70 100"> <rect x="5" y="5" width="60" height="90" rx="5" ry="5" fill="var(--illustration-element-fill)" stroke="currentColor" stroke-width="3"/> <path d="M 25 5 L 45 5 Q 50 5 50 10 L 50 20 L 20 20 L 20 10 Q 20 5 25 5 Z" fill="currentColor" opacity="0.6"/> <line x1="15" y1="35" x2="55" y2="35" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2"/> <line x1="15" y1="45" x2="55" y2="45" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2"/> <line x1="15" y1="55" x2="45" y2="55" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2"/> <line x1="15" y1="65" x2="55" y2="65" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2"/> </svg> </div>
+        <div class="floating-icon blood-drop-icon"> <svg viewBox="0 0 60 100"> <path d="M 30 100 C 0 75 0 50 30 10 C 60 50 60 75 30 100 Z" fill="var(--accent-ekg)" opacity="0.8"/> </svg> </div>
+        <div class="floating-icon heart-icon-simple"> <svg viewBox="0 0 100 90"> <path d="M 50 90 L 10 50 C 10 20 40 0 50 20 C 60 0 90 20 90 50 Z" fill="var(--accent-ekg)" opacity="0.7"/> </svg> </div>
+        <div class="floating-icon mortar-pestle-icon"> <div class="mortar"></div> <div class="pestle"></div> </div>
+        <div class="floating-icon first-aid-icon"> <div class="fa-box"></div> <div class="fa-cross-v"></div> <div class="fa-cross-h"></div> </div>
+        <div class="floating-icon tooth-icon"> <svg viewBox="0 0 80 100"> <path d=" M 10 30 Q 10 0 40 0 Q 70 0 70 30 L 60 30 L 60 60 Q 60 80 70 95 L 55 100 L 50 70 L 30 70 L 25 100 L 10 95 Q 20 80 20 60 L 20 30 Z" fill="var(--illustration-element-bg)" stroke="currentColor" stroke-width="4"/> </svg> </div>
+        <div class="floating-icon stethoscope-icon stethoscope-icon-3"> <svg class="stethoscope-svg" viewBox="0 0 50 50"><path d="M25,3 C18,3 14,8 14,15 C14,22 18,27 25,27 S36,22 36,15 C36,8 32,3 25,3 Z M25,25 C20,25 16,21 16,15 C16,9 20,5 25,5 C30,5 34,9 34,15 C34,21 30,25 25,25 Z"/><circle class="chestpiece-fill" cx="25" cy="15" r="8"/><path d="M14,15 Q14,35 8,40"/><path d="M36,15 Q36,35 42,40"/><circle cx="8" cy="42" r="3.5"/><circle cx="42" cy="42" r="3.5"/> </svg> </div>
+        <div class="floating-icon dna-icon dna-icon-3"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
+         <div class="floating-icon bandage-icon bandage-icon-2"> <div class="bandage-strip"></div> <div class="bandage-pad"></div> </div>
+        <div class="floating-icon test-tube-icon test-tube-icon-2"> <svg viewBox="0 0 50 100"> <path d="M 10 0 L 10 80 Q 10 100 25 100 Q 40 100 40 80 L 40 0 Z" stroke="currentColor" stroke-width="4" fill="var(--illustration-element-fill)"/> <path d="M 10 50 L 40 50 L 40 80 Q 40 95 25 95 Q 10 95 10 80 Z" fill="var(--accent-primary)" opacity="0.5"/> </svg> </div>
+        <div class="waves"> <div class="wave"></div> <div class="wave"></div> <div class="wave wave-3"></div> </div>
+    </div>
+
+    <div class="login-container">
+        <form method="POST" action="{{ url_for('password_reset.request_reset_route') }}" class="login-form">
+            <div class="logo">
+                <div class="logo-circle"></div>
+                <div class="logo-text">Health Portal</div>
+            </div>
+            <h1>Reset Password</h1>
+            <p class="info-text" style="margin-top: -20px; margin-bottom: 25px;">Enter your email address below. If an account exists, we'll send you a link to reset your password.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            {% set category = 'danger' if category == 'error' else category %}
+                            {% set alert_class = 'alert-' + category if category in ['danger', 'warning', 'info', 'success'] else 'alert-secondary' %}
+                            <div class="alert {{ alert_class }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="form-group">
+                <label for="email">Registered Email Address</label>
+                <input type="email" name="email" id="email" value="{{ form_data.get('email', '') }}" required autocomplete="email">
+            </div>
+
+            <button type="submit" class="login-button">Send Reset Link</button>
+
+            <div class="login-link">
+                Remember your password? <a href="{{ url_for('login.login_route') }}">Login Here</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('theme-toggle');
+            const root = document.documentElement;
+            const body = document.body;
+            const themeIcon = themeToggle.querySelector('.theme-icon');
+            const updateButton = () => { if (root.classList.contains('light-mode')) { themeIcon.textContent = '🌙'; themeToggle.title = 'Switch to Dark Mode'; } else { themeIcon.textContent = '☀️'; themeToggle.title = 'Switch to Light Mode'; } };
+            if (localStorage.getItem('theme') === 'light') { if (!root.classList.contains('light-mode')) root.classList.add('light-mode'); if (!body.classList.contains('light-mode')) body.classList.add('light-mode'); } else { root.classList.remove('light-mode'); body.classList.remove('light-mode'); } updateButton();
+            themeToggle.addEventListener('click', () => { root.classList.toggle('light-mode'); body.classList.toggle('light-mode'); if (root.classList.contains('light-mode')) { localStorage.setItem('theme', 'light'); } else { localStorage.removeItem('theme'); } updateButton(); });
+        });
+    </script>
+</body>
+</html>

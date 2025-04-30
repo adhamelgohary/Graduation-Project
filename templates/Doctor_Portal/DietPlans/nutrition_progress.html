@@ -1,0 +1,137 @@
+{% extends "Doctor_Portal/base.html" %} {# Or your common portal base template #}
+{% block title %}Nutrition Progress: {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
+
+{% block head_extra %}
+<style>
+    .progress-log-table th { white-space: nowrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Nutrition Progress: {{ patient.first_name }} {{ patient.last_name }}</h1>
+    {# Determine where the back button should go #}
+    {% if current_user.user_type == 'nutritionist' %}
+    <a href="{{ url_for('diet_plans.list_assignments') }}" class="button button-outline button-secondary">
+        <i class="fas fa-arrow-left fa-fw"></i> Back to Assignments
+    </a>
+    {% else %} {# Assuming Patient might view this via a different route #}
+     <a href="{{ url_for('doctor_main.dashboard') }}" class="button button-outline button-secondary">
+        <i class="fas fa-arrow-left fa-fw"></i> Back to Dashboard
+    </a>
+    {% endif %}
+</div>
+
+{# Display Flash Messages #}
+{% include '_flash_messages.html' %}
+
+{# Section to Add New Log (Only if patient is viewing their own) #}
+{% if can_add_log %}
+<div class="card shadow-sm content-section mb-4">
+    <div class="card-header">
+        <h5><i class="fas fa-plus-circle fa-fw"></i> Add New Log Entry</h5>
+    </div>
+    <div class="card-body">
+         {# TODO: Create a form POSTing to a new route like 'add_nutrition_log' #}
+         <form action="{{ url_for('patient_routes.add_nutrition_log', patient_user_id=patient.user_id) }}" method="POST"> {# Example route #}
+             {# CSRF Token #}
+             <div class="row">
+                 <div class="col-md-3 form-group mb-3">
+                     <label for="log_date" class="form-label">Date</label>
+                     <input type="date" id="log_date" name="log_date" class="form-control" value="{{ now().strftime('%Y-%m-%d') }}" required> {# Default to today #}
+                 </div>
+                 <div class="col-md-3 form-group mb-3">
+                     <label for="weight_kg" class="form-label">Weight (kg)</label>
+                     <input type="number" step="0.1" min="0" id="weight_kg" name="weight_kg" class="form-control" placeholder="e.g., 70.5">
+                 </div>
+                  <div class="col-md-3 form-group mb-3">
+                     <label for="calories_consumed" class="form-label">Calories Consumed</label>
+                     <input type="number" step="1" min="0" id="calories_consumed" name="calories_consumed" class="form-control" placeholder="e.g., 2000">
+                 </div>
+                 <div class="col-md-3 form-group mb-3">
+                     <label for="water_consumed_ml" class="form-label">Water (ml)</label>
+                     <input type="number" step="50" min="0" id="water_consumed_ml" name="water_consumed_ml" class="form-control" placeholder="e.g., 2000">
+                 </div>
+             </div>
+              <div class="row">
+                  <div class="col-md-6 form-group mb-3">
+                     <label for="mood" class="form-label">Mood</label>
+                      <select id="mood" name="mood" class="form-select">
+                          <option value="">-- Optional --</option>
+                          <option value="excellent">Excellent</option>
+                          <option value="good">Good</option>
+                          <option value="average">Average</option>
+                          <option value="poor">Poor</option>
+                          <option value="terrible">Terrible</option>
+                      </select>
+                 </div>
+                  <div class="col-md-6 form-group mb-3">
+                     <label for="energy_level" class="form-label">Energy Level</label>
+                      <select id="energy_level" name="energy_level" class="form-select">
+                          <option value="">-- Optional --</option>
+                          <option value="high">High</option>
+                          <option value="medium">Medium</option>
+                          <option value="low">Low</option>
+                      </select>
+                 </div>
+              </div>
+             <div class="form-group mb-3">
+                 <label for="notes" class="form-label">Notes</label>
+                 <textarea id="notes" name="notes" class="form-control" rows="2" placeholder="Any additional notes for the day..."></textarea>
+             </div>
+             <div class="text-end">
+                 <button type="submit" class="button button-primary"><i class="fas fa-save fa-fw"></i> Save Log Entry</button>
+             </div>
+         </form>
+    </div>
+</div>
+{% endif %}
+
+{# Display Existing Logs #}
+<div class="card shadow-sm content-section">
+     <div class="card-header">
+        <h5><i class="fas fa-history fa-fw"></i> Log History</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0 progress-log-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Weight (kg)</th>
+                        <th>Calories</th>
+                        <th>Water (ml)</th>
+                        <th>Mood</th>
+                        <th>Energy</th>
+                        <th>Notes</th>
+                        {# Add Action column if patient can edit/delete their logs #}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.log_date.strftime('%Y-%m-%d') if log.log_date else 'N/A' }}</td>
+                        <td>{{ '%g'|format(log.weight_kg) if log.weight_kg is not none else '-' }}</td>
+                        <td>{{ log.calories_consumed if log.calories_consumed is not none else '-' }}</td>
+                        <td>{{ log.water_consumed_ml if log.water_consumed_ml is not none else '-' }}</td>
+                        <td>{{ log.mood | title | default('-') }}</td>
+                        <td>{{ log.energy_level | title | default('-') }}</td>
+                        <td>{{ log.notes | default('') | truncate(100) }}</td> {# Truncate long notes #}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No nutrition logs found for this patient.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+     {# Add Pagination Controls Here (If implemented in backend) #}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+    {# Add JS for date pickers or charts if needed #}
+{% endblock %}

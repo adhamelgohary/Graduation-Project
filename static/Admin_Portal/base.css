@@ -1,39 +1,65 @@
+/* static/Admin_Portal/base.css */
+
 /* ==========================================================================
    Base Theme & Variables
    ========================================================================== */
    :root {
-    --primary-color: #3498db;          /* Blue */
-    --primary-color-darker: #2980b9;  /* Darker Blue */
-    --success-color: #2ecc71;          /* Green */
-    --warning-color: #f39c12;          /* Yellow/Orange */
-    --danger-color: #e74c3c;           /* Red */
-    --info-color: #17a2b8;            /* Teal */
-    --dark-color: #2c3e50;           /* Dark Blue/Gray */
-    --light-color: #f5f6fa;           /* Very Light Gray */
-    --text-color: #333;               /* Dark Gray Text */
-    --grey-color: #95a5a6;           /* Medium Gray */
-    --border-color: #e0e0e0;          /* Light Gray Border */
-    --border-radius: 8px;
-    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    --transition: all 0.3s ease;
+    --primary-color: #0d6efd;          /* Bootstrap Blue (Example) */
+    --primary-color-darker: #0b5ed7;  /* Darker Bootstrap Blue */
+    --primary-color-lighter: #cfe2ff; /* Lighter shade for backgrounds */
+    --success-color: #198754;          /* Bootstrap Green */
+    --warning-color: #ffc107;          /* Bootstrap Yellow */
+    --danger-color: #dc3545;           /* Bootstrap Red */
+    --info-color: #0dcaf0;             /* Bootstrap Teal */
+    --dark-color: #212529;           /* Bootstrap Dark (Sidebar BG) */
+    --secondary-color: #6c757d;        /* Bootstrap Secondary */
+    --light-color: #f8f9fa;           /* Very Light Gray (Main BG) */
+    --white-color: #ffffff;
+    --text-color: #495057;             /* Default Text */
+    --heading-color: #343a40;          /* Heading Text */
+    --grey-color: #adb5bd;             /* Medium Gray */
+    --border-color: #dee2e6;          /* Default Border */
+    --border-radius: 0.375rem;         /* Bootstrap's default */
+    --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.075); /* Softer shadow */
+    --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --transition: all 0.25s ease-in-out;
+
+    --sidebar-width: 280px;
+    --sidebar-bg: var(--dark-color);
+    --sidebar-link-color: rgba(255, 255, 255, 0.8);
+    --sidebar-link-hover-color: var(--white-color);
+    --sidebar-link-active-color: var(--white-color);
+    --sidebar-link-hover-bg: rgba(255, 255, 255, 0.1);
+    --sidebar-link-active-bg: var(--primary-color); /* Use primary for active */
+    --sidebar-submenu-bg: rgba(0, 0, 0, 0.2); /* Darker submenu */
+    --sidebar-icon-color: rgba(255, 255, 255, 0.6);
+    --sidebar-icon-active-color: var(--white-color);
 }
 
 /* ==========================================================================
    Base Styles & Reset
    ========================================================================== */
-* {
-    margin: 0;
-    padding: 0;
+*,
+*::before,
+*::after {
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 body {
     background-color: var(--light-color);
     color: var(--text-color);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     line-height: 1.6;
-    display: flex; /* Required for fixed sidebar layout */
+    display: flex;
     min-height: 100vh;
+    font-size: 1rem; /* 16px */
+    margin: 0;
 }
 
 a {
@@ -43,890 +69,528 @@ a {
 }
 a:hover {
     color: var(--primary-color-darker);
-    text-decoration: underline;
+    text-decoration: none;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--heading-color);
+}
+h1 { font-size: 1.875rem; } /* 30px */
+h2 { font-size: 1.625rem; } /* 26px */
+h3 { font-size: 1.375rem; } /* 22px */
+h4 { font-size: 1.125rem; } /* 18px */
+
+p {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
 }
 
 /* ==========================================================================
    Sidebar Styles
    ========================================================================== */
 .sidebar {
-    width: 280px;
-    background-color: var(--dark-color);
-    color: white;
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    color: var(--white-color);
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    padding: 25px 0;
+    padding: 20px 0; /* Adjust vertical padding */
     overflow-y: auto;
-    transition: var(--transition);
-    z-index: 1000;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: left 0.3s ease-in-out; /* Only transition left */
+    z-index: 1030; /* High z-index */
+    box-shadow: 0.125rem 0 0.5rem rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-.sidebar h2 {
+/* Sidebar Scrollbar */
+.sidebar::-webkit-scrollbar { width: 5px; }
+.sidebar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+
+.sidebar h2 { /* Portal Title */
     text-align: center;
-    margin-bottom: 30px;
-    padding: 0 25px 20px 25px; /* Combined padding */
-    font-size: 22px;
-    font-weight: 600;
+    padding: 10px 20px 20px 20px;
+    margin-bottom: 20px;
+    font-size: 1.3rem; /* 21px */
+    font-weight: 700;
+    color: var(--white-color);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
+    flex-shrink: 0; /* Prevent shrinking */
 }
-
 .sidebar h2 i {
-    margin-right: 10px;
+    margin-right: 8px;
+    color: var(--primary-color);
+    opacity: 0.9;
 }
 
 .sidebar ul {
-    list-style: none;
-    padding: 0 15px;
+    padding: 0 10px; /* Horizontal padding for the list container */
+    flex-grow: 1; /* Allow list to take remaining space */
+    overflow-y: auto; /* Scroll only the list if needed */
 }
 
 .sidebar ul li {
-    margin-bottom: 5px;
-    border-radius: var(--border-radius);
-    overflow: hidden; /* For border-left rendering */
+    margin-bottom: 4px; /* Space between items */
+    border-radius: 6px; /* Slightly rounder */
 }
 
+/* All Links in Sidebar */
 .sidebar ul li a {
-    color: rgba(255, 255, 255, 0.9);
-    text-decoration: none;
-    font-size: 15px;
+    color: var(--sidebar-link-color);
+    font-size: 0.95rem; /* 15.2px */
     display: flex;
     align-items: center;
-    padding: 12px 20px;
-    transition: var(--transition);
-    border-left: 4px solid transparent; /* Placeholder for active state */
+    padding: 12px 15px; /* Adjust padding */
+    transition: background-color 0.2s ease, color 0.2s ease;
+    position: relative;
+    border-radius: 6px;
 }
 
-.sidebar ul li a i {
-    margin-right: 12px;
+/* Icons */
+.sidebar ul li a i.fa-fw {
     width: 20px;
     text-align: center;
-    font-size: 18px;
-    flex-shrink: 0;
+    font-size: 1.1em; /* Slightly larger icons */
+    color: var(--sidebar-icon-color);
+    transition: color 0.2s ease;
+    /* me-2 class provides margin */
 }
 
+/* Link Hover State */
 .sidebar ul li a:hover {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.1);
-    text-decoration: none; /* Ensure underline is removed on hover */
+    color: var(--sidebar-link-hover-color);
+    background-color: var(--sidebar-link-hover-bg);
+    text-decoration: none;
+}
+.sidebar ul li a:hover i {
+    color: var(--sidebar-icon-active-color); /* Make icon brighter on hover */
 }
 
-.sidebar ul li.active a {
-    color: white;
-    font-weight: 600;
-    background-color: rgba(255, 255, 255, 0.15);
-    border-left-color: var(--primary-color); /* More specific override */
+/* Active State for Top-Level Links (non-dropdown) */
+.sidebar ul > li.active > a:not(.dropdown-toggle) {
+    color: var(--sidebar-link-active-color);
+    font-weight: 500; /* Slightly bolder */
+    background-color: var(--sidebar-link-active-bg);
+}
+.sidebar ul > li.active > a:not(.dropdown-toggle) i {
+    color: var(--sidebar-icon-active-color);
+}
+
+/* --- Collapsible Submenu Styling --- */
+
+/* Parent Toggle Link Styling */
+.sidebar ul a.dropdown-toggle {
+    /* Basic link styles applied above */
+}
+.sidebar ul a.dropdown-toggle.active { /* When parent section is active */
+    background-color: transparent; /* Don't highlight parent toggle itself */
+    color: var(--sidebar-link-hover-color); /* Keep text bright */
+    font-weight: 500;
+}
+.sidebar ul a.dropdown-toggle.active i {
+    color: var(--sidebar-icon-active-color);
+}
+
+/* Dropdown Arrow */
+.sidebar ul a.dropdown-toggle::after {
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    content: "\f078"; /* Font Awesome chevron-down */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 0.7em;
+    transition: transform .2s ease-in-out;
+    opacity: 0.6;
+}
+.sidebar ul a.dropdown-toggle:hover::after { opacity: 1; }
+.sidebar ul a.dropdown-toggle[aria-expanded="true"]::after {
+     transform: translateY(-50%) rotate(180deg);
+     opacity: 1;
+}
+
+/* Submenu UL */
+.sidebar ul ul.collapse {
+    padding-left: 0;
+    margin: 2px 5px 8px 5px; /* Top/bottom margin */
+    background-color: var(--sidebar-submenu-bg);
+    border-radius: 5px;
+}
+.sidebar ul ul.collapse.show {
+     /* No extra border needed with bg color */
+}
+
+/* Submenu Links (1st Level Deep) */
+.sidebar ul ul li a {
+    font-size: 0.9rem; /* 14.4px */
+    padding: 9px 15px; /* Adjust padding (ps-3 adds more) */
+    color: rgba(255, 255, 255, 0.75);
+    border-radius: 4px;
+    margin: 2px 5px; /* Inner margin for links */
+}
+.sidebar ul ul li a i.fa-fw {
+    font-size: 1em;
+    opacity: 0.7;
+    color: var(--sidebar-icon-color);
+}
+
+/* Submenu Link Hover */
+.sidebar ul ul li a:hover {
+     color: var(--sidebar-link-hover-color);
+     background-color: rgba(255, 255, 255, 0.1);
+}
+.sidebar ul ul li a:hover i {
+    color: var(--sidebar-icon-active-color);
+}
+
+/* Active Submenu Link */
+.sidebar ul ul > li.active > a:not(.dropdown-toggle) {
+    color: var(--sidebar-link-active-color);
+    font-weight: 500;
+    background-color: var(--primary-color-darker); /* Use darker primary for active sub-item */
+}
+.sidebar ul ul > li.active > a:not(.dropdown-toggle) i {
+    color: var(--sidebar-icon-active-color);
+}
+
+
+/* Styling for 2nd level nested submenus */
+.sidebar ul ul ul.collapse {
+    background-color: rgba(0, 0, 0, 0.25); /* Even darker */
+    margin: 2px 5px 5px 10px; /* Indent further */
+    border-radius: 4px;
+}
+.sidebar ul ul ul li a {
+    font-size: 0.85rem; /* 13.6px */
+    padding: 7px 15px; /* Adjust padding (ps-4 adds more) */
+    color: rgba(255, 255, 255, 0.7);
+}
+.sidebar ul ul ul li a i.fa-fw {
+    font-size: 0.9em;
+    opacity: 0.6;
+}
+.sidebar ul ul ul li a:hover {
+     background-color: rgba(255, 255, 255, 0.15);
+}
+/* Active 2nd Level Submenu Link */
+.sidebar ul ul ul > li.active > a {
+     color: var(--sidebar-link-active-color);
+     background-color: var(--primary-color); /* Can use main primary */
+     font-weight: 500;
 }
 
 /* ==========================================================================
    Main Content & Header Styles
    ========================================================================== */
 .main-content {
-    margin-left: 280px; /* Same as sidebar width */
-    padding: 30px;
-    transition: margin-left 0.3s ease;
+    margin-left: var(--sidebar-width);
+    padding: 0;
+    transition: margin-left 0.3s ease-in-out;
     flex-grow: 1;
     background-color: var(--light-color);
     min-height: 100vh;
-    width: calc(100% - 280px);
+    display: flex;
+    flex-direction: column;
 }
 
-/* Top Header Bar */
 .header {
-    background-color: white;
-    color: var(--text-color);
-    padding: 18px 30px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    margin-bottom: 30px;
+    background-color: var(--white-color);
+    padding: 1rem 1.875rem; /* 16px 30px */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky; /* Make header sticky */
+    top: 0;
+    z-index: 1020; /* Below sidebar, above content */
 }
 
-.header h1 { /* Main page title in the header */
-    font-size: 24px;
+.header h1 {
+    font-size: 1.5rem; /* 24px */
     font-weight: 600;
     display: flex;
     align-items: center;
     margin: 0;
+    color: var(--heading-color);
 }
-
-.header h1 i {
-    margin-right: 12px;
+.header h1 i { /* Icon within header title */
+    margin-right: 10px;
     color: var(--primary-color);
+    font-size: 1.1em;
 }
 
 .user-info {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px; /* Slightly smaller gap */
 }
-
 .user-info span {
     font-weight: 500;
+    color: var(--dark-color);
+    font-size: 0.95rem;
 }
 
 .profile-img {
-    width: 42px;
-    height: 42px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--primary-color-lighter); /* Lighter border */
+    background-color: var(--light-color);
 }
 
-/* Optional: Wrapper for page title/actions below main header */
-.page-header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 25px;
-}
-.page-header-actions h2 { /* Optional sub-header title */
-     font-size: 22px;
-     font-weight: 600;
-     margin: 0;
-}
-/* Action buttons within this container inherit from .action-buttons */
-
-/* ==========================================================================
-   General Containers & Cards
-   ========================================================================== */
-/* Base styles for main content blocks */
-.content-container, .card, .list-container, .form-container, .info-section, .delete-confirmation, .dashboard-card {
-    background-color: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    margin-bottom: 25px;
-    overflow: hidden;
-    transition: box-shadow 0.3s ease;
-    padding: 25px;
-}
-
-.content-container:hover, .card:hover, .list-container:hover, .form-container:hover, .info-section:hover, .delete-confirmation:hover, .dashboard-card:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-}
-
-/* Card Specific Header */
-.card-header {
-    padding: 18px 25px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #f9fafb;
-    margin: -25px -25px 25px -25px; /* Pull header to edges */
-}
-
-.card-header h2, .card-header h3 {
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-    color: var(--dark-color);
-    display: flex;
-    align-items: center;
-}
-
-.card-header h2 i, .card-header h3 i {
-    margin-right: 12px;
-    color: var(--primary-color);
-}
-
-.card-header-actions {
-    display: flex; /* Use flex for alignment */
-    align-items: center;
-    gap: 10px;
-}
-
-/* Layout Grid for Details Pages */
-.details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 25px;
-    margin-bottom: 25px;
-}
-.details-grid > .card, .details-grid > .info-section {
-    margin-bottom: 0; /* Prevent double margin */
-}
-
-/* Info Section Styling (Used for View pages) */
-.info-section-header {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0 0 20px 0;
-    color: var(--dark-color);
-    display: flex;
-    align-items: center;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
-}
-.info-section-header i {
-    margin-right: 10px;
-    color: var(--primary-color);
-}
-
-/* Detail Rows (Read-only data display) */
-.detail-row {
-    display: flex;
-    flex-wrap: wrap;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid #f5f5f5; /* Lighter border for inner details */
-    gap: 10px;
-}
-.detail-row:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-.detail-label {
-    font-weight: 600;
-    width: 180px;
-    color: #555;
-    font-size: 14px;
-    flex-shrink: 0;
-}
-.detail-value {
-    flex: 1;
-    min-width: 150px;
-    color: var(--text-color);
-    font-size: 15px;
-    word-break: break-word;
-}
-
-/* ==========================================================================
-   Form Styles
-   ========================================================================== */
-.form-container {
-    max-width: 850px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 30px;
-}
-
-.form-header { /* Header within a form container */
-    border-bottom: 1px solid var(--border-color);
-    margin: -30px -30px 25px -30px;
-    padding: 18px 30px;
-    background-color: #f9fafb;
-}
-.form-header h2 {
-    margin: 0;
-    color: var(--dark-color);
-    display: flex;
-    align-items: center;
-    font-size: 20px;
-    font-weight: 600;
-}
-.form-header h2 i {
-    margin-right: 12px;
-    color: var(--primary-color);
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    /* Let form-group handle bottom margin */
-}
-
-.form-row .form-group {
-    flex: 1;
-    min-width: 200px;
-    margin-bottom: 20px; /* Keep margin for spacing within row */
-}
-
-label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #555;
-    font-size: 14px;
-}
-
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="date"],
-input[type="tel"],
-input[type="number"],
-select,
-textarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    font-size: 15px;
-    transition: var(--transition);
-    background-color: #fff;
-    color: var(--text-color);
-    line-height: 1.5; /* Ensure consistent height */
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-    border-color: var(--primary-color);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-}
-
-input[readonly] {
-    background-color: #f0f2f5;
-    cursor: default;
-    border-color: #e0e4e8;
-    color: #6c757d;
-}
-input[readonly]:focus {
-    border-color: #e0e4e8; /* Keep border consistent */
-    box-shadow: none;
-}
-
-select {
-    appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 10px 10px;
-    padding-right: 35px;
-}
-
-textarea {
-    min-height: 100px;
-    resize: vertical;
-}
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px; /* Add space above checkbox */
-}
-.checkbox-container input[type="checkbox"] {
-    width: 16px; /* Consistent size */
-    height: 16px;
-    margin: 0;
-    flex-shrink: 0;
-}
-.checkbox-container label {
-    margin: 0;
-    font-weight: normal; /* Normal weight for checkbox label */
-    font-size: 15px;
-    color: var(--text-color);
-}
-
-.form-actions {
-    margin-top: 30px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    border-top: 1px solid var(--border-color);
-    padding-top: 20px;
-}
-/* Remove margin from last form-group *before* actions div */
-.form-container > *:last-child:not(.form-actions) > .form-group:last-child {
-    margin-bottom: 0;
-}
-
-
-/* ==========================================================================
-   Button Styles
-   ========================================================================== */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-    text-align: center;
-    white-space: nowrap;
-    vertical-align: middle;
-    user-select: none;
-    border: 1px solid transparent;
-    padding: 10px 18px;
-    font-size: 15px;
-    line-height: 1.5;
-    border-radius: var(--border-radius);
-    transition: var(--transition);
-    cursor: pointer;
-    text-decoration: none !important;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-.btn i {
-    margin-right: 8px;
-    font-size: 1em;
-    line-height: 1;
-}
-
-/* Sizes */
-.btn-sm { padding: 8px 14px; font-size: 14px; }
-.btn-lg { padding: 12px 22px; font-size: 16px; }
-
-/* Colors */
-.btn-primary { color: #fff; background-color: var(--primary-color); border-color: var(--primary-color); }
-.btn-secondary { color: #fff; background-color: var(--grey-color); border-color: var(--grey-color); }
-.btn-success { color: #fff; background-color: var(--success-color); border-color: var(--success-color); }
-.btn-danger { color: #fff; background-color: var(--danger-color); border-color: var(--danger-color); }
-.btn-warning { color: var(--dark-color); background-color: var(--warning-color); border-color: var(--warning-color); }
-.btn-info { color: #fff; background-color: var(--info-color); border-color: var(--info-color); }
-
-/* Outline */
-.btn-outline-primary { color: var(--primary-color); background-color: transparent; border-color: var(--primary-color); }
-.btn-outline-primary:hover { color: #fff; background-color: var(--primary-color); }
-/* Define other outline variants as needed */
-
-/* Hover & Focus States */
-.btn:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-.btn-primary:hover { background-color: var(--primary-color-darker); border-color: var(--primary-color-darker); }
-.btn-secondary:hover { background-color: #7f8c8d; border-color: #7f8c8d; }
-.btn-success:hover { background-color: #27ae60; border-color: #27ae60; }
-.btn-danger:hover { background-color: #c0392b; border-color: #c0392b; }
-.btn-warning:hover { background-color: #e67e22; border-color: #e67e22; }
-.btn-info:hover { background-color: #148a9c; border-color: #148a9c; }
-
-/* Icon Button */
-.btn-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--border-radius);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: var(--transition);
-    padding: 0;
-    border: 1px solid var(--border-color);
-    background-color: #fff;
-    color: var(--grey-color);
-    text-decoration: none;
-    font-size: 16px;
-    line-height: 1;
-    box-shadow: none;
-}
-.btn-icon i { margin-right: 0; } /* Ensure no margin on icon-only buttons */
-
-.btn-icon.view { background-color: rgba(52, 152, 219, 0.05); color: var(--primary-color); border-color: rgba(52, 152, 219, 0.3); }
-.btn-icon.edit { background-color: rgba(46, 204, 113, 0.05); color: var(--success-color); border-color: rgba(46, 204, 113, 0.3); }
-.btn-icon.delete { background-color: rgba(231, 76, 60, 0.05); color: var(--danger-color); border-color: rgba(231, 76, 60, 0.3); }
-
-.btn-icon:hover {
-    opacity: 1;
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    border-color: currentColor;
-}
-
-/* Delete Link Button */
-.delete-link-btn {
-    background: none;
-    border: none;
-    color: var(--danger-color);
-    cursor: pointer;
-    font-weight: 500;
-    padding: 0 5px;
-    text-decoration: none;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-.delete-link-btn i { font-size: 1em; }
-.delete-link-btn:hover {
-    color: #c0392b; /* Darker danger color */
-    text-decoration: underline;
-}
-
-/* Action button containers */
-.action-buttons {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-/* ==========================================================================
-   Table Styles
-   ========================================================================== */
-/* Use lowercase convention if possible, but keeping original for compatibility */
-.list-table, .List-table {
-    width: 100%;
-    border-collapse: collapse;
-    background-color: white;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    margin-top: 20px;
-    font-size: 15px;
-    border: 1px solid var(--border-color);
-}
-
-.list-table th, .List-table th,
-.list-table td, .List-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-    vertical-align: middle;
-}
-
-.list-table thead th, .List-table thead th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    color: #555;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    border-bottom-width: 2px; /* Thicker header bottom border */
-    border-color: var(--border-color); /* Ensure consistent border color */
-}
-
-.list-table tbody tr:last-child td,
-.List-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.list-table tbody tr:hover,
-.List-table tbody tr:hover {
-    background-color: #f0f8ff; /* Light blue hover */
-}
-
-/* Align action buttons left within table cells */
-.list-table .action-buttons,
-.List-table .action-buttons {
-     justify-content: flex-start;
-}
-
-/* ==========================================================================
-   List Page Specific Styles (Search/Add Bar)
-   ========================================================================== */
-/* Container above list table */
-.search-add-container {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-    gap: 15px;
-    align-items: center;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.search-container {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+/* Main Content Area Wrapper */
+.content-wrapper {
+    padding: 1.875rem; /* 30px */
     flex-grow: 1;
-    align-items: center;
 }
 
-.search-container input {
-    padding: 9px 15px; /* Aim to match button height */
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    min-width: 250px;
-    flex-grow: 1;
-    transition: var(--transition);
-    font-size: 15px;
-}
-.search-container input:focus {
-    border-color: var(--primary-color);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-}
-.search-container .btn {
-    flex-shrink: 0; /* Prevent button shrinking */
-}
 
 /* ==========================================================================
-   Badges & Status Indicators
-   ========================================================================== */
-.badge, .status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 10px;
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.2;
-    border-radius: 15px; /* Pill-like shape */
-    white-space: nowrap;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    /* Base color is very subtle, specific classes override */
-    background-color: rgba(150, 165, 166, 0.1); /* Faint grey */
-    color: var(--grey-color);
-    border: 1px solid transparent; /* Let specific styles add border */
-}
-.badge i, .status-badge i {
-    margin-right: 5px;
-    font-size: 1em;
-    line-height: 1;
-}
-
-/* Colors based on context */
-.badge.initial, .badge.consultation, .status-badge.completed { background-color: rgba(155, 89, 182, 0.1); color: #8e44ad; border-color: rgba(155, 89, 182, 0.3); } /* Purple */
-.badge.follow-up, .status-badge.scheduled, .status-badge.pending { background-color: rgba(52, 152, 219, 0.1); color: var(--primary-color); border-color: rgba(52, 152, 219, 0.3); } /* Blue */
-.badge.urgent, .status-badge.canceled, .status-badge.rejected, .status-badge.inactive { background-color: rgba(231, 76, 60, 0.08); color: var(--danger-color); border-color: rgba(231, 76, 60, 0.3); } /* Red */
-.badge.routine, .status-badge.confirmed, .status-badge.verified, .status-badge.active { background-color: rgba(46, 204, 113, 0.1); color: #27ae60; border-color: rgba(46, 204, 113, 0.3); } /* Green */
-.badge.telehealth, .status-badge.no-show, .status-badge.unknown { background-color: rgba(128, 140, 153, 0.1); color: #7f8c8d; border-color: rgba(128, 140, 153, 0.3); } /* Grey */
-.status-badge.warning { background-color: rgba(243, 156, 18, 0.1); color: #d35400; border-color: rgba(243, 156, 18, 0.3); } /* Orange */
-
-/* Specific view page statuses (Non-badge text styles) */
-.accepting-patients-yes { color: var(--success-color); font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
-.accepting-patients-no { color: var(--danger-color); font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
-
-/* ==========================================================================
-   Alert & Flash Message Styles
+   Flash Messages Container
    ========================================================================== */
 .flash-container {
-    position: fixed;
-    top: 80px; /* Adjust as needed */
-    right: 30px;
-    z-index: 1050;
-    max-width: 380px;
-    width: calc(100% - 60px);
-    pointer-events: none;
+    padding: 0 1.875rem; /* Match content-wrapper padding */
+    margin-top: 1rem; /* Space below header */
+    margin-bottom: 0; /* Reset bottom margin */
+    width: 100%;
+    z-index: 1025; /* Ensure above general content */
 }
-
-.alert {
-    padding: 15px 45px 15px 20px; /* Space for close button */
+.flash-container .alert {
+    box-shadow: var(--box-shadow-sm);
+    margin-bottom: 1rem;
+    border: none; /* Remove default border */
+    border-left: 5px solid;
     border-radius: var(--border-radius);
-    margin-bottom: 15px;
-    font-size: 15px;
-    display: flex;
-    align-items: flex-start;
-    border: 1px solid transparent;
-    position: relative;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    opacity: 0;
-    transform: translateX(100%);
-    transition: all 0.4s ease-out;
-    pointer-events: auto;
+    font-size: 0.95rem;
+    padding: 0.8rem 1rem;
 }
-.alert.show {
-    opacity: 0.98; /* Slightly transparent */
-    transform: translateX(0);
-}
+/* Bootstrap alert colors are usually sufficient, but add border colors */
+.flash-container .alert-success { border-left-color: var(--success-color); }
+.flash-container .alert-danger { border-left-color: var(--danger-color); }
+.flash-container .alert-warning { border-left-color: var(--warning-color); color: #664d03; background-color: #fff3cd; } /* Improve contrast */
+.flash-container .alert-info { border-left-color: var(--info-color); }
+.flash-container .alert-secondary { border-left-color: var(--secondary-color); }
 
-.alert i.alert-icon { /* Be more specific for alert icons */
-    margin-right: 12px;
-    font-size: 20px;
-    line-height: 1.4;
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-/* Colors */
-.alert-success { background-color: #e9f7ef; border-color: #a1d8b1; color: #1e4620; }
-.alert-success i.alert-icon { color: #27ae60; }
-
-.alert-danger { background-color: #fdedec; border-color: #f5b7b1; color: #641e16; }
-.alert-danger i.alert-icon { color: #c0392b; }
-
-.alert-warning { background-color: #fef9e7; border-color: #fcecc4; color: #6e5a0a; }
-.alert-warning i.alert-icon { color: #f39c12; }
-
-.alert-info { background-color: #e8f6f8; border-color: #a9d6e0; color: #154360; }
-.alert-info i.alert-icon { color: #17a2b8; }
-
-/* Close Button */
-.alert .btn-close {
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 1.4rem;
-    font-weight: bold;
-    color: inherit; /* Use alert text color */
-    opacity: 0.5;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    transition: opacity 0.2s ease;
-}
-.alert .btn-close:hover {
-    opacity: 0.8;
-}
 
 /* ==========================================================================
-   Modal Styles
+   Generic Component Styles (Enhanced)
    ========================================================================== */
-.modal-overlay {
-    display: none; /* Hidden by default */
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.65);
-    z-index: 1040;
-    overflow-y: auto;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    backdrop-filter: blur(3px);
-}
-.modal-overlay.active {
-    display: flex; /* Show when active */
-}
 
-.modal-content {
-    background-color: #fff;
+/* --- Buttons (Using Bootstrap classes, enhanced) --- */
+.btn {
     border-radius: var(--border-radius);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    padding: 0;
-    max-width: 550px;
-    width: 100%;
-    position: relative;
-    animation: zoomIn 0.3s ease-out forwards;
-    overflow: hidden; /* Clip content */
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column; /* Stack header, body, actions */
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: var(--transition);
+    box-shadow: none; /* Remove default shadow for cleaner look */
+    border-width: 1px;
+    font-size: 0.95rem;
 }
-
-@keyframes zoomIn {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08);
 }
+.btn:focus {
+    /* Use Bootstrap's focus */
+}
+.btn i.fa-fw, .btn i:not(.fa-fw) { /* Align icons */
+    margin-right: 0.5em;
+    line-height: 1; /* Prevent icon affecting line height */
+    vertical-align: middle;
+}
+.btn > i:only-child { /* Icon only button */
+    margin-right: 0;
+}
+.btn-sm { padding: 0.35rem 0.75rem; font-size: 0.875rem; }
+.btn-lg { padding: 0.65rem 1.25rem; font-size: 1.1rem; }
 
-.modal-header {
+/* --- Cards --- */
+.card {
+    background-color: var(--white-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow-sm);
+    margin-bottom: 1.5rem; /* Default spacing */
+    overflow: hidden;
+}
+.card-header {
+    padding: 1rem 1.25rem;
+    background-color: var(--white-color); /* Cleaner header */
     border-bottom: 1px solid var(--border-color);
-    padding: 18px 25px;
+    font-weight: 600;
+    color: var(--heading-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f9fafb;
-    flex-shrink: 0;
 }
- .modal-header h2 {
-    margin: 0;
-    font-size: 20px;
-    color: var(--dark-color);
-    font-weight: 600;
-    display: flex;
-    align-items: center;
- }
- .modal-header h2 i { margin-right: 10px; color: var(--primary-color); }
-
-.modal-close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: var(--grey-color);
-    line-height: 1;
-    padding: 0 5px;
-    transition: color 0.2s ease;
+.card-header h5, .card-header h6 {
+    margin-bottom: 0;
+    font-size: 1.1rem;
 }
-.modal-close-btn:hover {
-    color: var(--danger-color);
+.card-body {
+    padding: 1.25rem;
 }
-
-.modal-body {
-    padding: 25px;
-    overflow-y: auto;
-    flex-grow: 1; /* Allow body to fill space */
-}
-.modal-body .form-group:last-child {
-    margin-bottom: 0; /* Remove extra space at bottom */
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
+.card-footer {
+    padding: 0.75rem 1.25rem;
+    background-color: var(--light-color);
     border-top: 1px solid var(--border-color);
-    padding: 18px 25px;
-    background-color: #f9fafb;
-    flex-shrink: 0;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
 }
 
-/* ==========================================================================
-   Utility & Specific Component Styles
-   ========================================================================== */
-
-/* No Results Placeholder */
-.no-results {
-    text-align: center;
-    padding: 40px 30px;
-    background-color: #fdfdfe; /* Near white */
-    border-radius: var(--border-radius);
-    margin: 20px 0;
-    color: #7f8c8d; /* Medium-soft grey */
-    border: 1px dashed var(--border-color);
-}
-.no-results i.placeholder-icon { /* Be specific */
-    font-size: 36px;
-    color: #bdc3c7; /* Lighter grey icon */
-    margin-bottom: 15px;
-    display: block;
-}
-.no-results p {
-    margin-bottom: 15px;
-    font-size: 16px;
-}
-.no-results .btn {
-    margin-top: 10px;
-}
-
-/* Delete Confirmation Specifics */
-.delete-confirmation {
-    padding: 30px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: center;
-    /* Inherits card styles, no need to repeat background, etc. */
-}
-.delete-confirmation h2 {
-    font-size: 22px;
-    color: var(--dark-color);
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-.delete-confirmation h2 i { color: var(--danger-color); }
-
-.warning-text {
-    color: var(--danger-color);
-    font-weight: 600;
-    font-size: 16px;
-    margin-bottom: 20px;
-}
-.delete-confirmation p { /* General text style */
-    font-size: 15px;
-    color: #555;
-    margin-bottom: 20px;
-}
-
-/* Specific info box within delete confirmation */
-.list-info { /* Note: Renamed from List-info for convention if possible */
-    background-color: #fdfdfe;
-    border-radius: var(--border-radius);
-    padding: 20px;
-    margin: 25px 0;
-    text-align: left;
+/* --- Tables --- */
+.table {
     border: 1px solid var(--border-color);
-    border-left: 4px solid var(--danger-color); /* Highlight bar */
+    margin-bottom: 1rem; /* Default spacing below table */
+    border-radius: var(--border-radius); /* Apply radius to table wrapper if needed */
+    overflow: hidden; /* Clip content to border-radius */
+    box-shadow: var(--box-shadow-sm);
 }
-.list-info .detail-row { border-bottom-color: #eee; }
-.list-info .detail-row:last-child { border-bottom: none; }
+/* Make table responsive container have radius */
+.table-responsive {
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+.table-responsive > .table {
+    border: none; /* Remove inner border if wrapped */
+    margin-bottom: 0;
+    border-radius: 0; /* Remove inner radius */
+    box-shadow: none;
+}
 
-/* Center buttons within delete confirmation actions */
-.delete-confirmation .form-actions {
-     justify-content: center;
+.table thead th {
+    background-color: var(--light-color);
+    border-bottom-width: 1px;
+    border-color: var(--border-color);
+    font-weight: 600;
+    color: var(--heading-color);
+    vertical-align: middle;
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.table tbody td {
+    vertical-align: middle;
+    padding: 0.8rem 1rem;
+    border-color: var(--border-color);
+    font-size: 0.95rem;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8f9fa; /* Use light color for stripe */
+}
+.table-hover tbody tr:hover {
+    background-color: var(--primary-color-lighter);
+    cursor: default;
+}
+.table .actions {
+    white-space: nowrap;
+    text-align: right;
+}
+.table .actions .btn, .table .actions form {
+    margin-left: 0.3rem; /* Space between actions */
+}
+.table .badge { /* Adjust badge size in tables */
+    font-size: 0.8em;
+    padding: 0.35em 0.6em;
+}
+
+/* --- Forms --- */
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: var(--heading-color);
+}
+.form-control, .form-select {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25); /* Use primary color for focus ring */
+    outline: 0;
+}
+.form-control.is-invalid, .form-select.is-invalid {
+    border-color: var(--danger-color);
+}
+.form-control.is-invalid:focus, .form-select.is-invalid:focus {
+     box-shadow: 0 0 0 0.2rem rgba(var(--danger-color), 0.25);
+}
+.invalid-feedback {
+     font-size: 0.85rem;
+}
+.form-text {
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+}
+.form-check-label {
+     font-size: 0.95rem;
+}
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.form-control-sm, .form-select-sm {
+     padding: 0.35rem 0.6rem;
+     font-size: 0.875rem;
+}
+.input-group-sm > .form-control, .input-group-sm > .form-select, .input-group-sm > .input-group-text, .input-group-sm > .btn {
+    /* Ensure consistent sizing in small input groups */
+     padding: 0.35rem 0.6rem;
+     font-size: 0.875rem;
+}
+
+
+/* --- Breadcrumbs --- */
+.breadcrumb {
+    background-color: transparent;
+    padding: 0.5rem 0;
+    margin-bottom: 1rem;
+    font-size: 0.9em;
+}
+.breadcrumb-item a {
+    text-decoration: none;
+    color: var(--primary-color);
+}
+.breadcrumb-item a:hover {
+    color: var(--primary-color-darker);
+}
+.breadcrumb-item.active {
+    color: var(--secondary-color);
 }
 
 /* ==========================================================================
@@ -934,171 +598,43 @@ textarea {
    ========================================================================== */
 @media (max-width: 992px) {
     .sidebar {
-        left: -280px;
-        transition: left 0.3s ease; /* Ensure transition is defined */
+        left: calc(-1 * var(--sidebar-width));
     }
     .sidebar.sidebar-active {
         left: 0;
-        box-shadow: 2px 0 15px rgba(0,0,0,0.2);
+        box-shadow: 0.25rem 0 1rem rgba(0,0,0,0.15);
     }
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 999; /* Below sidebar */
+    /* Optional Overlay */
+    body.sidebar-overlay-active::before {
+        content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1029; display: block;
     }
-     .sidebar-overlay.active {
-        display: block;
-    }
+    .main-content { margin-left: 0; }
 
-    .main-content {
-        margin-left: 0;
-        width: 100%;
-    }
-    /* Add .menu-toggle styles here if implementing one */
+    /* Add styles for a menu toggle button (burger icon) here if you implement one */
+    /* .menu-toggle { display: block; position: fixed; top: 15px; left: 15px; z-index: 1031; ... } */
 }
 
 @media (max-width: 768px) {
-    body {
-        flex-direction: column; /* Stack body elements */
-    }
-    .sidebar { /* Becomes top bar */
-        width: 100%;
-        height: auto;
-        position: static; /* No longer fixed */
-        left: auto; /* Reset fixed positioning */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        z-index: auto; /* Reset z-index */
-        padding: 15px 0;
-    }
-    .sidebar h2 { margin-bottom: 15px; padding-bottom: 15px; font-size: 20px;}
-    .sidebar ul { padding: 0 10px;}
-    .sidebar ul li a { padding: 10px 15px; font-size: 14px;}
-    .sidebar ul li.active a { border-left-width: 3px; }
-
-    .main-content {
-        margin-left: 0; /* Already handled by 992px */
-        padding: 20px;
-        width: 100%; /* Already handled by 992px */
-    }
-
-    .header {
-        flex-direction: column; /* Stack header items */
-        align-items: flex-start; /* Align left */
-        gap: 15px;
-        padding: 15px 20px;
-    }
-    .header h1 { font-size: 20px; }
-    .user-info { order: -1; align-self: flex-end; } /* Move user info up/right */
-
-    .form-row {
-        flex-direction: column; /* Stack form elements in rows */
-        gap: 0; /* Let form-group handle gap */
-    }
-    .form-row .form-group { min-width: 100%; margin-bottom: 20px; }
-
-    .search-add-container {
-        flex-direction: column;
-        align-items: stretch; /* Full width items */
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-    .search-container input { min-width: 100%; }
-    /* Align Add button right if needed, otherwise it's full width */
-    .search-add-container > a.btn {
-        width: auto;
-        align-self: flex-end;
-        margin-top: 10px; /* Add space if search is present */
-    }
-
-
-    .action-buttons { justify-content: flex-start; } /* Align left */
-
-    /* Responsive Table: Stacked Cells */
-    .list-table thead, .List-table thead { display: none; } /* Hide desktop header */
-
-    .list-table tbody, .List-table tbody,
-    .list-table tr, .List-table tr,
-    .list-table td, .List-table td { display: block; width: 100%; }
-
-    .list-table tr, .List-table tr {
-        margin-bottom: 15px;
-        border: 1px solid var(--border-color);
-        border-radius: var(--border-radius);
-        padding: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        background-color: #fff; /* Ensure background for card effect */
-    }
-    .list-table td, .List-table td {
-        text-align: right; /* Align value right */
-        padding-left: 50%; /* Space for label */
-        position: relative;
-        border-bottom: 1px dotted #eee; /* Separator */
-        padding-top: 8px;
-        padding-bottom: 8px;
-        min-height: 36px; /* Ensure consistent height */
-        display: flex; /* Use flex for better alignment */
-        align-items: center;
-        justify-content: flex-end;
-    }
-    .list-table td:last-child, .List-table td:last-child { border-bottom: none; }
-
-    .list-table td::before, .List-table td::before {
-        content: attr(data-label); /* Use data-label attribute */
-        position: absolute;
-        left: 10px;
-        width: calc(50% - 20px);
-        font-weight: 600;
-        color: #555;
-        text-align: left;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: 13px; /* Slightly smaller label */
-    }
-    /* Reset styles for action buttons cell */
-    .list-table td.action-buttons, .List-table td.action-buttons {
-        padding-left: 10px;
-        text-align: right;
-        justify-content: flex-end; /* Align buttons right */
-    }
-    .list-table td.action-buttons::before, .List-table td.action-buttons::before {
-        content: ""; /* Hide label for actions */
-    }
-
-
-    .detail-row { flex-direction: column; gap: 5px; }
-    .detail-label { width: 100%; font-size: 13px; color: #777; margin-bottom: 2px;}
-    .detail-value { font-size: 15px; }
-
-    .flash-container {
-        max-width: calc(100% - 40px);
-        left: 20px;
-        right: 20px;
-        top: 20px;
-    }
-    .modal-content { max-width: calc(100% - 40px); max-height: 85vh;}
+    .content-wrapper { padding: 1.25rem; } /* 20px */
+    .header { padding: 0.8rem 1.25rem; }
+    .header h1 { font-size: 1.25rem; } /* 20px */
+    .flash-container { padding: 0 1.25rem; margin-top: 0.75rem; }
+    .table thead { display: none; } /* Hide table header on small screens */
+    .table tbody tr { display: block; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); box-shadow: var(--box-shadow-sm); }
+    .table tbody td { display: block; text-align: right; padding-left: 50%; position: relative; border: none; border-bottom: 1px dashed var(--border-color); }
+    .table tbody td:last-child { border-bottom: none; }
+    .table tbody td::before { content: attr(data-label); position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: calc(50% - 20px); text-align: left; font-weight: 600; color: var(--heading-color); font-size: 0.85rem; text-transform: uppercase; }
+    .table .actions { text-align: right; padding-top: 0.5rem; }
+    .table .actions .btn { margin-left: 5px; display: inline-block; width: auto; }
 }
 
 @media (max-width: 576px) {
-    .main-content { padding: 15px; }
-    .content-container, .card, .list-container, .form-container, .info-section, .delete-confirmation { padding: 20px; }
-    .card-header, .form-header { padding: 15px 20px; margin: -20px -20px 20px -20px; }
-    .modal-header, .modal-actions { padding: 15px 20px; }
-    .modal-body { padding: 20px; }
-
-    .form-actions {
-        flex-direction: column; /* Stack buttons */
-        gap: 10px;
-        align-items: stretch; /* Full width */
-    }
-    .form-actions .btn { width: 100%; } /* Full width buttons */
-
-    /* Further adjust stacked table padding if needed */
-    .list-table td, .List-table td { padding-left: 40%; }
-    .list-table td::before, .List-table td::before { width: calc(40% - 15px); }
+    .content-wrapper { padding: 1rem; } /* 16px */
+    .header { padding: 0.75rem 1rem; }
+    .header h1 { font-size: 1.125rem; } /* 18px */
+    .user-info span { display: none; } /* Hide welcome text */
+    .profile-img { width: 34px; height: 34px; }
+    .flash-container { padding: 0 1rem; margin-top: 0.5rem; }
+    .table tbody td { padding-left: 45%; }
+    .table tbody td::before { width: calc(45% - 15px); left: 5px; }
 }
-
-/* REMINDER: Add data-label attributes to your <td> elements in HTML tables for the mobile view (max-width: 768px breakpoint) */
-/* Example: <td data-label="Email">{{ admin.email }}</td> */

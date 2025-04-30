@@ -1,0 +1,70 @@
+/* static/css/doctor_management.css */
+/* Inherits from base.css */
+
+/* Filter Form Enhancements (Only specific overrides) */
+/* Base styles for label, input size come from base.css */
+
+/* Doctor Table Specifics */
+/* Base table styles apply */
+.doctor-table td .badge {
+    font-weight: 500; /* Adjust weight if needed */
+    /* Base badge styles apply */
+}
+/* Custom Badge Color Example (keep if used) */
+.badge.bg-purple {
+    color: #fff;
+    background-color: #6f42c1; /* Bootstrap purple */
+}
+/* Action button spacing handled by base.css .actions */
+
+/* Doctor Details Page */
+/* Base card styles apply */
+.doctor-details-card dt { /* Styling definition term in details */
+    font-weight: 500;
+    color: var(--secondary-color);
+    font-size: 0.9em;
+}
+.doctor-details-card dd { /* Styling definition data */
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+/* Document List Styling */
+.document-list .list-group-item {
+    border-left: none;
+    border-right: none;
+    padding: 0.75rem 0; /* Adjust padding */
+}
+.document-list .list-group-item:first-child { border-top: none; }
+.document-list .list-group-item:last-child { border-bottom: none; }
+
+.document-list strong { font-size: 0.95rem; }
+.document-list small { font-size: 0.8rem; color: var(--secondary-color); }
+
+.document-list .actions {
+    text-align: right;
+    flex-shrink: 0;
+    padding-left: 10px;
+}
+.document-list .actions .btn {
+     margin-left: 5px;
+}
+
+/* Upload Form Styling */
+.upload-form {
+    margin-top: 1rem; /* Space above upload form */
+}
+/* Base form styles apply for label, select, input */
+
+/* Edit Form Specifics */
+.edit-doctor-form h5 { /* Section headers within the edit form */
+    color: var(--primary-color);
+    font-size: 1.2rem; /* Make slightly larger */
+    margin-top: 1.5rem; /* Space above section headers */
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.edit-doctor-form h5:first-of-type {
+     margin-top: 0; /* No top margin for the very first header */
+}

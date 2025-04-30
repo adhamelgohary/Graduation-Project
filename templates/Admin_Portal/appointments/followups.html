@@ -1,0 +1,72 @@
+{% extends "Admin_Portal/base_admin.html" %}
+
+{% block title %}Pending Appointment Follow-ups{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment_management.css') }}">
+{% endblock %}
+
+{% block content %}
+<h1>Pending Appointment Follow-ups</h1>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin_appointments.list_appointments') }}">Appointments</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Follow-up Tasks</li>
+  </ol>
+</nav>
+<hr>
+
+<p class="text-muted">These tasks were likely generated due to 'No-Show' appointments. Update the status once action is taken.</p>
+
+<div class="card shadow-sm">
+{% if followups %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-sm mb-0">
+        <thead class="table-light">
+            <tr>
+                <th>Task ID</th>
+                <th>Appt ID</th>
+                <th>Patient</th>
+                <th>Doctor</th>
+                <th>Appt Date</th>
+                <th>Follow-up Notes</th>
+                <th>Task Created</th>
+                <th style="min-width: 250px;">Update Status & Add Note</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in followups %}
+            <tr>
+                <td>{{ task.followup_id }}</td>
+                <td><a href="{{ url_for('admin_appointments.edit_appointment', appointment_id=task.appointment_id) }}" title="View Appointment">{{ task.appointment_id }}</a></td>
+                <td>{{ task.patient_name or '(Unknown)' }}</td>
+                <td>{{ task.doctor_name or '(Unknown)' }}</td>
+                <td class="text-nowrap">{{ task.appointment_date.strftime('%Y-%m-%d') if task.appointment_date else 'N/A' }} {{ task.start_time.strftime('%H:%M') if task.start_time else '' }}</td>
+                <td><small>{{ (task.notes or '') | truncate(50, true) }}</small></td>
+                <td class="text-nowrap"><small>{{ task.followup_created_at.strftime('%Y-%m-%d %H:%M') if task.followup_created_at else 'N/A' }}</small></td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin_appointments.update_followup_status', followup_id=task.followup_id) }}">
+                        <div class="input-group input-group-sm">
+                            <select class="form-select" name="followup_status" required>
+                                <option value="contacted">Contacted</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="ignored">Ignored / No Action</option>
+                            </select>
+                            <input type="text" name="notes" class="form-control" placeholder="Add brief note...">
+                            <button type="submit" class="btn btn-success"><i class="fas fa-check"></i></button>
+                        </div>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card-body">
+    <p class="text-muted mb-0">No pending follow-up tasks found.</p>
+</div>
+{% endif %}
+</div> {# End card #}
+
+{% endblock %}

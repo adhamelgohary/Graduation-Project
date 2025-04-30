@@ -1,0 +1,87 @@
+{% extends "Doctor_Portal/base.html" %} {# Or your common portal base template #}
+{% block title %}Diet Plan Assignments{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Diet Plan Assignments</h1>
+    <a href="{{ url_for('diet_plans.assign_diet_plan') }}" class="button button-primary">
+        <i class="fas fa-plus fa-fw"></i> Assign New Plan
+    </a>
+</div>
+
+{# Display Flash Messages #}
+{% include '_flash_messages.html' %}
+
+{# Add Filters/Search Form Here (Optional - requires backend implementation) #}
+
+<div class="card shadow-sm content-section">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Plan Name</th>
+                        <th>Assigned By</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for assignment in assignments %}
+                    <tr>
+                        <td>
+                            {# Link to patient profile/progress if route exists #}
+                            <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" title="View Progress">
+                                {{ assignment.patient_first_name }} {{ assignment.patient_last_name }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('diet_plans.view_diet_plan', plan_id=assignment.plan_id) }}" title="View Plan Details">
+                                {{ assignment.plan_name }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if assignment.assigner_first_name %}
+                                {{ assignment.assigner_first_name }} {{ assignment.assigner_last_name }}
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ assignment.start_date.strftime('%Y-%m-%d') if assignment.start_date else 'N/A' }}</td>
+                        <td>{{ assignment.end_date.strftime('%Y-%m-%d') if assignment.end_date else 'Ongoing' }}</td>
+                        <td>
+                            {% if assignment.active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="action-buttons text-end">
+                             <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" class="button button-outline button-small" title="View Progress"><i class="fas fa-chart-line"></i></a>
+                             {# Add Edit Assignment Button/Link if that functionality exists #}
+                             {# <a href="#" class="button button-outline button-secondary button-small" title="Edit Assignment"><i class="fas fa-edit"></i></a> #}
+                             {% if assignment.active %}
+                                <form action="{{ url_for('diet_plans.deactivate_assignment', assignment_id=assignment.user_diet_plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate this assignment? The patient will no longer see it as active.');">
+                                    <button type="submit" class="button button-outline button-warning button-small" title="Deactivate Assignment">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                </form>
+                             {% endif %}
+                              {# Add Delete Assignment Button/Link if needed - careful with history #}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No diet plan assignments found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {# Add Pagination Controls Here (If implemented in backend) #}
+</div>
+{% endblock %}
