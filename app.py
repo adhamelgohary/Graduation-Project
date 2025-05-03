@@ -12,6 +12,13 @@ from utils.mail_config import configure_mail # Import even if mail is commented 
 from routes.login import login_bp, init_login_manager
 from routes.register import register_bp
 # from routes.password_reset import password_reset_bp # Assuming password reset uses mail
+
+# routes of website
+from routes.Website.home import home_bp
+from routes.Website.department import department_bp
+from routes.Website.doctor import doctor_bp # <-- Import doctor blueprint
+from routes.Website.appointments import appointment_bp # Example appointment blueprint
+# routes of admin portal
 from routes.Admin_Portal.Dashboard import admin_main
 from routes.Admin_Portal.Admins_Management import admin_management
 from routes.Admin_Portal.Doctors_Management import Doctors_Management
@@ -19,6 +26,7 @@ from routes.Admin_Portal.Patient_Management import patient_management
 from routes.Admin_Portal.Registiration_Approval_System import registration_approval
 from routes.Admin_Portal.search_users import search_users_bp
 from routes.Admin_Portal.Appointments import admin_appointments_bp
+# routes of doctor portal
 from routes.Doctor_Portal.Dashboard import doctor_main
 from routes.Doctor_Portal.availability_management import availability_bp
 from routes.Doctor_Portal.settings_management import settings_bp
@@ -26,6 +34,7 @@ from routes.Doctor_Portal.patients_management import patients_bp
 from routes.Doctor_Portal.disease_management import disease_management_bp
 from routes.Doctor_Portal.diet_plan_management import diet_plans_bp
 from routes.Doctor_Portal.appointment_management import appointments_bp
+from routes.Doctor_Portal.messaging import messaging_bp
 
 # --- Create Flask App ---
 app = Flask(__name__)
@@ -65,21 +74,25 @@ app.register_blueprint(patients_bp)
 app.register_blueprint(disease_management_bp)
 app.register_blueprint(diet_plans_bp)
 app.register_blueprint(appointments_bp)
-
+app.register_blueprint(home_bp)
+app.register_blueprint(department_bp)
+app.register_blueprint(doctor_bp) # <-- Register doctor blueprint
+app.register_blueprint(appointment_bp) # Example
+app.register_blueprint(messaging_bp)
 # --- Basic Routes ---
-@app.route('/')
-def home():
+#@app.route('/')
+#def home():
     # Redirect based on login status or show a landing page
-    if current_user.is_authenticated:
+#    if current_user.is_authenticated:
         # Redirect to appropriate dashboard based on user type
-        if getattr(current_user, 'user_type', None) == 'admin':
-            return redirect(url_for('admin_main.admin_dashboard'))
-        elif getattr(current_user, 'user_type', None) == 'doctor':
-             return redirect(url_for('doctor_main.dashboard'))
+#        if getattr(current_user, 'user_type', None) == 'admin':
+#            return redirect(url_for('admin_main.admin_dashboard'))
+#        elif getattr(current_user, 'user_type', None) == 'doctor':
+#             return redirect(url_for('doctor_main.dashboard'))
         # Add other user types (patient, etc.) if they have dashboards
-        else:
-             return redirect(url_for('login.login_route')) # Fallback to login
-    return redirect(url_for('login.login_route')) # Redirect unauthenticated users to login
+#        else:
+#             return redirect(url_for('login.login_route')) # Fallback to login
+#    return redirect(url_for('login.login_route')) # Redirect unauthenticated users to login
 
 
 # Add a simple health check endpoint (optional but good practice)
@@ -87,12 +100,11 @@ def home():
 def health_check():
     return "OK", 200
 
-
 # --- Run the App ---
 if __name__ == '__main__':
     # Use environment variables for host/port if possible
     host = os.environ.get('FLASK_RUN_HOST', '0.0.0.0')
     port = int(os.environ.get('FLASK_RUN_PORT', 54321))
-    debug = os.environ.get('FLASK_DEBUG', 'False').lower() in ['true', '1', 't']
+    debug = os.environ.get('FLASK_DEBUG', 'True').lower() in ['true', '1', 't']
     app.logger.info(f"Starting Flask app on {host}:{port} (Debug: {debug})")
     app.run(debug=debug, host=host, port=port)

@@ -1,18 +1,26 @@
-{% extends "Doctor_Portal/base.html" %} {# Or your common portal base template #}
+{% extends "Doctor_Portal/base.html" %}
 {% block title %}Diet Plan Assignments{% endblock %}
+
+{% block head_extra %}
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+ <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/disease_catalog.css') }}"> {# Shared styles #}
+{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h1>Diet Plan Assignments</h1>
-    <a href="{{ url_for('diet_plans.assign_diet_plan') }}" class="button button-primary">
-        <i class="fas fa-plus fa-fw"></i> Assign New Plan
-    </a>
+    {# Conditionally show Assign button based on dietitian role #}
+    {% if can_manage_assignments %}
+        <a href="{{ url_for('diet_plans.assign_diet_plan') }}" class="button button-primary">
+            <i class="fas fa-plus fa-fw"></i> Assign New Plan
+        </a>
+    {% endif %}
 </div>
 
 {# Display Flash Messages #}
 {% include '_flash_messages.html' %}
 
-{# Add Filters/Search Form Here (Optional - requires backend implementation) #}
+{# Add Filters/Search Form Here (Optional) #}
 
 <div class="card shadow-sm content-section">
     <div class="card-body p-0">
@@ -61,16 +69,15 @@
                         </td>
                         <td class="action-buttons text-end">
                              <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" class="button button-outline button-small" title="View Progress"><i class="fas fa-chart-line"></i></a>
-                             {# Add Edit Assignment Button/Link if that functionality exists #}
-                             {# <a href="#" class="button button-outline button-secondary button-small" title="Edit Assignment"><i class="fas fa-edit"></i></a> #}
-                             {% if assignment.active %}
-                                <form action="{{ url_for('diet_plans.deactivate_assignment', assignment_id=assignment.user_diet_plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate this assignment? The patient will no longer see it as active.');">
+                             {# Conditionally show Deactivate button based on dietitian role #}
+                             {% if assignment.active and can_manage_assignments %}
+                                <form action="{{ url_for('diet_plans.deactivate_assignment', assignment_id=assignment.user_diet_plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate this assignment?');">
                                     <button type="submit" class="button button-outline button-warning button-small" title="Deactivate Assignment">
                                         <i class="fas fa-times-circle"></i>
                                     </button>
                                 </form>
                              {% endif %}
-                              {# Add Delete Assignment Button/Link if needed - careful with history #}
+                              {# Add Edit/Delete Assignment buttons if needed and authorized #}
                         </td>
                     </tr>
                     {% else %}
@@ -82,6 +89,6 @@
             </table>
         </div>
     </div>
-    {# Add Pagination Controls Here (If implemented in backend) #}
+    {# Add Pagination Controls Here #}
 </div>
 {% endblock %}

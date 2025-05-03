@@ -1,0 +1,100 @@
+{# --- START OF FILE templates/Website/department_list.html --- #}
+
+{% extends "Website/base.html" %} {# Make sure the path to your base.html is correct #}
+
+{% block title %}All Departments - Pro Health Center{% endblock %}
+
+{% block head_extra %}
+  {# Reuse home.css for card styling, or create a specific department_list.css #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='Website/home.css') }}">
+  <style>
+    /* Optional: Add some specific styles for the list page layout */
+    .department-list-container {
+      padding: 40px 0; /* Add vertical padding */
+    }
+    .page-title {
+       text-align: center;
+       margin-bottom: 40px;
+       font-size: 2.5em;
+       color: var(--text-color);
+       font-weight: 600;
+       position: relative;
+       padding-bottom: 15px;
+    }
+     .page-title::after { /* Style similar to section titles */
+        content: '';
+        display: block;
+        width: 70px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--neon-blue, #00f0ff), var(--accent-color, #ff3b5c));
+        margin: 15px auto 0;
+        border-radius: 2px;
+    }
+    .department-list-grid {
+      display: grid;
+      /* Adjust columns based on screen size */
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px; /* Gap between cards */
+    }
+    /* Ensure cards have consistent height if needed */
+    .department-list-grid .container-card {
+        display: flex;
+        flex-direction: column;
+        height: 100%; /* Make cards fill grid cell height */
+    }
+     .department-list-grid .container-card .card-content {
+        flex-grow: 1; /* Allow content to push button down */
+        display: flex;
+        flex-direction: column;
+    }
+     .department-list-grid .container-card .learn-more {
+        margin-top: auto; /* Push button to bottom */
+        align-self: center; /* Center button horizontally */
+        width: 85%; /* Match button width from other pages */
+    }
+     .department-list-grid .container-card img {
+         height: 200px; /* Fixed height for list view images */
+         object-fit: cover; /* Ensure image covers the area */
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="department-list-container">
+  <h1 class="page-title">Our Departments</h1>
+
+  {% if departments %}
+    <div class="department-list-grid">
+      {# Loop through the 'departments' list passed from the Flask route #}
+      {% for dept in departments %}
+        {# Reuse the card structure from home.html #}
+        <div class="container-card">
+          {# Use the image_url generated in the backend #}
+          <img src="{{ url_for('static', filename=(dept.image_url | default('images/placeholder.jpg'))) }}" alt="{{ dept.name | default('Department') }}">
+          <div class="card-content">
+            <h3>{{ dept.name | title | default('Department') }}</h3>
+            <p>{{ dept.description | default('View details about this department.') | truncate(100) }}</p> {# Truncate description #}
+
+            {# Link to the specific department landing page #}
+            {% if dept.department_id %}
+              <a href="{{ url_for('department.department_landing', dept_id=dept.department_id) }}" class="learn-more">View Details</a>
+            {% else %}
+              <a href="#" class="learn-more disabled">View Details</a> {# Fallback if ID is missing #}
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    {# Message shown if the 'departments' list is empty or None #}
+    <p style="text-align: center; color: var(--text-secondary); padding: 30px;">
+        Currently, no departments are available to display.
+    </p>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {# No page-specific JavaScript needed for this simple list view #}
+{% endblock %}

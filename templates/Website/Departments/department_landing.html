@@ -1,0 +1,194 @@
+{% extends "Website/base.html" %}
+
+{% block title %}{{ department.name | default('Department') }} - Pro Health Center{% endblock %}
+
+{% block head_extra %}
+  {% if department.specific_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename=department.specific_css) }}">
+  {% endif %}
+
+  <style>
+    .conditions-section .conditions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+    }
+    .conditions-section .conditions .card {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .conditions-section .conditions .card .content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    .conditions-section .conditions .card .btn {
+        margin-top: auto;
+    }
+    @media (max-width: 992px) {
+        .conditions-section .conditions {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 600px) {
+        .conditions-section .conditions {
+            grid-template-columns: 1fr;
+        }
+    }
+     .no-conditions-message {
+         grid-column: 1 / -1;
+         text-align: center;
+         padding: 40px 20px;
+         color: var(--text-secondary);
+         background-color: var(--nested-card-bg, rgba(5, 21, 42, 0.8));
+         border-radius: 8px;
+         border: 1px dashed var(--border-color);
+     }
+  </style>
+{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="hero-particle" style="width: 300px; height: 300px; top: -50px; right: 10%;"></div>
+    <div class="hero-particle" style="width: 200px; height: 200px; bottom: -50px; left: 5%;"></div>
+    <div class="hero-particle" style="width: 150px; height: 150px; top: 40%; left: 50%;"></div>
+
+    <div class="hero-content">
+        <div class="text-content">
+            <h1>Advanced <span class="highlight">{{ department.hero_highlight | default('Medical') }}</span> Care, <br>Innovative <span class="highlight">{{ department.hero_main | default('Health') }}</span> <br>Treatments</h1>
+            <p>{{ department.description | default('Learn more about our specialized services.') }}</p>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" placeholder="Search {{ department.name | default('Conditions') }}...">
+            </div>
+        </div>
+
+        <div class="visual-content">
+            {% if department.hero_images %}
+                {% for img_src in department.hero_images %}
+                    <img src="{{ url_for('static', filename=img_src) }}" alt="Decorative Element" class="{{ department.hero_main | lower }}-image"
+                         style="position: absolute;
+                                top: {{ range(10, 70) | random }}%;
+                                left: {{ range(10, 90) | random }}%;
+                                width: {{ range(40, 70) | random }}px;
+                                opacity: 0.{{ range(5, 9) | random }};
+                                transform: rotate({{ range(-20, 20)|random }}deg);">
+                {% endfor %}
+            {% endif %}
+
+            <div class="cell" style="top: 15%; left: 70%;"></div>
+            <div class="cell" style="top: 45%; left: 20%;"></div>
+            <div class="cell" style="top: 70%; left: 40%;"></div>
+            <div class="cell" style="top: 25%; left: 5%; transform: scale(0.8);"></div>
+            <div class="cell" style="top: 80%; left: 85%; transform: scale(1.1);"></div>
+            <div class="cell" style="top: 5%; left: 40%; transform: scale(0.9);"></div>
+            <div class="cell" style="bottom: 5%; left: 50%; transform: scale(1.2);"></div>
+
+            {% if department.name == 'Cardiology' %}
+            <div class="animated-ecg-container">
+                <svg class="animated-ecg-line" viewBox="0 0 800 100" preserveAspectRatio="xMidYMid slice">
+                    <path id="ecg-path-1" class="ecg-segment" d="M 0 50 L 100 50 L 110 40 L 130 80 L 140 20 L 150 60 L 160 50 L 260 50 L 270 40 L 290 80 L 300 20 L 310 60 L 320 50 L 420 50 L 430 40 L 450 80 L 460 20 L 470 60 L 480 50 L 580 50 L 590 40 L 610 80 L 620 20 L 630 60 L 640 50 L 740 50 L 750 40 L 770 80 L 780 20 L 790 60 L 800 50 L 900 50 L 910 40 L 930 80 L 940 20 L 950 60 L 960 50 L 1060 50 L 1070 40 L 1090 80 L 1100 20 L 1110 60 L 1120 50 L 1220 50 L 1230 40 L 1250 80 L 1260 20 L 1270 60 L 1280 50 L 1380 50 L 1390 40 L 1410 80 L 1420 20 L 1430 60 L 1440 50 L 1540 50 L 1550 40 L 1570 80 L 1580 20 L 1590 60 L 1600 50" />
+                    <path id="ecg-path-2" class="ecg-segment" d="M 0 50 L 95 50 L 105 45 L 130 90 L 145 15 L 155 65 L 165 50 L 265 50 L 275 45 L 300 90 L 315 15 L 325 65 L 335 50 L 435 50 L 445 45 L 470 90 L 485 15 L 495 65 L 505 50 L 605 50 L 615 45 L 640 90 L 655 15 L 665 65 L 675 50 L 775 50 L 785 45 L 810 90 L 825 15 L 835 65 L 845 50 L 945 50 L 955 45 L 980 90 L 995 15 L 1005 65 L 1015 50 L 1115 50 L 1125 45 L 1150 90 L 1165 15 L 1175 65 L 1185 50 L 1285 50 L 1295 45 L 1320 90 L 1335 15 L 1345 65 L 1355 50 L 1455 50 L 1465 45 L 1490 90 L 1505 15 L 1515 65 L 1525 50 L 1600 50" />
+                    <path id="ecg-path-3" class="ecg-segment" d="M 0 50 L 120 50 L 128 42 L 145 70 L 155 30 L 162 55 L 170 50 L 250 50 L 260 60 L 270 50 L 350 50 L 358 42 L 375 70 L 385 30 L 392 55 L 400 50 L 500 50 L 508 42 L 525 70 L 535 30 L 542 55 L 550 50 L 630 50 L 640 60 L 650 50 L 730 50 L 738 42 L 755 70 L 765 30 L 772 55 L 780 50 L 880 50 L 888 42 L 905 70 L 915 30 L 922 55 L 930 50 L 1010 50 L 1020 60 L 1030 50 L 1110 50 L 1118 42 L 1135 70 L 1145 30 L 1152 55 L 1160 50 L 1260 50 L 1268 42 L 1285 70 L 1295 30 L 1302 55 L 1310 50 L 1390 50 L 1400 60 L 1410 50 L 1490 50 L 1498 42 L 1515 70 L 1525 30 L 1532 55 L 1540 50 L 1600 50" />
+                    <path id="ecg-path-4" class="ecg-segment" d="M 0 50 L 80 50 L 85 45 L 90 50 L 95 45 L 100 50 L 110 40 L 130 75 L 140 25 L 150 55 L 160 50 L 240 50 L 245 45 L 250 50 L 255 45 L 260 50 L 270 40 L 290 75 L 300 25 L 310 55 L 320 50 L 400 50 L 405 45 L 410 50 L 415 45 L 420 50 L 430 40 L 450 75 L 460 25 L 470 55 L 480 50 L 560 50 L 565 45 L 570 50 L 575 45 L 580 50 L 590 40 L 610 75 L 620 25 L 630 55 L 640 50 L 720 50 L 725 45 L 730 50 L 735 45 L 740 50 L 750 40 L 770 75 L 780 25 L 790 55 L 800 50 L 880 50 L 885 45 L 890 50 L 895 45 L 900 50 L 910 40 L 930 75 L 940 25 L 950 55 L 960 50 L 1040 50 L 1045 45 L 1050 50 L 1055 45 L 1060 50 L 1070 40 L 1090 75 L 1100 25 L 1110 55 L 1120 50 L 1200 50 L 1205 45 L 1210 50 L 1215 45 L 1220 50 L 1230 40 L 1250 75 L 1260 25 L 1270 55 L 1280 50 L 1360 50 L 1365 45 L 1370 50 L 1375 45 L 1380 50 L 1390 40 L 1410 75 L 1420 25 L 1430 55 L 1440 50 L 1520 50 L 1525 45 L 1530 50 L 1535 45 L 1540 50 L 1550 40 L 1570 75 L 1580 25 L 1590 55 L 1600 50" />
+                </svg>
+            </div>
+            {% elif department.name == 'Orthopedics' %}
+             <div class="animated-graph-container">
+                 <svg class="animated-density-line" viewBox="0 0 800 100" preserveAspectRatio="xMidYMid slice">
+                     <path id="density-path-1" class="density-segment" d="M 0 80 L 100 80 L 125 65 L 150 70 L 200 60 L 250 70 L 300 65 L 350 70 L 400 65 L 450 70 L 500 60 L 550 65 L 600 70 L 650 60 L 700 65 L 750 70 L 800 65" />
+                     <path id="density-path-2" class="density-segment" d="M 0 80 L 100 80 L 125 75 L 150 85 L 200 80 L 250 90 L 300 85 L 350 90 L 400 80 L 450 85 L 500 80 L 550 90 L 600 85 L 650 80 L 700 85 L 750 90 L 800 85" />
+                     <path id="density-path-3" class="density-segment" d="M 0 80 L 100 80 L 125 85 L 150 95 L 200 90 L 250 100 L 300 95 L 350 100 L 400 90 L 450 95 L 500 90 L 550 100 L 600 95 L 650 90 L 700 95 L 750 100 L 800 95" />
+                     <path id="density-path-4" class="density-segment" d="M 0 80 L 100 80 L 125 50 L 150 55 L 200 45 L 250 50 L 300 40 L 350 50 L 400 45 L 450 50 L 500 40 L 550 45 L 600 50 L 650 40 L 700 45 L 750 50 L 800 45" />
+                 </svg>
+             </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<div class="main-content">
+    {% if department.hero_images %}
+         {% for img_src in department.hero_images %}
+             <img src="{{ url_for('static', filename=img_src) }}" alt="Decorative Background Element" class="{{ department.hero_main | lower }}-image"
+                  style="position: absolute;
+                         top: {{ range(5, 90) | random }}%;
+                         left: {{ range(2, 95) | random }}%;
+                         width: {{ range(30, 60) | random }}px;
+                         opacity: 0.{{ range(4, 9) | random }};
+                         transform: rotate({{ range(-30, 30)|random }}deg);
+                         z-index: -1;">
+         {% endfor %}
+     {% endif %}
+
+    <div class="conditions-section">
+        <h2 class="section-title">{{ department.name }} Conditions</h2>
+        <div class="conditions">
+            {% if conditions %}
+                {% for condition in conditions %}
+                <div class="card">
+                    <div class="content">
+                        <h1>{{ condition.name | default('Condition') }}</h1>
+                        <div class="image-text-container">
+                            <img src="{{ url_for('static', filename=condition.image_url) }}" alt="{{ condition.name }} Illustration">
+                            <p>{{ condition.description | default ('Learn more about this condition.') | truncate(120) }}</p>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('department.view_condition', condition_id=condition.condition_id) }}" class="btn">Read More</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-conditions-message">
+                    No specific conditions listed for this department yet.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {% if department.specific_js %}
+        <script src="{{ url_for('static', filename=department.specific_js) }}"></script>
+    {% endif %}
+
+    {% if department.name == 'Cardiology' or department.name == 'Orthopedics' %}
+    <script>
+     document.addEventListener('DOMContentLoaded', function() {
+        const animPaths = document.querySelectorAll('.animated-ecg-line .ecg-segment, .animated-density-line .density-segment');
+        let currentAnimPathIndex = 0;
+        let pathSwitchInterval;
+
+        function switchAnimPath() {
+            if (animPaths.length > 1) {
+                animPaths[currentAnimPathIndex].classList.remove('visible-ecg', 'visible-density');
+                let newIndex;
+                do {
+                    newIndex = Math.floor(Math.random() * animPaths.length);
+                } while (newIndex === currentAnimPathIndex);
+                currentAnimPathIndex = newIndex;
+                const parentContainer = animPaths[currentAnimPathIndex].closest('.animated-ecg-container, .animated-graph-container');
+                if (parentContainer && parentContainer.classList.contains('animated-ecg-container')) {
+                     animPaths[currentAnimPathIndex].classList.add('visible-ecg');
+                } else if (parentContainer && parentContainer.classList.contains('animated-graph-container')) {
+                     animPaths[currentAnimPathIndex].classList.add('visible-density');
+                }
+            }
+        }
+
+        if (animPaths.length > 0) {
+            const firstParentContainer = animPaths[0].closest('.animated-ecg-container, .animated-graph-container');
+             if (firstParentContainer && firstParentContainer.classList.contains('animated-ecg-container')) {
+                 animPaths[0].classList.add('visible-ecg');
+            } else if (firstParentContainer && firstParentContainer.classList.contains('animated-graph-container')) {
+                 animPaths[0].classList.add('visible-density');
+            }
+            currentAnimPathIndex = 0;
+            pathSwitchInterval = setInterval(switchAnimPath, 3000);
+        }
+     });
+    </script>
+    {% endif %}
+
+{% endblock %}

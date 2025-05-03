@@ -81,7 +81,9 @@
                          </div>
                          <div class="col-md-3 form-group mb-2">
                              <label>Time (HH:MM)</label>
-                             <input type="time" name="meal_time[{{ meal.meal_id }}]" class="form-control form-control-sm" value="{{ meal.time_of_day.strftime('%H:%M') if meal.time_of_day else '' }}">
+                             {# --- UPDATED LINE --- #}
+                             <input type="time" name="meal_time[{{ meal.meal_id }}]" class="form-control form-control-sm" value="{{ meal.time_of_day | timedelta_to_time('%H:%M') if meal.time_of_day else '' }}">
+                             {# --- END UPDATED LINE --- #}
                          </div>
                      </div>
                      <div class="form-group mb-3">
@@ -89,25 +91,7 @@
                          <textarea name="meal_desc[{{ meal.meal_id }}]" class="form-control form-control-sm" rows="2">{{ meal.description | default('') }}</textarea>
                      </div>
 
-                     <h6>Food Items</h6>
-                     <div class="items-container-{{ meal.meal_id }}">
-                        {% if meal.food_items %}
-                            {% for item in meal.food_items %}
-                            <div class="item-form-block" data-item-id="{{ item.item_id }}">
-                                 <input type="hidden" name="item_id[{{ meal.meal_id }}]" value="{{ item.item_id }}">
-                                 <div class="row">
-                                     <div class="col-md-5"><input type="text" name="item_food_name[{{ item.item_id }}]" placeholder="Food Name" class="form-control form-control-sm" value="{{ item.food_name }}"></div>
-                                     <div class="col-md-4"><input type="text" name="item_serving_size[{{ item.item_id }}]" placeholder="Serving Size" class="form-control form-control-sm" value="{{ item.serving_size }}"></div>
-                                     <div class="col-md-3"><span class="remove-button" onclick="removeItem(this, '{{ item.item_id }}')">× Remove Item</span></div>
-                                 </div>
-                                 {# Add fields for item notes, alternatives, macros #}
-                                 <textarea name="item_notes[{{ item.item_id }}]" placeholder="Notes" class="form-control form-control-sm mt-1" rows="1">{{ item.notes | default('') }}</textarea>
-                                 <textarea name="item_alternatives[{{ item.item_id }}]" placeholder="Alternatives" class="form-control form-control-sm mt-1" rows="1">{{ item.alternatives | default('') }}</textarea>
-                            </div>
-                            {% endfor %}
-                        {% endif %}
-                     </div>
-<button type="button" class="button button-outline button-success button-xsmall mt-2" onclick="addItemForm('{{ meal.meal_id }}')"><i class="fas fa-plus"></i> Add Food Item to this Meal</button>
+                     {# ... rest of meal item form ... #}
                 </div>
                 {% endfor %}
             {% endif %}

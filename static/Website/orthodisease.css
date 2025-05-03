@@ -1,0 +1,103 @@
+/* --- START OF FILE orthodisease.css --- */
+/* Specific styles for Orthopedic DISEASE DETAIL pages, assumes base.css is loaded */
+
+/* Optional: Override base variables if needed */
+/* :root { --accent-color: #8856A7; ... } */
+
+/* Header Section */
+.header { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 20px 0; position: relative; z-index: 1; }
+.header h1 { font-size: 36px; color: var(--text-color); }
+.header img { width: 60px; height: 60px; border-radius: 8px; }
+
+/* Main Content Layout */
+.top-content { display: flex; gap: 30px; margin: 30px auto; align-items: flex-start; }
+.centered-gif { flex: 1; max-width: 40%; display: flex; justify-content: center; align-items: center; }
+.centered-gif img { max-width: 100%; height: auto; border-radius: 12px; box-shadow: var(--card-shadow); }
+.overview-container { flex: 1.5; background-color: var(--card-bg-color); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); padding: 25px; color: var(--text-color); }
+.main-content { display: flex; flex-direction: column; gap: 30px; margin: 40px auto 0; }
+.left-panel, .right-panel, .doctors-section, .tracker-promo { background-color: var(--card-bg-color); border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow); padding: 25px; margin-bottom: 0; color: var(--text-color); }
+
+/* Text Styling */
+h2, h3, h4 { color: var(--text-color); margin-bottom: 20px; position: relative; padding-bottom: 10px; }
+h2::after, h3::after { content: ''; position: absolute; bottom: 0; left: 0; width: 40px; height: 2px; background: linear-gradient(90deg, var(--neon-blue), var(--accent-color)); }
+h4 { margin-bottom: 10px; padding-bottom: 5px; }
+p, ul, li { color: var(--text-secondary); line-height: 1.6; }
+
+/* Cards within panels */
+.card { width: 100%; margin-bottom: 20px; }
+.card h2, .card h3 { margin-bottom: 15px; }
+.card ul { list-style-type: none; padding-left: 0; }
+.card ul li { position: relative; padding-left: 20px; margin-bottom: 10px; }
+.card ul li:before { content: "•"; color: var(--neon-blue); font-weight: bold; position: absolute; left: 0; top: 0; }
+
+/* Nested cards */
+.treatment-card, .imaging-card { background-color: var(--nested-card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; transition: all 0.3s; margin-top: 15px; }
+.treatment-card:hover, .imaging-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0, 140, 255, 0.1); border-color: rgba(var(--text-color), 0.15); }
+
+/* Doctors Section */
+.doctors-section { /* Defined above */ }
+.doctor-card { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; padding: 20px; background-color: var(--nested-card-bg); border: 1px solid var(--border-color); border-radius: 12px; transition: all 0.3s; }
+.doctor-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0, 140, 255, 0.1); border-color: rgba(var(--text-color), 0.15); }
+.doctor-avatar { font-size: 32px; background-color: var(--doctor-avatar-bg); color: var(--neon-blue); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 50%; box-shadow: 0 0 15px rgba(0, 140, 255, 0.2); }
+.doctor-details { flex: 1; }
+.doctor-name { font-weight: 600; font-size: 18px; margin-bottom: 4px; color: var(--text-color); }
+.doctor-specialty { color: var(--text-secondary); font-size: 14px; margin-bottom: 8px; }
+.appointment-button { display: inline-block; background-color: var(--emergency-bg); color: var(--emergency-text); border: 1px solid var(--emergency-border); padding: 8px 16px; border-radius: 5px; font-size: 14px; cursor: pointer; text-decoration: none; transition: all 0.3s; }
+.appointment-button:hover { background-color: rgba(136, 86, 167, 0.6); border-color: rgba(136, 86, 167, 0.8); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(136, 86, 167, 0.3); } /* Adjusted hover color */
+
+/* Read More/Less */
+.content-container { position: relative; }
+.content-preview { list-style-type: none; padding-left: 0px; margin-bottom: 10px; }
+.content-full { display: none; overflow: hidden; transition: max-height 0.3s ease-out; }
+.read-more-btn { background-color: transparent; color: var(--neon-blue); border: none; padding: 5px 0; cursor: pointer; display: flex; align-items: center; font-weight: 500; transition: all 0.3s; margin-top: 10px; }
+.read-more-btn:hover { text-decoration: underline; color: var(--accent-color); }
+.arrow { display: inline-block; margin-left: 5px; transition: transform 0.3s; }
+.arrow.up { transform: rotate(180deg); }
+
+/* Joint Warning Box */
+.joint-warning {
+    background-color: rgba(255, 248, 225, 0.9); border-left: 4px solid #ff9800;
+    padding: 20px; margin: 20px 0; border-radius: 6px;
+    color: #05152a; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.joint-warning h4 { color: #d87a00; margin-bottom: 15px; font-weight: bold; display: flex; align-items: center; font-size: 18px; }
+.joint-warning h4:before { content: "⚠️"; margin-right: 8px; }
+.joint-warning ul { padding-left: 5px; list-style-type: none; }
+.joint-warning ul li { position: relative; padding-left: 25px; margin-bottom: 12px; color: #05152a; font-weight: 500; }
+.joint-warning ul li:before { content: "•"; color: #ff6b00; font-weight: bold; font-size: 18px; position: absolute; left: 0; top: -2px; }
+[data-theme="dark"] .joint-warning { background-color: rgba(255, 248, 225, 0.9); color: #05152a; }
+[data-theme="dark"] .joint-warning ul li { color: #05152a; }
+
+
+/* Tracker Promo Section */
+.tracker-promo {
+    margin-top: 40px; padding: 30px; text-align: center;
+    background-color: var(--card-bg-color);
+    background-image: linear-gradient(45deg, rgba(136, 86, 167, 0.05), rgba(0, 120, 255, 0.05)); /* Adjusted gradient */
+}
+.tracker-promo h3 { margin-bottom: 15px; padding-bottom: 15px; text-align: center; }
+.tracker-promo h3::after { left: 50%; transform: translateX(-50%); width: 60px; background: linear-gradient(90deg, var(--neon-blue), var(--accent-color)); } /* Use ortho accent */
+.tracker-promo ul { list-style-type: none; max-width: 500px; margin: 0 auto 20px; text-align: left; padding-left: 0; }
+.tracker-promo ul li { position: relative; padding-left: 25px; margin-bottom: 8px; }
+.tracker-promo ul li:before { content: "✓"; color: var(--neon-blue); position: absolute; left: 0; }
+.tracker-button {
+    display: inline-block; background: linear-gradient(90deg, var(--neon-blue), var(--accent-color)); /* Use ortho accent */
+    color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 16px;
+    font-weight: 600; text-decoration: none; transition: all 0.3s; margin-top: 10px;
+    box-shadow: 0 5px 15px rgba(136, 86, 167, 0.2); /* Use ortho accent shadow */
+}
+.tracker-button:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(136, 86, 167, 0.3); }
+
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header { flex-direction: column; text-align: center; }
+    .header h1 { font-size: 28px; }
+    .header img { width: 80px; height: 80px; }
+    .top-content { flex-direction: column; }
+    .centered-gif { max-width: 80%; margin-bottom: 20px; }
+    .doctor-card { flex-direction: column; text-align: center; }
+    .doctor-avatar { margin-bottom: 10px; }
+    .tracker-promo { padding: 20px 15px; }
+}
+/* --- END OF FILE orthodisease.css --- */

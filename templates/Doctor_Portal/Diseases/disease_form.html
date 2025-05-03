@@ -6,16 +6,16 @@
 {% block head_extra %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/disease_catalog.css') }}">
+    {# Consider adding CSS for Select2 if you use it #}
     <style>
-        .form-section h4 {
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--color-border);
-            color: var(--color-primary);
-        }
+        .form-section h4 { margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); color: var(--color-primary); }
         .form-section { margin-bottom: 1.5rem; }
         .form-actions { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--color-border); text-align: right; }
         .current-image-display img { border: 1px solid #ddd; padding: 2px; margin-bottom: 5px;}
+        /* Style for multi-select */
+        .multi-select-label { font-weight: 500; margin-bottom: 0.3rem; display: block; }
+        select[multiple].form-control { height: 150px; } /* Adjust height as needed */
+        /* Add styles for Select2/Choices.js if used */
     </style>
 {% endblock %}
 
@@ -32,7 +32,7 @@
     {% if messages %}
         <div class="flash-messages-inline mb-4">
             {% for category, message in messages %}
-                <div class="alert alert-{{ category|replace('danger', 'error')|replace('warning', 'warning')|replace('success', 'success')|default('info') }} alert-dismissible fade show" role="alert"> {# Adjusted categories slightly for styling #}
+                <div class="alert alert-{{ category|replace('danger', 'error')|replace('warning', 'warning')|replace('success', 'success')|default('info') }} alert-dismissible fade show" role="alert">
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
@@ -43,7 +43,7 @@
 
 {# --- Display Specific Validation Errors --- #}
 {% if errors and request.method == 'POST' %}
-<div class="alert alert-error alert-dismissible fade show mb-4" role="alert"> {# Use alert-error #}
+<div class="alert alert-error alert-dismissible fade show mb-4" role="alert">
     <strong>Please correct the following errors:</strong>
     <ul> {% for error in errors %} <li>{{ error }}</li> {% endfor %} </ul>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -59,28 +59,30 @@
              {# CSRF Token if using Flask-WTF #}
              {# {{ form.csrf_token }} #}
 
+            {# --- Basic Info Section (Unchanged) --- #}
             <div class="form-section">
                 <h4><i class="fas fa-notes-medical fa-fw"></i> Basic Information</h4>
                 <div class="row">
-                    <div class="col-md-8 form-group mb-3"> {# Added mb-3 #}
+                    <div class="col-md-8 form-group mb-3">
                         <label for="condition_name" class="form-label">Condition Name <span class="text-danger">*</span></label>
                         <input type="text" id="condition_name" name="condition_name" class="form-control" value="{{ disease.condition_name if disease else request.form.get('condition_name', '') }}" required>
                     </div>
-                     <div class="col-md-4 form-group mb-3"> {# Added mb-3 #}
+                     <div class="col-md-4 form-group mb-3">
                         <label for="icd_code" class="form-label">ICD Code</label>
                         <input type="text" id="icd_code" name="icd_code" class="form-control" value="{{ disease.icd_code if disease else request.form.get('icd_code', '') }}" placeholder="e.g., I10">
                     </div>
                 </div>
-                <div class="form-group mb-3"> {# Added mb-3 #}
+                <div class="form-group mb-3">
                     <label for="description" class="form-label">Brief Description</label>
                     <textarea id="description" name="description" class="form-control" rows="3">{{ disease.description if disease else request.form.get('description', '') }}</textarea>
                 </div>
             </div>
 
+            {# --- Classification & Relevance Section (Unchanged) --- #}
              <div class="form-section">
                 <h4><i class="fas fa-tags fa-fw"></i> Classification & Relevance</h4>
                 <div class="row">
-                    <div class="col-md-3 form-group mb-3"> {# Adjusted col size #}
+                    <div class="col-md-3 form-group mb-3">
                         <label for="urgency_level" class="form-label">Urgency Level <span class="text-danger">*</span></label>
                         <select id="urgency_level" name="urgency_level" class="form-select" required>
                             <option value="" disabled {% if not (disease.urgency_level if disease else request.form.get('urgency_level')) %}selected{% endif %}>-- Select --</option>
@@ -90,7 +92,7 @@
                             {% endfor %}
                         </select>
                     </div>
-                     <div class="col-md-3 form-group mb-3"> {# Adjusted col size #}
+                     <div class="col-md-3 form-group mb-3">
                         <label for="condition_type" class="form-label">Condition Type</label>
                         <select id="condition_type" name="condition_type" class="form-select">
                              <option value="" {% if not (disease.condition_type if disease else request.form.get('condition_type')) %}selected{% endif %}>-- Optional --</option>
@@ -100,7 +102,7 @@
                              {% endfor %}
                         </select>
                     </div>
-                     <div class="col-md-3 form-group mb-3"> {# Adjusted col size #}
+                     <div class="col-md-3 form-group mb-3">
                          <label for="gender_relevance" class="form-label">Gender Relevance <span class="text-danger">*</span></label>
                         <select id="gender_relevance" name="gender_relevance" class="form-select" required>
                             {% set selected_gender = (disease.gender_relevance if disease else request.form.get('gender_relevance', 'all')) | string %}
@@ -109,8 +111,8 @@
                             {% endfor %}
                         </select>
                     </div>
-                     <div class="col-md-3 form-group mb-3"> {# Adjusted col size #}
-                        <label for="department_id" class="form-label">Department</label> {# Made optional, adjust if needed #}
+                     <div class="col-md-3 form-group mb-3">
+                        <label for="department_id" class="form-label">Department</label>
                         <select id="department_id" name="department_id" class="form-select">
                              <option value="" {% if not (disease.department_id if disease else request.form.get('department_id')) %}selected{% endif %}>-- Optional --</option>
                               {% set selected_dept_id = (disease.department_id if disease else request.form.get('department_id')) | string %}
@@ -133,7 +135,7 @@
                  </div>
             </div>
 
-
+            {# --- Detailed Information Section (Unchanged) --- #}
             <div class="form-section">
                 <h4><i class="fas fa-file-medical-alt fa-fw"></i> Detailed Information</h4>
                  <div class="form-group mb-3">
@@ -150,6 +152,7 @@
                 </div>
             </div>
 
+            {# --- Testing & Diagnosis Section (Unchanged) --- #}
             <div class="form-section">
                 <h4><i class="fas fa-vials fa-fw"></i> Testing & Diagnosis</h4>
                 <div class="row">
@@ -184,6 +187,7 @@
                 </div>
             </div>
 
+            {# --- Management & Education Section (Unchanged) --- #}
              <div class="form-section">
                 <h4><i class="fas fa-tasks fa-fw"></i> Management & Education</h4>
                  <div class="row">
@@ -193,7 +197,6 @@
                      </div>
                      <div class="col-md-6 form-group d-flex align-items-center pt-3 mb-3">
                         <div class="form-check form-switch">
-                            {# Check disease object first, then fallback to request.form #}
                             {% set is_treatable = (disease and disease.self_treatable == 1) or request.form.get('self_treatable') == 'on' %}
                             <input class="form-check-input" type="checkbox" role="switch" id="self_treatable" name="self_treatable" {% if is_treatable %}checked{% endif %}>
                             <label class="form-check-label" for="self_treatable">Potentially Self-Treatable</label>
@@ -206,9 +209,9 @@
                 </div>
             </div>
 
+            {# --- Image Section (Unchanged) --- #}
             <div class="form-section">
                  <h4><i class="fas fa-image fa-fw"></i> Image</h4>
-                 {# --- Image Upload Section --- #}
                  {% if disease and disease.disease_image_filename %}
                  <div class="mb-3 current-image-display">
                          <label>Current Image:</label><br>
@@ -217,7 +220,6 @@
                             <input class="form-check-input" type="checkbox" name="delete_image" id="delete_image" value="on">
                             <label class="form-check-label" for="delete_image">Delete current image when saving</label>
                          </div>
-                         {# Hidden field to track the current image file name #}
                          <input type="hidden" name="current_disease_image_filename" value="{{ disease.disease_image_filename }}">
                  </div>
                  {% endif %}
@@ -228,7 +230,55 @@
                  </div>
             </div>
 
-            {# --- Form Actions --- #}
+            {# --- NEW Association Linking Section --- #}
+            <div class="form-section">
+                <h4><i class="fas fa-link fa-fw"></i> Associated Items</h4>
+                <div class="row">
+                    {# Symptoms #}
+                    <div class="col-md-4 form-group mb-3">
+                        <label for="symptom_ids" class="form-label multi-select-label">Symptoms</label>
+                        <select name="symptom_ids" id="symptom_ids" class="form-control" multiple>
+                            {# Loop through ALL possible symptoms #}
+                            {% for sym in all_symptoms %}
+                                {# Check if this sym's ID is in the list of associated IDs (passed for edit mode) #}
+                                <option value="{{ sym.symptom_id }}" {% if associated_symptom_ids and sym.symptom_id in associated_symptom_ids %}selected{% endif %}>
+                                    {{ sym.symptom_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Hold Ctrl/Cmd to select multiple.</small>
+                    </div>
+
+                    {# Risk Factors #}
+                     <div class="col-md-4 form-group mb-3">
+                        <label for="factor_ids" class="form-label multi-select-label">Risk Factors</label>
+                        <select name="factor_ids" id="factor_ids" class="form-control" multiple>
+                            {% for rf in all_risk_factors %}
+                                <option value="{{ rf.factor_id }}" {% if associated_factor_ids and rf.factor_id in associated_factor_ids %}selected{% endif %}>
+                                    {{ rf.factor_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                         <small class="text-muted">Hold Ctrl/Cmd to select multiple.</small>
+                    </div>
+
+                     {# Protocols #}
+                     <div class="col-md-4 form-group mb-3">
+                        <label for="protocol_ids" class="form-label multi-select-label">Treatment Protocols</label>
+                        <select name="protocol_ids" id="protocol_ids" class="form-control" multiple>
+                            {% for pro in all_protocols %}
+                                <option value="{{ pro.protocol_id }}" {% if associated_protocol_ids and pro.protocol_id in associated_protocol_ids %}selected{% endif %}>
+                                    {{ pro.protocol_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                         <small class="text-muted">Hold Ctrl/Cmd to select multiple.</small>
+                    </div>
+                </div>
+                 <small class="text-warning">Note: Weights, requirement flags, and relevance for associations will use default values or need to be managed via a dedicated interface (not implemented here).</small>
+            </div>
+
+            {# --- Form Actions (Unchanged) --- #}
             <div class="form-actions">
                 <a href="{{ url_for('disease_management.list_diseases') }}" class="button button-outline button-secondary">Cancel</a>
                 <button type="submit" class="button button-primary">
@@ -244,4 +294,5 @@
 {% block scripts %}
 {# Include Bootstrap JS if needed for dismissible alerts #}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+{# Consider adding JS for Select2/Choices.js if you want enhanced multi-selects #}
 {% endblock %}

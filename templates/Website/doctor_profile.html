@@ -1,0 +1,123 @@
+{# templates/Website/doctor_profile.html #}
+{% extends "Website/base.html" %}
+
+{% block title %}Dr. {{ doctor.first_name }} {{ doctor.last_name }} - Profile{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Website/doctor_profile.css') }}">
+    {# --- Link the new component CSS --- #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Website/components.css') }}">
+{% endblock %}
+
+{% block content %}
+<script>
+  const USER_IS_LOGGED_IN = {{ is_logged_in | tojson }};
+</script>
+
+<div class="container profile-container">
+
+    <aside class="profile-sidebar">
+        <div class="profile-card"> {# Styled in components.css or doctor_profile.css #}
+            <img src="{{ url_for('static', filename=doctor.profile_picture_processed_url) }}" alt="Photo of Dr. {{ doctor.first_name }} {{ doctor.last_name }}">
+            <h2>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h2>
+            <p class="specialty">{{ doctor.specialization_name | default('Specialist') }}</p>
+            <p class="department">{{ doctor.department_name | default('') }}</p>
+
+            <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}"
+               class="btn-schedule schedule-prompt-btn" {# Styled in components.css #}
+               data-schedule-url="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}">
+                Schedule Appointment
+            </a>
+        </div>
+    </aside>
+
+    <section class="profile-main">
+        <div class="profile-details-card"> {# Styled in components.css or doctor_profile.css #}
+            <h3>About Dr. {{ doctor.last_name }}</h3>
+            {% if doctor.biography %}
+                <p>{{ doctor.biography | safe }}</p>
+            {% else %}
+                <p><i>Detailed biography coming soon.</i></p>
+            {% endif %}
+
+             <p>
+                <strong>Accepting New Patients:</strong>
+                {% if doctor.accepting_new_patients %}
+                    <span class="status-badge accepting">Yes</span> {# Styled in components.css #}
+                {% else %}
+                     <span class="status-badge not-accepting">No</span> {# Styled in components.css #}
+                {% endif %}
+             </p>
+
+             {% if doctor.clinic_address %}
+             <h3>Clinic Address</h3>
+             <p>{{ doctor.clinic_address | replace('\n', '<br>') | safe }}</p>
+             {% endif %}
+
+             <h3>Contact Information</h3>
+             <p><strong>Email:</strong> {{ doctor.email | default('Not Publicly Available') }}</p>
+             <p><strong>Phone:</strong> {{ doctor.phone | default('Not Publicly Available') }}</p>
+
+             {% if doctor.certifications %}
+                 <h3>Certifications & Credentials</h3>
+                 <ul>
+                     {% for cert in doctor.certifications.split('\n') %}
+                        {% set cert_trimmed = cert.strip() %}
+                        {% if cert_trimmed %}<li>{{ cert_trimmed }}</li>{% endif %}
+                     {% endfor %}
+                 </ul>
+             {% endif %}
+
+        </div>
+    </section>
+
+</div>
+
+{# Login/Register Modal (Structure remains) #}
+<div class="modal-overlay" id="login-register-modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal('login-register-modal')">×</button>
+        <h2>Action Required</h2>
+        <p>Please log in or create an account to schedule an appointment.</p>
+        <div class="modal-actions">
+            <a href="{{ url_for('login.login_route') }}" class="btn-modal btn-login">Login</a>
+            <a href="{{ url_for('register.register_route') }}" class="btn-modal btn-register">Register</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {# Modal JavaScript Logic (Keep as is) #}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const scheduleButtons = document.querySelectorAll('.schedule-prompt-btn');
+      const modal = document.getElementById('login-register-modal');
+      const modalOverlay = document.querySelector('.modal-overlay');
+      const isLoggedIn = (typeof USER_IS_LOGGED_IN !== 'undefined' && USER_IS_LOGGED_IN);
+
+      if (!modal || !modalOverlay) {
+          console.error("Modal elements not found on profile page!");
+          return;
+      }
+
+      scheduleButtons.forEach(button => {
+        button.addEventListener('click', function(event) {
+          if (isLoggedIn) {
+            console.log("User logged in, proceeding to schedule from profile.");
+            window.location.href = this.getAttribute('data-schedule-url');
+            event.preventDefault();
+          } else {
+            event.preventDefault();
+            console.log("User not logged in, showing modal from profile.");
+            openModal('login-register-modal');
+          }
+        });
+      });
+
+      window.openModal = function(modalId) { const m=document.getElementById(modalId); if(m) m.classList.add('active'); }
+      window.closeModal = function(modalId) { const m=document.getElementById(modalId); if(m) m.classList.remove('active'); }
+      modalOverlay.addEventListener('click', function(event) { if (event.target === modalOverlay) { closeModal('login-register-modal'); } });
+    });
+  </script>
+{% endblock %}

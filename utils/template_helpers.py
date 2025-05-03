@@ -2,6 +2,10 @@
 from datetime import datetime, date, time, timedelta
 
 # --- Filter Functions ---
+# In template_helpers.py
+
+def get_current_year():
+    return datetime.now().year # Correct
 
 def format_timedelta_as_time(delta, fmt='%I:%M %p'):
     """Custom Jinja filter to format timedelta (from TIME column) as time string."""
@@ -55,4 +59,5 @@ def register_template_helpers(app):
     app.jinja_env.globals['datetime'] = datetime
     app.jinja_env.globals['date'] = date # Add date if needed
     app.jinja_env.globals['time'] = time # Add time if needed
+    app.jinja_env.globals['get_current_year'] = get_current_year # Register as global
     app.logger.info("Registered Jinja globals: enumerate, timedelta, datetime, date, time")

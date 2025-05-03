@@ -1,0 +1,151 @@
+{% extends "Website/base.html" %}
+
+{% block title %}Home - Pro Health Center{% endblock %}
+
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='Website/home.css') }}">
+{% endblock %}
+
+{% block content %}
+
+  {# About Us Section #}
+  <section id="about-us" class="about-us">
+    <div class="about-us-text">
+      <h1>WELCOME TO OUR <span>HealthCare</span> WORLD</h1>
+      <p>
+        The healthcare system plays a vital role in disease awareness and preventive care, ensuring individuals stay informed about common health risks and early symptoms.
+        By promoting education on various conditions, it empowers people to take proactive steps toward their well-being.
+        Additionally, tailored nutrition plans based on individual health needs, lifestyle, and medical conditions help optimize overall health, manage diseases, and enhance recovery.
+        A well-structured approach to healthcare combines awareness, prevention, and personalized nutrition to support a healthier community.
+      </p>
+    </div>
+    <div class="about-us-image">
+      <img src="{{ url_for('static', filename='images/home.jpg') }}" alt="Healthcare">
+    </div>
+  </section>
+
+  {# Categories Section #}
+  <section id="categories" class="categories">
+    <h2 class="section-title">Categories</h2>
+    <div class="carousel-container">
+      <button class="prev-btn"><i class="fas fa-chevron-left"></i></button>
+      <div class="categories-section">
+
+        {# Loop through departments fetched from backend #}
+        {% if featured_departments %}
+          {% for dept in featured_departments %}
+          <div class="container-card">
+            <img src="{{ url_for('static', filename=(dept.image_url | default('images/placeholder.jpg'))) }}" alt="{{ dept.name | default('Department Image') }}">
+            <div class="card-content">
+              <h3>{{ dept.name | title | default('Department') }}</h3>
+              <p>{{ dept.description | default('Learn more about our services in this department.') | truncate(120) }}</p>
+              {% if dept.department_id %}
+                 {# Link to the specific department landing page #}
+                <a href="{{ url_for('department.department_landing', dept_id=dept.department_id) }}" class="learn-more">Learn More</a>
+              {% else %}
+                 <a href="{{ url_for('department.list_departments') }}" class="learn-more disabled">Learn More</a> {# Fallback link #}
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+           <p style="text-align: center; width: 100%; color: var(--text-secondary); padding: 20px;">
+               Featured categories could not be loaded at this time.
+            </p>
+        {% endif %}
+
+      </div>
+      <button class="next-btn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </section>
+
+{% endblock %}
+
+
+{% block footer %}
+  {# Inherit footer from base template using super() or define specific footer #}
+  {{ super() }}
+{% endblock %}
+
+
+{% block scripts %}
+  {# Keep carousel JavaScript #}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const prevBtn = document.querySelector('.prev-btn');
+      const nextBtn = document.querySelector('.next-btn');
+      const categoriesSection = document.querySelector('.categories-section');
+      const cards = document.querySelectorAll('.container-card');
+
+      if (!prevBtn || !nextBtn || !categoriesSection || cards.length === 0) {
+         console.warn("Carousel elements not found or no cards present, skipping carousel setup.");
+         // Optionally hide buttons if no cards or not enough to scroll
+         if(prevBtn) prevBtn.style.display = 'none';
+         if(nextBtn) nextBtn.style.display = 'none';
+         return;
+      }
+
+      // --- Carousel Logic (Keep as is or improve) ---
+      let currentIndex = 0;
+      let cardStyle = window.getComputedStyle(cards[0]);
+      let gap = parseFloat(window.getComputedStyle(categoriesSection).getPropertyValue('gap')) || 30;
+      let cardWidth = cards[0].offsetWidth + gap;
+      const carouselContainer = document.querySelector('.carousel-container');
+      let visibleCards = 1; // Calculate below
+
+      function calculateVisibleCards() {
+          if(cards.length === 0 || !carouselContainer || !cards[0]) return 1;
+          gap = parseFloat(window.getComputedStyle(categoriesSection).getPropertyValue('gap')) || 30;
+          cardWidth = cards[0].offsetWidth + gap;
+          visibleCards = Math.max(1, Math.floor(carouselContainer.offsetWidth / cardWidth));
+      }
+
+      function updateCarousel() {
+          if(cards.length === 0) return;
+          calculateVisibleCards();
+
+          const maxIndex = Math.max(0, cards.length - visibleCards);
+          // Adjust currentIndex if it becomes invalid after resize
+          if (currentIndex > maxIndex) {
+              currentIndex = maxIndex;
+          }
+
+          let newTransform = -(currentIndex * cardWidth);
+          categoriesSection.style.transform = `translateX(${newTransform}px)`;
+
+          // Update button states
+          prevBtn.disabled = currentIndex === 0;
+          prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+          prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
+
+          nextBtn.disabled = currentIndex >= maxIndex || cards.length <= visibleCards;
+          nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+          nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
+
+           // Hide buttons if not enough cards to scroll
+           const shouldShowButtons = cards.length > visibleCards;
+           prevBtn.style.display = shouldShowButtons ? 'flex' : 'none';
+           nextBtn.style.display = shouldShowButtons ? 'flex' : 'none';
+      }
+
+      prevBtn.addEventListener('click', function() {
+          if (currentIndex > 0) {
+              currentIndex--;
+              updateCarousel();
+          }
+      });
+
+      nextBtn.addEventListener('click', function() {
+          calculateVisibleCards(); // Recalculate on click in case of resize
+          const maxIndex = Math.max(0, cards.length - visibleCards);
+          if (currentIndex < maxIndex) {
+              currentIndex++;
+              updateCarousel();
+          }
+      });
+
+      window.addEventListener('resize', updateCarousel); // Recalculate on resize
+      updateCarousel(); // Initial setup
+    });
+  </script>
+{% endblock %}

@@ -28,23 +28,19 @@
         <header class="app-header">
             <div class="header-brand">
                  <a href="{{ url_for('doctor_main.dashboard') }}" style="text-decoration: none; color: inherit;"> {# Link logo to dashboard #}
-                    {# Placeholder for Logo or App Name #}
                     <span style="font-weight: bold; font-size: 1.2em;">HealthApp Portal</span>
                  </a>
                  {# Example using image: <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo"> #}
             </div>
             <div class="header-user">
-                {# Use current_user from Flask-Login as the primary source #}
                 {% if current_user and current_user.is_authenticated %}
                     <span class="user-greeting">
                         Welcome,
-                        {# Display title based on user_type #}
+                        {# Display title based on user_type - REMOVED Nutritionist specific #}
                         {% if current_user.user_type == 'doctor' %}
                             Dr. {{ current_user.last_name or 'User' }}
-                        {% elif current_user.user_type == 'nutritionist' %}
-                             {{ current_user.first_name or '' }} {{ current_user.last_name or 'Nutritionist' }} {# Using full name for nutritionist #}
                         {% else %}
-                             {{ current_user.username or 'User' }} {# Fallback for other potential types #}
+                             {{ current_user.first_name or current_user.username or 'User' }} {# Fallback for other types #}
                         {% endif %}
                     </span>
                      <a href="{{ url_for('login.logout_route') }}" class="button button-outline button-small"> <i class="fas fa-sign-out-alt fa-fw"></i> Logout</a> {# Added icon #}
@@ -59,23 +55,20 @@
             <nav>
                 {% if current_user and current_user.is_authenticated %} {# Only show nav if logged in #}
                 <ul>
-                    {# === Common Links (For Both Doctor & Nutritionist) === #}
+                    {# === Links Visible to All Logged-in Users === #}
                     <li>
-                        {# Assuming dashboard route is accessible by both #}
                         <a href="{{ url_for('doctor_main.dashboard') }}"
                            class="{% if request.endpoint == 'doctor_main.dashboard' %}active{% endif %}">
                             <i class="fas fa-tachometer-alt fa-fw"></i> Dashboard
                         </a>
                     </li>
                     <li>
-                        {# Assuming appointments route is accessible by both - UPDATE URL_FOR #}
-                        <a href="{{ url_for('appointments.list_appointments') if true else '#' }}" {# UPDATE 'appointments.list_appointments' #}
-                           class="{% if request.endpoint.startswith('appointments.') %}active{% endif %}"> {# UPDATE blueprint name 'appointments.' #}
+                        <a href="{{ url_for('appointments.list_appointments') if true else '#' }}" {# UPDATE #}
+                           class="{% if request.endpoint.startswith('appointments.') %}active{% endif %}"> {# UPDATE #}
                             <i class="fas fa-calendar-alt fa-fw"></i> Appointments
                         </a>
                     </li>
                     <li>
-                         {# Assuming patients route is accessible by both #}
                         <a href="{{ url_for('patients.patients_list') }}"
                            class="{% if request.endpoint.startswith('patients.') %}active{% endif %}">
                             <i class="fas fa-users fa-fw"></i> Patients
@@ -84,41 +77,31 @@
 
                     {# === Doctor-Specific Links === #}
                     {% if current_user.user_type == 'doctor' %}
-                    <li>
-                        <a href="{{ url_for('disease_management.list_diseases') }}"
-                           class="{% if request.endpoint.startswith('disease_management.') %}active{% endif %}">
-                            <i class="fas fa-book-medical fa-fw"></i> Disease Catalog
-                        </a>
-                    </li>
-                    {# Add other doctor-only links here #}
-                    {% endif %}
+                        <li>
+                            <a href="{{ url_for('disease_management.list_diseases') }}"
+                               class="{% if request.endpoint.startswith('disease_management.') %}active{% endif %}">
+                                <i class="fas fa-book-medical fa-fw"></i> Disease Catalog
+                            </a>
+                        </li>
+                        <li> {# Messages Link #}
+                            <a href="{{ url_for('messaging.message_list') }}"
+                               class="{% if request.endpoint.startswith('messaging.') %}active{% endif %}">
+                                <i class="fas fa-comments fa-fw"></i> Messages
+                            </a>
+                        </li>
+                        <li> {# Diet Plans Link #}
+                             <a href="{{ url_for('diet_plans.list_diet_plans') }}"
+                                class="{% if request.endpoint.startswith('diet_plans.') %}active{% endif %}">
+                                 <i class="fas fa-utensils fa-fw"></i> Diet Plans
+                             </a>
+                         </li>
+                         {# Add other doctor-only links here if needed #}
+                    {% endif %} {# <<<--- ENDIF for doctor-specific section ---<<< #}
 
-                    {# === Nutritionist-Specific Links === #}
-                    {% if current_user.user_type == 'nutritionist' %}
+                    {# === Common Links (Settings should likely be outside the doctor 'if') === #}
                     <li>
-                        {# Define your diet plan route, e.g., in a 'diet_plans' blueprint #}
-                        <a href="{{ url_for('diet_plans.list_diet_plans') }}" {# UPDATE 'diet_plans.list_diet_plans' #}
-                           class="{% if request.endpoint.startswith('diet_plans.') %}active{% endif %}"> {# UPDATE blueprint name 'diet_plans.' #}
-                            <i class="fas fa-utensils fa-fw"></i> Diet Plans
-                        </a>
-                    </li>
-                     {# Add other nutritionist-only links here, e.g., Meal Management, Nutrient Database #}
-                     {#
-                     <li>
-                        <a href="{{ url_for('meals.list_meals') }}"
-                           class="{% if request.endpoint.startswith('meals.') %}active{% endif %}">
-                            <i class="fas fa-apple-alt fa-fw"></i> Meal Library
-                        </a>
-                     </li>
-                     #}
-                    {% endif %}
-
-
-                    {# === Common Links (Continued) === #}
-                    <li>
-                         {# Assuming settings route is accessible by both #}
-                        <a href="{{ url_for('settings.view_settings') }}"
-                           class="{% if request.endpoint.startswith('settings.') %}active{% endif %}">
+                        <a href="{{ url_for('settings.view_settings') }}" {# UPDATE #}
+                           class="{% if request.endpoint.startswith('settings.') %}active{% endif %}"> {# UPDATE #}
                             <i class="fas fa-user-cog fa-fw"></i> Profile & Settings
                         </a>
                     </li>
@@ -131,10 +114,8 @@
             {# --- Flash Messages (Keep as is) --- #}
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    {# Consider moving flash messages to a fixed position container if preferred #}
                     <div class="flash-messages">
                         {% for category, message in messages %}
-                             {# Map categories for better styling consistency #}
                             <div class="alert alert-{{ category|replace('danger', 'error')|replace('warning', 'warning')|replace('success', 'success')|default('info') }}" role="alert">
                                 {{ message }}
                                 <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';" aria-label="Close">×</button>
@@ -161,7 +142,7 @@
         {# Optional Footer #}
         {#
         <footer class="app-footer">
-             <p>© {{ now().year }} HealthApp. All rights reserved.</p> {# Simpler year filter #}
+             <p>© {{ now().year }} HealthApp. All rights reserved.</p> {# Use built-in Jinja date object #}
         {#</footer> #}
 
     </div> {# End .app-layout #}

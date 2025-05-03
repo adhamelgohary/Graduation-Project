@@ -1,0 +1,130 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}Chat: {{ chat.patient_first_name }} {{ chat.patient_last_name }}{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/messaging.css') }}">
+    <style>
+        .chat-container { max-height: 60vh; overflow-y: auto; border: 1px solid #eee; padding: 1rem; margin-bottom: 1rem; background-color: #f8f9fa; }
+        .message-bubble { margin-bottom: 1rem; display: flex; }
+        .message-bubble.sender-doctor { justify-content: flex-end; }
+        .message-bubble.sender-patient { justify-content: flex-start; }
+        .message-content { max-width: 75%; padding: 0.6rem 1rem; border-radius: 15px; position: relative; }
+        .message-bubble.sender-doctor .message-content { background-color: #d1ecf1; border-bottom-right-radius: 0; } /* Light blue for doctor */
+        .message-bubble.sender-patient .message-content { background-color: #e2e3e5; border-bottom-left-radius: 0; } /* Light grey for patient */
+        .message-meta { font-size: 0.75em; color: #6c757d; margin-top: 5px; }
+        .sender-name { font-weight: 600; font-size: 0.8em; }
+        .message-text { white-space: pre-wrap; word-wrap: break-word; }
+        .message-attachment a { display: inline-block; margin-top: 5px; font-size: 0.9em; }
+        .chat-input-form textarea { resize: vertical; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+     <h1>
+         Chat with {{ chat.patient_first_name }} {{ chat.patient_last_name }}
+         <span class="badge bg-secondary ms-2">{{ chat.status | title }}</span>
+     </h1>
+    <div>
+        {# Button to Close Chat (Only if active) #}
+        {% if chat.status == 'active' %}
+         <form action="{{ url_for('.update_chat_status_route', chat_id=chat.chat_id) }}" method="POST" class="d-inline">
+             <input type="hidden" name="status" value="closed">
+             <button type="submit" class="button button-outline button-warning button-small" onclick="return confirm('Close this conversation? You can find it later under Closed chats.');">
+                 <i class="fas fa-archive fa-fw"></i> Close Chat
+             </button>
+         </form>
+         {% endif %}
+         <a href="{{ url_for('.message_list') }}" class="button button-outline button-secondary button-small ms-2">
+            <i class="fas fa-arrow-left fa-fw"></i> Back to Messages
+        </a>
+    </div>
+</div>
+
+{# Flash Messages #}
+{% include '_flash_messages.html' %}
+
+<div class="card shadow-sm content-section">
+    <div class="card-body">
+         {# Chat Header Info (Optional) #}
+         {% if chat.subject %} <p><strong>Subject:</strong> {{ chat.subject }}</p> {% endif %}
+
+         {# Chat Message Area #}
+         <div class="chat-container mb-3" id="chat-container">
+             {# Add logic for loading older messages if paginating #}
+             {% if messages %}
+                 {% for message in messages %}
+                     {% set is_sender_doctor = message.sender_type == 'doctor' %}
+                     <div class="message-bubble sender-{{ message.sender_type }}">
+                         <div class="message-content">
+                             <div class="sender-name">
+                                 {% if is_sender_doctor %}
+                                     You (Dr. {{ chat.doctor_last_name }})
+                                 {% else %}
+                                     {{ chat.patient_first_name }} {{ chat.patient_last_name }}
+                                 {% endif %}
+                             </div>
+                             <p class="message-text mb-0">{{ message.message_text }}</p>
+                             {% if message.has_attachment and message.attachment_id %}
+                                 <div class="message-attachment">
+                                     <a href="{{ url_for('.download_attachment', attachment_id=message.attachment_id) }}" title="Download {{ message.attachment_filename }}">
+                                         <i class="fas fa-paperclip fa-fw"></i> {{ message.attachment_filename | truncate(30) }}
+                                     </a>
+                                 </div>
+                             {% endif %}
+                             <div class="message-meta text-end">
+                                 {{ message.sent_at.strftime('%Y-%m-%d %H:%M') if message.sent_at else 'Sending...'}}
+                                 {% if message.read_at and not is_sender_doctor %} {# Show 'Read' for messages patient sent #}
+                                     <i class="fas fa-check-double text-primary ms-1" title="Read at {{ message.read_at.strftime('%Y-%m-%d %H:%M') }}"></i>
+                                 {% elif message.read_at and is_sender_doctor %} {# Show 'Read' for messages doctor sent #}
+                                     <i class="fas fa-check-double text-primary ms-1" title="Read"></i> {# Don't show time for own read messages #}
+                                 {% elif is_sender_doctor %} {# Show single tick if sent by doctor but not read #}
+                                      <i class="fas fa-check text-muted ms-1" title="Sent"></i>
+                                 {% endif %}
+                             </div>
+                         </div>
+                     </div>
+                 {% endfor %}
+             {% else %}
+                 <p class="text-center text-muted">No messages in this conversation yet.</p>
+             {% endif %}
+         </div>
+
+         {# Pagination for Messages (If implemented) #}
+         {# ... #}
+
+         {# Message Input Form (Only if chat is active) #}
+         {% if chat.status == 'active' %}
+             <form action="{{ url_for('.send_message', chat_id=chat.chat_id) }}" method="POST" class="chat-input-form" enctype="multipart/form-data">
+                 <div class="mb-2">
+                     <textarea name="message_text" class="form-control" rows="3" placeholder="Type your message here..." required></textarea>
+                 </div>
+                 <div class="d-flex justify-content-between align-items-center">
+                     <div>
+                         <label for="attachment" class="form-label visually-hidden">Attach file</label>
+                         <input type="file" name="attachment" id="attachment" class="form-control form-control-sm" style="max-width: 300px;">
+                         <small class="text-muted ms-2">Max {{ config.MAX_ATTACHMENT_MB | default(10) }}MB. Allowed: pdf, jpg, png, docx, etc.</small>
+                     </div>
+                     <button type="submit" class="button button-primary">
+                         <i class="fas fa-paper-plane fa-fw"></i> Send
+                     </button>
+                 </div>
+             </form>
+         {% else %}
+             <p class="text-center text-muted fst-italic">This conversation is closed. You cannot send new messages.</p>
+         {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {# Scroll chat to bottom on load #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chat-container');
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        });
+    </script>
+{% endblock %}

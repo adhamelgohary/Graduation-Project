@@ -1,0 +1,249 @@
+
+
+{% extends "Website/base.html" %}
+
+{% block title %}{{ condition.name | default('Condition Information') }} - Pro Health Center{% endblock %}
+
+{% block head_extra %}
+  {% if condition.specific_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename=condition.specific_css) }}">
+  {% else %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Website/generic_disease.css') }}">
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="header">
+        <h1>{{ condition.name | default('Condition Details') }}</h1>
+    </div>
+
+    <div class="top-content">
+        <div class="centered-gif">
+            <img src="{{ url_for('static', filename=condition.image_url | default('images/default_condition.png')) }}" alt="{{ condition.name }} illustration or image">
+        </div>
+        <div class="overview-container">
+            <h2>Overview</h2>
+            {% if condition.description and condition.description != condition.overview %}
+            <p><em>{{ condition.description | safe }}</em></p>
+            <hr style="border-color: var(--border-color); margin: 15px 0; border-style: dashed;">
+            {% endif %}
+            {{ condition.overview | default('No overview available.') | safe }}
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="left-panel">
+            <div class="left-panel-row">
+                 <div class="card quick-facts-card">
+                     <h3>Quick Facts</h3>
+                     <dl class="quick-facts-list">
+                         {% if condition.condition_type %}
+                         <dt>Type:</dt>
+                         <dd>{{ condition.condition_type | title }}</dd>
+                         {% endif %}
+                         {% if condition.urgency_level %}
+                         <dt>Urgency:</dt>
+                         <dd>{{ condition.urgency_level | title }}</dd>
+                         {% endif %}
+                         {% if condition.typical_duration %}
+                         <dt>Typical Duration:</dt>
+                         <dd>{{ condition.typical_duration }}</dd>
+                         {% endif %}
+                         {% if condition.icd_code %}
+                         <dt>ICD-10 Code:</dt>
+                         <dd>{{ condition.icd_code }}</dd>
+                         {% endif %}
+                         {% if condition.specialist_type %}
+                         <dt>Relevant Specialist(s):</dt>
+                         <dd>{{ condition.specialist_type }}</dd>
+                         {% endif %}
+                         {% if condition.self_treatable_display %}
+                         <dt>Potentially Self-Treatable:</dt>
+                         <dd>{{ condition.self_treatable_display }}</dd>
+                         {% endif %}
+                     </dl>
+                 </div>
+                {% if condition.symptoms %}
+                <div class="card">
+                    <h2>Symptoms</h2>
+                    <div class="content-container">
+                        <div class="content-full symptoms-full" style="display: none;">
+                             {{ condition.symptoms | safe }}
+                             {% if condition.emergency_info %}
+                             <div class="emergency-signs">
+                                 <h4>🆘 Emergency Signs / When to Seek Help:</h4>
+                                  {{ condition.emergency_info | safe }}
+                             </div>
+                             {% endif %}
+                        </div>
+                        <button class="read-more-btn symptoms-btn">
+                            Read more <span class="arrow">▼</span>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+                {% if condition.causes or condition.age_relevance or condition.gender_relevance %}
+                <div class="card">
+                    <h2>Causes & Risk Factors</h2>
+                    <div class="content-container">
+                         <div class="content-full causes-full" style="display: none;">
+                             {% if condition.causes %}
+                                 {{ condition.causes | safe }}
+                             {% endif %}
+                             {% if condition.age_relevance or condition.gender_relevance %}
+                                <h4 style="margin-top: 20px;">Who is Affected?</h4>
+                                <ul class="demographic-list" style="padding-left: 20px; list-style: disc; margin-top: 10px;">
+                                    {% if condition.age_relevance %}
+                                    <li><strong>Age:</strong> {{ condition.age_relevance }}</li>
+                                    {% endif %}
+                                    {% if condition.gender_relevance %}
+                                        {% if condition.gender_relevance == 'all' %}
+                                        <li><strong>Gender:</strong> Affects all genders.</li>
+                                        {% else %}
+                                        <li><strong>Gender:</strong> More common in {{ condition.gender_relevance | title }}s.</li>
+                                        {% endif %}
+                                    {% endif %}
+                                </ul>
+                             {% endif %}
+                         </div>
+                         <button class="read-more-btn causes-btn">
+                            Read more <span class="arrow">▼</span>
+                        </button>
+                    </div>
+                </div>
+                 {% endif %}
+            </div>
+        </div>
+
+        <div class="right-panel">
+             <h2>Diagnosis & Treatment</h2>
+             {% if condition.diagnosis or condition.testing %}
+            <div class="card">
+                <h3>Diagnosis & Testing</h3>
+                <div class="content-container">
+                    <div class="content-full diagnosis-full" style="display: none;">
+                         {% if condition.diagnosis %}
+                            {{ condition.diagnosis | safe }}
+                         {% endif %}
+                         {% if condition.testing %}
+                            {% if condition.diagnosis %}<hr style="border-color: var(--border-color); margin: 20px 0;">{% endif %}
+                            <h4>Common Tests:</h4>
+                            {{ condition.testing | safe }}
+                         {% endif %}
+                    </div>
+                     <button class="read-more-btn diagnosis-btn">
+                        Read more <span class="arrow">▼</span>
+                    </button>
+                </div>
+            </div>
+             {% endif %}
+             {% if condition.treatment %}
+            <div class="card">
+                <h3>Treatment Options</h3>
+                <div class="content-container">
+                     <div class="content-full treatment-full" style="display: none;">
+                         {{ condition.treatment | safe }}
+                     </div>
+                      <button class="read-more-btn treatment-btn">
+                        Read more <span class="arrow">▼</span>
+                    </button>
+                </div>
+            </div>
+             {% endif %}
+              {% if condition.educational_content %}
+             <div class="card educational-content-card">
+                 <h3>Further Information & Resources</h3>
+                 <div class="content-container">
+                     <div class="content-full" style="display: block;">
+                         {{ condition.educational_content | safe }}
+                     </div>
+                 </div>
+             </div>
+              {% endif %}
+        </div>
+    </div>
+
+     {# This block handles displaying the doctors #}
+     {% if doctors %}
+    <div class="doctors-section">
+        <h2>Find a Specialist</h2>
+        {% for doctor in doctors %}
+        <div class="doctor-card">
+            <div class="doctor-avatar">
+                {% if loop.index is odd %}👩‍⚕️{% else %}👨‍⚕️{% endif %}
+            </div>
+            <div class="doctor-details">
+                <div class="doctor-name">Dr. {{ doctor.first_name }} {{ doctor.last_name }}</div>
+                <div class="doctor-specialty">{{ doctor.specialization | default('Specialist') }}</div>
+                <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) | default('#') }}" class="appointment-button">Schedule Appointment</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+     {% else %}
+      <div class="doctors-section">
+         <h2>Find a Specialist</h2>
+         <p style="color: var(--text-secondary); padding-left: 15px;">No specific specialists are listed for this condition currently. Please check the department page or contact our general appointment line.</p>
+      </div>
+     {% endif %}
+
+     {% if condition.name == 'Migraine Headaches' or condition.name == 'Cluster Headaches' %}
+     <div class="tracker-promo">
+        <h3>📋 Track Your {{ condition.name }}</h3>
+        <p>Keeping a diary can help identify triggers and improve treatment. Record details like date/time, symptoms, severity, potential triggers (food, stress, sleep), and medications taken.</p>
+        <a href="#" class="tracker-button">Download Diary Template</a>
+     </div>
+     {% endif %}
+{% endblock %}
+
+{% block scripts %}
+{# Keep the existing script block as it was correct #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeToggle = document.getElementById('theme-toggle');
+        const htmlElement = document.documentElement;
+        if (themeToggle) {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            htmlElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = htmlElement.getAttribute('data-theme') || 'dark';
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                htmlElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                updateThemeIcon(newTheme);
+            });
+        }
+        function updateThemeIcon(theme) {
+             if (themeToggle) {
+                 themeToggle.innerText = theme === 'dark' ? '☀️' : '🌙';
+                 themeToggle.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+             }
+        }
+        const togglePairs = [
+            { btn: '.symptoms-btn', content: '.symptoms-full' },
+            { btn: '.causes-btn',   content: '.causes-full' },
+            { btn: '.diagnosis-btn', content: '.diagnosis-full' },
+            { btn: '.treatment-btn', content: '.treatment-full' }
+        ];
+        togglePairs.forEach(pair => {
+            const buttons = document.querySelectorAll(pair.btn);
+            buttons.forEach(button => {
+                const contentContainer = button.closest('.content-container');
+                const contentElement = contentContainer ? contentContainer.querySelector(pair.content) : null;
+                if (button && contentElement) {
+                    button.addEventListener('click', function() {
+                        const isVisible = contentElement.style.display === 'block';
+                        contentElement.style.display = isVisible ? 'none' : 'block';
+                        this.innerHTML = isVisible
+                            ? 'Read more <span class="arrow">▼</span>'
+                            : 'Read less <span class="arrow">▲</span>';
+                    });
+                } else if (button) {
+                    button.style.display = 'none';
+                }
+            });
+        });
+    });
+ </script>
+{% endblock %}

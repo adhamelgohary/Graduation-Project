@@ -68,6 +68,7 @@
                         <tr>
                             <td>{{ appt.appointment_date.strftime('%Y-%m-%d') if appt.appointment_date else 'N/A' }}</td>
                             <td>
+                                {# CORRECT: Already using the filter #}
                                 {{ appt.start_time | timedelta_to_time if appt.start_time else '--:--' }} -
                                 {{ appt.end_time | timedelta_to_time if appt.end_time else '--:--' }}
                             </td>
@@ -78,7 +79,7 @@
                             <td><span class="status-badge status-{{ appt.status | lower | replace(' ', '-') }}">{{ appt.status | replace('_', ' ') | title | default('N/A') }}</span></td>
                             <td>
                                  {# Placeholder link - update when route exists #}
-                                <a href="{{ url_for('doctor_main.view_appointment', appointment_id=appt.appointment_id) if false else '#' }}" class="button button-outline button-small">View</a>
+                                <a href="{{ url_for('appointments.view_appointment', appointment_id=appt.appointment_id) if false else '#' }}" class="button button-outline button-small">View</a>
                             </td>
                         </tr>
                         {% endfor %}

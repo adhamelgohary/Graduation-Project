@@ -2,13 +2,17 @@
 {% block title %}Diet Plan: {{ details.plan.plan_name }}{% endblock %}
 
 {% block head_extra %}
- <style> /* Add styles for meal/item display */
+ <style>
     .meal-block { border: 1px solid #eee; border-radius: 5px; margin-bottom: 1rem; background-color: #fdfdfd;}
-    .meal-header { background-color: #f5f5f5; padding: 0.5rem 1rem; border-bottom: 1px solid #eee; font-weight: 600;}
+    .meal-header { background-color: #f5f5f5; padding: 0.75rem 1rem; border-bottom: 1px solid #eee; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
     .meal-body { padding: 1rem; }
-    .food-item { border-bottom: 1px dotted #ddd; padding: 0.5rem 0; margin-bottom: 0.5rem; }
+    .food-item { border-bottom: 1px dotted #ddd; padding: 0.75rem 0; margin-bottom: 0.75rem; }
     .food-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
     .food-item strong { color: var(--color-primary); }
+    .food-macros { font-size: 0.85em; color: #555; margin-left: 1rem; }
+    .detail-label { font-weight: 600; color: var(--color-secondary); font-size: 0.9em; margin-bottom: 0.1rem; display: block;}
+    .detail-value { margin-bottom: var(--spacing-md); color: var(--color-text); font-size: 1rem; }
+    .detail-value.pre-wrap { white-space: pre-wrap; word-wrap: break-word; }
  </style>
 {% endblock %}
 
@@ -16,58 +20,111 @@
 <div class="page-header">
     <h1>Diet Plan: {{ details.plan.plan_name }}</h1>
     <div>
-        {% if details.plan.is_public or details.plan.creator_id == current_user.user_id %} {# Edit Auth Check #}
-        <a href="{{ url_for('.edit_diet_plan', plan_id=details.plan.plan_id) }}" class="button button-outline button-secondary button-small"><i class="fas fa-edit"></i> Edit</a>
-         {% endif %}
-        {% if details.plan.is_public or details.plan.creator_id == current_user.user_id %} {# Delete Auth Check #}
-         <form action="{{ url_for('.delete_diet_plan', plan_id=details.plan.plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete plan \'{{ details.plan.plan_name|e }}\'? This cannot be undone.');">
-             <button type="submit" class="button button-outline button-danger button-small" title="Delete"><i class="fas fa-trash"></i> Delete</button>
-         </form>
+        {# Conditionally show Edit/Delete based on flag from route #}
+        {% if can_edit_this_plan %}
+            <a href="{{ url_for('.edit_diet_plan', plan_id=details.plan.plan_id) }}" class="button button-outline button-secondary button-small"><i class="fas fa-edit"></i> Edit Plan</a>
+            <form action="{{ url_for('.delete_diet_plan', plan_id=details.plan.plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete plan \'{{ details.plan.plan_name|e }}\'? This cannot be undone.');">
+                 <button type="submit" class="button button-outline button-danger button-small" title="Delete"><i class="fas fa-trash"></i> Delete Plan</button>
+            </form>
          {% endif %}
         <a href="{{ url_for('.list_diet_plans') }}" class="button button-outline button-secondary button-small ms-2"><i class="fas fa-arrow-left"></i> Back to List</a>
     </div>
 </div>
 
+{# Flash Messages #}
+{% include '_flash_messages.html' %}
+
 <div class="card shadow-sm content-section">
+    <div class="card-header"><h4><i class="fas fa-info-circle"></i> Plan Overview</h4></div>
     <div class="card-body">
-        {# Display Plan Details (name, type, description, macros, conditions, public, creator) #}
-        <p><strong>Type:</strong> {{ details.plan.plan_type | title }}</p>
-        <p><strong>Description:</strong> {{ details.plan.description | default('N/A') | nl2br }}</p>
-        {# ... Display other fields ... #}
-         <p><strong>Target Conditions:</strong> {{ details.plan.target_conditions_list | join(', ') | default('N/A') }}</p>
-         <p><strong>Public:</strong> {{ 'Yes' if details.plan.is_public else 'No' }}</p>
-         <p><strong>Creator:</strong> {% if details.plan.creator_user_id %} {{ details.plan.creator_first_name }} {{ details.plan.creator_last_name }} {% else %} System {% endif %}</p>
-
-
-         <hr>
-         <h4>Meals & Schedule</h4>
-         {% if details.meals %}
-             {% for meal in details.meals %}
-             <div class="meal-block">
-                <div class="meal-header">
-                    {{ meal.meal_name | default('Unnamed Meal') }} ({{ meal.meal_type | title }})
-                    {% if meal.time_of_day %}<span class="text-muted small ms-2">- {{ meal.time_of_day.strftime('%H:%M') }}</span>{% endif %}
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <span class="detail-label">Plan Name</span>
+                <div class="detail-value"><strong>{{ details.plan.plan_name }}</strong></div>
+            </div>
+             <div class="col-md-4 mb-3">
+                <span class="detail-label">Plan Type</span>
+                <div class="detail-value">{{ details.plan.plan_type | title }}</div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <span class="detail-label">Availability</span>
+                <div class="detail-value">{{ 'Public' if details.plan.is_public else 'Private' }}</div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <span class="detail-label">Description</span>
+            <div class="detail-value pre-wrap">{{ details.plan.description | default('N/A') }}</div>
+        </div>
+         <div class="mb-3">
+            <span class="detail-label">Target Conditions</span>
+            <div class="detail-value">{{ details.plan.target_conditions_list | join(', ') | default('None specified') }}</div>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-md-3 col-6 mb-3"><span class="detail-label">Calories (Approx)</span><div class="detail-value">{{ details.plan.calories | default('-') }}</div></div>
+            <div class="col-md-3 col-6 mb-3"><span class="detail-label">Protein (g)</span><div class="detail-value">{{ details.plan.protein_grams | default('-') }}</div></div>
+            <div class="col-md-3 col-6 mb-3"><span class="detail-label">Carbs (g)</span><div class="detail-value">{{ details.plan.carbs_grams | default('-') }}</div></div>
+            <div class="col-md-3 col-6 mb-3"><span class="detail-label">Fat (g)</span><div class="detail-value">{{ details.plan.fat_grams | default('-') }}</div></div>
+            <div class="col-md-3 col-6 mb-3"><span class="detail-label">Fiber (g)</span><div class="detail-value">{{ details.plan.fiber_grams | default('-') }}</div></div>
+            <div class="col-md-3 col-6 mb-3"><span class="detail-label">Sodium (mg)</span><div class="detail-value">{{ details.plan.sodium_mg | default('-') }}</div></div>
+            <div class="col-md-6 mb-3"><span class="detail-label">Creator</span>
+                <div class="detail-value">
+                    {% if details.plan.creator_user_id %} {{ details.plan.creator_first_name }} {{ details.plan.creator_last_name }}
+                    {% else %} System/Admin {% endif %}
                 </div>
-                <div class="meal-body">
-                     {% if meal.description %}<p><em>{{ meal.description | nl2br }}</em></p>{% endif %}
-                     {% if meal.food_items %}
-                        {% for item in meal.food_items %}
-                        <div class="food-item">
-                            <strong>{{ item.food_name }}</strong>: {{ item.serving_size }}
-                            {# Display macros if available #}
-                            {% if item.notes %}<p class="small text-muted mb-0 mt-1">Notes: {{ item.notes }}</p>{% endif %}
-                            {% if item.alternatives %}<p class="small text-info mb-0 mt-1">Alts: {{ item.alternatives }}</p>{% endif %}
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted small">No food items listed for this meal.</p>
-                    {% endif %}
-                </div>
-             </div>
-             {% endfor %}
-         {% else %}
-            <p class="text-muted">No meals defined for this plan yet.</p>
-         {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm content-section mt-4">
+     <div class="card-header"><h4>Meals & Schedule</h4>
+        {% if details.meals %}
+            {% for meal in details.meals %}
+            <div class="meal-block">
+               <div class="meal-header">
+                   <span> {# Wrap in span for better layout control #}
+                       {{ meal.meal_name | default('Unnamed Meal') }} ({{ meal.meal_type | title }})
+                       {# --- UPDATED LINE --- #}
+                       {% if meal.time_of_day %}
+                           <span class="text-muted small ms-2">- {{ meal.time_of_day | timedelta_to_time }}</span>
+                       {% endif %}
+                        {# --- END UPDATED LINE --- #}
+                   </span>
+                   {% if meal.calories %}<span class="badge bg-light text-dark">~{{ meal.calories }} kcal</span>{% endif %}
+               </div>
+               <div class="meal-body">
+                    {% if meal.description %}<p><em>{{ meal.description}}</em></p>{% endif %}
+                    {% if meal.food_items %}
+                       {% for item in meal.food_items %}
+                       <div class="food-item">
+                            <div>
+                               <strong>{{ item.food_name }}</strong>: {{ item.serving_size }}
+                               {% if item.calories is not none or item.protein_grams is not none or item.carbs_grams is not none or item.fat_grams is not none %}
+                               <span class="food-macros">
+                                   ({% if item.calories is not none %}{{item.calories}}kcal{% endif %}
+                                    {% if item.protein_grams is not none %} P:{{'%g'|format(item.protein_grams)}}g{% endif %}
+                                    {% if item.carbs_grams is not none %} C:{{'%g'|format(item.carbs_grams)}}g{% endif %}
+                                    {% if item.fat_grams is not none %} F:{{'%g'|format(item.fat_grams)}}g{% endif %})
+                               </span>
+                               {% endif %}
+                            </div>
+                           {% if item.notes %}<p class="small text-muted mb-0 mt-1">Notes: {{ item.notes }}</p>{% endif %}
+                           {% if item.alternatives %}<p class="small text-info mb-0 mt-1">Alts: {{ item.alternatives }}</p>{% endif %}
+                       </div>
+                       {% endfor %}
+                   {% else %}
+                       <p class="text-muted small">No food items listed for this meal.</p>
+                   {% endif %}
+               </div>
+            </div>
+            {% endfor %}
+        {% else %}
+           <p class="text-muted">No meals defined for this plan yet.</p>
+           {% if can_edit_this_plan %} {# Assuming this flag exists from previous step #}
+               <p><a href="{{ url_for('.edit_diet_plan', plan_id=details.plan.plan_id) }}">Add meals now?</a></p>
+           {% endif %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}

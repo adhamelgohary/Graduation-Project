@@ -1,0 +1,145 @@
+{# templates/Website/doctor_list.html #}
+{% extends "Website/base.html" %}
+
+{% block title %}Find a Doctor - Pro Health Center{% endblock %}
+
+{% block head_extra %}
+  {# Link main list CSS (if any) #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='Website/doctor_list.css') }}">
+  {# --- Link the new component CSS --- #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='Website/components.css') }}">
+{% endblock %}
+
+{% block content %}
+<script>
+  const USER_IS_LOGGED_IN = {{ is_logged_in | tojson }};
+</script>
+
+<div class="container doctor-list-page">
+    <h1 class="page-title">Find Your Doctor</h1>
+
+    {# Filter Form (Structure remains) #}
+    <form method="GET" action="{{ url_for('doctor.list_doctors') }}" class="filter-form">
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label for="search_name">Doctor Name</label>
+                <input type="text" id="search_name" name="search_name" placeholder="Search by name..." value="{{ selected_name | default('') }}">
+            </div>
+            <div class="filter-group">
+                <label for="specialization_id">Specialization</label>
+                <select id="specialization_id" name="specialization_id">
+                    <option value="">All Specializations</option>
+                    {% for spec in specializations %}
+                        <option value="{{ spec.specialization_id }}" {% if spec.specialization_id == selected_spec_id %}selected{% endif %}>{{ spec.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="department_id">Department</label>
+                <select id="department_id" name="department_id">
+                    <option value="">All Departments</option>
+                     {% for dept in departments %}
+                        <option value="{{ dept.department_id }}" {% if dept.department_id == selected_dept_id %}selected{% endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="btn-filter">Apply Filters</button>
+            <a href="{{ url_for('doctor.list_doctors') }}" class="btn-clear">Clear Filters</a>
+        </div>
+    </form>
+
+    {# Doctor List Display (Structure remains) #}
+    <div class="doctor-list-container">
+        {% if doctors %}
+            <div class="doctor-grid"> {# This class is now styled in components.css #}
+                {% for doctor in doctors %}
+                    <div class="doctor-card-item"> {# Styled in components.css #}
+                         <div class="doctor-card-image">
+                             <img src="{{ url_for('static', filename=doctor.profile_picture_processed_url) }}" alt="Photo of Dr. {{ doctor.first_name }} {{ doctor.last_name }}">
+                         </div>
+                         <div class="doctor-card-content">
+                             <h3>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h3>
+                             <p class="specialty">{{ doctor.specialization_name | default('Specialist') }}</p>
+                             <p class="department">{{ doctor.department_name | default('') }}</p>
+                         </div>
+                         <div class="doctor-card-action">
+                            <a href="{{ url_for('doctor.view_doctor_profile', doctor_id=doctor.user_id) }}" class="btn-details">
+                                View Details
+                            </a>
+                            <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}"
+                               class="btn-schedule schedule-prompt-btn"
+                               data-schedule-url="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}">
+                                Schedule
+                            </a>
+                         </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-results">
+                <p>No doctors found matching your criteria.</p>
+                <p><a href="{{ url_for('doctor.list_doctors') }}">Clear filters</a> to view all doctors.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{# Login/Register Prompt Modal (Structure remains) #}
+<div class="modal-overlay" id="login-register-modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal('login-register-modal')">×</button>
+        <h2>Action Required</h2>
+        <p>Please log in or create an account to schedule an appointment.</p>
+        <div class="modal-actions">
+            <a href="{{ url_for('login.login_route') }}" class="btn-modal btn-login">Login</a>
+            <a href="{{ url_for('register.register_route') }}" class="btn-modal btn-register">Register</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {# Modal JavaScript Logic (Keep as is) #}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const scheduleButtons = document.querySelectorAll('.schedule-prompt-btn');
+    const modal = document.getElementById('login-register-modal');
+    const modalOverlay = document.querySelector('.modal-overlay');
+    const isLoggedIn = (typeof USER_IS_LOGGED_IN !== 'undefined' && USER_IS_LOGGED_IN);
+
+    if (!modal || !modalOverlay) {
+        console.error("Modal elements not found!");
+        return;
+    }
+
+    scheduleButtons.forEach(button => {
+      button.addEventListener('click', function(event) {
+        if (isLoggedIn) {
+          console.log("User logged in, proceeding to schedule.");
+          window.location.href = this.getAttribute('data-schedule-url');
+          event.preventDefault();
+        } else {
+          event.preventDefault();
+          console.log("User not logged in, showing modal.");
+          openModal('login-register-modal');
+        }
+      });
+    });
+
+    window.openModal = function(modalId) {
+       const modalToOpen = document.getElementById(modalId);
+       if(modalToOpen) { modalToOpen.classList.add('active'); }
+    }
+    window.closeModal = function(modalId) {
+       const modalToClose = document.getElementById(modalId);
+       if(modalToClose) { modalToClose.classList.remove('active'); }
+    }
+    modalOverlay.addEventListener('click', function(event) {
+        if (event.target === modalOverlay) { closeModal('login-register-modal'); }
+    });
+  });
+</script>
+{% endblock %}

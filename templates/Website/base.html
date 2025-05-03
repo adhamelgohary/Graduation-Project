@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark"> {# Default theme, JS will override based on localStorage #}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>{% block title %}Pro Health Center{% endblock %}</title>
+
+  {# Base CSS for the website section #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='Website/base.css') }}">
+  {# Font Awesome for icons #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  {# Favicon #}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+  {# Block for page-specific CSS or head elements #}
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <nav class="navbar">
+    {# Logo linking to homepage #}
+    <a href="{{ url_for('home.index') | default('/') }}" class="nav-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+      </svg>
+      <h1>{% block nav_brand %}Pro Health Center{% endblock %}</h1>
+    </a>
+
+    {# --- Desktop Navigation Links --- #}
+    <div class="nav-links">
+      {# Block for child templates IF they needed to ADD links, but not OVERRIDE #}
+      {# We define the CORE links here now #}
+      <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
+      <a href="{{ url_for('department.list_departments') }}" class="{{ 'active' if request.endpoint.startswith('department.') else '' }}">Departments</a>
+      <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
+      <a href="#">Contact</a> {# Placeholder #}
+
+      {# --- Login/Logout Conditional --- #}
+      {% if current_user.is_authenticated %}
+         {# Links for logged-in users #}
+         <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
+         {# Link to appropriate dashboard/settings based on role #}
+         {% if current_user.user_type == 'doctor' %}
+            <a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.endpoint.startswith('settings.') else '' }}">Settings</a> {# Doctor settings #}
+            <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
+         {% elif current_user.user_type == 'admin' %}
+             <a href="{{ url_for('admin_main.admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.admin_dashboard' else '' }}">Admin Panel</a> {# Admin dashboard #}
+         {% else %} {# Assume patient #}
+            {# Add patient-specific settings/profile link if available #}
+            <a href="#">My Account</a> {# Generic patient account link placeholder #}
+         {% endif %}
+         <a href="{{ url_for('login.logout_route') }}">Logout</a> {# Logout Link #}
+      {% else %}
+         {# Links for logged-out users #}
+         <a href="{{ url_for('login.login_route') }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a> {# Login Link #}
+         <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a> {# Register Link #}
+      {% endif %}
+      {# --- End Conditional --- #}
+    </div>
+
+    {# Theme Toggle & Mobile Menu Button Container #}
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode" title="Toggle Theme">
+            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+    </div>
+  </nav>
+
+  {# --- Mobile Menu Container --- #}
+  <div class="mobile-menu" id="mobile-menu">
+      {# Define mobile links directly here #}
+      <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
+      <a href="{{ url_for('department.list_departments') }}" class="{{ 'active' if request.endpoint.startswith('department.') else '' }}">Departments</a>
+      <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
+      <a href="#">Contact</a> {# Placeholder #}
+      {# --- Login/Logout Conditional (Mobile) --- #}
+      {% if current_user.is_authenticated %}
+          <hr> {# Separator #}
+          <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
+           {# Add dashboard/settings links similar to desktop nav #}
+           {% if current_user.user_type == 'doctor' %}
+              <a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.endpoint.startswith('settings.') else '' }}">Settings</a>
+              <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
+           {% elif current_user.user_type == 'admin' %}
+               <a href="{{ url_for('admin_main.admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.admin_dashboard' else '' }}">Admin Panel</a>
+           {% else %} {# Assume Patient #}
+              <a href="#">My Account</a> {# Placeholder #}
+           {% endif %}
+          <a href="{{ url_for('login.logout_route') }}">Logout</a>
+      {% else %}
+          <hr> {# Separator #}
+          <a href="{{ url_for('login.login_route') }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a>
+          <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a>
+      {% endif %}
+      {# --- End Conditional --- #}
+  </div>
+
+  {# Main Content Area #}
+  <main class="main-container">
+    {# --- Flash Messages --- #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages-container"> {# Optional container for positioning #}
+          {% for category, message in messages %}
+            {# Use status_badge filter for consistent class mapping #}
+            <div class="alert alert-{{ category | status_badge }}" role="alert">
+              {{ message }}
+              <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';" aria-label="Close">×</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {# --- End Flash Messages --- #}
+
+    {% block content %}{% endblock %} {# Page-specific content goes here #}
+  </main>
+
+  {# Footer Block #}
+  {% block footer %}
+  <footer class="site-footer">
+    <div class="footer-content">
+      <h2>Contact Us</h2>
+      <p>Email: info@prohealth.com | Phone: (123) 456-7890</p>
+      {# Use the Jinja global function #}
+      <p>© {{ get_current_year() }} Pro Health Center. All Rights Reserved.</p>
+    </div>
+  </footer>
+  {% endblock %}
+
+  {# Base JavaScript #}
+  <script>
+    // Theme toggle functionality
+    (function() {
+      const themeToggle = document.getElementById('theme-toggle');
+      const htmlElement = document.documentElement;
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+      htmlElement.setAttribute('data-theme', currentTheme);
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const oldTheme = htmlElement.getAttribute('data-theme');
+          const newTheme = oldTheme === 'dark' ? 'light' : 'dark';
+          htmlElement.setAttribute('data-theme', newTheme);
+          localStorage.setItem('theme', newTheme);
+        });
+      }
+    })();
+
+    // Mobile menu functionality
+    (function() {
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if(mobileMenuBtn && mobileMenu) {
+          mobileMenuBtn.addEventListener('click', (event) => {
+            mobileMenu.classList.toggle('active');
+            event.stopPropagation();
+          });
+          document.addEventListener('click', (event) => {
+            if (mobileMenu.classList.contains('active') && !mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+               mobileMenu.classList.remove('active');
+            }
+          });
+          mobileMenu.addEventListener('click', (event) => {
+            if (event.target.tagName === 'A') { mobileMenu.classList.remove('active'); }
+          });
+      }
+    })();
+
+    // Function for smooth scrolling
+    function scrollToSection(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 70;
+            const sectionTop = section.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+            window.scrollTo({ top: sectionTop, behavior: 'smooth' });
+        }
+    }
+  </script>
+
+  {# Block for page-specific JavaScript #}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

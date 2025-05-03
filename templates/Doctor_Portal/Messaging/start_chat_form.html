@@ -1,0 +1,65 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}Start New Chat{% endblock %}
+
+{% block head_extra %}
+    {# Add CSS for Select2 if used #}
+    {# <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> #}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Start New Chat</h1>
+    <a href="{{ url_for('messaging.message_list') }}" class="button button-outline button-secondary">
+        <i class="fas fa-arrow-left fa-fw"></i> Back to Messages
+    </a>
+</div>
+
+{# Flash Messages #}
+{% include '_flash_messages.html' %}
+
+<div class="card shadow-sm content-section">
+    <div class="card-body">
+        <form action="{{ url_for('messaging.start_chat') }}" method="POST" class="data-form">
+            <div class="form-group mb-3">
+                <label for="patient_user_id" class="form-label">Select Patient <span class="text-danger">*</span></label>
+                <select id="patient_user_id" name="patient_user_id" class="form-select" required>
+                    <option value="" selected disabled>-- Choose Patient You Have Appointments With --</option>
+                    {% for patient in patients %}
+                        <option value="{{ patient.user_id }}" {% if patient.user_id == selected_patient_id %}selected{% endif %}>
+                            {{ patient.last_name }}, {{ patient.first_name }} (ID: {{ patient.user_id }})
+                        </option>
+                    {% else %}
+                         <option value="" disabled>No patients found with previous appointments.</option>
+                    {% endfor %}
+                </select>
+                {# Add Select2 class here if using it #}
+            </div>
+
+             <div class="form-group mb-3">
+                <label for="subject" class="form-label">Subject (Optional)</label>
+                <input type="text" id="subject" name="subject" class="form-control" placeholder="e.g., Follow up on results" value="{{ request.form.get('subject', '') }}">
+            </div>
+
+             <div class="form-group mb-3">
+                <label for="initial_message" class="form-label">Initial Message (Optional)</label>
+                <textarea id="initial_message" name="initial_message" class="form-control" rows="4" placeholder="Type your first message (optional)...">{{ request.form.get('initial_message', '') }}</textarea>
+            </div>
+
+
+            <div class="form-actions text-end mt-4 pt-3 border-top">
+                 <a href="{{ url_for('messaging.message_list') }}" class="button button-outline button-secondary">Cancel</a>
+                <button type="submit" class="button button-primary">
+                    <i class="fas fa-comment-dots fa-fw"></i> Start Chat
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {# Add JS for Select2 if used #}
+    {# <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> #}
+    {# <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> #}
+    {# <script> $(document).ready(function() { $('#patient_user_id').select2({...}); }); </script> #}
+{% endblock %}
