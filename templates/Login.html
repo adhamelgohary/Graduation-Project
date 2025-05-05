@@ -3,46 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Link to the new login.css -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <!-- Link to the login.css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}"> {# Assuming css is in static/css/ #}
     <title>Secure Login - Health Portal</title>
     <script>
-        // IIFE for theme (Same as register)
-        (function() { const storedTheme = localStorage.getItem('theme'); const root = document.documentElement; if (storedTheme === 'light') { root.classList.add('light-mode'); } else { root.classList.remove('light-mode'); } })();
+        // IIFE for theme (Runs immediately to prevent flash of default theme)
+        (function() {
+            try {
+                const storedTheme = localStorage.getItem('theme');
+                const root = document.documentElement;
+                if (storedTheme === 'light') {
+                    root.classList.add('light-mode');
+                } else {
+                    // Default is dark, ensure light-mode is removed if not stored or stored as dark
+                    root.classList.remove('light-mode');
+                }
+            } catch (e) {
+                console.error("Error accessing localStorage for theme:", e);
+            }
+        })();
     </script>
 </head>
-<!-- Add conditional theme class like register.html -->
+<!-- Add theme class to body AFTER initial JS check to sync -->
 <body class="{{ 'light-mode' if request.cookies.get('theme') == 'light' else '' }}">
 
-    <!-- Theme Toggle Button (Same as register) -->
-    <button id="theme-toggle" title="Toggle Light/Dark Mode"><span class="theme-icon">☀️</span></button>
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" title="Toggle Light/Dark Mode" aria-label="Toggle Theme"><span class="theme-icon">☀️</span></button>
 
-    <!-- Background Visuals Container (Structure copied from register.html) -->
+    <!-- Background Visuals Container (Keep As Is) -->
     <div class="full-page-background">
-        <!-- EKG Heart Pulse - Scrolling -->
+        <!-- EKG Heart Pulse -->
         <div class="heartbeat-wrapper">
             <div class="heartbeat-lines">
                 <svg viewBox="0 0 600 100" preserveAspectRatio="none"><path d="M0,50 C20,50 40,20 60,50 S100,80 120,50 S160,30 180,50 S220,70 240,50 S280,40 300,50 S340,60 360,50 S400,35 420,50 S460,75 480,50 S520,45 540,50 S580,50 600,50" /></svg>
                 <svg viewBox="0 0 600 100" preserveAspectRatio="none"><path d="M0,50 C20,50 40,20 60,50 S100,80 120,50 S160,30 180,50 S220,70 240,50 S280,40 300,50 S340,60 360,50 S400,35 420,50 S460,75 480,50 S520,45 540,50 S580,50 600,50" /></svg>
             </div>
         </div>
-
-        <!-- Illustrations (Copied directly from final register.html) -->
-        <div class="medical-symbols">
-            <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div>
-            <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div>
-            <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div>
-             <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div>
-        </div>
-        <div class="pills">
-            <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div>
-            <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div>
-            <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div>
-        </div>
+        <!-- Other Background Elements (Keep As Is) -->
+        <div class="medical-symbols">{% for _ in range(12) %}<div class="medical-cross"></div>{% endfor %}</div>
+        <div class="pills">{% for _ in range(12) %}<div class="pill"></div>{% endfor %}</div>
         <div class="caduceus"> <div class="caduceus-staff"></div> <div class="caduceus-wings"><div class="caduceus-wing"></div><div class="caduceus-wing"></div></div> <div class="caduceus-snake"><svg class="caduceus-snake-path" viewBox="0 0 60 100"><path d="M30,0 C40,10 20,30 30,40 C40,50 20,70 30,80 C40,90 20,110 30,120" /></svg></div> </div>
         <div class="caduceus caduceus-2"> <div class="caduceus-staff"></div> <div class="caduceus-wings"><div class="caduceus-wing"></div><div class="caduceus-wing"></div></div> <div class="caduceus-snake"><svg class="caduceus-snake-path" viewBox="0 0 60 100"><path d="M30,0 C40,10 20,30 30,40 C40,50 20,70 30,80 C40,90 20,110 30,120" /></svg></div> </div>
-
-        <!-- All Floating icons (Copied directly from final register.html) -->
+        <!-- Floating icons -->
         <div class="floating-icon stethoscope-icon"> <svg class="stethoscope-svg" viewBox="0 0 50 50"> <path d="M25,3 C18,3 14,8 14,15 C14,22 18,27 25,27 S36,22 36,15 C36,8 32,3 25,3 Z M25,25 C20,25 16,21 16,15 C16,9 20,5 25,5 C30,5 34,9 34,15 C34,21 30,25 25,25 Z"/><circle class="chestpiece-fill" cx="25" cy="15" r="8"/><path d="M14,15 Q14,35 8,40"/><path d="M36,15 Q36,35 42,40"/><circle cx="8" cy="42" r="3.5"/><circle cx="42" cy="42" r="3.5"/> </svg> </div>
         <div class="floating-icon dna-icon"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
         <div class="floating-icon molecule-icon"> <div class="css-icon-wrapper"> <div class="atom atom-1"></div> <div class="atom atom-2"></div> <div class="atom atom-3"></div> </div> </div>
@@ -63,104 +65,111 @@
         <div class="floating-icon dna-icon dna-icon-3"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
         <div class="floating-icon bandage-icon bandage-icon-2"> <div class="bandage-strip"></div> <div class="bandage-pad"></div> </div>
         <div class="floating-icon test-tube-icon test-tube-icon-2"> <svg viewBox="0 0 50 100"> <path d="M 10 0 L 10 80 Q 10 100 25 100 Q 40 100 40 80 L 40 0 Z" stroke="currentColor" stroke-width="4" fill="var(--illustration-element-fill)"/> <path d="M 10 50 L 40 50 L 40 80 Q 40 95 25 95 Q 10 95 10 80 Z" fill="var(--accent-primary)" opacity="0.5"/> </svg> </div>
-
+        <!-- Waves -->
         <div class="waves"> <div class="wave"></div> <div class="wave"></div> <div class="wave wave-3"></div> </div>
     </div> <!-- End full-page-background -->
 
-    <!-- Login Container - Now ONLY holds the form -->
+    <!-- Login Container -->
     <div class="login-container">
-        <form method="POST" action="{{ url_for('login.login_route') }}" class="login-form">
-            <!-- Logo and Heading (Same as register) -->
+        {# The form posts to the current URL, which includes ?next=... if it was present #}
+        <form method="POST" action="" class="login-form" novalidate> {# Use action="" for current URL; novalidate prevents browser validation interfering with server-side #}
+            <!-- Logo and Heading -->
             <div class="logo">
                 <div class="logo-circle"></div>
                 <div class="logo-text">Health Portal</div>
             </div>
             <h1>Secure Login</h1>
 
-            <!-- Flash Messages Display (Same structure as register) -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="flash-messages"> {# Add wrapper div #}
-                        {% for category, message in messages %}
-                            {# Map 'error' to 'danger' for styling consistency #}
-                            {% set category = 'danger' if category == 'error' else category %}
-                            {% set alert_class = 'alert-' + category if category in ['danger', 'warning', 'info', 'success'] else 'alert-secondary' %}
-                            <div class="alert {{ alert_class }}">{{ message }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
+            <!-- Flash Messages Display -->
+            {# Make sure you have a templates/_flash_messages.html file #}
+            {% include '_flash_messages.html' %}
 
-            <!-- Login Specific Fields -->
+            <!-- *** ADDED: Hidden Input Field for 'next' Redirect Target *** -->
+            {# Reads the 'next' variable passed from the Flask route.
+               Value is empty if 'next' is None or not provided.
+               This ensures the desired redirect URL persists across failed login attempts. #}
+            <input type="hidden" name="next" value="{{ next or '' }}">
+
+            <!-- Login Fields -->
             <div class="form-group">
                 <label for="identifier">Email Address or Username</label>
-                <input type="text" name="identifier" id="identifier" value="{{ form_data.get('identifier', '') if form_data else '' }}" required autocomplete="username">
-                 <small>Enter the email or username you registered with.</small> {# Optional helper text #}
+                {# Repopulate identifier from request.form if available (after POST failure) #}
+                {# Use request.form.get('identifier', '') for safer access #}
+                <input type="text" name="identifier" id="identifier" value="{{ request.form.get('identifier', '') }}" required autocomplete="username" aria-required="true">
+                <small>Enter the email or username you registered with.</small>
             </div>
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" name="password" id="password" required autocomplete="current-password">
-                 <!-- ADD FORGOT PASSWORD LINK HERE -->
+                <input type="password" name="password" id="password" required autocomplete="current-password" aria-required="true">
                  <div class="login-link" style="text-align: right; margin-top: 5px; font-size: 0.85em;">
-                     <a href="#">Forgot Password?</a>
+                     {# TODO: Make this link functional - points to a password reset route #}
+                     <a href="{{ url_for('auth.forgot_password_route') if config.get('AUTH_PASSWORD_RESET_ENABLED') else '#' }}">Forgot Password?</a>
                  </div>
             </div>
 
-            <!-- Remember Me Checkbox - Simple Style -->
-             <div class="login-link">
-                <input type="checkbox" name="remember" id="remember" {{ 'checked' if form_data and form_data.get('remember') }}>
+            <!-- Remember Me Checkbox -->
+             <div class="form-group remember-me-group"> {# Changed to form-group for consistency #}
+                <input type="checkbox" name="remember" id="remember" value="true" {{ 'checked' if request.form.get('remember') }}>
                 <label for="remember">Remember Me</label>
             </div>
 
-
             <button type="submit" class="login-button">Login</button>
 
-            <!-- Link to Register Page (Same structure as register's login link) -->
-            <div class="login-link"> {# Use same class for consistency #}
-                Don't have an account? <a href="{{ url_for('register.register_route') }}">Register Here</a>
+            <!-- Link to Register Page -->
+            <div class="login-link register-link"> {# Added class for potential styling #}
+                Don't have an account? <a href="{{ url_for('register.register_route') }}">Register Here</a> {# Adjust route name if needed #}
             </div>
         </form>
     </div> <!-- End login-container -->
 
-    <!-- Theme Toggle Script (Same as register) -->
+    <!-- Theme Toggle Script (Keep As Is, with added error handling) -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const themeToggle = document.getElementById('theme-toggle');
-            const root = document.documentElement; // Target html element
-            const body = document.body; // Target body
+            const root = document.documentElement;
+            const body = document.body; // Get body element
             const themeIcon = themeToggle.querySelector('.theme-icon');
 
             const updateButton = () => {
-                if (root.classList.contains('light-mode')) { // Check root class
-                    themeIcon.textContent = '🌙';
+                if (root.classList.contains('light-mode')) {
+                    themeIcon.textContent = '🌙'; // Moon for light mode
                     themeToggle.title = 'Switch to Dark Mode';
+                    themeToggle.setAttribute('aria-label', 'Switch to Dark Mode');
                 } else {
-                    themeIcon.textContent = '☀️';
+                    themeIcon.textContent = '☀️'; // Sun for dark mode
                      themeToggle.title = 'Switch to Light Mode';
+                     themeToggle.setAttribute('aria-label', 'Switch to Light Mode');
                 }
             };
 
-             // Initial setup based on localStorage AND ensure body matches
-             if (localStorage.getItem('theme') === 'light') {
-                 if (!root.classList.contains('light-mode')) root.classList.add('light-mode');
-                 if (!body.classList.contains('light-mode')) body.classList.add('light-mode');
-             } else {
-                 root.classList.remove('light-mode');
-                 body.classList.remove('light-mode');
+             // Apply theme based on localStorage on initial load
+             try {
+                 if (localStorage.getItem('theme') === 'light') {
+                     if (!root.classList.contains('light-mode')) root.classList.add('light-mode');
+                     if (!body.classList.contains('light-mode')) body.classList.add('light-mode'); // Ensure body class matches
+                 } else {
+                     root.classList.remove('light-mode');
+                     body.classList.remove('light-mode'); // Ensure body class matches
+                 }
+             } catch (e) {
+                 console.error("Error accessing localStorage for theme on load:", e);
              }
-             updateButton(); // Set initial button state
-
+             updateButton(); // Set initial icon/title/aria-label
 
             themeToggle.addEventListener('click', () => {
                 root.classList.toggle('light-mode');
-                body.classList.toggle('light-mode'); // Toggle on body too
+                body.classList.toggle('light-mode'); // Also toggle on body
 
-                if (root.classList.contains('light-mode')) {
-                    localStorage.setItem('theme', 'light');
-                } else {
-                    localStorage.removeItem('theme'); // Remove if dark (default)
+                try {
+                    if (root.classList.contains('light-mode')) {
+                        localStorage.setItem('theme', 'light');
+                    } else {
+                        localStorage.removeItem('theme'); // Default is dark, remove storage item
+                    }
+                } catch (e) {
+                    console.error("Error updating localStorage for theme:", e);
                 }
-                updateButton(); // Update button after toggle
+                updateButton(); // Update icon/title/aria-label after click
             });
         });
     </script>

@@ -202,6 +202,51 @@ def get_available_slots(doctor_id, selected_date_str):
 
     current_app.logger.debug(f"Available slots for Doc {doctor_id} on {selected_date_str}: {available_slots}")
     return available_slots
+# Add this helper function or import it
+def check_daily_limit(doctor_id, location_id, appt_date_obj):
+    """Checks if the daily appointment limit for a provider/location/date has been reached."""
+    conn = None; cursor = None
+    try:
+        conn = get_db_connection(); cursor = conn.cursor(dictionary=True)
+
+        # 1. Find the limit for this specific day/location
+        cursor.execute("""
+            SELECT max_appointments FROM provider_daily_limits
+            WHERE provider_id = %s AND location_id = %s AND limit_date = %s
+            """, (doctor_id, location_id, appt_date_obj))
+        limit_row = cursor.fetchone()
+
+        if not limit_row:
+            return True # No specific limit set, allow booking
+
+        max_allowed = limit_row['max_appointments']
+        if max_allowed == 0: # Explicitly blocked
+             current_app.logger.info(f"Booking blocked for Doc:{doctor_id} Loc:{location_id} Date:{appt_date_obj} due to max_appointments=0")
+             return False
+
+        # 2. Count existing confirmed/scheduled appointments
+        cursor.execute("""
+            SELECT COUNT(appointment_id) as current_count FROM appointments
+            WHERE doctor_id = %s AND location_id = %s AND appointment_date = %s
+            AND status IN ('scheduled', 'confirmed', 'rescheduled')
+            """, (doctor_id, location_id, appt_date_obj))
+        count_row = cursor.fetchone()
+        current_count = count_row['current_count'] if count_row else 0
+
+        # 3. Compare
+        if current_count >= max_allowed:
+             current_app.logger.warning(f"Daily limit reached for Doc:{doctor_id} Loc:{location_id} Date:{appt_date_obj}. Limit={max_allowed}, Current={current_count}")
+             return False # Limit reached
+        else:
+             return True # Limit not reached
+
+    except Exception as e:
+        current_app.logger.error(f"Error checking daily limit for Doc:{doctor_id} Loc:{location_id} Date:{appt_date_obj}: {e}")
+        return False # Fail closed - block booking if check fails
+    finally:
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
+
 
 def get_appointment_types():
      """ Fetches active appointment types from the database. """
@@ -575,12 +620,12 @@ def schedule_appointment_datetime(doctor_id):
         # --- Optional: Update Patient's Phone if provided and different ---
         if patient_phone and getattr(current_user, 'phone', None) != patient_phone:
              # Update user's phone number in DB (implement update_user_phone function)
-             # update_user_phone(current_user.user_id, patient_phone)
-             current_app.logger.info(f"User {current_user.user_id} updated phone number via appointment form.")
+             # update_user_phone(current_user.id, patient_phone)
+             current_app.logger.info(f"User {current_user.id} updated phone number via appointment form.")
              # Update the current_user object if possible, or re-fetch user data
 
         # --- Create Appointment ---
-        patient_id = current_user.user_id # Get patient's ID from logged-in user
+        patient_id = current_user.id # Get patient's ID from logged-in user
         new_appt_id = create_appointment_record(
             patient_id, doctor_id, selected_date, selected_time,
             appointment_type, reason
@@ -640,7 +685,7 @@ def get_doctor_availability_json(doctor_id, date_str):
 # @roles_required('patient', 'doctor') # Allow both, logic below differentiates
 def view_my_appointments():
     """Displays a list of upcoming and past appointments for the logged-in user."""
-    user_id = current_user.user_id
+    user_id = current_user.id
     user_type = getattr(current_user, 'user_type', None)
     appointments = {'upcoming': [], 'past': []}
     view_title = "My Appointments"
@@ -670,7 +715,7 @@ def view_my_appointments():
 # Role check done inside function
 def view_appointment_detail(appointment_id):
     """Displays details for a specific appointment."""
-    user_id = current_user.user_id
+    user_id = current_user.id
     user_type = getattr(current_user, 'user_type', None)
 
     appointment = get_appointment_details(appointment_id, user_id, user_type)
@@ -693,7 +738,7 @@ def view_appointment_detail(appointment_id):
 # Role check done inside function
 def cancel_appointment(appointment_id):
     """Handles the cancellation of an appointment."""
-    user_id = current_user.user_id
+    user_id = current_user.id
     user_type = getattr(current_user, 'user_type', None)
 
     # Basic check - allow patient, doctor, admin
@@ -733,7 +778,7 @@ def cancel_appointment(appointment_id):
 # @roles_required('patient') # Usually patient initiates
 def reschedule_appointment_start(appointment_id):
     """Initiates the reschedule process by marking old and redirecting."""
-    user_id = current_user.user_id
+    user_id = current_user.id
     user_type = getattr(current_user, 'user_type', None)
     if user_type != 'patient': # Only patients can reschedule this way
         flash("Only patients can reschedule appointments.", "warning")

@@ -28,7 +28,7 @@
         <header class="app-header">
             <div class="header-brand">
                  <a href="{{ url_for('doctor_main.dashboard') }}" style="text-decoration: none; color: inherit;"> {# Link logo to dashboard #}
-                    <span style="font-weight: bold; font-size: 1.2em;">HealthApp Portal</span>
+                    <span style="font-weight: bold; font-size: 1.2em;">Dr.{{ current_user.last_name or 'User' }}'s Portal</span>
                  </a>
                  {# Example using image: <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo"> #}
             </div>
@@ -38,7 +38,7 @@
                         Welcome,
                         {# Display title based on user_type - REMOVED Nutritionist specific #}
                         {% if current_user.user_type == 'doctor' %}
-                            Dr. {{ current_user.last_name or 'User' }}
+                            Dr.{{ current_user.last_name or 'User' }}
                         {% else %}
                              {{ current_user.first_name or current_user.username or 'User' }} {# Fallback for other types #}
                         {% endif %}

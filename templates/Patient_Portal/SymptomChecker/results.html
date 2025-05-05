@@ -1,0 +1,83 @@
+{% extends "Website/base.html" %}
+{% block title %}Symptom Assessment Results{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/symptom_checker.css') }}">
+    <style>
+        .results-summary { background-color: var(--bg-secondary); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--border-color); }
+        .condition-card { border: 1px solid var(--border-color); border-radius: 5px; padding: 1rem; margin-bottom: 1rem; background-color: rgba(var(--bg-secondary-rgb), 0.5); /* Use RGB for opacity */ }
+        .condition-card h4 { margin-top: 0; margin-bottom: 0.5rem; }
+        .emergency-warning { border: 2px solid var(--accent-pink); background-color: rgba(255, 59, 92, 0.1); padding: 1rem; border-radius: 5px; text-align: center; margin-bottom: 1.5rem; }
+        .emergency-warning h3 { color: var(--accent-pink); }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Symptom Assessment Results</h1>
+     <a href="{{ url_for('symptom_checker.start_checker') }}" class="button button-outline button-secondary button-small">
+        <i class="fas fa-redo fa-fw"></i> Start New Assessment
+    </a>
+</div>
+
+{% include '_flash_messages.html' %}
+
+{% if results %}
+<div class="results-summary">
+    <p><strong>Assessment Date:</strong> {{ results.start_time.strftime('%Y-%m-%d %H:%M') }}</p>
+    {% if results.primary_complaint %}
+        <p><strong>Your Main Concern:</strong> {{ results.primary_complaint }}</p>
+    {% endif %}
+    <p><strong>Selected Symptoms:</strong>
+        {# TODO: Display symptom names based on results.selected_symptoms IDs #}
+        {# Example: {{ symptom_details[results.selected_symptoms[0]].symptom_name }}, ... #}
+        {{ results.selected_symptoms | join(', ') }} {# Displaying IDs for now #}
+    </p>
+     {# Display selected risk factors if implemented #}
+</div>
+
+{# --- Emergency Warning (if applicable) --- #}
+{# {% if results.emergency_flag %} #} {# Assuming backend calculates an emergency flag #}
+{# <div class="emergency-warning"> #}
+{#     <h3><i class="fas fa-exclamation-triangle"></i> Potential Emergency</h3> #}
+{#     <p>Based on your symptoms, immediate medical attention may be required. Please call emergency services or go to the nearest emergency room.</p> #}
+{# </div> #}
+{# {% endif %} #}
+
+{# --- Potential Conditions --- #}
+<div class="card content-section mb-4">
+    <div class="card-header"><h5>Potential Conditions</h5></div>
+    <div class="card-body">
+        <p class="text-muted">Based on the symptoms provided, here are some possibilities. This is NOT a diagnosis. Please consult a healthcare professional.</p>
+         {% if results.results %}
+             {% for condition in results.results %} {# Loop through the calculated results #}
+             <div class="condition-card urgency-{{ condition.urgency | lower }}">
+                 <h4>{{ condition.condition_name }}</h4>
+                 <p><strong>Match Score (Example):</strong> {{ '%g'|format(condition.match_score * 100) }}%</p>
+                 <p><strong>Urgency:</strong> <span class="badge bg-{{ condition.urgency | status_badge }}">{{ condition.urgency | title }}</span></p>
+                 <p><strong>Recommendation:</strong> {{ condition.recommendation }}</p>
+                 {# Add link to condition details if available #}
+                 {# <a href="#">Learn More</a> #}
+             </div>
+             {% endfor %}
+         {% else %}
+            <p>Could not determine potential conditions based on the selected symptoms.</p>
+         {% endif %}
+    </div>
+</div>
+
+{# --- General Recommendations --- #}
+<div class="card content-section">
+    <div class="card-header"><h5>Recommendations</h5></div>
+    <div class="card-body">
+        <p>{{ results.recommendations | default('Please consult with a healthcare provider for an accurate diagnosis and treatment plan.') | nl2br }}</p>
+        {# Add buttons for scheduling appointment or contacting doctor? #}
+    </div>
+</div>
+
+{% else %}
+    <p>Could not load assessment results.</p>
+{% endif %}
+
+
+{% endblock %}

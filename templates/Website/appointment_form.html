@@ -1,280 +1,185 @@
-{# --- START OF FILE templates/Website/appointment_form.html --- #}
 {% extends "Website/base.html" %}
 
-{% block title %}Schedule Appointment - Pro Health Center{% endblock %}
+{% block title %}Schedule Appointment{% endblock %}
 
 {% block head_extra %}
-  {# Link base appointment CSS (if separated) or specific step CSS #}
-  <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointment.css') }}">
-  {# Add CSS for date picker if you use one #}
-  <style>
-    /* Style for loading indicator */
-    .loading-indicator {
-        display: none; /* Hidden by default */
-        color: var(--neon-blue);
-        font-style: italic;
-        margin-top: 5px;
-    }
-    /* Style for disabled time slots */
-    #appointment_time option:disabled {
-        color: #aaa;
-        background-color: #eee;
-    }
-    [data-theme="dark"] #appointment_time option:disabled {
-        color: #666;
-        background-color: #222;
-    }
-    /* Style for doctor info card */
-     .doctor-info-card {
-        background-color: var(--nested-card-bg, var(--bg-secondary)); /* Use nested or secondary */
-        border-radius: 12px;
-        padding: 20px;
-        border: 1px solid var(--border-color);
-        margin-bottom: 30px;
-        text-align: center;
-     }
-     .doctor-info-card img {
-         width: 100px;
-         height: 100px;
-         border-radius: 50%;
-         object-fit: cover;
-         margin-bottom: 15px;
-         border: 2px solid var(--border-color);
-     }
-      .doctor-info-card h3 {
-          font-size: 1.2em;
-          margin-bottom: 5px;
-          padding-bottom: 0;
-          border-bottom: none;
-      }
-       .doctor-info-card h3::after { display: none; } /* Remove underline from h3 */
-       .doctor-info-card p {
-           font-size: 0.95em;
-           color: var(--text-secondary);
-           margin-bottom: 0;
-       }
-
-  </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}">
+    <style>
+        /* Add specific styles from appointments.css if needed or keep them there */
+    </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="form-section">
-        {# Display Doctor Info #}
-        <div class="doctor-info-card">
-            {% if doctor.profile_photo_url %}
-             <img src="{{ url_for('static', filename=doctor.profile_photo_url) }}" alt="Dr. {{ doctor.last_name }}">
-            {% else %}
-             <img src="{{ url_for('static', filename='images/default_doctor.png') }}" alt="Default Doctor Avatar"> {# Fallback image #}
-            {% endif %}
-            <h3>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h3>
-            <p>{{ doctor.specialization_name | default('Specialist') }}</p>
-            {# <p>{{ doctor.department_name | default('') }}</p> #}
-        </div>
-
-        <h2>Schedule Your Appointment</h2>
-
-        {# Display flash messages #}
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">{{ message }}</div> {# Add CSS for .alert #}
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-
-        {# The actual form #}
-        <form method="POST" action="{{ url_for('appointment.schedule_appointment_datetime', doctor_id=doctor.user_id) }}">
-            {# Hidden field might be useful if form structure changes #}
-            {# <input type="hidden" name="doctor_id" value="{{ doctor.user_id }}"> #}
-
-            {# Patient Info (if not pre-filled based on login) #}
-            {# Example: Only show if admin is booking for patient #}
-            {# {% if current_user.role == 'admin' %} ... {% endif %} #}
-            {# Based on original HTML, assuming patient enters these - maybe prefill? #}
-             <div class="form-group">
-                <label for="name">Your Name</label>
-                 {# Pre-fill name if possible from current_user #}
-                <input type="text" id="name" name="patient_name" placeholder="Your Full Name" value="{{ current_user.first_name }} {{ current_user.last_name }}" readonly required>
-            </div>
-             <div class="form-group">
-                <label for="phone">Your Phone Number</label>
-                 {# Pre-fill phone if possible #}
-                <input type="tel" id="phone" name="patient_phone" placeholder="(123) 456 - 789" value="{{ current_user.phone | default('') }}" required>
-            </div>
-             {# Medical Record Number might not be needed here if linked via patient_id #}
-             {# <div class="form-group"> ... </div> #}
-
-
-            {# Appointment Details #}
-            <div class="form-row" style="display: flex; gap: 20px;">
-                 {# Department - Could be hidden or pre-selected based on doctor #}
-                <div class="form-group" style="flex: 1;">
-                    <label for="department_display">Department</label>
-                    <input type="text" id="department_display" value="{{ doctor.department_name | default('N/A') }}" readonly>
-                    {# Optionally pass actual department_id if needed by backend #}
-                    {# <input type="hidden" name="department_id" value="{{ doctor.department_id }}"> #}
-                </div>
-
-                <div class="form-group" style="flex: 1;">
-                  <label for="appointment_type">Appointment Type</label>
-                  <select id="appointment_type" name="appointment_type" required>
-                    <option value="" disabled selected>Select Type...</option>
-                    {% for type in appointment_types %}
-                        <option value="{{ type.type_name }}" {% if type.type_name == selected_appointment_type %}selected{% endif %}>
-                            {{ type.type_name }}
-                        </option>
-                    {% endfor %}
-                  </select>
-                </div>
-            </div>
-
-            <div class="form-row" style="display: flex; gap: 20px;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="appointment_date">Select Date</label>
-                    <div class="date-field">
-                         {# Use HTML5 date picker #}
-                        <input type="date" id="appointment_date" name="appointment_date"
-                               min="{{ today_date }}" {# Pass today_date from backend #}
-                               value="{{ selected_date | default('') }}" required>
-                    </div>
-                </div>
-
-                <div class="form-group" style="flex: 1;">
-                    <label for="appointment_time">Select Time</label>
-                     {# This select will be populated by JavaScript #}
-                    <select id="appointment_time" name="appointment_time" required disabled>
-                        <option value="" selected>Select a date first</option>
-                    </select>
-                    <div id="loading-slots" class="loading-indicator">Loading available times...</div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="reason">Reason for Visit (Optional)</label>
-                <textarea id="reason" name="reason" rows="3" placeholder="Briefly describe the reason for your visit...">{{ reason_value | default('') }}</textarea>
-                 {# Add textarea styling in CSS if needed #}
-            </div>
-
-
-            <div class="button-row">
-                {# Back button could go to doctor list or previous step #}
-                <button type="button" class="btn-submit back" onclick="window.history.back();">
-                  Back
-                   <svg width="16" height="16" ... >...</svg>
-                </button>
-                <button type="submit" class="btn-submit">
-                  Schedule Appointment
-                   <svg width="16" height="16" ... >...</svg>
-                </button>
-            </div>
-        </form>
-    </div> {# End form-section #}
-
-    {# Remove or replace the generic contact section with doctor-specific info if desired #}
-    <div class="contact-section">
-      <h2>Doctor Information</h2> {# Changed title #}
-      <div class="contact-card">
-         {# Use specific doctor image if available #}
-         {% if doctor.profile_photo_url %}
-             <img src="{{ url_for('static', filename=doctor.profile_photo_url) }}" alt="Dr. {{ doctor.last_name }}" class="doctor-image">
-         {% else %}
-             <img src="{{ url_for('static', filename='images/default_doctor.png') }}" alt="Doctor Avatar" class="doctor-image">
-         {% endif %}
-        <div class="contact-info">
-          <h3>{{ doctor.first_name }} {{ doctor.last_name }}</h3>
-           <p>{{ doctor.specialization_name | default('Specialist') }}</p>
-           {# Add other relevant doctor info if available #}
-           {% if doctor.clinic_address %}
-           <h3>Clinic Address</h3>
-           <p class="contact-value">{{ doctor.clinic_address }}</p>
-           {% endif %}
-           {# Add phone etc if available in 'doctor' object #}
-           {# <h3>Phone</h3> ... #}
-        </div>
-      </div>
+<div class="main-container">
+    <div class="page-header">
+        <h1>Schedule Appointment</h1>
+         <a href="{{ url_for('doctor.list_doctors') }}" class="button button-outline button-secondary button-small">
+             <i class="fas fa-arrow-left fa-fw"></i> Back to Doctors
+         </a>
     </div>
 
-</div> {# End container #}
+    {% include '_flash_messages.html' %}
+
+    <div class="card content-section appointment-form-card">
+        <div class="card-body">
+            {% if doctor %}
+            {# --- Doctor Info Display --- #}
+            <div class="doctor-info-card">
+                <img src="{{ url_for('static', filename=doctor.profile_photo_url or 'images/default_doctor.png') }}" alt="Dr. {{ doctor.last_name }}">
+                <div>
+                    <h4>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h4>
+                    <p>{{ doctor.specialization_name | default('Doctor') }}</p>
+                     {% if doctor.department_name %} <p>{{ doctor.department_name }}</p> {% endif %}
+                </div>
+            </div>
+
+            {# --- Scheduling Form --- #}
+            <form id="schedule-form" action="{{ url_for('appointment.schedule_appointment_datetime', doctor_id=doctor.user_id) }}" method="POST">
+                <input type="hidden" name="doctor_id" value="{{ doctor.user_id }}">
+
+                {# Step 2: Date, Time, Type, Reason, Location #}
+                 <div class="row">
+                    <div class="col-md-6 form-group mb-3">
+                        <label for="appointment_date" class="form-label">Select Date *</label>
+                        <input type="date" id="appointment_date" name="appointment_date" class="form-control"
+                               value="{{ selected_date | default('') }}" required min="{{ today_date }}">
+                    </div>
+
+                    <div class="col-md-6 form-group mb-3">
+                         <label for="appointment_time_select" class="form-label">Select Available Time *
+                             <span id="appointment_time_display"></span> {# Display selected time #}
+                         </label>
+                         <div id="time-slots-container" class="time-slots border p-2">
+                             <p class="text-muted initial-prompt">Please select a date first.</p>
+                         </div>
+                         <input type="hidden" id="appointment_time" name="appointment_time" required
+                                value="{{ selected_time | default('') }}"> {# Pre-fill if coming back from error #}
+                    </div>
+                 </div>
+
+                 {# --- NEW Location Dropdown --- #}
+                 <div class="form-group mb-3">
+                     <label for="location_id" class="form-label">Select Location *</label>
+                     <select id="location_id" name="location_id" class="form-select" required>
+                         <option value="" selected disabled>-- Choose Clinic Location --</option>
+                          {% set current_location = selected_location_id | default('') | string %}
+                         {% for loc in locations %}
+                            <option value="{{ loc.location_id }}" {% if current_location == loc.location_id|string %}selected{% endif %}>
+                                {{ loc.name }} {% if loc.address %} ({{ loc.address | truncate(40) }}) {% endif %}
+                            </option>
+                         {% endfor %}
+                         {% if not locations %}
+                            <option value="" disabled>No locations available.</option>
+                         {% endif %}
+                     </select>
+                 </div>
+                 {# --- End Location Dropdown --- #}
+
+                 <div class="row">
+                      <div class="col-md-6 form-group mb-3">
+                         <label for="appointment_type" class="form-label">Appointment Type *</label>
+                         <select id="appointment_type" name="appointment_type" class="form-select" required>
+                             <option value="" disabled {% if not selected_appointment_type %}selected{% endif %}>-- Select Type --</option>
+                              {% set current_type = selected_appointment_type | default('') %}
+                             {% for type in appointment_types %}
+                                 <option value="{{ type.type_name }}" {% if type.type_name == current_type %}selected{% endif %}>
+                                     {{ type.type_name }}
+                                 </option>
+                             {% endfor %}
+                         </select>
+                     </div>
+                      <div class="col-md-6 form-group mb-3">
+                         <label for="patient_phone" class="form-label">Confirm/Update Phone Number *</label>
+                         <input type="tel" id="patient_phone" name="patient_phone" class="form-control"
+                                value="{{ phone_value | default(current_user.phone | default('')) }}" required placeholder="e.g., 123-456-7890">
+                     </div>
+                 </div>
+
+                 <div class="form-group mb-3">
+                    <label for="reason" class="form-label">Reason for Visit (Briefly)</label>
+                    <textarea id="reason" name="reason" class="form-control" rows="3" placeholder="Optional: Briefly state the reason for your visit...">{{ reason_value | default('') }}</textarea>
+                 </div>
+
+
+                <div class="form-actions mt-4 pt-3 border-top">
+                    <button type="submit" class="button button-primary" id="submit-button" disabled>
+                        <i class="fas fa-check-circle fa-fw"></i> Confirm Appointment
+                    </button>
+                </div>
+            </form>
+            {% else %}
+                 <p>Doctor information could not be loaded.</p>
+            {% endif %}
+        </div> {# end card-body #}
+    </div> {# end card #}
+</div> {# end main-container #}
 {% endblock %}
 
 {% block scripts %}
+{# Keep existing JavaScript for fetching time slots - no changes needed there #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dateInput = document.getElementById('appointment_date');
-    const timeSelect = document.getElementById('appointment_time');
-    const loadingIndicator = document.getElementById('loading-slots');
-    const doctorId = "{{ doctor.user_id | tojson }}"; // Pass doctor ID securely
+    const timeSlotsContainer = document.getElementById('time-slots-container');
+    const hiddenTimeInput = document.getElementById('appointment_time');
+    const submitButton = document.getElementById('submit-button');
+    const selectedTimeDisplay = document.getElementById('appointment_time_display');
+    const doctorId = '{{ doctor.user_id if doctor else "" }}';
 
-    if (dateInput && timeSelect && loadingIndicator && doctorId) {
-        dateInput.addEventListener('change', function() {
-            const selectedDate = this.value; // Format: YYYY-MM-DD
-
-            // Clear previous options and show loading
-            timeSelect.innerHTML = '<option value="" selected>Loading...</option>';
-            timeSelect.disabled = true;
-            loadingIndicator.style.display = 'block';
-
-            if (selectedDate) {
-                // Fetch available slots using AJAX
-                const availabilityUrl = `/appointments/availability/${doctorId}/${selectedDate}`; // Use url_for in production if possible
-
-                fetch(availabilityUrl)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        timeSelect.innerHTML = ''; // Clear loading/previous options
-                        if (data.available_slots && data.available_slots.length > 0) {
-                            timeSelect.disabled = false;
-                            timeSelect.innerHTML = '<option value="" disabled selected>Select a time...</option>'; // Add placeholder
-                            data.available_slots.forEach(slot => {
-                                // Optional: Format time for display (e.g., 14:30 to 2:30 PM)
-                                const timeParts = slot.split(':');
-                                const hour = parseInt(timeParts[0], 10);
-                                const minute = timeParts[1];
-                                const ampm = hour >= 12 ? 'PM' : 'AM';
-                                const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-                                const displayTime = `${displayHour}:${minute} ${ampm}`;
-
-                                const option = document.createElement('option');
-                                option.value = slot; // Keep value as HH:MM for backend
-                                option.textContent = displayTime;
-                                timeSelect.appendChild(option);
-                            });
-                        } else {
-                            timeSelect.innerHTML = '<option value="" disabled selected>No slots available</option>';
-                            timeSelect.disabled = true;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching availability:', error);
-                        timeSelect.innerHTML = '<option value="" disabled selected>Error loading times</option>';
-                        timeSelect.disabled = true;
-                        // Optionally display a user-friendly error message
-                        flash('Could not load available times. Please try again later.', 'danger'); // Need flash message setup
-                    })
-                    .finally(() => {
-                        loadingIndicator.style.display = 'none'; // Hide loading
-                    });
-            } else {
-                // No date selected
-                timeSelect.innerHTML = '<option value="" selected>Select a date first</option>';
-                timeSelect.disabled = true;
-                loadingIndicator.style.display = 'none';
-            }
-        });
-
-        // Trigger change event if a date is pre-selected (e.g., on form validation error reload)
-        if(dateInput.value) {
-            dateInput.dispatchEvent(new Event('change'));
-        }
+    function clearTimeSlots() { /* ... as before ... */
+        timeSlotsContainer.innerHTML = '<p class="text-muted initial-prompt">Please select a date.</p>';
+        hiddenTimeInput.value = '';
+        selectedTimeDisplay.textContent = '';
+        submitButton.disabled = true;
     }
 
-    // Theme toggle is handled by base.html
+    async function fetchAndDisplaySlots(selectedDate) { /* ... as before ... */
+        if (!selectedDate || !doctorId) { clearTimeSlots(); return; }
+        timeSlotsContainer.innerHTML = '<div class="loading-slots">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
+        hiddenTimeInput.value = ''; selectedTimeDisplay.textContent = ''; submitButton.disabled = true;
+        try {
+            const url = `/appointments/availability/${doctorId}/${selectedDate}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            const data = await response.json();
+            timeSlotsContainer.innerHTML = '';
+            if (data.error) { timeSlotsContainer.innerHTML = `<p class="text-danger">${data.error}</p>`; }
+            else if (data.available_slots && data.available_slots.length > 0) {
+                data.available_slots.forEach(slot => {
+                    const slotElement = document.createElement('div');
+                    slotElement.classList.add('time-slot');
+                    slotElement.textContent = formatTime(slot);
+                    slotElement.dataset.timeValue = slot;
+                    // Pre-select if matches hidden input value (for errors)
+                    if (hiddenTimeInput.value === slot) {
+                         slotElement.classList.add('selected');
+                         selectedTimeDisplay.textContent = `(${formatTime(slot)})`;
+                         submitButton.disabled = false;
+                    }
+                    slotElement.addEventListener('click', handleSlotSelection);
+                    timeSlotsContainer.appendChild(slotElement);
+                });
+            } else { timeSlotsContainer.innerHTML = '<p class="text-muted">No available slots for this date.</p>'; }
+        } catch (error) { console.error('Error fetching availability:', error); timeSlotsContainer.innerHTML = '<p class="text-danger">Could not load times.</p>'; }
+    }
+
+    function handleSlotSelection(event) { /* ... as before ... */
+        timeSlotsContainer.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+        const selectedSlot = event.target;
+        selectedSlot.classList.add('selected');
+        hiddenTimeInput.value = selectedSlot.dataset.timeValue;
+        selectedTimeDisplay.textContent = `(${selectedSlot.textContent})`;
+        submitButton.disabled = false;
+    }
+
+    function formatTime(timeString24) { /* ... as before ... */
+       try { const [hours, minutes] = timeString24.split(':').map(Number); const date = new Date(); date.setHours(hours, minutes, 0, 0); const ampm = hours >= 12 ? 'PM' : 'AM'; const hours12 = hours % 12 || 12; return `${hours12}:${minutes.toString().padStart(2, '0')} ${ampm}`; } catch (e) { return timeString24; }
+    }
+
+    if (dateInput) {
+        dateInput.addEventListener('change', function() { fetchAndDisplaySlots(this.value); });
+        if (dateInput.value) { fetchAndDisplaySlots(dateInput.value); } // Fetch on load if date pre-filled
+    }
 });
 </script>
 {% endblock %}

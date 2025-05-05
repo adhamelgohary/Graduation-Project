@@ -7,6 +7,21 @@ from db import get_db_connection
 from utils.template_helpers import format_timedelta_as_time
 from datetime import timedelta, datetime, date, time # Import time
 
+from .utils import (
+    check_doctor_authorization,
+    check_provider_authorization,      # Import if used
+    check_doctor_or_dietitian_authorization, # Import if used
+    is_doctor_authorized_for_patient, # Import if used
+    get_provider_id,
+    get_enum_values,                 # Import if used
+    get_all_simple,                  # Import if used
+    calculate_age,                   # Import if used
+    allowed_file,                    # Import if used
+    generate_secure_filename,
+    can_modify_appointment,
+    get_doctor_details         # Import if used
+)
+
 # Define the Blueprint for doctor routes
 doctor_main = Blueprint(
     'doctor_main',
@@ -14,70 +29,6 @@ doctor_main = Blueprint(
     url_prefix='/doctor',
     template_folder='../../templates' # Adjust if templates are elsewhere relative to this file
 )
-
-# --- Helper Functions ---
-
-def check_doctor_authorization(user):
-    """Checks if the logged-in user is authenticated and is a doctor."""
-    if not user or not user.is_authenticated:
-        return False
-    return getattr(user, 'user_type', None) == 'doctor'
-
-# THIS HELPER IS NOW DEPRECATED AND REMOVED
-# Use format_timedelta_as_time from template_helpers directly in Jinja
-# def timedelta_to_time_string(td): ... REMOVED ...
-
-def get_doctor_details(doctor_user_id):
-    """Fetches comprehensive doctor details joining users, doctors, specializations, and departments."""
-    conn = None
-    cursor = None
-    doctor_info = None
-    try:
-        conn = get_db_connection()
-        if conn is None:
-            current_app.logger.error(f"DB connection failed for get_doctor_details (User ID: {doctor_user_id}): Could not establish connection.")
-            return None
-        if not conn.is_connected():
-             current_app.logger.error(f"DB connection failed for get_doctor_details (User ID: {doctor_user_id}): Connection is not active.")
-             try: conn.close()
-             except: pass
-             return None
-
-        cursor = conn.cursor(dictionary=True)
-
-        query = """
-            SELECT
-                u.user_id, u.username, u.email, u.first_name, u.last_name,
-                u.phone, u.country, u.account_status,
-                u.created_at as user_created_at,
-                d.user_id as doctor_user_id, d.specialization_id, s.name AS specialization_name,
-                d.license_number, d.license_state, d.license_expiration, d.npi_number, d.medical_school,
-                d.graduation_year, d.certifications, d.accepting_new_patients, d.biography,
-                d.profile_photo_url, d.clinic_address, d.verification_status, d.department_id,
-                dep.name AS department_name
-            FROM users u
-            JOIN doctors d ON u.user_id = d.user_id
-            LEFT JOIN specializations s ON d.specialization_id = s.specialization_id
-            LEFT JOIN departments dep ON d.department_id = dep.department_id
-            WHERE u.user_id = %s AND u.user_type = 'doctor';
-        """
-        cursor.execute(query, (doctor_user_id,))
-        doctor_info = cursor.fetchone()
-
-    except mysql.connector.Error as err:
-        current_app.logger.error(f"DB error in get_doctor_details for user_id {doctor_user_id}: {err}")
-        return None
-    except Exception as e:
-        current_app.logger.error(f"Unexpected error in get_doctor_details for user_id {doctor_user_id}: {e}", exc_info=True)
-        return None
-    finally:
-        if cursor:
-            try: cursor.close()
-            except Exception as cur_err: current_app.logger.error(f"Error closing cursor in get_doctor_details: {cur_err}", exc_info=False)
-        if conn and conn.is_connected():
-            try: conn.close()
-            except Exception as conn_err: current_app.logger.error(f"Error closing connection in get_doctor_details: {conn_err}", exc_info=False)
-    return doctor_info
 
 # --- Dashboard Route ---
 @doctor_main.route('/dashboard', methods=['GET'])

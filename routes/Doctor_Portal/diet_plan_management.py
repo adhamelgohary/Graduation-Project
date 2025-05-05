@@ -10,74 +10,19 @@ from db import get_db_connection
 from datetime import date, datetime
 import math
 import json # For handling target_conditions if stored as JSON (Alternative)
-
-# --- Authorization Helper ---
-def check_doctor_or_dietitian_authorization(user, require_dietitian_for_edit=False):
-    """
-    Checks authorization for diet plan routes.
-
-    Args:
-        user: The current_user object from Flask-Login.
-        require_dietitian_for_edit (bool): If True, requires the user to be
-                                           specifically a 'Registered Dietitian'.
-                                           If False, only requires 'doctor' type.
-
-    Returns:
-        bool: True if authorized, False otherwise.
-    """
-    if not user or not user.is_authenticated:
-        return False
-
-    # Basic check: Must be a 'doctor' user type
-    if getattr(user, 'user_type', None) != 'doctor':
-        return False
-
-    # If edit/add/delete permission is required, check specialization
-    if require_dietitian_for_edit:
-        # We need to fetch the doctor's specialization name
-        conn = None; cursor = None
-        try:
-            user_id = getattr(user, 'user_id', None) or getattr(user, 'id', None)
-            if not user_id:
-                current_app.logger.warning("Authorization check failed: Could not determine user ID.")
-                return False # Cannot verify without ID
-
-            conn = get_db_connection()
-            if not conn: raise ConnectionError("DB connection failed for auth check")
-            cursor = conn.cursor(dictionary=True)
-
-            cursor.execute("""
-                SELECT s.name as specialization_name
-                FROM doctors doc
-                JOIN specializations s ON doc.specialization_id = s.specialization_id
-                WHERE doc.user_id = %s
-            """, (user_id,))
-            doctor_info = cursor.fetchone()
-
-            # Check if doctor info exists and specialization matches
-            if doctor_info and doctor_info.get('specialization_name') == 'Registered Dietitian':
-                return True # Is a doctor and the correct specialization
-            else:
-                # Log if doctor exists but specialization doesn't match
-                if doctor_info:
-                    current_app.logger.debug(f"Authorization denied for user {user_id}: Specialization is '{doctor_info.get('specialization_name')}', required 'Registered Dietitian'.")
-                else:
-                    current_app.logger.warning(f"Authorization denied for user {user_id}: No doctor record found.")
-                return False
-
-        except (mysql.connector.Error, ConnectionError) as db_err:
-            current_app.logger.error(f"Database error checking dietitian specialization for user {user_id}: {db_err}")
-            return False # Deny access on DB error
-        except Exception as e:
-            current_app.logger.error(f"Unexpected error checking dietitian specialization for user {user_id}: {e}", exc_info=True)
-            return False # Deny access on other errors
-        finally:
-            if cursor: cursor.close()
-            if conn and conn.is_connected(): conn.close()
-
-    else:
-        # If only view access is needed, being a 'doctor' is enough
-        return True
+from .utils import (
+    check_doctor_authorization,
+    check_provider_authorization,      # Import if used
+    check_doctor_or_dietitian_authorization, # Import if used
+    is_doctor_authorized_for_patient, # Import if used
+    get_provider_id,
+    get_enum_values,                 # Import if used
+    get_all_simple,                  # Import if used
+    calculate_age,                   # Import if used
+    allowed_file,                    # Import if used
+    generate_secure_filename,
+    can_modify_appointment         # Import if used
+)
 
 # --- Blueprint Definition ---
 diet_plans_bp = Blueprint(
@@ -96,58 +41,6 @@ VALID_SORT_COLUMNS = {
 DEFAULT_SORT_COLUMN = 'name'
 DEFAULT_SORT_DIRECTION = 'ASC'
 ENUM_CACHE = {}
-
-# --- Helper Functions ---
-
-def get_enum_values(table_name, column_name):
-    """ Helper to get ENUM values from DB schema. Caches results. """
-    cache_key = f"{table_name}_{column_name}"
-    if cache_key in ENUM_CACHE: return ENUM_CACHE[cache_key]
-    conn = None; cursor = None; values = []
-    try:
-        conn = get_db_connection();
-        if not conn: raise ConnectionError("DB connection failed")
-        cursor = conn.cursor()
-        db_name = conn.database
-        query = "SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = %s"
-        cursor.execute(query, (db_name, table_name, column_name))
-        result = cursor.fetchone()
-        if result and result[0]: # Check if result and column_type are not None
-            enum_str = result[0]
-            # Handle potential bytes response from db
-            if isinstance(enum_str, bytes): enum_str = enum_str.decode('utf-8')
-            if enum_str.startswith('enum(') and enum_str.endswith(')'):
-                 # More robust parsing for single quotes and potential spaces
-                 raw_values = enum_str[len('enum('):-1].split(',')
-                 values = [val.strip().strip("'") for val in raw_values]
-            else: current_app.logger.warning(f"Column {table_name}.{column_name} is not an ENUM or format unexpected: {enum_str}")
-        else: current_app.logger.warning(f"Could not retrieve ENUM definition for {table_name}.{column_name}")
-        ENUM_CACHE[cache_key] = values; return values
-    except (mysql.connector.Error, ConnectionError) as e:
-        current_app.logger.error(f"Error fetching ENUM values for {table_name}.{column_name}: {e}"); return []
-    finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-
-def get_all_simple(table_name, id_col, name_col, order_by=None, where_clause=None):
-    """ Generic helper to fetch ID/Name pairs from simple tables, with optional WHERE """
-    conn = None; cursor = None; items = []
-    order_clause = f"ORDER BY {order_by}" if order_by else f"ORDER BY {name_col}"
-    where_str = f"WHERE {where_clause}" if where_clause else ""
-    try:
-        conn = get_db_connection()
-        if not conn: raise ConnectionError("DB connection failed")
-        cursor = conn.cursor(dictionary=True)
-        # Basic security checks (assuming inputs are safe here as they are hardcoded in calls)
-        query = f"SELECT {id_col}, {name_col} FROM {table_name} {where_str} {order_clause}"
-        cursor.execute(query)
-        items = cursor.fetchall()
-    except (mysql.connector.Error, ConnectionError) as e:
-        current_app.logger.error(f"Error fetching from {table_name}: {e}")
-    finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-    return items
 
 # Specific fetchers
 def get_all_conditions(): return get_all_simple('conditions', 'condition_name', 'condition_name', order_by='condition_name', where_clause='is_active = TRUE') # Use name as value, filter active

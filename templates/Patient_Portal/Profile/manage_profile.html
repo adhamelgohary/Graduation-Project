@@ -1,0 +1,174 @@
+{% extends "Website/base.html" %}
+{% block title %}My Profile{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/profile.css') }}"> {# Optional specific CSS #}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Manage My Profile</h1>
+</div>
+
+{% include '_flash_messages.html' %}
+
+<div class="profile-container card"> {# Using card style from components.css or base.css #}
+    <div class="card-body">
+
+        {# --- Profile Picture Section --- #}
+        <section class="profile-section">
+            <h4>Profile Picture</h4>
+            <div class="profile-picture-area">
+                <img src="{{ url_for('static', filename=profile_data.profile_picture) if profile_data and profile_data.profile_picture else url_for('static', filename='images/default_avatar.png') }}" alt="Profile Picture" class="current-profile-pic">
+                <form action="{{ url_for('patient_profile.upload_photo') }}" method="POST" enctype="multipart/form-data" class="upload-form">
+                    <label for="profile_picture">Update Picture:</label>
+                    <input type="file" id="profile_picture" name="profile_picture" accept="image/*" required>
+                    <button type="submit" class="button button-small">Upload</button>
+                </form>
+            </div>
+        </section>
+        <hr>
+
+        {# --- Main Profile Form --- #}
+        <form action="{{ url_for('patient_profile.manage_profile') }}" method="POST">
+            {# Personal Information #}
+            <section class="profile-section">
+                <h4>Personal Information</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="first_name">First Name *</label>
+                        <input type="text" id="first_name" name="first_name" value="{{ profile_data.first_name | default(request.form.get('first_name', '')) }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name *</label>
+                        <input type="text" id="last_name" name="last_name" value="{{ profile_data.last_name | default(request.form.get('last_name', '')) }}" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="date_of_birth">Date of Birth *</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth" value="{{ profile_data.date_of_birth.strftime('%Y-%m-%d') if profile_data and profile_data.date_of_birth else request.form.get('date_of_birth', '') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender *</label>
+                        <select id="gender" name="gender" required>
+                             {# TODO: Populate options dynamically from get_enum_values if possible, else hardcode #}
+                             {% set current_gender = profile_data.gender | default(request.form.get('gender')) %}
+                             <option value="unknown" {% if current_gender == 'unknown' %}selected{% endif %}>Unknown</option>
+                             <option value="male" {% if current_gender == 'male' %}selected{% endif %}>Male</option>
+                             <option value="female" {% if current_gender == 'female' %}selected{% endif %}>Female</option>
+                             <option value="other" {% if current_gender == 'other' %}selected{% endif %}>Other</option>
+                             <option value="prefer_not_to_say" {% if current_gender == 'prefer_not_to_say' %}selected{% endif %}>Prefer Not To Say</option>
+                        </select>
+                    </div>
+                </div>
+                 <div class="form-row">
+                     <div class="form-group">
+                        <label for="marital_status">Marital Status</label>
+                         <select id="marital_status" name="marital_status">
+                              {% set current_marital = profile_data.marital_status | default(request.form.get('marital_status')) %}
+                              <option value="" {% if not current_marital %}selected{% endif %}>-- Select --</option>
+                              <option value="single" {% if current_marital == 'single' %}selected{% endif %}>Single</option>
+                              <option value="married" {% if current_marital == 'married' %}selected{% endif %}>Married</option>
+                              <option value="divorced" {% if current_marital == 'divorced' %}selected{% endif %}>Divorced</option>
+                              <option value="widowed" {% if current_marital == 'widowed' %}selected{% endif %}>Widowed</option>
+                              <option value="separated" {% if current_marital == 'separated' %}selected{% endif %}>Separated</option>
+                              <option value="other" {% if current_marital == 'other' %}selected{% endif %}>Other</option>
+                         </select>
+                    </div>
+                     <div class="form-group">
+                        <label for="occupation">Occupation</label>
+                        <input type="text" id="occupation" name="occupation" value="{{ profile_data.occupation | default(request.form.get('occupation', '')) }}">
+                    </div>
+                 </div>
+            </section>
+            <hr>
+
+            {# Contact Information #}
+             <section class="profile-section">
+                <h4>Contact Information</h4>
+                 <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ profile_data.email | default('') }}" readonly disabled>
+                    <small>Email cannot be changed here.</small>
+                </div>
+                 <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" name="phone" value="{{ profile_data.phone | default(request.form.get('phone', '')) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input type="text" id="country" name="country" value="{{ profile_data.country | default(request.form.get('country', '')) }}">
+                    </div>
+                 </div>
+             </section>
+             <hr>
+
+            {# Medical Details #}
+            <section class="profile-section">
+                <h4>Medical Details</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="blood_type">Blood Type</label>
+                         <select id="blood_type" name="blood_type">
+                             {% set current_blood = profile_data.blood_type | default(request.form.get('blood_type')) %}
+                              <option value="Unknown" {% if not current_blood or current_blood == 'Unknown' %}selected{% endif %}>Unknown</option>
+                              <option value="A+" {% if current_blood == 'A+' %}selected{% endif %}>A+</option>
+                              <option value="A-" {% if current_blood == 'A-' %}selected{% endif %}>A-</option>
+                              <option value="B+" {% if current_blood == 'B+' %}selected{% endif %}>B+</option>
+                              <option value="B-" {% if current_blood == 'B-' %}selected{% endif %}>B-</option>
+                              <option value="AB+" {% if current_blood == 'AB+' %}selected{% endif %}>AB+</option>
+                              <option value="AB-" {% if current_blood == 'AB-' %}selected{% endif %}>AB-</option>
+                              <option value="O+" {% if current_blood == 'O+' %}selected{% endif %}>O+</option>
+                              <option value="O-" {% if current_blood == 'O-' %}selected{% endif %}>O-</option>
+                         </select>
+                    </div>
+                     <div class="form-group">
+                        <label for="height_cm">Height (cm)</label>
+                        <input type="number" step="0.01" id="height_cm" name="height_cm" value="{{ profile_data.height_cm | default(request.form.get('height_cm', '')) }}" placeholder="e.g., 175.5">
+                    </div>
+                     <div class="form-group">
+                        <label for="weight_kg">Weight (kg)</label>
+                        <input type="number" step="0.1" id="weight_kg" name="weight_kg" value="{{ profile_data.weight_kg | default(request.form.get('weight_kg', '')) }}" placeholder="e.g., 70.2">
+                    </div>
+                </div>
+            </section>
+            <hr>
+
+             {# Insurance Information #}
+            <section class="profile-section">
+                <h4>Insurance Information</h4>
+                 <div class="form-group">
+                    <label for="insurance_provider_id">Insurance Provider</label>
+                    <select id="insurance_provider_id" name="insurance_provider_id">
+                         <option value="" {% if not profile_data.insurance_provider_id %}selected{% endif %}>-- None / Self-pay --</option>
+                         {% set current_provider = profile_data.insurance_provider_id | default(request.form.get('insurance_provider_id', '')) | string %}
+                         {% for provider in insurance_providers %}
+                            <option value="{{ provider.id }}" {% if current_provider == provider.id|string %}selected{% endif %}>{{ provider.provider_name }}</option>
+                         {% endfor %}
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="insurance_policy_number">Policy Number</label>
+                        <input type="text" id="insurance_policy_number" name="insurance_policy_number" value="{{ profile_data.insurance_policy_number | default(request.form.get('insurance_policy_number', '')) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="insurance_group_number">Group Number</label>
+                        <input type="text" id="insurance_group_number" name="insurance_group_number" value="{{ profile_data.insurance_group_number | default(request.form.get('insurance_group_number', '')) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="insurance_expiration">Expiration Date</label>
+                        <input type="date" id="insurance_expiration" name="insurance_expiration" value="{{ profile_data.insurance_expiration.strftime('%Y-%m-%d') if profile_data and profile_data.insurance_expiration else request.form.get('insurance_expiration', '') }}">
+                    </div>
+                </div>
+            </section>
+
+            <div class="form-actions">
+                <button type="submit" class="button button-primary">Save Profile Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

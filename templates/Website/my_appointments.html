@@ -1,0 +1,181 @@
+{% extends "Website/base.html" %} {# Extends the main website base #}
+{# REMOVED Macro Import: {% from "macros/_appointment_card.html" import render_appointment_card %} #}
+
+{% block title %}{{ view_title | default("My Appointments") }}{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}"> {# Specific CSS for appointments list #}
+    {# Link components.css if card styles are defined there #}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Website/components.css') }}"> #}
+    {# Add inline style or link specific CSS for appointment cards if needed #}
+    <style>
+        .appointment-list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        .appointment-card {
+            /* Add or reference card styles from base/components */
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .appointment-card .card-body {
+            padding: 1.2rem 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .appointment-card .card-title {
+            font-size: 1.1em; font-weight: 600; margin-bottom: 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 0.5rem;
+             border-bottom: 1px dashed var(--border-color); /* Add separator */
+             padding-bottom: 0.75rem;
+        }
+        .appointment-card .card-title .status-badge {
+            font-size: 0.8em; padding: 0.3em 0.6em;
+        }
+        .appointment-card .card-text {
+            font-size: 0.95em; color: var(--text-secondary); margin-bottom: 0.6rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .appointment-card .card-text i {
+            color: var(--text-secondary); width: 16px; text-align: center;
+        }
+        .appointment-card .card-text.doctor-name { color: var(--text-color); font-weight: 500; }
+        .appointment-card .card-text.reason-snippet { font-style: italic; }
+        .appointment-card .card-actions {
+            margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);
+            display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;
+        }
+        .appointment-list-table .table { margin-bottom: 0; }
+        .appointment-list-table th { white-space: nowrap; }
+        .no-results { padding: 2rem; text-align: center; color: var(--text-secondary); }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container"> {# Use the main container from base.css #}
+    <div class="page-header"> {# Standard page header style #}
+        <h1>{{ view_title | default("My Appointments") }}</h1>
+        <a href="{{ url_for('doctor.list_doctors') }}" class="button button-primary button-small">
+             <i class="fas fa-calendar-plus fa-fw"></i> Schedule New Appointment
+         </a>
+    </div>
+
+    {% include '_flash_messages.html' %} {# Include flash messages partial #}
+
+    {# --- Upcoming Appointments --- #}
+    <section class="appointment-section upcoming-appointments">
+        <h2 class="section-title">Upcoming Appointments</h2>
+        {% if upcoming_appointments %}
+            <div class="appointment-list-grid"> {# Use a grid for cards #}
+                {% for appt in upcoming_appointments %}
+                    {# --- START: Inline Appointment Card Structure --- #}
+                    <div class="appointment-card card"> {# Using card styles #}
+                        <div class="card-body">
+                             <div class="card-title">
+                                 {# Date and Time #}
+                                 <span>
+                                     <i class="fas fa-calendar-alt fa-fw"></i>
+                                     {{ appt.appointment_date.strftime('%a, %b %d, %Y') }} at {{ appt.display_start_time }}
+                                 </span>
+                                 {# Status Badge #}
+                                 <span class="status-badge status-{{ appt.status | status_badge }}">
+                                     {{ appt.status | title }}
+                                 </span>
+                             </div>
+
+                             {# Doctor Info #}
+                             <p class="card-text doctor-name">
+                                 <i class="fas fa-user-md fa-fw"></i> {{ appt.doctor_full_name }}
+                             </p>
+                             {% if appt.department_name %}
+                                <p class="card-text"><i class="fas fa-building fa-fw"></i> {{ appt.department_name }}</p>
+                             {% endif %}
+
+                             {# Appointment Type #}
+                             <p class="card-text">
+                                 <i class="fas fa-notes-medical fa-fw"></i> Type: {{ appt.appointment_type | title }}
+                             </p>
+
+                             {# Location #}
+                             {% if appt.location_name %}
+                                <p class="card-text"><i class="fas fa-map-marker-alt fa-fw"></i> {{ appt.location_name }}</p>
+                             {% endif %}
+
+                             {# Reason Snippet #}
+                              {% if appt.reason %}
+                                <p class="card-text reason-snippet"><i class="fas fa-comment-medical fa-fw"></i> Reason: {{ appt.reason | truncate(50) }}</p>
+                             {% endif %}
+
+                             {# Actions #}
+                             <div class="card-actions">
+                                <a href="{{ url_for('appointment.view_appointment_detail', appointment_id=appt.appointment_id) }}" class="button button-small button-outline">View Details</a>
+                                {% if appt.status in ['scheduled', 'confirmed'] %}
+                                    <a href="{{ url_for('appointment.reschedule_appointment_start', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-secondary">Reschedule</a>
+                                    <form action="{{ url_for('appointment.cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
+                                        <button type="submit" class="button button-small button-danger button-outline">Cancel</button>
+                                    </form>
+                                {% endif %}
+                             </div>
+                        </div>
+                    </div>
+                    {# --- END: Inline Appointment Card Structure --- #}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-results card content-section"> {# Use card for consistency #}
+                <p>You have no upcoming appointments scheduled.</p>
+            </div>
+        {% endif %}
+    </section>
+
+     {# --- Past Appointments --- #}
+    <section class="appointment-section past-appointments mt-5">
+        <h2 class="section-title">Past Appointments</h2>
+         {% if past_appointments %}
+            <div class="appointment-list-table card content-section p-0"> {# Wrap table in card, remove padding #}
+                 <div class="table-responsive">
+                    <table class="table table-striped table-hover mb-0"> {# Add striped/hover from base if desired #}
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Doctor</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for appt in past_appointments %}
+                            <tr>
+                                <td>{{ appt.appointment_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ appt.display_start_time }}</td>
+                                <td>{{ appt.doctor_full_name }}</td>
+                                <td>{{ appt.appointment_type | title }}</td>
+                                <td><span class="status-badge status-{{ appt.status | status_badge }}">{{ appt.status | title }}</span></td>
+                                <td class="action-buttons">
+                                    <a href="{{ url_for('appointment.view_appointment_detail', appointment_id=appt.appointment_id) }}" class="button button-small button-outline">View Details</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                 </div>
+            </div>
+        {% else %}
+            <div class="no-results card content-section">
+                 <p>No past appointment history found.</p>
+             </div>
+        {% endif %}
+    </section>
+
+</div> {# End main-container #}
+{% endblock %}

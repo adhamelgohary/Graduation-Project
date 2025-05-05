@@ -12,11 +12,19 @@ from db import get_db_connection
 from datetime import date, datetime
 import math # For pagination calculations
 
-# --- Authorization Helper ---
-def check_doctor_authorization(user):
-    if not user or not user.is_authenticated: return False
-    return getattr(user, 'user_type', None) == 'doctor'
-
+from .utils import (
+    check_doctor_authorization,
+    check_provider_authorization,      # Import if used
+    check_doctor_or_dietitian_authorization, # Import if used
+    is_doctor_authorized_for_patient, # Import if used
+    get_provider_id,
+    get_enum_values,                 # Import if used
+    get_all_simple,                  # Import if used
+    calculate_age,                   # Import if used
+    allowed_file,                    # Import if used
+    generate_secure_filename,
+    can_modify_appointment         # Import if used
+)
 # --- Blueprint Definition ---
 disease_management_bp = Blueprint(
     'disease_management',
@@ -38,12 +46,6 @@ DEFAULT_SORT_DIRECTION = 'ASC'
 ENUM_CACHE = {} # Simple cache for ENUM values
 
 # --- Helper Functions ---
-
-def allowed_file(filename):
-    """Checks if the filename has an allowed extension."""
-    ALLOWED_EXTENSIONS = current_app.config.get('ALLOWED_IMAGE_EXTENSIONS', {'png', 'jpg', 'jpeg', 'gif', 'webp'})
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def save_disease_image(file):
     """Saves the uploaded image file securely."""
@@ -98,56 +100,6 @@ def delete_disease_image(filename_relative_path):
     except Exception as e:
         current_app.logger.error(f"Error deleting image file {filename_relative_path}: {e}")
     return False
-
-def get_enum_values(table_name, column_name):
-    """ Helper to get ENUM values from DB schema. Caches results. """
-    cache_key = f"{table_name}_{column_name}"
-    if cache_key in ENUM_CACHE:
-        return ENUM_CACHE[cache_key]
-    conn = None; cursor = None; values = []
-    try:
-        conn = get_db_connection();
-        if not conn: raise ConnectionError("DB connection failed")
-        cursor = conn.cursor()
-        db_name = conn.database
-        query = "SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = %s"
-        cursor.execute(query, (db_name, table_name, column_name))
-        result = cursor.fetchone()
-        if result and result[0]:
-            enum_str = result[0];
-            if isinstance(enum_str, bytes): enum_str = enum_str.decode('utf-8')
-            if enum_str.startswith('enum(') and enum_str.endswith(')'):
-                 raw_values = enum_str[len('enum('):-1].split(',')
-                 values = [val.strip().strip("'") for val in raw_values]
-            else: current_app.logger.warning(f"Column {table_name}.{column_name} format unexpected: {enum_str}")
-        else: current_app.logger.warning(f"Could not retrieve ENUM definition for {table_name}.{column_name}")
-        ENUM_CACHE[cache_key] = values
-        return values
-    except (mysql.connector.Error, ConnectionError) as e:
-        current_app.logger.error(f"Error fetching ENUM values for {table_name}.{column_name}: {e}")
-        return []
-    finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-
-def get_all_simple(table_name, id_col, name_col, order_col=None):
-    """ Generic helper to fetch ID/Name pairs from simple tables """
-    conn = None; cursor = None; items = []
-    order_by = order_col if order_col else name_col
-    try:
-        conn = get_db_connection();
-        if not conn: raise ConnectionError("DB connection failed")
-        cursor = conn.cursor(dictionary=True)
-        # Column names are assumed safe as they come from code, not user input
-        query = f"SELECT `{id_col}`, `{name_col}` FROM `{table_name}` ORDER BY `{order_by}` ASC"
-        cursor.execute(query)
-        items = cursor.fetchall()
-    except (mysql.connector.Error, ConnectionError) as e:
-        current_app.logger.error(f"Error fetching from {table_name}: {e}")
-    finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-    return items
 
 # Specific Fetchers using the generic helper
 def get_all_departments(): return get_all_simple('departments', 'department_id', 'name')
@@ -517,7 +469,7 @@ def add_disease():
                 INSERT INTO conditions (condition_name, description, icd_code, urgency_level, condition_type,
                     age_relevance, gender_relevance, specialist_type, self_treatable, typical_duration,
                     educational_content, overview, symptoms_text, causes_text, testing_details,
-                    diagnosis_details, disease_image_filename, testing_type_id, diagnosis_type_id,
+                    diagnosis_details, condition_image_filename, testing_type_id, diagnosis_type_id,
                     department_id, is_active, created_at, updated_at)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, TRUE, NOW(), NOW())
             """
@@ -650,7 +602,7 @@ def edit_disease(condition_id):
                 UPDATE conditions SET condition_name=%s, description=%s, icd_code=%s, urgency_level=%s, condition_type=%s,
                     age_relevance=%s, gender_relevance=%s, specialist_type=%s, self_treatable=%s, typical_duration=%s,
                     educational_content=%s, overview=%s, symptoms_text=%s, causes_text=%s, testing_details=%s,
-                    diagnosis_details=%s, disease_image_filename=%s, testing_type_id=%s, diagnosis_type_id=%s,
+                    diagnosis_details=%s, condition_image_filename=%s, testing_type_id=%s, diagnosis_type_id=%s,
                     department_id=%s, updated_at=NOW()
                 WHERE condition_id=%s AND is_active = TRUE
             """
@@ -693,7 +645,7 @@ def edit_disease(condition_id):
 
         # Re-render edit form on error
         form_data = request.form.to_dict(); form_data['condition_id'] = condition_id
-        form_data['disease_image_filename'] = previous_filename_relative
+        form_data['condition_image_filename'] = previous_filename_relative
         return render_template(
             'Doctor_Portal/Diseases/disease_form.html', form_action=url_for('disease_management.edit_disease', condition_id=condition_id),
             form_title=f"Edit Condition (ID: {condition_id})", disease=form_data, errors=errors,

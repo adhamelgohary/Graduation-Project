@@ -26,6 +26,11 @@ from routes.Admin_Portal.Patient_Management import patient_management
 from routes.Admin_Portal.Registiration_Approval_System import registration_approval
 from routes.Admin_Portal.search_users import search_users_bp
 from routes.Admin_Portal.Appointments import admin_appointments_bp
+from routes.Admin_Portal.structure_management import structure_bp
+# Import Patient Portal Blueprints
+from routes.Patient_Portal.profile import patient_profile_bp
+from routes.Patient_Portal.medical_info import patient_medical_info_bp
+from routes.Patient_Portal.symptom_checker import symptom_checker_bp
 # routes of doctor portal
 from routes.Doctor_Portal.Dashboard import doctor_main
 from routes.Doctor_Portal.availability_management import availability_bp
@@ -35,6 +40,7 @@ from routes.Doctor_Portal.disease_management import disease_management_bp
 from routes.Doctor_Portal.diet_plan_management import diet_plans_bp
 from routes.Doctor_Portal.appointment_management import appointments_bp
 from routes.Doctor_Portal.messaging import messaging_bp
+from routes.Doctor_Portal.location_management import locations_bp
 
 # --- Create Flask App ---
 app = Flask(__name__)
@@ -79,6 +85,12 @@ app.register_blueprint(department_bp)
 app.register_blueprint(doctor_bp) # <-- Register doctor blueprint
 app.register_blueprint(appointment_bp) # Example
 app.register_blueprint(messaging_bp)
+app.register_blueprint(locations_bp)
+app.register_blueprint(structure_bp)
+# Patient Portal
+app.register_blueprint(patient_profile_bp)
+app.register_blueprint(patient_medical_info_bp)
+app.register_blueprint(symptom_checker_bp)
 # --- Basic Routes ---
 #@app.route('/')
 #def home():

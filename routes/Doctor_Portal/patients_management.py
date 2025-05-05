@@ -10,10 +10,19 @@ from db import get_db_connection
 from datetime import date, datetime, timedelta
 import math # For calculating age
 
-# Assuming check_doctor_authorization is accessible (import or define)
-def check_doctor_authorization(user):
-    if not user or not user.is_authenticated: return False
-    return getattr(user, 'user_type', None) == 'doctor'
+from .utils import (
+    check_doctor_authorization,
+    check_provider_authorization,      # Import if used
+    check_doctor_or_dietitian_authorization, # Import if used
+    is_doctor_authorized_for_patient, # Import if used
+    get_provider_id,
+    get_enum_values,                 # Import if used
+    get_all_simple,                  # Import if used
+    calculate_age,                   # Import if used
+    allowed_file,                    # Import if used
+    generate_secure_filename,
+    can_modify_appointment         # Import if used
+)
 
 # --- Blueprint Definition ---
 patients_bp = Blueprint(
@@ -24,28 +33,6 @@ patients_bp = Blueprint(
 )
 
 # --- Helper Functions ---
-
-def calculate_age(born):
-    """Calculate age from date of birth."""
-    if not born:
-        return None
-    today = date.today()
-    try:
-        # Ensure 'born' is a date object
-        if isinstance(born, str):
-            born_date = date.fromisoformat(born)
-        elif isinstance(born, datetime):
-            born_date = born.date()
-        elif isinstance(born, date):
-            born_date = born
-        else:
-            return None # Invalid type
-
-        # Calculate age
-        age = today.year - born_date.year - ((today.month, today.day) < (born_date.month, born_date.day))
-        return age
-    except (ValueError, TypeError):
-        return None
 
 def get_patients_for_doctor(doctor_id, search_term=None):
     """Fetches a list of patients associated with the doctor via appointments."""

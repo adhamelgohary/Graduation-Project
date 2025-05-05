@@ -17,7 +17,7 @@ DB_CONFIG = {
 }
 NUM_DOCTORS = 20
 NUM_PATIENTS = 20
-STARTING_USER_ID = 19
+STARTING_USER_ID = 1
 # --- End Configuration ---
 
 # --- Database Connection (Import from db.py Recommended) ---

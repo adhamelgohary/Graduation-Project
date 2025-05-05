@@ -33,6 +33,7 @@
       <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
       <a href="{{ url_for('department.list_departments') }}" class="{{ 'active' if request.endpoint.startswith('department.') else '' }}">Departments</a>
       <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
+      <a href="#">Services</a> {# <-- ADDED Services Link #}
       <a href="#">Contact</a> {# Placeholder #}
 
       {# --- Login/Logout Conditional --- #}
@@ -44,15 +45,15 @@
             <a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.endpoint.startswith('settings.') else '' }}">Settings</a> {# Doctor settings #}
             <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
          {% elif current_user.user_type == 'admin' %}
-             <a href="{{ url_for('admin_main.admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.admin_dashboard' else '' }}">Admin Panel</a> {# Admin dashboard #}
+             <a href="{{ url_for('admin_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.dashboard' else '' }}">Admin Panel</a> {# Admin dashboard #}
          {% else %} {# Assume patient #}
             {# Add patient-specific settings/profile link if available #}
-            <a href="#">My Account</a> {# Generic patient account link placeholder #}
+            <a href="{{ url_for('patient_profile.manage_profile') }}">My Account</a> {# Generic patient account link placeholder #}
          {% endif %}
          <a href="{{ url_for('login.logout_route') }}">Logout</a> {# Logout Link #}
       {% else %}
          {# Links for logged-out users #}
-         <a href="{{ url_for('login.login_route') }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a> {# Login Link #}
+         <a href="{{ url_for('login.login_route', next=request.path) }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a> {# Login Link #}
          <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a> {# Register Link #}
       {% endif %}
       {# --- End Conditional --- #}
@@ -76,6 +77,7 @@
       <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
       <a href="{{ url_for('department.list_departments') }}" class="{{ 'active' if request.endpoint.startswith('department.') else '' }}">Departments</a>
       <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
+      <a href="#">Services</a> {# <-- ADDED Services Link #}
       <a href="#">Contact</a> {# Placeholder #}
       {# --- Login/Logout Conditional (Mobile) --- #}
       {% if current_user.is_authenticated %}
@@ -86,14 +88,14 @@
               <a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.endpoint.startswith('settings.') else '' }}">Settings</a>
               <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
            {% elif current_user.user_type == 'admin' %}
-               <a href="{{ url_for('admin_main.admin_dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.admin_dashboard' else '' }}">Admin Panel</a>
+               <a href="{{ url_for('admin_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.dashboard' else '' }}">Admin Panel</a>
            {% else %} {# Assume Patient #}
               <a href="#">My Account</a> {# Placeholder #}
            {% endif %}
           <a href="{{ url_for('login.logout_route') }}">Logout</a>
       {% else %}
           <hr> {# Separator #}
-          <a href="{{ url_for('login.login_route') }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a>
+          <a href="{{ url_for('login.login_route', next=request.path) }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a>
           <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a>
       {% endif %}
       {# --- End Conditional --- #}

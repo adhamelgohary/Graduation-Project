@@ -1,0 +1,118 @@
+{% extends "Website/base.html" %}
+{% block title %}My Vitals{% endblock %}
+
+{% block head_extra %}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}"> #}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Manage Vitals (Weight, etc.)</h1>
+    <a href="{{ url_for('patient_medical_info.view_medical_dashboard') }}" class="button button-outline button-secondary button-small">
+        <i class="fas fa-arrow-left fa-fw"></i> Back to Medical Info
+    </a>
+</div>
+
+{% include '_flash_messages.html' %}
+
+{# --- Current Vitals Display (from Profile) --- #}
+<div class="card content-section mb-4">
+    <div class="card-header"><h5>Current Vitals (from Profile)</h5></div>
+    <div class="card-body">
+         <p><strong>Height:</strong> {{ '%g'|format(current_vitals.height_cm) if current_vitals and current_vitals.height_cm else 'N/A' }} cm</p>
+         <p><strong>Latest Weight:</strong> {{ '%g'|format(current_vitals.weight_kg) if current_vitals and current_vitals.weight_kg else 'N/A' }} kg</p>
+         <small><a href="{{ url_for('patient_profile.manage_profile') }}">Update these in your main profile?</a></small>
+    </div>
+</div>
+
+
+{# --- Log New Vitals Entry --- #}
+<div class="card content-section mb-4">
+    <div class="card-header"><h5>Log Vitals for a Specific Date</h5></div>
+    <div class="card-body">
+        <form action="{{ url_for('.manage_vitals') }}" method="POST">
+             <div class="row">
+                <div class="col-md-6 form-group mb-3">
+                    <label for="log_date" class="form-label">Log Date *</label>
+                    <input type="date" id="log_date" name="log_date" class="form-control" value="{{ form_data.log_date if form_data else today_date_str }}" required> {# Default to today #}
+                </div>
+                <div class="col-md-6 form-group mb-3">
+                    <label for="weight_kg" class="form-label">Weight (kg) *</label>
+                    <input type="number" step="0.1" min="0" id="weight_kg" name="weight_kg" class="form-control" value="{{ form_data.weight_kg if form_data else '' }}" placeholder="e.g., 70.5" required>
+                </div>
+                {# Add Height input here if you want to log it separately #}
+            </div>
+             <div class="form-group mb-3">
+                 <label for="notes" class="form-label">Notes (Optional)</label>
+                 <textarea id="notes" name="notes" class="form-control" rows="2">{{ form_data.notes if form_data else '' }}</textarea>
+             </div>
+             <div class="text-end">
+                <button type="submit" class="button button-primary"><i class="fas fa-plus"></i> Log/Update Vitals for Date</button>
+             </div>
+        </form>
+         <small class="text-muted">Logging for a date that already exists will update the entry.</small>
+    </div>
+</div>
+
+{# --- Vitals History Table --- #}
+<div class="card content-section">
+     <div class="card-header"><h5>Vitals Log History</h5></div>
+     <div class="card-body p-0">
+         <div class="table-responsive">
+             <table class="table table-striped table-hover mb-0">
+                 <thead>
+                     <tr>
+                         <th>Date</th>
+                         <th>Weight (kg)</th>
+                         <th>Notes</th>
+                         {# Add Action column if deletion is needed #}
+                     </tr>
+                 </thead>
+                 <tbody>
+                     {% for entry in vitals_history %}
+                     <tr>
+                         <td>{{ entry.log_date.strftime('%Y-%m-%d') if entry.log_date else 'N/A' }}</td>
+                         <td>{{ '%g'|format(entry.weight_kg) if entry.weight_kg is not none else '-' }}</td>
+                         <td>{{ entry.notes | truncate(100) | default('') }}</td>
+                         {# Add actions #}
+                     </tr>
+                     {% else %}
+                     <tr>
+                         <td colspan="3" class="text-center text-muted py-4">No vitals history logged yet.</td>
+                     </tr>
+                     {% endfor %}
+                 </tbody>
+             </table>
+         </div>
+     </div>
+     {# Pagination Controls #}
+      {% if total_pages > 1 %}
+        <div class="card-footer d-flex justify-content-center">
+            <nav aria-label="Vitals log navigation">
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {{ 'disabled' if current_page <= 1 else '' }}">
+                        <a class="page-link" href="{{ url_for('.manage_vitals', page=current_page-1) }}">« Prev</a>
+                    </li>
+                    <li class="page-item disabled"><span class="page-link">Page {{ current_page }} of {{ total_pages }}</span></li>
+                    <li class="page-item {{ 'disabled' if current_page >= total_pages else '' }}">
+                        <a class="page-link" href="{{ url_for('.manage_vitals', page=current_page+1) }}">Next »</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+     {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+     <script>
+        // Set default date for new log entry
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('log_date');
+            if (dateInput && !dateInput.value) { // Only set if empty
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+            }
+        });
+    </script>
+{% endblock %}

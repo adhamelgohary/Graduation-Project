@@ -1,0 +1,96 @@
+{% extends "Website/base.html" %}
+{% block title %}My Allergies{% endblock %}
+
+{% block head_extra %}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}"> #}
+    <style>
+        .current-allergies-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px dotted var(--border-color); }
+        .current-allergies-list li:last-child { border-bottom: none; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Manage Allergies</h1>
+    <a href="{{ url_for('patient_medical_info.view_medical_dashboard') }}" class="button button-outline button-secondary button-small">
+        <i class="fas fa-arrow-left fa-fw"></i> Back to Medical Info
+    </a>
+</div>
+
+{% include '_flash_messages.html' %}
+
+{# --- Add New Allergy Form --- #}
+<div class="card content-section mb-4">
+    <div class="card-header"><h5>Add New Allergy</h5></div>
+    <div class="card-body">
+        <form action="{{ url_for('.manage_allergies') }}" method="POST">
+            <div class="row">
+                <div class="col-md-6 form-group mb-3">
+                    <label for="allergy_id" class="form-label">Allergy Name *</label>
+                    <select id="allergy_id" name="allergy_id" class="form-select" required>
+                        <option value="" selected disabled>-- Select Allergy --</option>
+                        {% for allergy in all_allergies_list %}
+                            <option value="{{ allergy.allergy_id }}" {% if form_data and form_data.allergy_id|int == allergy.allergy_id %}selected{% endif %}>
+                                {{ allergy.allergy_name }} ({{ allergy.allergy_type | title }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 form-group mb-3">
+                    <label for="severity" class="form-label">Severity *</label>
+                    <select id="severity" name="severity" class="form-select" required>
+                         {% set current_severity = form_data.severity if form_data else 'unknown' %}
+                         {% for level in allergy_severities %}
+                             <option value="{{ level }}" {% if current_severity == level %}selected{% endif %}>{{ level | title }}</option>
+                         {% endfor %}
+                    </select>
+                </div>
+            </div>
+             <div class="row">
+                 <div class="col-md-6 form-group mb-3">
+                    <label for="reaction_description" class="form-label">Reaction Description</label>
+                    <input type="text" id="reaction_description" name="reaction_description" class="form-control" value="{{ form_data.reaction_description if form_data else '' }}">
+                 </div>
+                  <div class="col-md-6 form-group mb-3">
+                    <label for="diagnosed_date" class="form-label">Date Diagnosed (Approx)</label>
+                    <input type="date" id="diagnosed_date" name="diagnosed_date" class="form-control" value="{{ form_data.diagnosed_date if form_data else '' }}">
+                 </div>
+             </div>
+             <div class="form-group mb-3">
+                 <label for="notes" class="form-label">Notes</label>
+                 <textarea id="notes" name="notes" class="form-control" rows="2">{{ form_data.notes if form_data else '' }}</textarea>
+             </div>
+             <div class="text-end">
+                <button type="submit" class="button button-primary"><i class="fas fa-plus"></i> Add/Update Allergy</button>
+             </div>
+        </form>
+    </div>
+</div>
+
+{# --- Current Allergies List --- #}
+<div class="card content-section">
+     <div class="card-header"><h5>My Recorded Allergies</h5></div>
+     <div class="card-body">
+        {% if current_allergies %}
+            <ul class="current-allergies-list">
+                {% for allergy in current_allergies %}
+                    <li>
+                        <div>
+                            <strong>{{ allergy.allergy_name }}</strong> ({{ allergy.allergy_type | title }})
+                            <br>
+                            <small>Severity: {{ allergy.severity | title }} {% if allergy.reaction_description %} | Reaction: {{ allergy.reaction_description | truncate(50) }} {% endif %} {% if allergy.diagnosed_date %} | Diagnosed: {{ allergy.diagnosed_date.strftime('%Y-%m-%d') }} {% endif %}</small>
+                             {% if allergy.notes %}<br><small><em>Notes: {{ allergy.notes | truncate(80) }}</em></small>{% endif %}
+                        </div>
+                        <form action="{{ url_for('.delete_allergy', allergy_id=allergy.allergy_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this allergy?')">
+                            <button type="submit" class="button button-danger button-xsmall" title="Remove"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">You haven't recorded any allergies yet.</p>
+        {% endif %}
+     </div>
+</div>
+
+{% endblock %}

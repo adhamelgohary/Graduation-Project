@@ -1,0 +1,55 @@
+{% extends "Website/base.html" %}
+{% block title %}My Medical Information{% endblock %}
+
+{% block head_extra %}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}"> #}
+    <style>
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .info-card { padding: 1.5rem; text-align: center; background-color: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border-color); }
+        .info-card i { font-size: 2rem; color: var(--accent-color); margin-bottom: 1rem; }
+        .info-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>My Medical Information</h1>
+    <p>View and manage your health records.</p>
+</div>
+
+{% include '_flash_messages.html' %}
+
+<div class="info-grid">
+    <a href="{{ url_for('patient_medical_info.manage_allergies') }}" class="info-card card-link">
+        <i class="fas fa-allergies"></i>
+        <h3>Allergies</h3>
+        <p>View and manage your known allergies.</p>
+    </a>
+    <a href="{{ url_for('patient_medical_info.manage_symptoms') }}" class="info-card card-link">
+        <i class="fas fa-stethoscope"></i>
+        <h3>Symptoms Log</h3>
+        <p>Track and review your reported symptoms.</p>
+    </a>
+     <a href="{{ url_for('patient_medical_info.manage_vitals') }}" class="info-card card-link">
+        <i class="fas fa-heartbeat"></i>
+        <h3>Vitals</h3>
+        <p>Log and view weight and other vitals.</p>
+    </a>
+     <a href="{{ url_for('patient_medical_info.view_history') }}" class="info-card card-link">
+        <i class="fas fa-notes-medical"></i>
+        <h3>Medical History</h3>
+        <p>Document past conditions and surgeries.</p>
+    </a>
+    <a href="{{ url_for('patient_profile.manage_profile') }}" class="info-card card-link"> {# Link back to profile for lifestyle #}
+        <i class="fas fa-user-edit"></i>
+        <h3>Lifestyle</h3>
+        <p>Update occupation and other factors.</p>
+    </a>
+     <a href="#" class="info-card card-link"> {# Placeholder #}
+        <i class="fas fa-file-medical-alt"></i>
+        <h3>Documents</h3>
+        <p>View shared medical documents.</p>
+    </a>
+</div>
+
+{% endblock %}

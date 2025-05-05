@@ -4,19 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Hospital Admin Dashboard{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    {# Use Bootstrap 5.1.3 as per original #}
+    {# Font Awesome for Icons #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {# Bootstrap 5.1.3 CSS #}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/base.css') }}">
+    {# Chart.js (Optional, if used on dashboard/reports) #}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    {# --- Your Custom Base Admin CSS --- #}
+    {# Link to your specific base CSS for the admin portal layout #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/base.css') }}"> {# Adjust path if needed #}
+    {# --- Placeholder for Page-Specific CSS --- #}
     {% block extra_css %}{% endblock %}
-    
-    </style>
+
 </head>
 <body>
+    {# --- Sidebar Navigation --- #}
     <div class="sidebar">
-        <h2><i class="fas fa-hospital-user"></i> Admin Portal</h2>
-        <ul>
+        <h2 class="ps-3"><i class="fas fa-hospital-user"></i> Admin Portal</h2>
+        <ul class="list-unstyled components"> {# Use Bootstrap list-unstyled #}
             {# Dashboard Link #}
             <li class="{% if request.endpoint == 'admin_main.dashboard' %}active{% endif %}">
                 <a href="{{ url_for('admin_main.dashboard') }}">
@@ -25,19 +30,22 @@
             </li>
 
             {# --- User & Role Management Section (Collapsible) --- #}
-            <li> {# Active state handled by inner items and parent toggle class below #}
+            {# Determine if any child endpoint is active for the parent #}
+            {% set is_user_mgmt_active = request.endpoint.startswith('admin_management.') or request.endpoint.startswith('Doctors_Management.') or request.endpoint.startswith('patient_management.') or request.endpoint.startswith('search_users.') %}
+            <li>
                  {# Parent Toggle Link #}
-                 <a href="#userRoleSubmenu" data-bs-toggle="collapse" aria-expanded="{% if request.endpoint.startswith('admin_management.') or request.endpoint.startswith('Doctors_Management.') or request.endpoint.startswith('patient_management.') or request.endpoint.startswith('search_users.') %}true{% else %}false{% endif %}" class="dropdown-toggle {% if request.endpoint.startswith('admin_management.') or request.endpoint.startswith('Doctors_Management.') or request.endpoint.startswith('patient_management.') or request.endpoint.startswith('search_users.') %}active{% endif %}">
+                 <a href="#userRoleSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_user_mgmt_active else 'false' }}" class="dropdown-toggle {% if is_user_mgmt_active %}active{% endif %}">
                      <i class="fas fa-users-cog fa-fw me-2"></i> User Management
                  </a>
                  {# Submenu Content #}
-                 <ul class="collapse list-unstyled {% if request.endpoint.startswith('admin_management.') or request.endpoint.startswith('Doctors_Management.') or request.endpoint.startswith('patient_management.') or request.endpoint.startswith('search_users.') %}show{% endif %}" id="userRoleSubmenu">
-                      {# Admin Management Sub-section (Optional Inner Collapse) #}
+                 <ul class="collapse list-unstyled {% if is_user_mgmt_active %}show{% endif %}" id="userRoleSubmenu">
+                      {# Admin Management Sub-section (Inner Collapse) #}
+                      {% set is_admin_sub_active = request.endpoint.startswith('admin_management.') %}
                       <li>
-                          <a href="#adminMgmtSubSubmenu" data-bs-toggle="collapse" aria-expanded="{% if request.endpoint.startswith('admin_management.') %}true{% else %}false{% endif %}" class="dropdown-toggle ps-3 {% if request.endpoint.startswith('admin_management.') %}active{% endif %}">
+                          <a href="#adminMgmtSubSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_admin_sub_active else 'false' }}" class="dropdown-toggle ps-3 {% if is_admin_sub_active %}active{% endif %}">
                              <i class="fas fa-user-shield fa-fw me-2"></i> Admins & Roles
                           </a>
-                          <ul class="collapse list-unstyled {% if request.endpoint.startswith('admin_management.') %}show{% endif %}" id="adminMgmtSubSubmenu">
+                          <ul class="collapse list-unstyled {% if is_admin_sub_active %}show{% endif %}" id="adminMgmtSubSubmenu">
                                <li class="{% if request.endpoint == 'admin_management.index' %}active{% endif %}">
                                   <a class="ps-4" href="{{ url_for('admin_management.index') }}"><i class="fas fa-user-tie fa-fw me-2"></i>Admin List</a>
                               </li>
@@ -55,7 +63,7 @@
                       {# Patient Management #}
                       <li class="{% if request.endpoint.startswith('patient_management.') %}active{% endif %}">
                           <a class="ps-3" href="{{ url_for('patient_management.index') }}">
-                              <i class="fas fa-procedures fa-fw me-2"></i> Patients {# Changed icon #}
+                              <i class="fas fa-procedures fa-fw me-2"></i> Patients
                           </a>
                       </li>
                       {# User Search #}
@@ -69,25 +77,27 @@
             {# --- End User & Role Management --- #}
 
             {# --- Appointments Section (Collapsible) --- #}
-            <li> {# Active state handled by inner items and parent toggle class below #}
+            {% set is_appt_mgmt_active = request.endpoint.startswith('admin_appointments.') %}
+            <li>
                  {# Parent Toggle Link #}
-                 <a href="#appointmentsSubmenu" data-bs-toggle="collapse" aria-expanded="{% if request.endpoint.startswith('admin_appointments.') %}true{% else %}false{% endif %}" class="dropdown-toggle {% if request.endpoint.startswith('admin_appointments.') %}active{% endif %}">
+                 <a href="#appointmentsSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_appt_mgmt_active else 'false' }}" class="dropdown-toggle {% if is_appt_mgmt_active %}active{% endif %}">
                      <i class="fas fa-calendar-alt fa-fw me-2"></i> Appointments
                  </a>
                  {# Submenu Content #}
-                 <ul class="collapse list-unstyled {% if request.endpoint.startswith('admin_appointments.') %}show{% endif %}" id="appointmentsSubmenu">
+                 <ul class="collapse list-unstyled {% if is_appt_mgmt_active %}show{% endif %}" id="appointmentsSubmenu">
                      {# Appointments List #}
-                     <li class="{% if request.endpoint.startswith('admin_appointments.') and 'config' not in request.endpoint and 'reports' not in request.endpoint %}active{% endif %}">
+                     <li class="{% if request.endpoint == 'admin_appointments.list_appointments' %}active{% endif %}">
                           <a class="ps-3" href="{{ url_for('admin_appointments.list_appointments') }}">
                               <i class="fas fa-calendar-check fa-fw me-2"></i> List & Edit
                           </a>
                       </li>
                       {# Configuration Sub-section (Inner Collapse) #}
+                       {% set is_appt_config_active = request.endpoint.startswith('admin_appointments.configure_') %}
                       <li>
-                           <a href="#apptConfigSubSubmenu" data-bs-toggle="collapse" aria-expanded="{% if request.endpoint.startswith('admin_appointments.configure_') %}true{% else %}false{% endif %}" class="dropdown-toggle ps-3 {% if request.endpoint.startswith('admin_appointments.configure_') %}active{% endif %}">
+                           <a href="#apptConfigSubSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_appt_config_active else 'false' }}" class="dropdown-toggle ps-3 {% if is_appt_config_active %}active{% endif %}">
                                <i class="fas fa-cogs fa-fw me-2"></i> Configuration
                            </a>
-                           <ul class="collapse list-unstyled {% if request.endpoint.startswith('admin_appointments.configure_') %}show{% endif %}" id="apptConfigSubSubmenu">
+                           <ul class="collapse list-unstyled {% if is_appt_config_active %}show{% endif %}" id="apptConfigSubSubmenu">
                                 <li class="{% if request.endpoint == 'admin_appointments.configure_appointment_types' %}active{% endif %}">
                                    <a class="ps-4" href="{{ url_for('admin_appointments.configure_appointment_types') }}"><i class="fas fa-tags fa-fw me-2"></i>Types</a>
                                 </li>
@@ -113,55 +123,83 @@
                 </a>
             </li>
 
-            {# Settings Link (Example) #}
+            {# --- Configuration Section (NEW) --- #}
+            {% set is_config_active = request.endpoint.startswith('admin_structure.') %}
             <li>
-                <a href="#"> {# Link to actual settings page when available #}
-                    <i class="fas fa-sliders-h fa-fw me-2"></i> Settings
+                <a href="#configSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_config_active else 'false' }}" class="dropdown-toggle {% if is_config_active %}active{% endif %}">
+                    <i class="fas fa-tools fa-fw me-2"></i> Configuration
+                </a>
+                <ul class="collapse list-unstyled {% if is_config_active %}show{% endif %}" id="configSubmenu">
+                    <li class="{% if request.endpoint == 'admin_structure.manage_structure' %}active{% endif %}">
+                        <a class="ps-3" href="{{ url_for('admin_structure.manage_structure') }}">
+                            <i class="fas fa-sitemap fa-fw me-2"></i> Depts & Specs
+                        </a>
+                    </li>
+                    {# Add other config links here if needed in the future #}
+                    {# Example:
+                    <li>
+                        <a class="ps-3" href="#">
+                            <i class="fas fa-cog fa-fw me-2"></i> Other Config
+                        </a>
+                    </li>
+                    #}
+                </ul>
+            </li>
+            {# --- End Configuration Section --- #}
+
+            {# Settings Link (Placeholder - Link to actual page later) #}
+            <li>
+                <a href="#"> {# TODO: Replace # with url_for('admin_settings.index') or similar #}
+                    <i class="fas fa-sliders-h fa-fw me-2"></i> System Settings
                 </a>
             </li>
 
             {# Logout Link #}
             <li>
-                <a href="{{ url_for('login.logout_route') }}">
+                <a href="{{ url_for('login.logout_route') }}"> {# Ensure 'login.logout_route' is correct #}
                     <i class="fas fa-sign-out-alt fa-fw me-2"></i> Logout
                 </a>
             </li>
         </ul>
     </div>
 
+    {# --- Main Content Area --- #}
     <div class="main-content">
+        {# --- Header --- #}
         <div class="header">
+            {# Use block for dynamic header title #}
             <h1>{% block header_title %}{% endblock %}</h1>
+            {# User Info Display #}
             <div class="user-info">
-                {# Ensure current_user is available and has first_name #}
-                <span>Welcome, {{ current_user.first_name if current_user else 'Admin' }}</span>
-                <img src="https://via.placeholder.com/40" alt="Profile" class="profile-img"> {# Replace with actual profile image URL #}
+                {# Safely access current_user attributes #}
+                <span>Welcome, {{ current_user.first_name if current_user and current_user.is_authenticated else 'Admin' }}</span>
+                 {# Dynamically load profile picture if available, else placeholder #}
+                 {# Assuming current_user has a profile_picture attribute containing the filename #}
+                 {% set admin_profile_pic = url_for('static', filename='Admin_Portal/images/default_admin_avatar.png') %} {# Default Placeholder #}
+                 {% if current_user and current_user.is_authenticated and current_user.profile_picture %}
+                     {% set admin_profile_pic = url_for('static', filename='uploads/profile_pics/' + current_user.profile_picture) %} {# Adjust path as needed #}
+                 {% endif %}
+                <img src="{{ admin_profile_pic }}" alt="Profile" class="profile-img rounded-circle"> {# Added rounded-circle class #}
             </div>
         </div>
 
-        {# Flash Messages Section #}
-        <div class="flash-container container-fluid"> {# Added container-fluid for better spacing #}
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'secondary' }} alert-dismissible fade show mt-3" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+        {# --- Flash Messages --- #}
+        <div class="flash-container container-fluid py-2"> {# Added padding #}
+            {# Include the standard flash message partial #}
+            {% include '_flash_messages.html' %}
         </div>
 
-        {# Ensure content block has padding/margins if needed #}
-        <div class="content-wrapper p-3"> {# Added a wrapper with padding #}
-             {% block content %}{% endblock %}
+        {# --- Main Content Block --- #}
+        <div class="content-wrapper p-3 p-md-4"> {# Added responsive padding #}
+             {% block content %}{% endblock %} {# Page-specific content goes here #}
         </div>
 
     </div>
 
-    {# Ensure Bootstrap JS is included for collapse component to work #}
+    {# --- JavaScript --- #}
+    {# Bootstrap 5 Bundle (includes Popper) #}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    {# --- Placeholder for Page-Specific JavaScript --- #}
     {% block scripts %}{% endblock %}
 </body>
 </html>

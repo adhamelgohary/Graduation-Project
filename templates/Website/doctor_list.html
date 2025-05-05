@@ -94,7 +94,7 @@
         <h2>Action Required</h2>
         <p>Please log in or create an account to schedule an appointment.</p>
         <div class="modal-actions">
-            <a href="{{ url_for('login.login_route') }}" class="btn-modal btn-login">Login</a>
+            <a href="{{ url_for('login.login_route', next=request.path) }}" class="btn-modal btn-login">Login</a>
             <a href="{{ url_for('register.register_route') }}" class="btn-modal btn-register">Register</a>
         </div>
     </div>

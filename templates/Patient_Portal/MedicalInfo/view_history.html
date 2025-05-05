@@ -1,0 +1,62 @@
+{% extends "Website/base.html" %}
+{% block title %}My Medical History{% endblock %}
+
+{% block head_extra %}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}"> #}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>My Medical History</h1>
+    <div>
+        <a href="{{ url_for('.add_history_entry') }}" class="button button-primary button-small">
+            <i class="fas fa-plus"></i> Add History Entry
+        </a>
+        <a href="{{ url_for('.view_medical_dashboard') }}" class="button button-outline button-secondary button-small ms-2">
+            <i class="fas fa-arrow-left fa-fw"></i> Back to Medical Info
+        </a>
+    </div>
+</div>
+
+{% include '_flash_messages.html' %}
+
+<div class="card content-section">
+     <div class="card-header"><h5>Recorded History</h5></div>
+     <div class="card-body p-0">
+          <div class="table-responsive">
+             <table class="table table-striped table-hover mb-0">
+                 <thead>
+                     <tr>
+                         <th>Condition/Procedure</th>
+                         <th>Start Date</th>
+                         <th>End Date</th>
+                         <th>Notes</th>
+                         <th>Actions</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                     {# TODO: Loop through history entries fetched from backend #}
+                     {% for entry in history %}
+                     <tr>
+                          <td>{{ entry.condition_name }}</td>
+                          <td>{{ entry.start_date.strftime('%Y-%m-%d') if entry.start_date else '-' }}</td>
+                          <td>{{ entry.end_date.strftime('%Y-%m-%d') if entry.end_date else 'Ongoing' }}</td>
+                          <td>{{ entry.notes | truncate(100) | default('') }}</td>
+                          <td>
+                               {# Add Edit/Delete buttons #}
+                               <a href="#" class="button button-outline button-secondary button-xsmall">Edit</a>
+                               <form action="#" method="POST" class="d-inline"> <button type="submit" class="button button-danger button-xsmall">Delete</button></form>
+                          </td>
+                     </tr>
+                     {% else %}
+                     <tr>
+                         <td colspan="5" class="text-center text-muted py-4">No medical history recorded yet.</td>
+                     </tr>
+                     {% endfor %}
+                 </tbody>
+             </table>
+         </div>
+     </div>
+     {# Pagination if needed #}
+</div>
+{% endblock %}

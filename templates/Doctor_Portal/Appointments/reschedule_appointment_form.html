@@ -1,77 +1,64 @@
 {% extends "Doctor_Portal/base.html" %}
 {% block title %}Reschedule Appointment{% endblock %}
 
-{% block head_extra %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/appointments.css') }}">
-{% endblock %}
-
 {% block content %}
 <div class="page-header">
     <h1>Reschedule Appointment</h1>
-    {# Back uses secondary outline #}
-     <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="button button-outline button-secondary button-small">
-         <i class="fas fa-arrow-left fa-fw"></i> Back to Details
-     </a>
+    <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="button button-outline button-secondary">
+        <i class="fas fa-times fa-fw"></i> Cancel Reschedule
+    </a>
 </div>
 
-<div class="flash-messages-container alert-container-fixed">
-    {% include '_flash_messages.html' %}
-</div>
+<p>Rescheduling for: <strong>{{ appointment.patient_last_name }}, {{ appointment.patient_first_name }}</strong> (ID: {{ appointment.appointment_id }})</p>
+<p>Original: {{ appointment.appointment_date_str }} at {{ appointment.start_time_str }} ({{ appointment.appointment_type|capitalize }})</p>
 
-<div class="card shadow-sm content-section appointment-form">
-    <div class="card-header"><h4 class="mb-0">Reschedule for: <strong>{{ appointment.patient_first_name }} {{ appointment.patient_last_name }}</strong></h4></div>
+{# Display form errors #}
+{% if errors %}
+<div class="alert alert-danger">
+    <strong>Please correct the errors:</strong>
+    <ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div class="card">
     <div class="card-body">
-        <div class="alert alert-info small mb-4" role="alert">
-            <i class="fas fa-info-circle me-1"></i> <strong>Current Appointment:</strong> {{ appointment.appointment_date.strftime('%B %d, %Y') }} at {{ appointment.start_time }} ({{ appointment.appointment_type | title }})
-        </div>
+        <form action="{{ url_for('.reschedule_appointment', appointment_id=appointment.appointment_id) }}" method="post">
+             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-md);">
+                 {# Readonly fields #}
+                 <div>
+                     <label class="form-label">Patient</label>
+                     <input type="text" class="form-control" value="{{ appointment.patient_last_name }}, {{ appointment.patient_first_name }}" disabled>
+                 </div>
+                 <div>
+                     <label class="form-label">Appointment Type</label>
+                     <input type="text" class="form-control" value="{{ appointment.appointment_type|capitalize }}" disabled>
+                 </div>
 
-        <form action="{{ url_for('.reschedule_appointment', appointment_id=appointment.appointment_id) }}" method="POST" class="data-form">
-            {# {{ form.csrf_token }} #}
+                 {# Editable fields #}
+                 <div>
+                     <label for="appointment_date" class="form-label">New Date</label>
+                     <input type="date" class="form-control" id="appointment_date" name="appointment_date" value="{{ appointment.appointment_date_str or '' }}" required min="{{ today_iso }}">
+                 </div>
+                 <div>
+                     <label for="start_time" class="form-label">New Start Time</label>
+                     <input type="time" class="form-control" id="start_time" name="start_time" value="{{ appointment.start_time_str or '' }}" required step="900"> {# 15 min step #}
+                 </div>
 
-            <div class="row g-3">
-                <div class="col-md-6 form-group">
-                    <label for="appointment_date" class="form-label">New Date <span class="text-danger">*</span></label>
-                    <input type="text" id="appointment_date" name="appointment_date" class="form-control flatpickr-date-future" value="{{ request.form.get('appointment_date', appointment.appointment_date.strftime('%Y-%m-%d')) }}" placeholder="Select New Date" required>
-                </div>
-                <div class="col-md-6 form-group">
-                    <label for="start_time" class="form-label">New Start Time <span class="text-danger">*</span></label>
-                     <input type="text" id="start_time" name="start_time" class="form-control flatpickr-time" value="{{ request.form.get('start_time', appointment.start_time.strftime('%H:%M')) }}" placeholder="Select New Time" required>
-                </div>
-            </div>
+                 {# Optional: Location Change - If enabled, add location dropdown here #}
+                 {# <div style="grid-column: 1 / -1;"> ... Location Select ... </div> #}
 
-            <p class="text-muted small mt-2 mb-3">Duration is based on original appointment type: <strong>{{ appointment.appointment_type | title }}</strong></p>
+                 <div style="grid-column: 1 / -1;">
+                     <label for="reason" class="form-label">Reason for Visit (Optional)</label>
+                     <input type="text" class="form-control" id="reason" name="reason" value="{{ appointment.reason or '' }}">
+                 </div>
 
-
-             <div class="form-group mb-3">
-                <label for="reason" class="form-label">Reason for Visit <span class="text-muted">(Optional, Edit if changed)</span></label>
-                <input type="text" id="reason" name="reason" class="form-control" value="{{ request.form.get('reason', appointment.reason or '') }}" maxlength="250" placeholder="Reason unchanged unless edited">
+                 <div style="grid-column: 1 / -1;">
+                     <label for="notes" class="form-label">Provider Notes (Optional)</label>
+                     <textarea class="form-control" id="notes" name="notes" rows="3">{{ appointment.notes or '' }}</textarea>
+                 </div>
              </div>
-
-             <div class="form-group mb-3">
-                <label for="notes" class="form-label">Internal Notes <span class="text-muted">(Staff only, Optional, Edit if changed)</span></label>
-                <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Notes unchanged unless edited">{{ request.form.get('notes', appointment.notes or '') }}</textarea>
-             </div>
-
-            <div class="form-actions">
-                {# Cancel uses secondary outline #}
-                 <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="button button-outline button-secondary">Cancel</a>
-                {# Reschedule uses primary style #}
-                <button type="submit" class="button button-primary"> {# Kept primary for reschedule action #}
-                    <i class="fas fa-calendar-check fa-fw"></i> Reschedule Appointment
-                </button>
-            </div>
+             <button type="submit" class="button button-primary mt-4"><i class="fas fa-check fa-fw"></i> Confirm Reschedule</button>
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        flatpickr(".flatpickr-date-future", { /* ... options ... */ });
-         flatpickr(".flatpickr-time", { /* ... options ... */ });
-    });
-</script>
 {% endblock %}

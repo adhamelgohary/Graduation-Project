@@ -1,0 +1,113 @@
+{% extends "Website/base.html" %}
+
+{% block title %}Appointment Details{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}">
+    {# Link components.css if card styles are defined there #}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Website/components.css') }}"> #}
+    <style>
+        .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem 1.5rem; margin-bottom: 1rem; }
+        .detail-item strong { display: block; color: var(--text-secondary); font-size: 0.9em; margin-bottom: 0.2rem; }
+        .detail-item span { font-size: 1em; }
+        .appointment-notes { white-space: pre-wrap; background-color: var(--nested-card-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="page-header">
+        <h1>Appointment Details</h1>
+         <a href="{{ url_for('appointment.view_my_appointments') }}" class="button button-outline button-secondary button-small">
+             <i class="fas fa-arrow-left fa-fw"></i> Back to My Appointments
+         </a>
+    </div>
+
+    {% include '_flash_messages.html' %}
+
+    {% if appointment %}
+    <div class="card content-section appointment-detail-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+             <h2 class="section-title mb-0 pb-0">Appointment on {{ appointment.display_date }}</h2>
+             <span class="status-badge status-{{ appointment.status_badge_class }}">{{ appointment.status | title }}</span>
+        </div>
+        <div class="card-body">
+            {# --- Appointment Info --- #}
+            <section class="detail-section mb-4">
+                 <h4>Appointment Information</h4>
+                 <div class="detail-grid">
+                    <div class="detail-item"><strong>Time:</strong> <span>{{ appointment.display_start_time }} - {{ appointment.display_end_time }}</span></div>
+                    <div class="detail-item"><strong>Type:</strong> <span>{{ appointment.appointment_type | title }}</span></div>
+                    <div class="detail-item"><strong>Location:</strong> <span>{{ appointment.location_name | default('N/A') }}</span></div>
+                    {% if appointment.location_address %}
+                        <div class="detail-item grid-full-width"><strong>Address:</strong> <span>{{ appointment.location_address }}</span></div>
+                    {% endif %}
+                     <div class="detail-item grid-full-width"><strong>Reason Provided:</strong> <span>{{ appointment.reason | default('None provided') }}</span></div>
+                 </div>
+            </section>
+             <hr>
+            {# --- Doctor Info --- #}
+            <section class="detail-section mb-4">
+                 <h4>Doctor Information</h4>
+                 <div class="detail-grid">
+                     <div class="detail-item"><strong>Doctor:</strong> <span>{{ appointment.doctor_full_name }}</span></div>
+                     <div class="detail-item"><strong>Specialization:</strong> <span>{{ appointment.specialization_name | default('N/A') }}</span></div>
+                     {# Add department if available #}
+                 </div>
+            </section>
+             <hr>
+
+            {# --- Patient Info (Only show if Doctor/Admin viewing?) --- #}
+            {% if current_user.user_type != 'patient' %}
+            <section class="detail-section mb-4">
+                 <h4>Patient Information</h4>
+                 <div class="detail-grid">
+                     <div class="detail-item"><strong>Patient:</strong> <span>{{ appointment.patient_full_name }}</span></div>
+                     <div class="detail-item"><strong>Email:</strong> <span>{{ appointment.patient_email }}</span></div>
+                     <div class="detail-item"><strong>Phone:</strong> <span>{{ appointment.patient_phone | default('N/A') }}</span></div>
+                 </div>
+            </section>
+             <hr>
+            {% endif %}
+
+            {# --- Notes --- #}
+             <section class="detail-section mb-4">
+                <h4>Notes</h4>
+                <div class="appointment-notes">
+                    {{ appointment.notes | default('No notes recorded for this appointment.') | nl2br }}
+                </div>
+             </section>
+
+
+            {# --- Actions --- #}
+            <div class="form-actions mt-4 pt-3 border-top">
+                 {% if appointment.status in ['scheduled', 'confirmed'] %}
+                    {# Reschedule Button #}
+                    {% if current_user.user_type == 'patient' %} {# Only patient can initiate reschedule this way #}
+                     <a href="{{ url_for('appointment.reschedule_appointment_start', appointment_id=appointment.appointment_id) }}" class="button button-secondary">Reschedule</a>
+                    {% endif %}
+
+                    {# Cancel Button (Modal trigger might be better) #}
+                    <form action="{{ url_for('appointment.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
+                         {# Add hidden input for reason if using a modal later #}
+                         <button type="submit" class="button button-danger button-outline">Cancel Appointment</button>
+                    </form>
+                 {% elif appointment.status == 'rescheduled' and current_user.user_type == 'patient' %}
+                      <p class="text-muted fst-italic">This appointment was marked for rescheduling. Please schedule a new one.</p>
+                      <a href="{{ url_for('.schedule_with_doc', doctor_id=appointment.doctor_id) }}" class="button button-primary">Schedule Replacement</a>
+                 {% elif appointment.status == 'completed' %}
+                       <p class="text-muted fst-italic">This appointment has been completed.</p>
+                       {# Option to book follow-up? #}
+                       <a href="{{ url_for('.schedule_with_doc', doctor_id=appointment.doctor_id) }}" class="button button-secondary">Book Follow-up</a>
+                 {% else %}
+                      <p class="text-muted fst-italic">This appointment cannot be modified (Status: {{ appointment.status | title }}).</p>
+                 {% endif %}
+            </div>
+
+        </div> {# End card-body #}
+    </div> {# End card #}
+    {% else %}
+        <p>Appointment details could not be loaded.</p>
+    {% endif %}
+</div> {# End main-container #}
+{% endblock %}

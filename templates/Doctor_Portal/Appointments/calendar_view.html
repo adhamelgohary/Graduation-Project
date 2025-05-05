@@ -2,60 +2,96 @@
 {% block title %}Appointment Calendar{% endblock %}
 
 {% block head_extra %}
-    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css' rel='stylesheet' />
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/appointments.css') }}">
+{# FullCalendar CSS & JS #}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+{# --- Basic FullCalendar Styling Overrides (Optional) --- #}
+<style>
+    :root { /* Make FC use CSS variables if possible */
+       --fc-border-color: var(--color-border);
+       --fc-page-bg-color: var(--color-background);
+       --fc-event-border-color: var(--color-primary);
+       --fc-event-text-color: var(--color-text-light);
+       --fc-event-bg-color: var(--color-primary);
+       --fc-today-bg-color: rgba(0, 123, 255, 0.08);
+       --fc-button-bg-color: var(--color-primary);
+       --fc-button-text-color: var(--color-text-light);
+       --fc-button-border-color: var(--color-primary);
+       --fc-button-hover-bg-color: var(--color-primary-dark);
+       --fc-button-hover-border-color: var(--color-primary-dark);
+       --fc-button-active-bg-color: var(--color-primary-dark);
+       --fc-button-active-border-color: var(--color-primary-dark);
+       --fc-list-event-hover-bg-color: #f1f4f6;
+    }
+    #calendar {
+        max-width: 100%; /* Let it fill container */
+        margin: 0;
+        background-color: var(--color-surface);
+        padding: var(--spacing-md);
+        border: 1px solid var(--color-border);
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+    }
+    .fc .fc-toolbar.fc-header-toolbar {
+        margin-bottom: var(--spacing-md);
+    }
+    /* Style FC buttons using custom button class */
+    .fc .fc-button {
+         /* Attempt to mimic .button class - may need !important or more specificity */
+         background-color: var(--fc-button-bg-color) !important;
+         color: var(--fc-button-text-color) !important;
+         border: 1px solid var(--fc-button-border-color) !important;
+         padding: 0.4rem 0.8rem !important;
+         font-size: 0.9rem !important;
+         border-radius: var(--border-radius) !important;
+         text-transform: none !important;
+         box-shadow: none !important;
+         transition: background-color 0.2s ease, border-color 0.2s ease !important;
+         vertical-align: middle;
+    }
+    .fc .fc-button:hover {
+        background-color: var(--fc-button-hover-bg-color) !important;
+        border-color: var(--fc-button-hover-border-color) !important;
+    }
+    /* Add more specific overrides if needed */
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h1>Appointment Calendar</h1>
-    <div class="header-actions">
-        {# List view uses secondary style #}
-        <a href="{{ url_for('appointments.list_appointments') }}" class="button button-outline button-secondary button-small">
-            <i class="fas fa-list fa-fw"></i> List View
-        </a>
-        {# New uses primary style #}
-         <a href="{{ url_for('appointments.create_appointment') }}" class="button button-primary button-small ms-2">
-             <i class="fas fa-plus fa-fw"></i> New Appointment
-         </a>
-    </div>
+     <a href="{{ url_for('.list_appointments') }}" class="button button-outline button-secondary">
+        <i class="fas fa-list fa-fw"></i> List View
+    </a>
 </div>
 
-<div class="flash-messages-container alert-container-fixed">
-    {% include '_flash_messages.html' %}
+{# Calendar Container #}
+<div id='calendar'>
+    <div id="calendar-loading" style="text-align: center; padding: 2rem; display: none;">Loading...</div>
 </div>
 
-<div id="calendar-container" class="card shadow-sm content-section">
-     <div class="card-body p-lg-4">
-         <div id='calendar'>Loading Calendar...</div>
-     </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.js'></script>
-    {# Ensure Bootstrap JS is loaded #}
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
-        if (!calendarEl) { /* ... error handling ... */ }
-
-        var calendar = new FullCalendar.Calendar(calendarEl, {
-          initialView: 'timeGridWeek',
-          headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
-          editable: false,
-          selectable: false,
-          events: { /* ... events feed ... */ },
-          eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
-          eventClick: function(info) { /* ... event click handler ... */ },
-          slotMinTime: '08:00:00',
-          slotMaxTime: '19:00:00',
-          expandRows: true,
-          navLinks: true,
-          dayMaxEvents: true,
-          nowIndicator: true,
-        });
-        calendar.render();
-      });
-    </script>
+{# Keep the FullCalendar Initialization Script #}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var loadingEl = document.getElementById('calendar-loading'); // Get loading indicator
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'timeGridWeek', // Default to week view maybe?
+      headerToolbar: { /* Keep existing toolbar setup */
+        left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek' },
+      navLinks: true, editable: false, selectable: false, dayMaxEvents: true,
+      events: { url: "{{ url_for('appointments.appointment_data_feed') }}", failure: function(error) { /* Keep error handling */ console.error("FC Error:", error); /* Use custom flash if needed */ } },
+      eventTimeFormat: { hour: 'numeric', minute: '2-digit', meridiem: 'short' },
+      eventClick: function(info) { /* Keep eventClick logic */ info.jsEvent.preventDefault(); if (info.event.url) window.location.href = info.event.url; },
+      loading: function(isLoading) { if (loadingEl) loadingEl.style.display = isLoading ? 'block' : 'none'; }
+      // Add business hours, slot times etc. if desired
+       // businessHours: { daysOfWeek: [ 1, 2, 3, 4, 5 ], startTime: '08:00', endTime: '17:00' },
+       // slotMinTime: "07:00:00",
+       // slotMaxTime: "19:00:00",
+    });
+    calendar.render();
+  });
+</script>
 {% endblock %}

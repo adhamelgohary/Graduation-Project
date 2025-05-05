@@ -1,0 +1,36 @@
+{% extends "Admin_Portal/base_admin.html" %}
+
+{% block title %}Edit Specialization{% endblock %}
+{% block header_title %}Edit Specialization{% endblock %}
+
+{% block content %}
+    <h3>Editing: {{ specialization.name | escape }}</h3>
+
+    <form action="{{ url_for('admin_structure.edit_specialization', spec_id=specialization.specialization_id) }}" method="post">
+         <div class="mb-3">
+            <label for="specialization_name" class="form-label">Specialization Name *</label>
+            <input type="text" class="form-control" id="specialization_name" name="specialization_name" value="{{ request.form.get('specialization_name', specialization.name) | escape }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="specialization_description" class="form-label">Description</label>
+            <textarea class="form-control" id="specialization_description" name="specialization_description" rows="3">{{ request.form.get('specialization_description', specialization.description) | escape | default('', true) }}</textarea>
+        </div>
+         <div class="mb-3">
+            <label for="department_id" class="form-label">Assign to Department</label>
+            <select class="form-select" id="department_id" name="department_id">
+                <option value="">-- None --</option> {# Important: Empty value for unlinked #}
+                {% set current_dept_id = request.form.get('department_id', specialization.department_id) %}
+                {% for dept in departments %}
+                    <option value="{{ dept.department_id }}" {% if current_dept_id|int == dept.department_id %}selected{% endif %}>
+                        {{ dept.name | escape }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
+            <a href="{{ url_for('admin_structure.manage_structure') }}#specializations-section" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+{% endblock %}

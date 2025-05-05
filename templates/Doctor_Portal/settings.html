@@ -1,383 +1,890 @@
 {% extends "Doctor_Portal/base.html" %}
-
-{% block title %}Profile & Settings{% endblock %}
+{% block title %}My Settings{% endblock %}
 
 {% block head_extra %}
-    {# Bootstrap CSS required for Tabs #}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    {# Font Awesome for icons (keep if not in base.html) #}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    {# Link the external CSS file for settings (Keep your settings.css) #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/settings.css') }}">
-    {# Optionally add styles similar to patient_profile.css if desired #}
-    <style>
-        /* Basic tab styling adjustments (can be in settings.css) */
-        .nav-tabs .nav-link {
-            color: var(--color-secondary); /* Use your theme colors */
-            border-bottom-width: 2px; /* Make inactive bottom border subtle */
-        }
-        .nav-tabs .nav-link.active {
-            color: var(--color-primary);
-            border-color: var(--color-primary);
-            border-bottom-color: transparent; /* Hide bottom border for active tab */
-            background-color: var(--color-background); /* Match content background */
-        }
-        .tab-content {
-            border: 1px solid #dee2e6; /* Match BS tab border */
-            border-top: none;
-            padding: 1.5rem 1rem; /* Add padding */
-            background-color: var(--color-background); /* Match background */
-            border-radius: 0 0 var(--border-radius) var(--border-radius); /* Rounded bottom corners */
-        }
-         /* Styles copied/adapted from settings.css or patient_profile.css as needed */
-        .settings-form .form-group { margin-bottom: 1rem; }
-        .settings-form label { font-weight: 600; margin-bottom: 0.3rem; display: block; font-size: 0.9em; }
-        .profile-photo-area { margin-bottom: 1.5rem; }
-        .profile-photo-current { margin-bottom: 0.5rem; }
-        .profile-photo-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; }
-        .profile-photo-placeholder { width: 120px; height: 120px; border-radius: 50%; background-color: #e9ecef; display: inline-flex; align-items: center; justify-content: center; font-size: 3rem; color: #adb5bd; border: 3px solid #eee; }
-        .profile-photo-controls input[type="file"] { display: none; }
-        .profile-photo-controls label, .profile-photo-controls button { margin: 0 5px; }
-        .document-list { margin-top: 1rem; }
-        .document-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid #eee; }
-        .document-item:last-child { border-bottom: none; }
-        .document-info { display: flex; align-items: center; }
-        .doc-icon { font-size: 1.5rem; margin-right: 1rem; }
-        .doc-details { display: flex; flex-direction: column; }
-        .doc-name { font-weight: 600; color: var(--color-primary); text-decoration: none; }
-        .doc-name:hover { text-decoration: underline; }
-        .doc-type, .doc-date { font-size: 0.85em; color: #6c757d; }
-        .availability-content .form-row { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: flex-end; }
-        .availability-content .form-row .form-group { flex: 1; }
-        .availability-content .form-row .form-group button { width: 100%; }
-        .weekly-schedule-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; }
-        .day-column h4 { border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem; font-size: 1rem; text-align: center; }
-        .time-slot, .override-item { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 0.4rem 0.8rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; }
-        .delete-btn { background: none; border: none; color: var(--color-danger); cursor: pointer; font-weight: bold; opacity: 0.7; font-size: 1.1rem; padding: 0 0.3rem; line-height: 1; }
-        .delete-btn:hover { opacity: 1; }
-        .override-details { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; }
-        .override-details span { white-space: nowrap; }
-        .status-unavailable { font-weight: bold; color: #dc3545; }
-        .status-available { font-weight: bold; color: #198754; }
-        .reason { font-style: italic; color: #6c757d; }
+{# --- Add Tab Specific CSS --- #}
+<style>
+    /* Keep existing tab styles */
+    .tab-navigation button { background-color: #f8f9fa; border: 1px solid var(--color-border); border-bottom: none; padding: var(--spacing-sm) var(--spacing-lg); cursor: pointer; border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius); margin-right: 2px; color: var(--color-text-muted); font-weight: 500; }
+    .tab-navigation button.active { background-color: var(--color-surface); color: var(--color-primary); border-color: var(--color-border); border-bottom: 1px solid var(--color-surface); position: relative; top: 1px; }
+    .tab-content-area { border: 1px solid var(--color-border); border-top: none; padding: var(--spacing-lg); background-color: var(--color-surface); border-radius: 0 0 var(--border-radius) var(--border-radius); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
 
-    </style>
+    /* Profile photo styles */
+    .profile-photo-current { max-width: 180px; margin-bottom: var(--spacing-md); }
+    .profile-photo-current img { border: 1px solid var(--color-border); border-radius: var(--border-radius); }
+
+    /* Document list styles */
+    .document-list-item { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-sm) 0; border-bottom: 1px solid #eee; }
+    .document-list-item a { margin-right: auto; margin-left: var(--spacing-sm); }
+    .document-list-item:last-child { border-bottom: none; }
+
+    /* Availability/Location specific styles */
+    .section-card { border: 1px solid var(--color-border-subtle); border-radius: var(--border-radius); margin-bottom: var(--spacing-lg); background-color: #fff; box-shadow: var(--shadow-sm); }
+    .section-card .card-header { background-color: #f8f9fa; padding: var(--spacing-sm) var(--spacing-md); font-weight: 600; border-bottom: 1px solid var(--color-border-subtle); border-top-left-radius: var(--border-radius); border-top-right-radius: var(--border-radius);}
+    .section-card .card-body { padding: var(--spacing-md); }
+    .section-card .card-footer { background-color: #f8f9fa; padding: var(--spacing-sm) var(--spacing-md); border-top: 1px solid var(--color-border-subtle); border-bottom-left-radius: var(--border-radius); border-bottom-right-radius: var(--border-radius);}
+
+    .location-entry { margin-bottom: var(--spacing-xl); padding-bottom: var(--spacing-lg); border-bottom: 2px solid var(--color-primary-muted); }
+    .location-entry:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0;}
+    .location-details { margin-bottom: var(--spacing-md); }
+    .location-actions { margin-bottom: var(--spacing-md); }
+    .schedule-grid { padding-left: var(--spacing-md); margin-top: var(--spacing-md);}
+
+    .availability-list li { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-xs) 0; margin-bottom: var(--spacing-xs); border-bottom: 1px dashed #eee; }
+    .availability-list li:last-child { border-bottom: none; }
+    .availability-list .button { margin-left: var(--spacing-md); }
+
+    .form-grid { display: grid; gap: var(--spacing-md); }
+    @media (min-width: 768px) { /* Basic form grid columns */
+        .form-grid-2col { grid-template-columns: repeat(2, 1fr); }
+        .form-grid-3col { grid-template-columns: repeat(3, 1fr); }
+        .form-grid-4col { grid-template-columns: repeat(4, 1fr); }
+        .form-grid-auto { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+        .form-grid-col-span-2 { grid-column: span 2; }
+        .form-grid-col-span-3 { grid-column: span 3; }
+        .form-grid-col-span-4 { grid-column: span 4; }
+    }
+    .add-form { padding-top: var(--spacing-md); border-top: 1px solid var(--color-border); margin-top: var(--spacing-lg); }
+    .add-form h6 { margin-bottom: var(--spacing-sm); }
+    #add-new-location-form { padding: var(--spacing-md); background-color: #fdfdfd; border: 1px solid var(--color-border-subtle); border-radius: var(--border-radius); }
+
+    #add-new-location-card .card-header { cursor: pointer; }
+    #add-new-location-body { display: none; /* Initially hidden */ }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header"> {# Use consistent header style #}
-    <h1>Profile & Settings</h1>
-    {# Add any relevant header actions if needed #}
+<div class="page-header">
+    <h1>My Settings</h1>
 </div>
 
-{# Display Flash Messages #}
-{% include '_flash_messages.html' %} {# Assumes _flash_messages.html partial exists #}
+{# --- Flash messages area specific to this page --- #}
+<div id="settings-flash-area" class="flash-messages">
+     {% include '_flash_messages.html' %}
+</div>
 
 {# --- Tab Navigation --- #}
-<ul class="nav nav-tabs mb-3" id="settingsTab" role="tablist">
-  <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">
-        <i class="fas fa-user-edit fa-fw"></i> Profile
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">
-        <i class="fas fa-folder-open fa-fw"></i> Documents
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">
-        <i class="fas fa-key fa-fw"></i> Change Password
-    </button>
-  </li>
-   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="availability-tab" data-bs-toggle="tab" data-bs-target="#availability" type="button" role="tab" aria-controls="availability" aria-selected="false">
-        <i class="fas fa-calendar-alt fa-fw"></i> Availability
-    </button>
-  </li>
-</ul>
+<div class="tab-navigation" id="settings-tab-nav">
+    <button class="active" data-tab-target="#tab-profile">Profile</button>
+    <button data-tab-target="#tab-security">Security</button>
+    <button data-tab-target="#tab-locations">Locations & Schedules</button>
+    <button data-tab-target="#tab-availability">Exceptions & Limits</button>
+    <button data-tab-target="#tab-photo">Photo</button>
+    <button data-tab-target="#tab-documents">Documents</button>
+</div>
 
 {# --- Tab Content --- #}
-<div class="tab-content" id="settingsTabContent">
+<div class="tab-content-area">
+    {# --- Profile Tab --- #}
+    <div class="tab-pane active" id="tab-profile">
+        <h2>Profile Information</h2>
+        <form action="{{ url_for('settings.update_profile') }}" method="post">
+            <div class="form-grid form-grid-2col">
+                {# Basic Info Fields #}
+                <div><label for="first_name" class="form-label">First Name</label><input type="text" class="form-control" id="first_name" name="first_name" value="{{ doctor_info.first_name or '' }}" required></div>
+                <div><label for="last_name" class="form-label">Last Name</label><input type="text" class="form-control" id="last_name" name="last_name" value="{{ doctor_info.last_name or '' }}" required></div>
+                <div><label for="email" class="form-label">Email</label><input type="email" class="form-control" id="email" name="email" value="{{ doctor_info.email or '' }}" required></div>
+                <div><label for="phone" class="form-label">Phone</label><input type="tel" class="form-control" id="phone" name="phone" value="{{ doctor_info.phone or '' }}"></div>
 
-  {# --- Profile Tab --- #}
-  <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-    {# Content copied directly from previous settings.html Profile section #}
-    <div class="card border-0"> {# Remove card class if tab-content provides border #}
-        <div class="card-body p-0"> {# Remove padding if tab-content provides it #}
-            {# --- Profile Photo Management --- #}
-            <div class="text-center profile-photo-area">
-                 {# ... (photo display and upload/delete forms) ... #}
-                 <div class="profile-photo-current">
-                    {% set photo_url_db = doctor_info.profile_photo_url %}
-                    {% if photo_url_db %}
-                        <img src="{{ url_for('static', filename=photo_url_db) }}" alt="Profile Photo" class="profile-photo-img">
-                    {% else %}
-                        <div class="profile-photo-placeholder"><i class="fas fa-user fa-fw"></i></div>
-                    {% endif %}
-                 </div>
-                 <div class="profile-photo-controls">
-                     <form action="{{ url_for('settings.upload_profile_photo') }}" method="POST" enctype="multipart/form-data" class="d-inline">
-                         {# CSRF token #}
-                         <input type="file" name="profile_photo" id="profile_photo_input" accept="image/*" onchange="this.form.submit()" title="Select photo">
-                         <label for="profile_photo_input" class="button button-secondary button-small"><i class="fas fa-camera fa-fw"></i> {{ 'Change' if photo_url_db else 'Upload' }} Photo</label>
-                     </form>
-                     {% if photo_url_db %}
-                     <form action="{{ url_for('settings.delete_profile_photo') }}" method="POST" class="d-inline" onsubmit="return confirm('Remove photo?');">
-                         {# CSRF token #}
-                         <button type="submit" class="button button-danger button-small" title="Remove photo"><i class="fas fa-trash-alt fa-fw"></i> Remove</button>
-                     </form>
-                     {% endif %}
-                 </div>
-            </div>
-
-            {# --- Profile Details Form --- #}
-            <form action="{{ url_for('settings.update_profile') }}" method="POST" class="settings-form mt-4">
-                 {# CSRF token #}
-                <div class="row">
-                    <div class="col-md-6">
-                        <h4 class="mb-3">Basic & Contact</h4>
-                        <div class="form-group"> <label for="first_name">First Name *</label> <input type="text" id="first_name" name="first_name" class="form-control" value="{{ doctor_info.first_name | default('') }}" required> </div>
-                        <div class="form-group"> <label for="last_name">Last Name *</label> <input type="text" id="last_name" name="last_name" class="form-control" value="{{ doctor_info.last_name | default('') }}" required> </div>
-                        <div class="form-group"> <label for="email">Email Address *</label> <input type="email" id="email" name="email" class="form-control" value="{{ doctor_info.email | default('') }}" required> </div>
-                        <div class="form-group"> <label for="phone">Phone Number</label> <input type="tel" id="phone" name="phone" class="form-control" value="{{ doctor_info.phone | default('') }}" placeholder="Optional"> </div>
-                        <div class="form-group"> <label for="clinic_address">Clinic Address</label> <textarea id="clinic_address" name="clinic_address" class="form-control" rows="3" placeholder="Optional">{{ doctor_info.clinic_address | default('') }}</textarea> </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h4 class="mb-3">Professional Details</h4>
-                        <div class="form-group"> <label for="specialization">Specialization *</label> <input type="text" id="specialization" name="specialization" class="form-control" value="{{ doctor_info.specialization_name | default('') }}" required> </div>
-                        <div class="form-group"> <label for="npi_number">NPI Number</label> <input type="text" id="npi_number" name="npi_number" class="form-control" value="{{ doctor_info.npi_number | default('') }}" placeholder="10 digits, optional" pattern="\d{10}" title="NPI must be 10 digits"> </div>
-                        <div class="form-group"> <label for="license_number">License Number *</label> <input type="text" id="license_number" name="license_number" class="form-control" value="{{ doctor_info.license_number | default('') }}" required> </div>
-                        <div class="form-group"> <label for="license_state">License State *</label> <input type="text" id="license_state" name="license_state" class="form-control" value="{{ doctor_info.license_state | default('') }}" required placeholder="e.g., CA, NY" maxlength="2" style="text-transform: uppercase;"> </div>
-                        <div class="form-group">
-                            <label for="license_expiration">License Expiration Date *</label>
-                            <input type="date" id="license_expiration" name="license_expiration" class="form-control" value="{{ doctor_info.license_expiration.isoformat() if doctor_info.license_expiration else '' }}" required>
-                             {# Display warning if license expires soon #}
-                             {% if doctor_info.license_expiration and today_date and doctor_info.license_expiration < (today_date + timedelta(days=30)) %}
-                                 <small class="text-danger d-block mt-1"><i class="fas fa-exclamation-triangle fa-fw"></i> License expires soon or has expired!</small>
-                             {% endif %}
-                        </div>
-                        <div class="form-group"> <label for="medical_school">Medical School</label> <input type="text" id="medical_school" name="medical_school" class="form-control" value="{{ doctor_info.medical_school | default('') }}"> </div>
-                        <div class="form-group"> <label for="graduation_year">Graduation Year</label> <input type="number" id="graduation_year" name="graduation_year" class="form-control" value="{{ doctor_info.graduation_year | default('') }}" min="1900" max="{{ current_year + 1 }}"> </div>
-                        <div class="form-group"> <label for="certifications">Certifications (comma-separated)</label> <textarea id="certifications" name="certifications" class="form-control" rows="3">{{ doctor_info.certifications | default('') }}</textarea> </div>
-                        <div class="form-group"> <label for="biography">Biography</label> <textarea id="biography" name="biography" class="form-control" rows="4" placeholder="Optional summary">{{ doctor_info.biography | default('') }}</textarea> </div>
-                        <div class="form-group form-check"> <input type="checkbox" id="accepting_new_patients" name="accepting_new_patients" class="form-check-input" {% if doctor_info.accepting_new_patients %}checked{% endif %}> <label for="accepting_new_patients" class="form-check-label">Accepting New Patients</label> </div>
-                    </div>
+                {# --- Department Dropdown --- #}
+                <div>
+                    <label for="department_id" class="form-label">Department</label>
+                    <select class="form-select" id="department_id" name="department_id">
+                        <option value="">-- Select Department (Optional) --</option>
+                        {% for dept in all_departments %}
+                            <option value="{{ dept.department_id }}" {% if dept.department_id == doctor_info.department_id %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
                 </div>
-                <hr class="my-4">
-                <div class="text-end"> <button type="submit" class="button button-primary"><i class="fas fa-save fa-fw"></i> Save Profile Changes</button> </div>
-            </form>
-        </div>
-    </div>
-  </div>
 
-  {# --- Documents Tab --- #}
-  <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
-    {# Content copied directly from previous settings.html Documents section #}
-     <div class="card border-0">
-        <div class="card-body p-0">
-             <h4 class="mb-3">Upload New Document</h4>
-             <form action="{{ url_for('settings.upload_document') }}" method="POST" enctype="multipart/form-data" class="settings-form">
-                 {# CSRF token #}
-                 <div class="row align-items-end g-2">
-                     <div class="col-md-5 form-group"> <label for="document_file">Select File *</label> <input type="file" id="document_file" name="document_file" class="form-control form-control-sm" required accept=".pdf,.png,.jpg,.jpeg"> <small class="text-muted">Allowed: PDF, PNG, JPG (Max 16MB)</small> </div>
-                     <div class="col-md-4 form-group"> <label for="document_type">Document Type *</label> <select id="document_type" name="document_type" class="form-select form-select-sm" required> <option value="" disabled selected>-- Select Type --</option> <option value="license">License</option> <option value="certification">Certification</option> <option value="identity">Identity</option> <option value="education">Education</option> <option value="other">Other</option> </select> </div>
-                     <div class="col-md-3 form-group"> <button type="submit" class="button button-success button-small w-100"> <i class="fas fa-upload fa-fw"></i> Upload</button> </div>
-                 </div>
-             </form>
-             <hr class="my-4">
-             <h4 class="mb-3">Uploaded Documents</h4>
-             <div class="document-list">
-                 {% if doctor_documents %} {% for doc in doctor_documents %}
-                     <div class="document-item" id="doc-{{ doc.document_id }}">
-                         {# ... (document item display) ... #}
-                          <div class="document-info">
-                             {% set filename_lower = doc.file_name|lower %}
-                             {% if filename_lower.endswith('.pdf') %} <i class="fas fa-file-pdf fa-fw doc-icon text-danger"></i>
-                             {% elif filename_lower.endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')) %} <i class="fas fa-file-image fa-fw doc-icon text-info"></i>
-                             {% else %} <i class="fas fa-file-alt fa-fw doc-icon text-secondary"></i> {% endif %}
-                             <div class="doc-details">
-                                 {% set view_filename = doc.file_path.split('/')[-1] %}
-                                 <a href="{{ url_for('settings.view_uploaded_document', filename=view_filename) }}" target="_blank" class="doc-name" title="{{ doc.file_name }}">{{ doc.file_name }}</a>
-                                 <span class="doc-type">{{ doc.document_type | title }}</span>
-                                 <span class="doc-date">Uploaded: {{ doc.upload_date.strftime('%Y-%m-%d') if doc.upload_date else 'N/A' }}</span>
+                {# --- Specialization Dropdown (Options populated by JS) --- #}
+                <div>
+                    <label for="specialization_id" class="form-label">Specialization *</label>
+                    <select class="form-select" id="specialization_id" name="specialization_id" required>
+                        <option value="">-- Select Department First --</option> {# Placeholder #}
+                        {# Options will be added by JavaScript based on department selection #}
+                        {# We might add the currently selected one here if it exists, JS will handle hiding/showing #}
+                        {% if doctor_info.specialization_id %}
+                            <option value="{{ doctor_info.specialization_id }}" selected data-department-id="{{ doctor_info.department_id or '' }}">
+                                {{ doctor_info.specialization_name or 'Current Specialization' }} {# Show current if known #}
+                            </option>
+                        {% endif %}
+                    </select>
+                </div>
+
+                {# NPI Number #}
+                <div><label for="npi_number" class="form-label">NPI Number (10 digits)</label><input type="text" class="form-control" id="npi_number" name="npi_number" pattern="\d{10}" value="{{ doctor_info.npi_number or '' }}" title="NPI must be 10 digits"></div>
+                <div></div> {# Spacer #}
+
+               {# License Info #}
+               <div class="form-grid-col-span-2 form-grid form-grid-3col">
+                    <div><label for="license_number" class="form-label">License Number</label><input type="text" class="form-control" id="license_number" name="license_number" value="{{ doctor_info.license_number or '' }}" required></div>
+                    <div><label for="license_state" class="form-label">License State</label><input type="text" class="form-control" id="license_state" name="license_state" value="{{ doctor_info.license_state or '' }}" required></div>
+                    <div><label for="license_expiration" class="form-label">License Expiration</label><input type="date" class="form-control" id="license_expiration" name="license_expiration" value="{{ doctor_info.license_expiration_str or '' }}" required></div>
+               </div>
+
+                {# Education & Other #}
+                <div><label for="medical_school" class="form-label">Medical School</label><input type="text" class="form-control" id="medical_school" name="medical_school" value="{{ doctor_info.medical_school or '' }}"></div>
+                <div><label for="graduation_year" class="form-label">Graduation Year</label><input type="number" class="form-control" id="graduation_year" name="graduation_year" min="1900" max="{{ current_year + 1 }}" step="1" value="{{ doctor_info.graduation_year or '' }}"></div>
+                <div class="form-grid-col-span-2"><label for="certifications" class="form-label">Certifications (comma-separated)</label><textarea class="form-control" id="certifications" name="certifications" rows="2">{{ doctor_info.certifications or '' }}</textarea></div>
+                <div class="form-grid-col-span-2"><label for="biography" class="form-label">Biography</label><textarea class="form-control" id="biography" name="biography" rows="4">{{ doctor_info.biography or '' }}</textarea></div>
+                <div><label for="clinic_address" class="form-label">Primary Mailing/Contact Address</label><input type="text" class="form-control" id="clinic_address" name="clinic_address" value="{{ doctor_info.clinic_address or '' }}"></div>
+                <div class="d-flex align-items-end"><div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" {% if doctor_info.accepting_new_patients %}checked{% endif %}><label class="form-check-label" for="accepting_new_patients">Accepting New Patients</label></div></div>
+            </div>
+            <button type="submit" class="button button-success mt-4"><i class="fas fa-save fa-fw"></i> Update Profile</button>
+        </form>
+    </div>
+
+    {# --- Security Tab --- #}
+    <div class="tab-pane" id="tab-security">
+        <h2>Change Password</h2>
+        <form action="{{ url_for('settings.update_password') }}" method="post">
+             <div class="form-grid form-grid-2col">
+                 <div><label for="current_password" class="form-label">Current Password</label><input type="password" class="form-control" id="current_password" name="current_password" required></div>
+                 <div></div> {# Spacer #}
+                 <div><label for="new_password" class="form-label">New Password</label><input type="password" class="form-control" id="new_password" name="new_password" minlength="8" required><small class="text-muted">Minimum 8 characters</small></div>
+                 <div><label for="confirm_password" class="form-label">Confirm New Password</label><input type="password" class="form-control" id="confirm_password" name="confirm_password" required></div>
+             </div>
+             <button type="submit" class="button button-warning mt-4"><i class="fas fa-key fa-fw"></i> Change Password</button>
+        </form>
+    </div>
+
+    {# --- Locations & Schedules Tab --- #}
+    <div class="tab-pane" id="tab-locations">
+        <h2>My Practice Locations & Weekly Schedules</h2>
+        <p>Manage where you practice and your standard weekly availability at each location.</p>
+        <div id="location-list">
+             {% if provider_locations %}
+                 {% for loc in provider_locations %}
+                 <div class="location-entry" id="location-{{ loc.doctor_location_id }}">
+                    <h4>
+                        {{ loc.location_name | escape }} {# Use escape for user-generated content #}
+                        {% if loc.is_primary %} <span class="badge badge-info ms-2">Primary</span> {% endif %}
+                    </h4>
+                    <div class="location-details text-muted mb-2">
+                        <i class="fas fa-map-marker-alt fa-fw"></i> {{ loc.address | escape or 'No Address' }}{% if loc.city %}, {{ loc.city | escape }}{% endif %}{% if loc.state %}, {{ loc.state | escape }}{% endif %}<br>
+                        {% if loc.phone_number %}<i class="fas fa-phone fa-fw"></i> {{ loc.phone_number | escape }}{% endif %}
+                    </div>
+                    <div class="location-actions mb-3">
+                        <button class="button button-outline button-secondary button-small" onclick="alert('Edit location functionality to be implemented.');"><i class="fas fa-edit fa-fw"></i> Edit Details</button>
+                        <button class="button button-outline button-danger button-small delete-location-btn" data-location-id="{{ loc.doctor_location_id }}" data-location-name="{{ loc.location_name | escape }}">
+                            <i class="fas fa-trash-alt fa-fw"></i> Delete Location
+                        </button>
+                    </div>
+                    <div class="schedule-grid section-card">
+                        <div class="card-header">Weekly Schedule for {{ loc.location_name | escape }}</div>
+                        <div class="card-body">
+                             <div id="weekly-schedule-list-{{ loc.doctor_location_id }}" class="mb-3">
+                                 {% for day_index in range(7) %}
+                                     <h6>{{ days_of_week[day_index] }}</h6>
+                                     <ul class="availability-list list-unstyled" id="schedule-day-{{ loc.doctor_location_id }}-{{ day_index }}">
+                                         {% set found_slot = false %}
+                                         {% for slot in all_location_slots if slot.doctor_location_id == loc.doctor_location_id and slot.day_of_week == day_index %}
+                                             {% set found_slot = true %}
+                                             <li id="slot-{{ slot.location_availability_id }}">
+                                                 <span><i class="far fa-clock"></i> {{ slot.start_time }} - {{ slot.end_time }}</span>
+                                                 <button class="button button-outline button-danger button-small delete-weekly-slot" data-slot-id="{{ slot.location_availability_id }}">
+                                                     <i class="fas fa-trash-alt fa-fw"></i> Delete
+                                                 </button>
+                                             </li>
+                                         {% endfor %}
+                                         {% if not found_slot %}
+                                             <li class="text-muted no-slots-{{ loc.doctor_location_id }}-{{ day_index }}">No slots defined.</li>
+                                         {% endif %}
+                                     </ul>
+                                     <hr class="{% if loop.last %}d-none{% endif %}" style="margin: var(--spacing-sm) 0 var(--spacing-md);">
+                                 {% endfor %}
                              </div>
-                         </div>
-                         <div class="document-actions">
-                              <form action="{{ url_for('settings.delete_document', document_id=doc.document_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete document \'{{ doc.file_name|escape }}\'?');">
-                                  {# CSRF token #}
-                                  <button type="submit" class="button button-danger button-xsmall" title="Delete Document"> <i class="fas fa-trash-alt fa-fw"></i> </button>
-                              </form>
-                         </div>
+                            <div class="add-form">
+                                <h6>Add New Weekly Slot for {{ loc.location_name | escape }}</h6>
+                                <form class="add-weekly-slot-form form-grid" style="grid-template-columns: 1fr 1fr 1fr auto; align-items: end; gap: var(--spacing-sm);" data-location-id="{{ loc.doctor_location_id }}">
+                                    <input type="hidden" name="doctor_location_id" value="{{ loc.doctor_location_id }}">
+                                     <div>
+                                         <label for="weekly_day_of_week_{{ loc.doctor_location_id }}" class="form-label small">Day</label>
+                                         <select class="form-select form-select-sm" id="weekly_day_of_week_{{ loc.doctor_location_id }}" name="day_of_week" required>
+                                             {% for i in range(7) %}<option value="{{ i }}">{{ days_of_week[i] }}</option>{% endfor %}
+                                         </select>
+                                     </div>
+                                     <div>
+                                         <label for="weekly_start_time_{{ loc.doctor_location_id }}" class="form-label small">Start Time</label>
+                                         <input type="time" class="form-control form-control-sm" id="weekly_start_time_{{ loc.doctor_location_id }}" name="start_time" required step="900">
+                                     </div>
+                                     <div>
+                                         <label for="weekly_end_time_{{ loc.doctor_location_id }}" class="form-label small">End Time</label>
+                                         <input type="time" class="form-control form-control-sm" id="weekly_end_time_{{ loc.doctor_location_id }}" name="end_time" required step="900">
+                                     </div>
+                                     <div><button type="submit" class="button button-success button-small"><i class="fas fa-plus fa-fw"></i> Add Slot</button></div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                 {% endfor %}
+            {% else %}
+                <p class="text-muted" id="no-locations-message">You haven't added any practice locations yet.</p>
+            {% endif %}
+        </div>
+        <div class="section-card mt-4" id="add-new-location-card">
+             <div class="card-header" onclick="toggleAddLocationForm()">
+                <i class="fas fa-plus-circle fa-fw"></i> Add New Practice Location <i class="fas fa-chevron-down float-end" id="add-location-chevron"></i>
+             </div>
+             <div class="card-body" id="add-new-location-body">
+                 <form id="add-location-form" action="{{ url_for('locations.add_doctor_location') }}" method="post"> {# Assuming locations blueprint exists #}
+                     <div class="form-grid form-grid-2col">
+                         <div class="form-grid-col-span-2"><label for="new_location_name" class="form-label">Location Name *</label><input type="text" class="form-control" id="new_location_name" name="location_name" placeholder="e.g., Main Clinic" required></div>
+                         <div class="form-grid-col-span-2"><label for="new_address" class="form-label">Street Address *</label><input type="text" class="form-control" id="new_address" name="address" required></div>
+                         <div><label for="new_city" class="form-label">City</label><input type="text" class="form-control" id="new_city" name="city"></div>
+                         <div><label for="new_state" class="form-label">State</label><input type="text" class="form-control" id="new_state" name="state"></div>
+                         <div><label for="new_zip_code" class="form-label">Zip Code</label><input type="text" class="form-control" id="new_zip_code" name="zip_code"></div>
+                         <div><label for="new_country" class="form-label">Country</label><input type="text" class="form-control" id="new_country" name="country" value="United States"></div>
+                         <div><label for="new_phone_number" class="form-label">Phone Number</label><input type="tel" class="form-control" id="new_phone_number" name="phone_number"></div>
+                         <div class="form-check d-flex align-items-center"><input class="form-check-input" type="checkbox" id="new_is_primary" name="is_primary"><label class="form-check-label ms-2" for="new_is_primary">Set as Primary Location</label></div>
+                         <div class="form-grid-col-span-2"><label for="new_notes" class="form-label">Internal Notes (Optional)</label><textarea class="form-control" id="new_notes" name="notes" rows="2"></textarea></div>
                      </div>
-                 {% endfor %} {% else %} <p class="text-muted">No documents uploaded.</p> {% endif %}
+                     <button type="submit" class="button button-primary mt-3"><i class="fas fa-save fa-fw"></i> Add Location</button>
+                 </form>
              </div>
         </div>
     </div>
-  </div>
 
-  {# --- Change Password Tab --- #}
-  <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
-     {# Content copied directly from previous settings.html Password section #}
-      <div class="card border-0">
-        <div class="card-body p-0">
-            <h4 class="mb-3">Change Your Password</h4>
-             <form action="{{ url_for('settings.update_password') }}" method="POST" class="settings-form">
-                 {# CSRF token #}
-                <div class="form-group"> <label for="current_password">Current Password *</label> <input type="password" id="current_password" name="current_password" class="form-control" required> </div>
-                <div class="form-group"> <label for="new_password">New Password *</label> <input type="password" id="new_password" name="new_password" class="form-control" required minlength="8"> <small class="text-muted">Minimum 8 characters</small> </div>
-                <div class="form-group"> <label for="confirm_password">Confirm New Password *</label> <input type="password" id="confirm_password" name="confirm_password" class="form-control" required> </div>
-                <div class="text-end mt-3"> <button type="submit" class="button button-primary"><i class="fas fa-key fa-fw"></i> Update Password</button> </div>
-            </form>
-        </div>
-    </div>
-  </div>
-
-  {# --- Availability Tab --- #}
-  <div class="tab-pane fade" id="availability" role="tabpanel" aria-labelledby="availability-tab">
-    {# Content copied directly from previous settings.html Availability section #}
-     <div class="card border-0">
-        <div class="card-body p-0">
-            <div class="availability-content">
-                <h4 class="mb-3">Recurring Weekly Schedule</h4>
-                <p class="text-muted mb-3">Define standard working hours.</p>
-                <form id="add-weekly-slot-form" class="availability-form mb-4">
-                     {# ... (weekly slot form) ... #}
-                     <div class="form-row">
-                         <div class="form-group"><label for="wk-day">Day *</label> <select id="wk-day" name="day_of_week" class="form-select form-select-sm" required><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select></div>
-                         <div class="form-group"><label for="wk-start">Start Time *</label> <input type="time" id="wk-start" name="start_time" class="form-control form-control-sm" required step="900"></div>
-                         <div class="form-group"><label for="wk-end">End Time *</label> <input type="time" id="wk-end" name="end_time" class="form-control form-control-sm" required step="900"></div>
-                         <div class="form-group"><button type="submit" class="button button-success button-small">Add Slot</button></div>
-                     </div>
-                </form>
-                <div id="weekly-form-feedback" class="mb-3" style="min-height: 40px;"></div> {# Feedback Area #}
-                <div class="weekly-schedule-grid">
-                    {# ... (loop through days and slots) ... #}
-                     {% for day_num, day_name in enumerate(days_of_week) %}
-                     <div class="day-column">
-                        <h4>{{ day_name }}</h4>
-                        <div id="day-{{ day_num }}-slots">
-                            {% set current_day_slots = schedule.get(day_num, []) %}
-                            {% if current_day_slots %} {% for slot in current_day_slots %}
-                                 <div class="time-slot" id="slot-{{ slot.availability_id }}">
-                                     <span>{{ slot.start_time }} - {{ slot.end_time }}</span>
-                                     <button class="delete-btn delete-weekly-slot" data-slot-id="{{ slot.availability_id }}" title="Delete Slot">×</button>
-                                 </div>
-                            {% endfor %} {% else %}
-                                 <p class="text-muted no-slots small">No availability set.</p>
-                            {% endif %}
-                        </div>
-                     </div>
-                     {% endfor %}
+    {# --- Availability Exceptions & Limits Tab --- #}
+    <div class="tab-pane" id="tab-availability">
+        <h2>Availability Exceptions & Limits</h2>
+        <p>Define specific one-off unavailability/availability periods and set daily appointment caps per location.</p>
+        <div id="availability-error-flash" class="flash-messages"></div>
+        <div class="section-card">
+            <div class="card-header">Availability Overrides (Exceptions)</div>
+            <div class="card-body">
+                <p>Define specific dates or times you are unavailable/available, either generally or for a specific location.</p>
+                <div id="override-list" class="mb-3">
+                    <h6>Existing Overrides (Upcoming)</h6>
+                    <ul class="availability-list list-unstyled">
+                         {% if overrides %}
+                             {% for override in overrides %}
+                             <li id="override-{{ override.override_id }}">
+                                 <span>
+                                     <i class="far fa-calendar-times"></i> <strong>{{ override.override_date }}</strong>
+                                     {% if override.location_name %} at <strong>{{ override.location_name | escape }}</strong>{% else %} (General){% endif %}:
+                                     {% if override.start_time and override.end_time %}{{ override.start_time }} - {{ override.end_time }}{% else %}Full Day{% endif %}
+                                     - <span class="badge {{ 'bg-danger' if override.is_unavailable else 'bg-success' }} text-white">
+                                           {{ 'Unavailable' if override.is_unavailable else 'Available' }}
+                                       </span>
+                                     {% if override.reason %}<em class="text-muted ms-1">({{ override.reason|escape }})</em>{% endif %}
+                                 </span>
+                                 <button class="button button-outline button-danger button-small delete-override" data-override-id="{{ override.override_id }}">
+                                     <i class="fas fa-trash-alt fa-fw"></i> Delete
+                                 </button>
+                             </li>
+                             {% endfor %}
+                         {% else %}
+                             <li id="no-overrides-message" class="text-muted">No upcoming overrides defined.</li>
+                         {% endif %}
+                     </ul>
                 </div>
-                <hr class="my-4">
-                <h4 class="mb-3">Date Specific Overrides</h4>
-                <p class="text-muted mb-3">Block dates/times or mark specific times as available.</p>
-                <form id="add-override-form" class="availability-form mb-4">
-                     {# ... (override form) ... #}
-                    <div class="form-row">
-                         <div class="form-group"><label for="override_date">Date *</label> <input type="date" id="override_date" name="override_date" class="form-control form-control-sm" required></div>
-                         <div class="form-group"><label for="override_type">Type *</label> <select id="override_type" name="is_unavailable" class="form-select form-select-sm"><option value="true" selected>Unavailable</option><option value="false">Available</option></select></div>
-                         <div class="form-group"><label for="override_start_time">Start Time</label> <input type="time" id="override_start_time" name="start_time" class="form-control form-control-sm" step="900"> <small class="text-muted">Optional</small></div>
-                         <div class="form-group"><label for="override_end_time">End Time</label> <input type="time" id="override_end_time" name="end_time" class="form-control form-control-sm" step="900"> <small class="text-muted">Optional</small></div>
-                    </div>
-                     <div class="form-row">
-                         <div class="form-group" style="flex-grow: 2;"><label for="override_reason">Reason</label> <input type="text" id="override_reason" name="reason" class="form-control form-control-sm" placeholder="e.g., Vacation, Conference"></div>
-                         <div class="form-group"><button type="submit" class="button button-success button-small">Add Override</button></div>
-                     </div>
-                </form>
-                <div id="override-form-feedback" class="mb-3" style="min-height: 40px;"></div> {# Feedback Area #}
-                <h5 class="mb-3">Existing Overrides (Upcoming)</h5>
-                <div id="override-list">
-                     {# ... (loop through overrides) ... #}
-                    {% if overrides %} {% for override in overrides %}
-                        <div class="override-item" id="override-{{ override.override_id }}">
-                            <div class="override-details">
-                                <span><strong>{{ override.override_date }}</strong></span>
-                                {% if override.start_time and override.end_time %}<span>{{ override.start_time }} - {{ override.end_time }}</span>{% else %}<span>Full Day</span>{% endif %}
-                                <span class="{{ 'status-unavailable' if override.is_unavailable else 'status-available' }}">{{ 'Unavailable' if override.is_unavailable else 'Available' }}</span>
-                                {% if override.reason %}<span class="reason">({{ override.reason }})</span>{% endif %}
-                            </div>
-                            <button class="delete-btn delete-override" data-override-id="{{ override.override_id }}" title="Delete Override">×</button>
+                <div class="add-form">
+                    <h6>Add New Override</h6>
+                    <form id="add-override-form" class="form-grid form-grid-auto" style="align-items: end; gap: var(--spacing-sm);">
+                        <div>
+                            <label for="override_location_id" class="form-label small">Location (Opt)</label>
+                            <select class="form-select form-select-sm" id="override_location_id" name="doctor_location_id">
+                                <option value="">-- General (All Locations) --</option>
+                                {% for loc in provider_locations %}
+                                <option value="{{ loc.doctor_location_id }}">{{ loc.location_name | escape }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    {% endfor %} {% else %}
-                        <p class="text-muted no-overrides small">No upcoming overrides found.</p>
-                    {% endif %}
+                        <div><label for="override_date" class="form-label small">Date</label><input type="date" class="form-control form-control-sm" id="override_date" name="override_date" required min="{{ today_date_iso }}"></div>
+                        <div><label for="override_start_time" class="form-label small">Start (Opt)</label><input type="time" class="form-control form-control-sm" id="override_start_time" name="start_time" title="Leave blank for full day" step="900"></div>
+                        <div><label for="override_end_time" class="form-label small">End (Opt)</label><input type="time" class="form-control form-control-sm" id="override_end_time" name="end_time" title="Leave blank for full day" step="900"></div>
+                        <div>
+                             <label for="is_unavailable" class="form-label small">Status</label>
+                             <select class="form-select form-select-sm" id="is_unavailable" name="is_unavailable"><option value="true" selected>Unavailable</option><option value="false">Available</option></select>
+                         </div>
+                        <div style="grid-column: span 2;"><label for="override_reason" class="form-label small">Reason (Opt)</label><input type="text" class="form-control form-control-sm" id="override_reason" name="reason"></div>
+                         <div><button type="submit" class="button button-warning button-small"><i class="fas fa-plus fa-fw"></i> Add Override</button></div>
+                    </form>
                 </div>
             </div>
         </div>
+        <div class="section-card">
+            <div class="card-header">Daily Appointment Limits (Per Location)</div>
+            <div class="card-body">
+                 <p>Set maximum confirmed/scheduled appointments allowed for a specific date and location.</p>
+                 <div id="daily-limit-list" class="mb-3">
+                    <h6>Existing Limits (Upcoming)</h6>
+                     <ul class="availability-list list-unstyled">
+                         {% if daily_limits %}
+                             {% for limit in daily_limits %}
+                             <li id="limit-{{ limit.provider_daily_limit_id }}">
+                                 <span>
+                                     <i class="far fa-calendar-check"></i> <strong>{{ limit.limit_date }}</strong> at <strong>{{ limit.location_name | escape }}</strong>:
+                                     Max <strong>{{ limit.max_appointments }}</strong>
+                                 </span>
+                                 <button class="button button-outline button-danger button-small delete-daily-limit" data-limit-id="{{ limit.provider_daily_limit_id }}">
+                                     <i class="fas fa-trash-alt fa-fw"></i> Delete
+                                 </button>
+                             </li>
+                             {% endfor %}
+                         {% else %}
+                             <li id="no-limits-message" class="text-muted">No upcoming daily limits defined.</li>
+                         {% endif %}
+                     </ul>
+                </div>
+                 <div class="add-form">
+                     <h6>Add / Update Daily Limit</h6>
+                     <form id="add-daily-limit-form" class="form-grid" style="grid-template-columns: 1fr 1.5fr auto auto; align-items: end; gap: var(--spacing-sm);">
+                         <div><label for="limit_date" class="form-label small">Date</label><input type="date" class="form-control form-control-sm" id="limit_date" name="limit_date" required min="{{ today_date_iso }}"></div>
+                         <div>
+                             <label for="limit_location_id" class="form-label small">Location</label>
+                             <select class="form-select form-select-sm" id="limit_location_id" name="doctor_location_id" required {% if not provider_locations %}disabled{% endif %}>
+                                 <option value="">Select Location...</option>
+                                 {% for loc in provider_locations %}<option value="{{ loc.doctor_location_id }}">{{ loc.location_name | escape }}</option>{% endfor %}
+                             </select>
+                              {% if not provider_locations %} <small class="text-danger">No locations added yet.</small> {% endif %}
+                         </div>
+                         <div><label for="limit_max_appointments" class="form-label small">Max Appts</label><input type="number" class="form-control form-control-sm" id="limit_max_appointments" name="max_appointments" required min="0" style="width: 80px;"></div>
+                         <div><button type="submit" class="button button-info button-small" {% if not provider_locations %}disabled{% endif %}><i class="fas fa-save fa-fw"></i> Save Limit</button></div>
+                     </form>
+                 </div>
+            </div>
+        </div>
     </div>
-  </div> {# End Availability Tab #}
-
-</div> {# End tab-content #}
 
 
-{# --- Confirmation Modal (Keep from previous settings) --- #}
-<div id="deleteConfirmModal" class="modal-backdrop" style="display: none;">
-    {# ... (modal structure remains the same) ... #}
-    <div class="modal-dialog"> <div class="modal-content card"> <div class="modal-header card-header"> <h5 class="modal-title">Confirm Deletion</h5> <button type="button" class="close-alert" id="closeModalBtn" aria-label="Close">×</button> </div> <div class="modal-body"> <p id="modalBodyText">Are you sure?</p> </div> <div class="modal-footer card-footer"> <button type="button" class="button button-secondary button-small" id="cancelDeleteBtn">Cancel</button> <button type="button" class="button button-danger button-small" id="confirmDeleteBtn" data-delete-type="" data-delete-id="">Delete</button> </div> </div> </div>
-</div>
+    {# --- Profile Photo Tab --- #}
+    <div class="tab-pane" id="tab-photo">
+        <h2>Profile Photo</h2>
+         <div class="mb-3 profile-photo-current">
+             <p>Current Photo:</p>
+             {# Correctly reference profile_photo_url from doctor_info #}
+             {% set photo_rel_path = doctor_info.profile_photo_url %}
+             {% if photo_rel_path %}
+                <img src="{{ url_for('static', filename=photo_rel_path) }}" alt="Profile Photo">
+             {% else %}
+                <p class="text-muted">No photo uploaded.</p>
+                {# Optionally display a default avatar #}
+                {# <img src="{{ url_for('static', filename='images/profile_pics/default_avatar.png') }}" alt="Default Avatar"> #}
+             {% endif %}
+         </div>
+         <div class="mb-3">
+             <form action="{{ url_for('settings.upload_profile_photo') }}" method="post" enctype="multipart/form-data">
+                 <div class="mb-2"><label for="profile_photo" class="form-label">Upload New Photo</label><input class="form-control" required type="file" id="profile_photo" name="profile_photo" accept="image/png, image/jpeg, image/gif"><small class="text-muted">Allowed: PNG, JPG, GIF. Max 2MB.</small></div>
+                 <button type="submit" class="button button-success"><i class="fas fa-upload fa-fw"></i> Upload</button>
+             </form>
+         </div>
+         {% if photo_rel_path %} {# Use the variable set above #}
+         <div class="mt-4"><form action="{{ url_for('settings.delete_profile_photo') }}" method="post" onsubmit="return confirm('Delete profile photo?');"><button type="submit" class="button button-danger"><i class="fas fa-trash-alt fa-fw"></i> Delete Current Photo</button></form></div>
+         {% endif %}
+    </div>
+
+    {# --- Documents Tab --- #}
+    <div class="tab-pane" id="tab-documents">
+         <h2>My Documents</h2>
+         <p>Upload licenses, certifications, etc. for verification or personal reference.</p>
+         <div class="section-card mb-4">
+             <div class="card-header">Upload New Document</div>
+             <div class="card-body">
+                 <form action="{{ url_for('settings.upload_document') }}" method="post" enctype="multipart/form-data">
+                     <div class="form-grid form-grid-2col">
+                         <div><label for="document_type" class="form-label">Document Type</label><select class="form-select" id="document_type" name="document_type" required><option value="">Select Type...</option><option value="license">License</option><option value="certification">Certification</option><option value="identity">Identity</option><option value="education">Education</option><option value="other">Other</option></select></div>
+                         <div><label for="document_file" class="form-label">Document File</label><input class="form-control" type="file" id="document_file" name="document_file" required accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"><small class="text-muted">Allowed: PDF, PNG, JPG, DOC(X). Max 5MB.</small></div>
+                     </div>
+                     <button type="submit" class="button button-success mt-3"><i class="fas fa-upload fa-fw"></i> Upload</button>
+                 </form>
+             </div>
+         </div>
+         <h4>Uploaded Documents</h4>
+          {% if doctor_documents %}
+             <ul class="list-group"> {# Simple list group for display #}
+                  {% for doc in doctor_documents %}
+                  <li class="list-group-item document-list-item" id="doc-{{ doc.document_id }}">
+                       <span>
+                           <i class="fas fa-file-alt fa-fw text-secondary me-2"></i>
+                           <strong>{{ doc.document_type | capitalize }}:</strong>
+                           <a href="{{ url_for('settings.view_uploaded_document', filename=doc.file_path.split('/')[-1]) }}" target="_blank" title="View Document">
+                               {{ doc.file_name | escape }}
+                           </a>
+                           <small class="text-muted ms-2">(Uploaded: {{ doc.upload_date.strftime('%Y-%m-%d %H:%M') if doc.upload_date else 'N/A' }})</small>
+                       </span>
+                       <form action="{{ url_for('settings.delete_document', document_id=doc.document_id) }}" method="post" class="d-inline" onsubmit="return confirm('Delete this document?');">
+                           <button type="submit" class="button button-outline button-danger button-small ms-3">
+                               <i class="fas fa-trash-alt fa-fw"></i> Delete
+                           </button>
+                       </form>
+                  </li>
+                  {% endfor %}
+             </ul>
+          {% else %}
+             <p class="text-muted">No documents uploaded yet.</p>
+          {% endif %}
+    </div>
+
+</div> {# End Tab Content Area #}
 
 {% endblock %}
 
 {% block scripts %}
-    {# Bootstrap JS Bundle (Place BEFORE your custom script) #}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+{# --- Embed Specialization Data --- #}
+<script>
+    // Store all specializations with their department IDs in a JS variable
+    const allSpecializations = {{ all_specializations_json | safe }};
+    const currentDoctorInfo = {
+        departmentId: {{ doctor_info.department_id | default('null') }}, // Handle None from Python
+        specializationId: {{ doctor_info.specialization_id | default('null') }}
+    };
+</script>
 
-    {# === Include the SAME JavaScript from the previous settings.html for Availability AJAX === #}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- Code for Tab Persistence ---
-        const triggerTabList = [].slice.call(document.querySelectorAll('#settingsTab button[data-bs-toggle="tab"]'));
-        triggerTabList.forEach(function (triggerEl) {
-            const tabTrigger = new bootstrap.Tab(triggerEl);
-            triggerEl.addEventListener('shown.bs.tab', function (event) {
-                localStorage.setItem('activeSettingsTab', event.target.getAttribute('data-bs-target'));
-            });
+<script>
+    // --- Simple Tab Navigation (Keep as is) ---
+    const tabButtons = document.querySelectorAll('.tab-navigation button');
+    const tabPanes = document.querySelectorAll('.tab-content-area .tab-pane');
+
+    function activateTab(targetId) {
+        if (!targetId || !document.querySelector(`.tab-navigation button[data-tab-target="${targetId}"]`)) {
+            // If targetId is invalid or button doesn't exist, default to first tab
+            targetId = tabButtons.length > 0 ? tabButtons[0].dataset.tabTarget : null;
+            if (!targetId) return; // No tabs to activate
+        }
+        tabButtons.forEach(button => {
+            button.classList.toggle('active', button.dataset.tabTarget === targetId);
         });
-        const activeTabTarget = localStorage.getItem('activeSettingsTab');
-        if (activeTabTarget) {
-            const activeTabElement = document.querySelector(`#settingsTab button[data-bs-target="${activeTabTarget}"]`);
-            if (activeTabElement) {
-                const tab = new bootstrap.Tab(activeTabElement);
-                tab.show();
+        tabPanes.forEach(pane => {
+            pane.classList.toggle('active', pane.id === targetId.substring(1)); // Remove '#' from id
+        });
+         // Update URL hash without causing page jump if possible
+         if (history.pushState) { history.pushState(null, null, targetId); }
+         else { window.location.hash = targetId; }
+    }
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault(); // Prevent default anchor behavior if wrapped in <a>
+            activateTab(button.dataset.tabTarget);
+        });
+    });
+
+     const initialHash = window.location.hash;
+     if (initialHash) {
+         // Timeout helps ensure DOM is fully ready, especially if scripts load async
+         setTimeout(() => activateTab(initialHash), 0);
+     } else {
+        activateTab(tabButtons.length > 0 ? tabButtons[0].dataset.tabTarget : null); // Default to first tab
+     }
+
+
+    // --- Flash Message Helper (Keep as is) ---
+     function showFlash(containerId, message, type = 'info') {
+          const container = document.getElementById(containerId);
+          if (!container) { console.warn("Flash container not found:", containerId); return; }
+          // Map type to Bootstrap 5 alert classes (adjust if using different CSS framework)
+          let alertClass = 'alert-info';
+          if (type === 'success') alertClass = 'alert-success';
+          else if (type === 'danger' || type === 'error') alertClass = 'alert-danger';
+          else if (type === 'warning') alertClass = 'alert-warning';
+          const alertDiv = document.createElement('div');
+          alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+          alertDiv.role = 'alert';
+          alertDiv.innerHTML = `${escapeHTML(message)}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+          // Clear previous messages in this specific container
+          container.innerHTML = '';
+          container.appendChild(alertDiv);
+     }
+
+    // --- Generic AJAX Request Helpers (Keep as is) ---
+    async function postFormData(url, formData) {
+        try {
+            // Add CSRF token if using Flask-WTF
+            // const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const headers = {
+                // 'X-CSRFToken': csrfToken // Example header
+            };
+            const response = await fetch(url, { method: 'POST', body: formData, headers: headers });
+             // Check if response is JSON before parsing
+             const contentType = response.headers.get("content-type");
+             if (contentType && contentType.indexOf("application/json") !== -1) {
+                return await response.json();
+             } else {
+                // Handle non-JSON responses (e.g., HTML error pages)
+                console.error("Received non-JSON response:", await response.text());
+                return { success: false, message: `Server returned an unexpected response (Status: ${response.status})` };
+             }
+        } catch (error) {
+            console.error('POST Error:', error);
+            return { success: false, message: 'Network or server error during POST.' };
+        }
+    }
+    async function postData(url, data) { // Helper for sending JSON data
+        try {
+            // const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    // 'X-CSRFToken': csrfToken // Example header
+                },
+                body: JSON.stringify(data)
+             });
+              const contentType = response.headers.get("content-type");
+             if (contentType && contentType.indexOf("application/json") !== -1) {
+                return await response.json();
+             } else {
+                console.error("Received non-JSON response:", await response.text());
+                return { success: false, message: `Server returned an unexpected response (Status: ${response.status})` };
+             }
+        } catch (error) {
+            console.error('POST JSON Error:', error);
+            return { success: false, message: 'Network or server error during POST.' };
+        }
+    }
+     async function deleteResource(url) {
+        try {
+             // const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+             const headers = {
+                'Accept': 'application/json',
+                // 'X-CSRFToken': csrfToken // Example header
+            };
+            const response = await fetch(url, { method: 'DELETE', headers: headers });
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                 // If response is JSON, parse it
+                 return await response.json();
+            } else {
+                 // If no content or non-JSON, infer success from status code
+                 return { success: response.ok, message: response.ok ? 'Deleted successfully.' : `Error: ${response.statusText || 'Failed to delete'}`};
             }
+        } catch (error) {
+            console.error('DELETE Error:', error);
+            return { success: false, message: 'Network or server error during DELETE.' };
+        }
+    }
+    // Helper to escape HTML
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        const div = document.createElement('div');
+        div.textContent = String(str); // Ensure it's a string
+        return div.innerHTML;
+    }
+
+    // --- Dependent Dropdown Logic ---
+    const departmentSelect = document.getElementById('department_id');
+    const specializationSelect = document.getElementById('specialization_id');
+
+    function updateSpecializationOptions() {
+        if (!departmentSelect || !specializationSelect) return; // Elements not found
+
+        const selectedDepartmentId = departmentSelect.value ? parseInt(departmentSelect.value, 10) : null;
+        const currentSpecializationId = specializationSelect.value ? parseInt(specializationSelect.value, 10) : null;
+
+        // Clear existing options (keep the first "-- Select --" or placeholder)
+        while (specializationSelect.options.length > 1) {
+             // Remove options starting from the second one if a placeholder exists
+             // Or remove all if no placeholder is desired initially
+             specializationSelect.remove(1);
+        }
+        // If placeholder exists, update its text
+        if (specializationSelect.options[0]) {
+             specializationSelect.options[0].textContent = selectedDepartmentId ? "-- Select Specialization --" : "-- Select Department First --";
+             specializationSelect.options[0].value = ""; // Ensure placeholder has no value
+             specializationSelect.disabled = !selectedDepartmentId; // Disable if no dept selected
         }
 
-        // --- Availability AJAX and Modal JS (COPY EXACTLY from previous settings.html) ---
-        const weeklyForm = document.getElementById('add-weekly-slot-form');
-        const overrideForm = document.getElementById('add-override-form');
-        // ... (rest of the variables: weeklyFeedback, overrideFeedback, modalElement, etc.) ...
-        const weeklyFeedback = document.getElementById('weekly-form-feedback');
-        const overrideFeedback = document.getElementById('override-form-feedback');
-        const modalElement = document.getElementById('deleteConfirmModal');
-        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const modalBodyText = document.getElementById('modalBodyText');
 
+        let foundMatchingOption = false;
+        // Filter and add options from the embedded JS data
+        allSpecializations.forEach(spec => {
+            // Match if department IDs are equal OR if the specialization's dept ID is null/undefined (treat as general?)
+            // OR if no department is selected (show all? - decide based on requirements)
+            // Current logic: Only show if department ID matches exactly.
+             if (spec.department_id === selectedDepartmentId) {
+                const option = document.createElement('option');
+                option.value = spec.specialization_id;
+                option.textContent = spec.name;
+                option.dataset.departmentId = spec.department_id || ''; // Store dept id
+                specializationSelect.appendChild(option);
+                if (spec.specialization_id === currentSpecializationId) {
+                    option.selected = true;
+                    foundMatchingOption = true;
+                }
+            }
+        });
 
-        function showModal(type, id) { /* ... (modal logic from settings.html) ... */ if(!modalElement || !confirmDeleteBtn || !modalBodyText) { console.error("Modal elements missing!"); return; } confirmDeleteBtn.dataset.deleteType = type; confirmDeleteBtn.dataset.deleteId = id; modalBodyText.textContent = `Are you sure you want to delete this ${type === 'weekly' ? 'weekly availability slot' : 'availability override'}? This action cannot be undone.`; modalElement.style.display = 'flex'; setTimeout(() => modalElement.classList.add('modal-open'), 10); }
-        function hideModal() { /* ... (modal logic from settings.html) ... */ if(!modalElement) return; modalElement.classList.remove('modal-open'); setTimeout(() => { if (!modalElement.classList.contains('modal-open')) { modalElement.style.display = 'none'; } }, 300); if(confirmDeleteBtn) { confirmDeleteBtn.dataset.deleteType = ''; confirmDeleteBtn.dataset.deleteId = ''; } }
-        if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', hideModal);
-        if (closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
-        if (modalElement) { modalElement.addEventListener('click', (event) => { if (event.target === modalElement) hideModal(); }); }
+        // If the previously selected specialization doesn't belong to the new department, reset selection
+        if (!foundMatchingOption && specializationSelect.options.length > 1) {
+             specializationSelect.selectedIndex = 0; // Select the placeholder
+        } else if (!foundMatchingOption && currentDoctorInfo.specializationId && !selectedDepartmentId) {
+             // Handle case where department is deselected but user HAD a specialization
+             // Maybe keep the old one but show a warning, or force selection?
+             // For now, just reset to placeholder.
+             specializationSelect.selectedIndex = 0;
+        }
 
-        function showFeedback(element, message, isSuccess) { /* ... (feedback logic from settings.html) ... */ if(!element) return; const alertClass = isSuccess ? 'alert-success' : 'alert-danger'; element.innerHTML = `<div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="font-size: 0.9em; padding: 0.5rem 0.8rem;">${message} <button type="button" class="btn-close" style="padding: 0.6rem 0.8rem;" data-bs-dismiss="alert" aria-label="Close"></button></div>`; setTimeout(() => { if(element) element.innerHTML = ''; }, 6000); }
-        function flashMessage(message, category = 'info') { /* ... (flash logic from settings.html) ... */ const flashContainer = document.querySelector('.flash-messages'); if (!flashContainer) { console.warn("Flash container not found for message:", message); return; } const alertDiv = document.createElement('div'); const alertClass = { info: 'info', success: 'success', warning: 'warning', danger: 'danger', error: 'danger'}[category] || 'info'; alertDiv.className = `alert alert-${alertClass} alert-dismissible fade`; alertDiv.setAttribute('role', 'alert'); alertDiv.style.cssText = 'opacity: 0; transition: opacity 0.5s ease-in-out; margin-bottom: var(--spacing-md);'; alertDiv.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`; flashContainer.insertBefore(alertDiv, flashContainer.firstChild); setTimeout(() => alertDiv.classList.add('show'), 50); setTimeout(() => { alertDiv.classList.remove('show'); alertDiv.addEventListener('transitionend', () => alertDiv.remove(), { once: true }); }, 5000); }
+        // If no options were added (except placeholder), indicate that
+        if (specializationSelect.options.length <= 1 && selectedDepartmentId) {
+             if (specializationSelect.options[0]) {
+                specializationSelect.options[0].textContent = "-- No Specializations Found --";
+             }
+             specializationSelect.disabled = true;
+        }
 
-        function addSlotToDOM(slot) { /* ... (DOM logic from settings.html) ... */ const dayContainer = document.getElementById(`day-${slot.day_of_week}-slots`); if (!dayContainer) return; const noSlotsMsg = dayContainer.querySelector('.no-slots'); if (noSlotsMsg) noSlotsMsg.remove(); const div = document.createElement('div'); div.classList.add('time-slot'); div.id = `slot-${slot.availability_id}`; div.innerHTML = `<span>${slot.start_time} - ${slot.end_time}</span> <button class="delete-btn delete-weekly-slot" data-slot-id="${slot.availability_id}" title="Delete Slot">×</button>`; const existingSlots = Array.from(dayContainer.querySelectorAll('.time-slot')); let inserted = false; for(const existing of existingSlots) { const existingStartTime = existing.querySelector('span').textContent.split(' - ')[0]; if (slot.start_time < existingStartTime) { dayContainer.insertBefore(div, existing); inserted = true; break; } } if (!inserted) dayContainer.appendChild(div); }
-        function addOverrideToDOM(override) { /* ... (DOM logic from settings.html) ... */ const listContainer = document.getElementById('override-list'); if (!listContainer) return; const noOverridesMsg = listContainer.querySelector('.no-overrides'); if (noOverridesMsg) noOverridesMsg.remove(); const div = document.createElement('div'); div.classList.add('override-item'); div.id = `override-${override.override_id}`; let timeHtml = override.start_time && override.end_time ? `<span>${override.start_time} - ${override.end_time}</span>` : `<span>Full Day</span>`; let statusClass = override.is_unavailable ? 'status-unavailable' : 'status-available'; let statusText = override.is_unavailable ? 'Unavailable' : 'Available'; let reasonHtml = override.reason ? `<span class="reason">(${override.reason})</span>` : ''; div.innerHTML = `<div class="override-details"> <span><strong>${override.override_date}</strong></span> ${timeHtml} <span class="${statusClass}">${statusText}</span> ${reasonHtml} </div> <button class="delete-btn delete-override" data-override-id="${override.override_id}" title="Delete Override">×</button>`; const existingOverrides = Array.from(listContainer.querySelectorAll('.override-item')); let inserted = false; for (const existing of existingOverrides) { const existingDate = existing.querySelector('.override-details > span:first-child strong').textContent; if (override.override_date < existingDate) { listContainer.insertBefore(div, existing); inserted = true; break; } else if (override.override_date === existingDate && override.start_time) { const existingStartTimeMatch = existing.querySelector('.override-details > span:nth-child(2)'); const existingStartTime = existingStartTimeMatch ? existingStartTimeMatch.textContent.split(' - ')[0] : 'Full Day'; if (existingStartTime !== 'Full Day' && override.start_time < existingStartTime) { listContainer.insertBefore(div, existing); inserted = true; break; } } } if (!inserted) listContainer.appendChild(div); }
+    }
 
-        function handleAddWeekly(event) { /* ... (AJAX handler from settings.html) ... */ event.preventDefault(); if(!weeklyForm || !weeklyFeedback) return; weeklyFeedback.innerHTML = ''; const formData = new FormData(weeklyForm); const startTime = formData.get('start_time'); const endTime = formData.get('end_time'); if (startTime && endTime && startTime >= endTime) { showFeedback(weeklyFeedback, 'Start time must be before end time.', false); return; } fetch('{{ url_for("availability.add_weekly_slot_route") }}', { method: 'POST', body: formData }).then(response => response.json()).then(data => { showFeedback(weeklyFeedback, data.message, data.success); if (data.success && data.slot) { addSlotToDOM(data.slot); weeklyForm.reset(); } }).catch(error => { console.error('Add Weekly Slot Error:', error); showFeedback(weeklyFeedback, 'An error occurred.', false); }); }
-        function handleAddOverride(event) { /* ... (AJAX handler from settings.html) ... */ event.preventDefault(); if(!overrideForm || !overrideFeedback) return; overrideFeedback.innerHTML = ''; const formData = new FormData(overrideForm); const startTime = formData.get('start_time'); const endTime = formData.get('end_time'); if ((startTime && !endTime) || (!startTime && endTime)) { showFeedback(overrideFeedback, 'Provide both times or leave both blank.', false); return; } if (startTime && endTime && startTime >= endTime) { showFeedback(overrideFeedback, 'Start time must be before end time.', false); return; } fetch('{{ url_for("availability.add_override_route") }}', { method: 'POST', body: formData }).then(response => response.json()).then(data => { showFeedback(overrideFeedback, data.message, data.success); if (data.success && data.override) { addOverrideToDOM(data.override); overrideForm.reset(); } }).catch(error => { console.error('Add Override Error:', error); showFeedback(overrideFeedback, 'An error occurred.', false); }); }
-        function handleDeleteConfirm() { /* ... (AJAX handler from settings.html) ... */ if (!confirmDeleteBtn) return; const type = confirmDeleteBtn.dataset.deleteType; const id = confirmDeleteBtn.dataset.deleteId; if (!type || !id) { console.error("Delete type/ID missing."); hideModal(); return; } let url = ''; let elementIdPrefix = ''; if (type === 'weekly') { url = `{{ url_for('availability.delete_weekly_slot_route', availability_id=0) }}`.replace('/0', `/${id}`); elementIdPrefix = 'slot-'; } else if (type === 'override') { url = `{{ url_for('availability.delete_override_route', override_id=0) }}`.replace('/0', `/${id}`); elementIdPrefix = 'override-'; } else { console.error("Unknown delete type:", type); hideModal(); return; } const fetchOptions = { method: 'DELETE', headers: { 'Accept': 'application/json' /* , 'X-CSRFToken': '...' */ }}; fetch(url, fetchOptions).then(response => response.json().then(data => ({ status: response.status, body: data }))).then(({ status, body }) => { if (body.success) { const elementToRemove = document.getElementById(`${elementIdPrefix}${id}`); if (elementToRemove) { const parentDiv = elementToRemove.parentElement; elementToRemove.remove(); if (type === 'weekly' && parentDiv && !parentDiv.querySelector('.time-slot')) { parentDiv.innerHTML = '<p class="text-muted no-slots small">No availability set.</p>'; } else if (type === 'override' && parentDiv && !parentDiv.querySelector('.override-item')) { parentDiv.innerHTML = '<p class="text-muted no-overrides small">No upcoming overrides found.</p>'; } } flashMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted.`, "success"); } else { flashMessage(body.message || `Failed to delete ${type}.`, "danger"); } }).catch(error => { console.error('Delete Error:', error); flashMessage('An error occurred.', "danger"); }).finally(() => hideModal()); }
+    // --- Event Listeners ---
+    document.addEventListener('DOMContentLoaded', function() {
 
-        if (weeklyForm) weeklyForm.addEventListener('submit', handleAddWeekly);
-        if (overrideForm) overrideForm.addEventListener('submit', handleAddOverride);
-        if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', handleDeleteConfirm);
-        document.body.addEventListener('click', function(event) { const target = event.target; let deleteType = null; let deleteId = null; if (target.matches('.delete-weekly-slot')) { deleteType = 'weekly'; deleteId = target.dataset.slotId; } else if (target.matches('.delete-override')) { deleteType = 'override'; deleteId = target.dataset.overrideId; } if (deleteType && deleteId) { event.preventDefault(); showModal(deleteType, deleteId); } });
+        // Attach listener to department dropdown
+        if (departmentSelect) {
+            departmentSelect.addEventListener('change', updateSpecializationOptions);
+            // Initial population on page load
+            updateSpecializationOptions();
+        } else {
+            console.error("Department select dropdown ('department_id') not found.");
+        }
 
-    });
-    </script>
+        // ---- Location Management (AJAX, keep as is) ----
+        const addLocationForm = document.getElementById('add-location-form');
+        if (addLocationForm) {
+            addLocationForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const formData = new FormData(addLocationForm);
+                // Ensure endpoint matches your location management blueprint/route
+                const url = "{{ url_for('locations.add_doctor_location') }}"; // Assuming 'locations' blueprint
+                const result = await postFormData(url, formData);
+                showFlash('settings-flash-area', result.message, result.success ? 'success' : 'danger');
+                if (result.success && result.location) {
+                    addLocationForm.reset();
+                    // Consider dynamic update vs. reload based on complexity
+                    window.location.reload(); // Reload to reflect changes everywhere
+                    // toggleAddLocationForm(false); // Hide form
+                }
+            });
+        }
+        document.getElementById('location-list')?.addEventListener('click', function(event) {
+            if (event.target.closest('.delete-location-btn')) {
+                event.preventDefault();
+                const button = event.target.closest('.delete-location-btn');
+                const locationId = button.dataset.locationId;
+                const locationName = button.dataset.locationName;
+                if (confirm(`Are you sure you want to delete location "${escapeHTML(locationName)}"? This will also delete its weekly schedule and other associated availability data.`)) {
+                     // Ensure endpoint matches your location management blueprint/route
+                    const url = `/portal/locations/${locationId}`; // Assuming DELETE /portal/locations/<id>
+                     deleteResource(url).then(result => {
+                        showFlash('settings-flash-area', result.message, result.success ? 'success' : 'danger');
+                        if (result.success) {
+                            const itemToRemove = document.getElementById(`location-${locationId}`);
+                            if (itemToRemove) {
+                                itemToRemove.remove();
+                                if (!document.querySelector('#location-list .location-entry')) {
+                                     document.getElementById('location-list').innerHTML = '<p id="no-locations-message" class="text-muted">You haven\'t added any practice locations yet.</p>';
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        });
+
+        // ---- Weekly Schedule per Location (AJAX, keep as is) ----
+        document.querySelectorAll('.add-weekly-slot-form').forEach(form => {
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const formData = new FormData(form);
+                const locationId = form.dataset.locationId;
+                // Ensure endpoint matches your availability management blueprint/route
+                const url = "{{ url_for('availability.add_weekly_slot_route') }}"; // Assuming 'availability' blueprint
+                // Use postFormData for form data
+                const result = await postFormData(url, formData);
+                 showFlash(`settings-flash-area`, result.message, result.success ? 'success' : 'danger');
+                if (result.success && result.slot) {
+                    form.reset();
+                    const dayIndex = result.slot.day_of_week;
+                    const list = document.getElementById(`schedule-day-${locationId}-${dayIndex}`);
+                    const noSlotsMsg = list?.querySelector(`.no-slots-${locationId}-${dayIndex}`);
+                    if (noSlotsMsg) noSlotsMsg.remove();
+                    if(list) {
+                        const newItem = document.createElement('li');
+                        newItem.id = `slot-${result.slot.location_availability_id}`;
+                        newItem.innerHTML = `
+                            <span><i class="far fa-clock"></i> ${result.slot.start_time} - ${result.slot.end_time}</span>
+                            <button class="button button-outline button-danger button-small delete-weekly-slot" data-slot-id="${result.slot.location_availability_id}"><i class="fas fa-trash-alt fa-fw"></i> Delete</button>
+                        `;
+                        list.appendChild(newItem);
+                    }
+                }
+            });
+        });
+        document.getElementById('location-list')?.addEventListener('click', function(event) {
+             if (event.target.closest('.delete-weekly-slot')) {
+                handleDeleteWeeklySlot(event);
+             }
+        });
+        function handleDeleteWeeklySlot(event) {
+             if (!confirm('Delete this weekly slot?')) return;
+             const button = event.target.closest('button');
+             const slotId = button.dataset.slotId; // location_availability_id
+             // Ensure endpoint matches your availability management blueprint/route
+             const url = `/portal/availability/weekly/${slotId}`; // Assuming DELETE /portal/availability/weekly/<id>
+            deleteResource(url).then(result => {
+                 showFlash('settings-flash-area', result.message, result.success ? 'success' : 'warning');
+                 if (result.success) {
+                     const itemToRemove = document.getElementById(`slot-${slotId}`);
+                     if(itemToRemove) {
+                         const list = itemToRemove.parentElement;
+                         const locationId = list.id.split('-')[2];
+                         const dayIndex = list.id.split('-')[3];
+                         itemToRemove.remove();
+                         if (list && list.children.length === 0) {
+                             const noSlotsMsg = document.createElement('li');
+                             noSlotsMsg.className = `text-muted no-slots-${locationId}-${dayIndex}`;
+                             noSlotsMsg.textContent = 'No slots defined.';
+                             list.appendChild(noSlotsMsg);
+                         }
+                     }
+                 }
+             });
+        }
+
+        // ---- Overrides (AJAX, keep as is) ----
+        const addOverrideForm = document.getElementById('add-override-form');
+        if (addOverrideForm) {
+            addOverrideForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const formData = new FormData(addOverrideForm);
+                 // Ensure endpoint matches your availability management blueprint/route
+                const url = "{{ url_for('availability.add_override_route') }}"; // Assuming 'availability' blueprint
+                const result = await postFormData(url, formData); // Use postFormData
+                showFlash('availability-error-flash', result.message, result.success ? 'success' : 'danger');
+                if (result.success && result.override) {
+                    addOverrideForm.reset();
+                    const overrideList = document.querySelector('#override-list ul');
+                    const noOverridesMsg = document.getElementById('no-overrides-message');
+                    if (noOverridesMsg) noOverridesMsg.remove();
+                    const newItem = document.createElement('li');
+                    newItem.id = `override-${result.override.override_id}`;
+                    let timeStr = (result.override.start_time && result.override.end_time) ? `${result.override.start_time} - ${result.override.end_time}` : 'Full Day';
+                    let statusBadge = `<span class="badge ${result.override.is_unavailable ? 'bg-danger' : 'bg-success'} text-white">${result.override.is_unavailable ? 'Unavailable' : 'Available'}</span>`;
+                    let reasonStr = result.override.reason ? `<em class="text-muted ms-1">(${escapeHTML(result.override.reason)})</em>` : '';
+                    let locationStr = result.override.location_name ? ` at <strong>${escapeHTML(result.override.location_name)}</strong>` : ' (General)';
+                    newItem.innerHTML = `
+                         <span><i class="far fa-calendar-times"></i> <strong>${result.override.override_date}</strong>${locationStr}: ${timeStr} - ${statusBadge}${reasonStr}</span>
+                         <button class="button button-outline button-danger button-small delete-override" data-override-id="${result.override.override_id}"><i class="fas fa-trash-alt fa-fw"></i> Delete</button>
+                    `;
+                    overrideList.appendChild(newItem);
+                }
+            });
+        }
+        document.getElementById('override-list')?.addEventListener('click', function(event) {
+            if (event.target.closest('.delete-override')) {
+                handleDeleteOverride(event);
+            }
+        });
+        function handleDeleteOverride(event) {
+             if (!confirm('Delete this override?')) return;
+             const button = event.target.closest('button');
+             const overrideId = button.dataset.overrideId;
+              // Ensure endpoint matches your availability management blueprint/route
+             const url = `/portal/availability/override/${overrideId}`; // Assuming DELETE /portal/availability/override/<id>
+             deleteResource(url).then(result => {
+                 showFlash('availability-error-flash', result.message, result.success ? 'success' : 'warning');
+                 if (result.success) {
+                     const itemToRemove = document.getElementById(`override-${overrideId}`);
+                     if (itemToRemove) {
+                         const list = itemToRemove.parentElement;
+                         itemToRemove.remove();
+                         if (list && list.children.length === 0) {
+                             const noOverridesMsg = document.createElement('li');
+                             noOverridesMsg.id = 'no-overrides-message'; noOverridesMsg.className = 'text-muted'; noOverridesMsg.textContent = 'No upcoming overrides defined.';
+                             list.appendChild(noOverridesMsg);
+                         }
+                     }
+                 }
+             });
+        }
+
+        // ---- Daily Limits (AJAX, keep as is) ----
+         const addLimitForm = document.getElementById('add-daily-limit-form');
+         if (addLimitForm) {
+             addLimitForm.addEventListener('submit', async function(event) {
+                 event.preventDefault();
+                 const formData = new FormData(addLimitForm);
+                   // Ensure endpoint matches your availability management blueprint/route
+                 const url = "{{ url_for('availability.save_daily_limit_route') }}"; // Assuming 'availability' blueprint
+                 const result = await postFormData(url, formData); // Use postFormData
+                 showFlash('availability-error-flash', result.message, result.success ? 'success' : 'danger');
+                 if (result.success && result.limit) {
+                    addLimitForm.reset();
+                    const limitList = document.querySelector('#daily-limit-list ul');
+                    const noLimitsMsg = document.getElementById('no-limits-message');
+                    if (noLimitsMsg) noLimitsMsg.remove();
+                    const existingItem = document.getElementById(`limit-${result.limit.provider_daily_limit_id}`);
+                    if(existingItem) existingItem.remove();
+                    const newItem = document.createElement('li');
+                    newItem.id = `limit-${result.limit.provider_daily_limit_id}`;
+                    newItem.innerHTML = `
+                        <span><i class="far fa-calendar-check"></i> <strong>${result.limit.limit_date}</strong> at <strong>${escapeHTML(result.limit.location_name)}</strong>: Max <strong>${result.limit.max_appointments}</strong></span>
+                        <button class="button button-outline button-danger button-small delete-daily-limit" data-limit-id="${result.limit.provider_daily_limit_id}"><i class="fas fa-trash-alt fa-fw"></i> Delete</button>
+                    `;
+                    limitList.appendChild(newItem);
+                 }
+             });
+         }
+        document.getElementById('daily-limit-list')?.addEventListener('click', function(event) {
+             if (event.target.closest('.delete-daily-limit')) {
+                 handleDeleteDailyLimit(event);
+             }
+        });
+        function handleDeleteDailyLimit(event) {
+             if (!confirm('Delete this daily limit?')) return;
+             const button = event.target.closest('button');
+             const limitId = button.dataset.limitId;
+               // Ensure endpoint matches your availability management blueprint/route
+             const url = `/portal/availability/limits/${limitId}`; // Assuming DELETE /portal/availability/limits/<id>
+             deleteResource(url).then(result => {
+                 showFlash('availability-error-flash', result.message, result.success ? 'success' : 'warning');
+                  if (result.success) {
+                      const itemToRemove = document.getElementById(`limit-${limitId}`);
+                      if(itemToRemove) {
+                          const list = itemToRemove.parentElement;
+                          itemToRemove.remove();
+                           if (list && list.children.length === 0) {
+                              const noLimitsMsg = document.createElement('li');
+                              noLimitsMsg.id = 'no-limits-message'; noLimitsMsg.className = 'text-muted'; noLimitsMsg.textContent = 'No upcoming daily limits defined.';
+                              list.appendChild(noLimitsMsg);
+                           }
+                      }
+                  }
+             });
+        }
+
+    }); // End DOMContentLoaded
+
+     // --- Toggle Add Location Form (Keep as is) ---
+     function toggleAddLocationForm(forceOpen = null) {
+         const body = document.getElementById('add-new-location-body');
+         const chevron = document.getElementById('add-location-chevron');
+         if (!body || !chevron) return;
+         let isOpen;
+         if (forceOpen === true) isOpen = false;
+         else if (forceOpen === false) isOpen = true;
+         else isOpen = body.style.display === 'block';
+         if (!isOpen) {
+             body.style.display = 'block';
+             chevron.classList.replace('fa-chevron-down', 'fa-chevron-up');
+         } else {
+             body.style.display = 'none';
+             chevron.classList.replace('fa-chevron-up', 'fa-chevron-down');
+         }
+     }
+     document.addEventListener('DOMContentLoaded', () => {
+         const addLocationBody = document.getElementById('add-new-location-body');
+         if (addLocationBody && !addLocationBody.classList.contains('show-on-error')) { // Prevent hiding if server indicates error
+            addLocationBody.style.display = 'none';
+         }
+     });
+
+</script>
 {% endblock %}

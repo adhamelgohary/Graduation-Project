@@ -12,11 +12,21 @@ from db import get_db_connection
 from datetime import datetime
 import math
 
-# --- Authorization Helper ---
-def check_doctor_authorization(user):
-    """Checks if the user is an authenticated doctor."""
-    if not user or not user.is_authenticated: return False
-    return getattr(user, 'user_type', None) == 'doctor'
+from .utils import (
+    check_doctor_authorization,
+    check_provider_authorization,      # Import if used
+    check_doctor_or_dietitian_authorization, # Import if used
+    is_doctor_authorized_for_patient, # Import if used
+    get_provider_id,
+    get_enum_values,                 # Import if used
+    get_all_simple,                  # Import if used
+    calculate_age,                   # Import if used
+    allowed_file,                    # Import if used
+    generate_secure_filename,
+    can_modify_appointment         # Import if used
+)
+
+
 
 # --- Blueprint Definition ---
 messaging_bp = Blueprint(

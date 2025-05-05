@@ -132,7 +132,8 @@
                         <h1>{{ condition.name | default('Condition') }}</h1>
                         <div class="image-text-container">
                             <img src="{{ url_for('static', filename=condition.image_url) }}" alt="{{ condition.name }} Illustration">
-                            <p>{{ condition.description | default ('Learn more about this condition.') | truncate(120) }}</p>
+                            {# Use 'or' to provide an empty string if description is None or empty, then truncate #}
+<p>{{ (condition.description or '') | truncate(120, True) | default('Learn more about this condition.', True) }}</p>
                         </div>
                     </div>
                     <a href="{{ url_for('department.view_condition', condition_id=condition.condition_id) }}" class="btn">Read More</a>

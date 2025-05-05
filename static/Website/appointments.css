@@ -1,0 +1,265 @@
+/* static/Website/appointments.css */
+
+/* --- My Appointments List --- */
+.appointment-section {
+    margin-bottom: 3rem;
+}
+.appointment-section h2.section-title {
+    text-align: left;
+    font-size: 1.8em;
+    margin-bottom: 1.5rem;
+}
+.appointment-section h2.section-title::after {
+    margin: 10px 0 20px; /* Adjust underline position */
+    width: 50px;
+}
+
+.appointment-list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.appointment-card {
+    /* Uses .card .content-section styles from base */
+    display: flex; /* Ensure items align correctly */
+    flex-direction: column;
+    height: 100%; /* Make cards in a row equal height */
+}
+
+.appointment-card .card-body {
+    padding: 1.2rem 1.5rem;
+    flex-grow: 1; /* Allows actions to stick to bottom */
+    display: flex;
+    flex-direction: column;
+}
+
+.appointment-card .card-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping if needed */
+    gap: 0.5rem;
+    border: none; padding: 0;
+}
+.appointment-card .card-title::after { display: none; }
+
+.appointment-card .status-badge {
+    font-size: 0.8em;
+    padding: 0.3em 0.6em;
+}
+
+.appointment-card .card-text {
+    font-size: 0.95em;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.appointment-card .card-text i {
+    color: var(--text-secondary);
+    width: 16px; /* Align icons */
+    text-align: center;
+}
+.appointment-card .card-text.doctor-name {
+    color: var(--text-color);
+    font-weight: 500;
+}
+.appointment-card .card-text.reason-snippet {
+    font-style: italic;
+}
+
+
+.appointment-card .card-actions {
+    margin-top: auto; /* Push actions to the bottom */
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end; /* Align buttons right */
+}
+
+/* Past Appointments Table */
+.appointment-list-table .table {
+    margin-bottom: 0; /* Remove default table margin inside card */
+}
+.appointment-list-table th {
+     white-space: nowrap;
+}
+.appointment-list-table .action-buttons form {
+    margin-left: 5px;
+}
+
+.no-results {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+/* --- Appointment Detail --- */
+.appointment-detail-card .card-header {
+    background-color: var(--nested-card-bg); /* Subtle difference for header */
+}
+.appointment-detail-card h2.section-title {
+     text-align: left;
+     font-size: 1.5em;
+     margin: 0; padding: 0;
+}
+.appointment-detail-card h2.section-title::after { display: none; }
+
+.detail-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px dashed var(--border-color);
+}
+.detail-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.detail-section h4 {
+    font-size: 1.1em;
+    color: var(--accent-pink);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.detail-section h4::after { display: none; }
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.8rem 1.5rem;
+}
+.detail-item strong {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    margin-bottom: 0.1rem;
+    font-weight: 500;
+}
+.detail-item span {
+    font-size: 1em;
+    color: var(--text-color);
+}
+.detail-item.grid-full-width {
+    grid-column: 1 / -1; /* Make item span full width */
+}
+
+.appointment-notes {
+    white-space: pre-wrap;
+    background-color: var(--nested-card-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    font-size: 0.95em;
+    color: var(--text-secondary);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* --- Appointment Form --- */
+.appointment-form-card .card-body {
+     padding: 2rem;
+}
+.doctor-info-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--nested-card-bg);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+}
+.doctor-info-card img {
+    width: 60px; height: 60px;
+    border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+.doctor-info-card h4 {
+    margin: 0 0 0.2rem 0; font-size: 1.2em; color: var(--text-color);
+    padding: 0; border: none;
+}
+.doctor-info-card h4::after { display: none; }
+.doctor-info-card p { margin: 0; font-size: 0.9em; color: var(--text-secondary); }
+
+.availability-section label {
+    font-weight: 500;
+    margin-bottom: 0.8rem;
+    display: block;
+}
+
+.time-slots {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); /* Adjust minmax */
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    max-height: 250px; /* Increased height */
+    overflow-y: auto;
+    padding: 0.8rem;
+    background-color: var(--input-bg);
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+.time-slot {
+    padding: 0.6rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+    background-color: var(--bg-secondary);
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+    font-size: 0.9em;
+    color: var(--text-color);
+}
+.time-slot:hover {
+    background-color: var(--button-bg);
+    border-color: var(--accent-pink);
+}
+.time-slot.selected {
+    background-color: var(--accent-pink);
+    color: white;
+    border-color: var(--accent-pink);
+    font-weight: 600;
+}
+.loading-slots, .initial-prompt {
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    grid-column: 1 / -1; /* Span full grid width */
+}
+.loading-slots i { margin-left: 5px; }
+
+#appointment_time_display {
+    font-weight: bold;
+    margin-left: 10px;
+    color: var(--neon-blue); /* Highlight selected time */
+}
+
+.form-actions {
+     text-align: right;
+     margin-top: 2rem;
+     padding-top: 1rem;
+     border-top: 1px solid var(--border-color);
+}
+
+#submit-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--text-secondary);
+    border-color: var(--text-secondary);
+    color: var(--bg-secondary);
+}
+[data-theme="light"] #submit-button:disabled {
+    background-color: var(--border-color);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
