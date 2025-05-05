@@ -14,7 +14,7 @@ def dashboard():
         flash("Access denied. Admin privileges required.", "danger")
         # Redirect to login or a more appropriate page like the user's own dashboard
         # Assuming a general 'auth.login' route exists, adjust if needed.
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('login.login_route'))
 
     connection = None
     cursor = None
