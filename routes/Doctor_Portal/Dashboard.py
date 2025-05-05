@@ -38,7 +38,7 @@ def dashboard():
     if not check_doctor_authorization(current_user):
         flash("Access denied. You must be logged in as a doctor.", "warning")
         # Adjust redirect target as needed (e.g., to a general login or home page)
-        return redirect(url_for('auth.login')) # Assuming 'auth.login' is your login route
+        return redirect(url_for('login.login_route')) # Assuming 'auth.login' is your login route
 
     doctor_user_id = current_user.id
 

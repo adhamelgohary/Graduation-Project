@@ -4,8 +4,10 @@ from flask import Blueprint, render_template, current_app, abort, url_for
 import mysql.connector
 import sys
 import os
+import re # Import regex for potential cleanup
 
 # --- Database Connection Setup ---
+# ... (keep as is) ...
 try:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
     from db import get_db_connection
@@ -19,6 +21,7 @@ except ImportError:
             return None
 
 # --- Import Shared Functions ---
+# ... (keep as is) ...
 try:
     from .home import get_all_departments_from_db
 except ImportError as e:
@@ -32,6 +35,7 @@ except ImportError as e:
 
 
 # --- Blueprint Definition ---
+# ... (keep as is) ...
 department_bp = Blueprint(
     'department',
     __name__,
@@ -39,9 +43,36 @@ department_bp = Blueprint(
     url_prefix='/departments'
 )
 
+# --- Helper: Simple Text Snippet Generation ---
+def create_snippet(text, max_length=250, indicator="..."):
+    """
+    Creates a snippet from text if it exceeds max_length.
+    Tries to break cleanly at sentence ends or spaces near the limit.
+    Returns the snippet and a boolean indicating if more content exists.
+    """
+    if not text or len(text) <= max_length:
+        return text, False # No snippet needed or text is short
+
+    # Try to find a sentence end near the max_length
+    end_sentence = text.rfind('.', 0, max_length + 1)
+    if end_sentence > max_length * 0.7: # Found a sentence end reasonably close
+        snippet = text[:end_sentence + 1]
+        return snippet, True
+
+    # Try to find a space near the max_length
+    end_space = text.rfind(' ', 0, max_length + 1)
+    if end_space > max_length * 0.7: # Found a space reasonably close
+         snippet = text[:end_space] + indicator
+         return snippet, True
+
+    # Fallback: hard cut
+    snippet = text[:max_length] + indicator
+    return snippet, True
+
 # --- Helper Functions ---
 
 def get_department_by_id(dept_id):
+    # ... (keep as is - no changes needed here for read more) ...
     """Fetches department details by ID, adds image URL and specific theme info."""
     department = None
     conn = None
@@ -96,14 +127,17 @@ def get_department_by_id(dept_id):
         if conn and conn.is_connected(): conn.close()
     return department
 
+
 def get_conditions_by_department(dept_id):
-    """Fetches active conditions associated with a department ID."""
+    # --- Added snippet generation for condition list descriptions ---
+    """Fetches active conditions, generates short descriptions for list view."""
     conditions = []
     conn = None
     cursor = None
     logger = current_app.logger if current_app else print
     log_method_error = logger.error if hasattr(logger, 'error') else logger
     log_method_exception = logger.exception if hasattr(logger, 'exception') else logger
+    SNIPPET_LENGTH_LIST = 100 # Shorter snippet for list view
 
     try:
         conn = get_db_connection()
@@ -126,7 +160,9 @@ def get_conditions_by_department(dept_id):
 
             condition_data['name'] = condition_data.get('condition_name')
             desc = condition_data.get('description', '')
-            condition_data['short_description'] = (desc[:100] + '...') if desc and len(desc) > 100 else desc
+            # Use helper to generate snippet for the list view
+            condition_data['short_description'], _ = create_snippet(desc, SNIPPET_LENGTH_LIST) # Ignore 'has_more' flag for list view
+
             conditions.append(condition_data)
     except mysql.connector.Error as db_err:
          if db_err.errno == 1054:
@@ -145,13 +181,17 @@ def get_conditions_by_department(dept_id):
     return conditions
 
 def get_condition_details_by_id(condition_id):
-    """Fetches detailed information for a specific active condition."""
+    """
+    Fetches detailed condition info, generates snippets for long text fields,
+    and adds flags indicating if more content exists.
+    """
     condition = None
     conn = None
     cursor = None
     logger = current_app.logger if current_app else print
     log_method_error = logger.error if hasattr(logger, 'error') else logger
     log_method_exception = logger.exception if hasattr(logger, 'exception') else logger
+    SNIPPET_LENGTH_DETAIL = 250 # Define snippet length for detail view
 
     try:
         conn = get_db_connection()
@@ -159,13 +199,12 @@ def get_condition_details_by_id(condition_id):
             log_method_error(f"Failed to get DB connection for condition ID {condition_id}")
             return None
         cursor = conn.cursor(dictionary=True)
-        # Fetch relevant fields - REMOVED c.treatment_details
+        # Fetch all necessary fields
         query = """
             SELECT
                 c.condition_id, c.condition_name AS name, c.description, c.overview,
                 c.symptoms_text AS symptoms, c.causes_text AS causes,
                 c.diagnosis_details AS diagnosis,
-                -- c.treatment_details AS treatment, -- REMOVED: Column does not exist in provided schema
                 c.testing_details AS testing, c.educational_content,
                 c.icd_code, c.urgency_level, c.condition_type, c.age_relevance,
                 c.gender_relevance, c.specialist_type, c.self_treatable,
@@ -175,35 +214,40 @@ def get_condition_details_by_id(condition_id):
             LEFT JOIN departments dept ON c.department_id = dept.department_id
             WHERE c.condition_id = %s AND c.is_active = TRUE
         """
-        cursor.execute(query, (condition_id,)) # Query execution should now succeed if schema matches
-        condition = cursor.fetchone()           # fetchone() will return data or None
+        cursor.execute(query, (condition_id,))
+        condition = cursor.fetchone()
 
-        # This 'if' block will now execute if the query was successful AND found a row
         if condition:
+            # --- Snippet Generation & Flags ---
+            fields_to_snippet = [ 'symptoms', 'causes', 'diagnosis', 'testing', 'educational_content', 'emergency_info']
+            for field in fields_to_snippet:
+                full_text = condition.get(field)
+                snippet, has_more = create_snippet(full_text, SNIPPET_LENGTH_DETAIL)
+                condition[f"{field}_snippet"] = snippet # e.g., condition['symptoms_snippet']
+                condition[f"{field}_has_more"] = has_more # e.g., condition['symptoms_has_more']
+            # --- End Snippet Generation ---
+
             # Keep url_for for images
             img_file = condition.get('condition_image_filename')
             condition['image_url'] = url_for('static', filename=f"images/conditions/{img_file}") if img_file else url_for('static', filename="images/conditions/disease_placeholder.png")
 
-            # CSS Mapping based on Department
-            # REMOVED url_for for CSS paths - using direct strings relative to static folder
-            # ASSUMPTION: CSS files are in 'static/website/' directory
+            # CSS Mapping (direct paths)
             dept_name = condition.get('department_name')
-            if dept_name == 'Cardiology': condition['specific_css'] = 'website/cardisease.css' # FIXED
-            elif dept_name == 'Neurology': condition['specific_css'] = 'website/neurodisease.css' # FIXED
-            elif dept_name == 'Orthopedics': condition['specific_css'] = 'website/orthodisease.css' # FIXED
-            elif dept_name == 'Dermatology': condition['specific_css'] = 'website/dermadisease.css' # FIXED
-            elif dept_name == 'Oncology': condition['specific_css'] = 'website/oncologydisease.css' # FIXED
-            else: condition['specific_css'] = 'website/generic_disease.css' # FIXED
+            if dept_name == 'Cardiology': condition['specific_css'] = 'website/cardisease.css'
+            elif dept_name == 'Neurology': condition['specific_css'] = 'website/neurodisease.css'
+            elif dept_name == 'Orthopedics': condition['specific_css'] = 'website/orthodisease.css'
+            elif dept_name == 'Dermatology': condition['specific_css'] = 'website/dermadisease.css'
+            elif dept_name == 'Oncology': condition['specific_css'] = 'website/oncologydisease.css'
+            else: condition['specific_css'] = 'website/generic_disease.css'
 
-            # Boolean Display for self_treatable
+            # Boolean Display
             if 'self_treatable' in condition and condition['self_treatable'] is not None:
                  condition['self_treatable_display'] = 'Yes' if condition['self_treatable'] else 'No'
             else:
                 condition['self_treatable_display'] = 'N/A'
 
     except mysql.connector.Error as db_err:
-         # Error handling remains the same, but the 1054 error for 'treatment_details' should no longer occur
-         if db_err.errno == 1054: # Check if *other* columns are missing
+         if db_err.errno == 1054:
              try: column_name = str(db_err).split("'")[1]
              except IndexError: column_name = "unknown"
              log_method_error(f"DB Error fetching condition details: Column '{column_name}' missing. Schema mismatch? Err: {db_err}")
@@ -217,10 +261,10 @@ def get_condition_details_by_id(condition_id):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
-    # This will return the fetched condition dictionary or None if not found OR if an error occurred
-    return condition
+    return condition # Returns None if error or not found
 
 def get_doctors_by_department(dept_id):
+    # ... (keep as is - no changes needed here for read more) ...
     """Fetches active and approved doctors associated with a department ID."""
     doctors = []
     conn = None
@@ -278,6 +322,7 @@ def get_doctors_by_department(dept_id):
 
 @department_bp.route('/')
 def list_departments():
+    # ... (keep as is) ...
     """Renders the page listing all available departments."""
     all_departments = get_all_departments_from_db()
     if not all_departments and current_app:
@@ -290,6 +335,7 @@ def list_departments():
 
 @department_bp.route('/<int:dept_id>/')
 def department_landing(dept_id):
+    # ... (keep as is) ...
     """Renders the landing page for a specific department."""
     department = get_department_by_id(dept_id)
     if not department:
@@ -308,22 +354,18 @@ def department_landing(dept_id):
         conditions=department_conditions
     )
 
+
 @department_bp.route('/conditions/<int:condition_id>')
 def view_condition(condition_id):
+    # ... (keep as is - logic is correct, relies on updated get_condition_details_by_id) ...
     """Renders the details page for a specific condition."""
-    # This function should now correctly return the condition data or None
-    condition = get_condition_details_by_id(condition_id)
+    condition = get_condition_details_by_id(condition_id) # Now returns snippets and flags
 
-    # This check is now accurate: if condition is None, it means the query
-    # either genuinely found no matching active condition with that ID,
-    # OR a *different* database error occurred (e.g., connection failed).
     if not condition:
         if current_app:
-            # The warning is now more meaningful. Check logs for DB errors in get_condition_details_by_id
             current_app.logger.warning(f"Condition details requested for ID {condition_id}, but get_condition_details_by_id returned None. Check for DB errors or if condition exists and is active.")
-        abort(404, description=f"Condition with ID {condition_id} not found or not available.") # Adjusted abort message
+        abort(404, description=f"Condition with ID {condition_id} not found or not available.")
 
-    # --- If condition was found ---
     if current_app:
         current_app.logger.debug(f"Successfully fetched condition data for ID {condition_id}: {condition.get('name')}")
 
@@ -343,6 +385,7 @@ def view_condition(condition_id):
     if current_app:
         current_app.logger.debug(f"Rendering condition detail template: {template_path}")
 
+    # Pass the condition object (now containing snippets and flags) to the template
     return render_template(
         template_path,
         condition=condition,
