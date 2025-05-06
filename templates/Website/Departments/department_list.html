@@ -70,7 +70,7 @@
         {# Reuse the card structure from home.html #}
         <div class="container-card">
           {# Use the image_url generated in the backend #}
-          <img src="{{ url_for('static', filename=(dept.image_url | default('images/placeholder.jpg'))) }}" alt="{{ dept.name | default('Department') }}">
+          <img src="{{ url_for('static', filename=(dept.image_url | default('images/placeholder.jpg'))) }}" alt="{{ dept.name | default('Department Image') }}">
           <div class="card-content">
             <h3>{{ dept.name | title | default('Department') }}</h3>
             <p>{{ dept.description | default('View details about this department.') | truncate(100) }}</p> {# Truncate description #}

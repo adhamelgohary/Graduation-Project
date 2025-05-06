@@ -7,7 +7,7 @@
 <style>
     .structure-section { margin-bottom: 2rem; }
     .table th, .table td { vertical-align: middle; }
-    .actions-cell { width: 1%; white-space: nowrap; } /* Prevent wrapping */
+    .actions-cell { width: 1%; white-space: nowrap; }
     .add-form-section {
         padding: 1.5rem;
         border: 1px solid #dee2e6;
@@ -16,6 +16,13 @@
         margin-top: 1rem;
     }
     .add-form-section h4 { margin-bottom: 1rem; }
+    .dept-img-thumbnail {
+        max-width: 60px;
+        max-height: 40px;
+        object-fit: contain; /* Or 'cover' */
+        border-radius: 3px;
+        border: 1px solid #ccc;
+    }
 </style>
 {% endblock %}
 
@@ -28,6 +35,7 @@
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
+                    <th>Image</th> {# <-- ADDED Image Column #}
                     <th>Name</th>
                     <th>Description</th>
                     <th class="actions-cell">Actions</th>
@@ -37,14 +45,21 @@
                 {% if departments %}
                     {% for dept in departments %}
                     <tr>
+                        {# <-- ADDED Image Cell --> #}
+                        <td>
+                            {% if dept.image_url %}
+                                <img src="{{ dept.image_url }}" alt="{{ dept.name | escape }} image" class="dept-img-thumbnail">
+                            {% else %}
+                                <span class="text-muted small">No image</span>
+                            {% endif %}
+                        </td>
                         <td>{{ dept.name | escape }}</td>
                         <td>{{ dept.description | escape | default('N/A', true) | truncate(80)}}</td>
                         <td class="actions-cell">
                             <a href="{{ url_for('admin_structure.edit_department', dept_id=dept.department_id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            {# Use form for delete for safety #}
-                            <form action="{{ url_for('admin_structure.delete_department', dept_id=dept.department_id) }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete department \'{{ dept.name | escape }}\'? Specializations linked to it will become unlinked.');">
+                            <form action="{{ url_for('admin_structure.delete_department', dept_id=dept.department_id) }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete department \'{{ dept.name | escape }}\'? Specializations linked to it will become unlinked. Associated image will be deleted.');">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
@@ -54,26 +69,33 @@
                     {% endfor %}
                 {% else %}
                     <tr>
-                        <td colspan="3" class="text-center text-muted">No departments found.</td>
+                        <td colspan="4" class="text-center text-muted">No departments found.</td> {# Incremented colspan #}
                     </tr>
                 {% endif %}
             </tbody>
         </table>
     </div>
 
-    {# Add Department Form #}
+    {# Add Department Form - Added file input and enctype #}
     <div class="add-form-section">
         <h4>Add New Department</h4>
-        <form action="{{ url_for('admin_structure.add_department') }}" method="post">
+        <form action="{{ url_for('admin_structure.add_department') }}" method="post" enctype="multipart/form-data"> {# <-- ADDED enctype --> #}
             <div class="row g-3">
-                <div class="col-md-5">
+                <div class="col-md-4"> {# Adjusted column size #}
                     <label for="department_name" class="form-label">Department Name *</label>
                     <input type="text" class="form-control" id="department_name" name="department_name" required>
                 </div>
-                <div class="col-md-7">
+                <div class="col-md-4"> {# Adjusted column size #}
                     <label for="department_description" class="form-label">Description</label>
                     <input type="text" class="form-control" id="department_description" name="department_description">
                 </div>
+                {# --- ADDED File Input --- #}
+                <div class="col-md-4">
+                    <label for="department_image" class="form-label">Image (Optional)</label>
+                    <input type="file" class="form-control" id="department_image" name="department_image" accept="image/png, image/jpeg, image/gif, image/webp">
+                     <small class="text-muted">Allowed: png, jpg, gif, webp</small>
+                </div>
+                 {# --- END File Input --- #}
                 <div class="col-12">
                     <button type="submit" class="btn btn-success"><i class="fas fa-plus me-1"></i> Add Department</button>
                 </div>
@@ -82,9 +104,9 @@
     </div>
 </section>
 
-<hr> {# Separator #}
+<hr>
 
-{# --- Specializations Section --- #}
+{# --- Specializations Section (No changes needed here) --- #}
 <section class="structure-section" id="specializations-section">
     <h3>Specializations</h3>
      <div class="table-responsive mb-3">
@@ -103,7 +125,7 @@
                     <tr>
                         <td>{{ spec.name | escape }}</td>
                         <td>{{ spec.description | escape | default('N/A', true) | truncate(60) }}</td>
-                        <td>{{ spec.department_name | escape | default('<i class="text-muted">None</i>' | safe, true) }}</td> {# Show 'None' if unlinked #}
+                        <td>{{ spec.department_name | escape | default('<i class="text-muted">None</i>' | safe, true) }}</td>
                         <td class="actions-cell">
                              <a href="{{ url_for('admin_structure.edit_specialization', spec_id=spec.specialization_id) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
                                 <i class="fas fa-edit"></i>
@@ -125,7 +147,6 @@
         </table>
     </div>
 
-    {# Add Specialization Form #}
     <div class="add-form-section">
         <h4>Add New Specialization</h4>
         <form action="{{ url_for('admin_structure.add_specialization') }}" method="post">
@@ -141,8 +162,8 @@
                 <div class="col-md-4">
                     <label for="department_id" class="form-label">Assign to Department</label>
                     <select class="form-select" id="department_id" name="department_id">
-                        <option value="">-- None --</option> {# Option for unlinked #}
-                        {% for dept in departments %} {# Use departments list from context #}
+                        <option value="">-- None --</option>
+                        {% for dept in departments %}
                         <option value="{{ dept.department_id }}">{{ dept.name | escape }}</option>
                         {% endfor %}
                     </select>
@@ -158,5 +179,4 @@
 {% endblock %}
 
 {% block scripts %}
-{# Add any specific JS for this page if needed, e.g., improved delete confirmations #}
 {% endblock %}

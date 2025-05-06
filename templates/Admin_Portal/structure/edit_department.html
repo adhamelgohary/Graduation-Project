@@ -1,36 +1,57 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Edit Specialization{% endblock %}
-{% block header_title %}Edit Specialization{% endblock %}
+{% block title %}Edit Department{% endblock %}
+{% block header_title %}Edit Department{% endblock %}
+
+{% block extra_css %}
+<style>
+    .current-dept-img-container { margin-bottom: 1rem; }
+    .current-dept-img { max-width: 150px; max-height: 100px; display: block; border: 1px solid #ccc; border-radius: 4px; }
+    .delete-img-label { margin-left: 0.5rem; font-weight: normal; color: #dc3545; cursor: pointer;}
+</style>
+{% endblock %}
 
 {% block content %}
-    <h3>Editing: {{ specialization.name | escape }}</h3>
+    <h3>Editing: {{ department.name | escape }}</h3>
 
-    <form action="{{ url_for('admin_structure.edit_specialization', spec_id=specialization.specialization_id) }}" method="post">
-         <div class="mb-3">
-            <label for="specialization_name" class="form-label">Specialization Name *</label>
-            <input type="text" class="form-control" id="specialization_name" name="specialization_name" value="{{ request.form.get('specialization_name', specialization.name) | escape }}" required>
+    <form action="{{ url_for('admin_structure.edit_department', dept_id=department.department_id) }}" method="post" enctype="multipart/form-data"> {# <-- ADDED enctype --> #}
+        <div class="mb-3">
+            <label for="department_name" class="form-label">Department Name *</label>
+            <input type="text" class="form-control" id="department_name" name="department_name" value="{{ request.form.get('department_name', department.name) | escape }}" required>
         </div>
         <div class="mb-3">
-            <label for="specialization_description" class="form-label">Description</label>
-            <textarea class="form-control" id="specialization_description" name="specialization_description" rows="3">{{ request.form.get('specialization_description', specialization.description) | escape | default('', true) }}</textarea>
+            <label for="department_description" class="form-label">Description</label>
+            <textarea class="form-control" id="department_description" name="department_description" rows="3">{{ request.form.get('department_description', department.description) | escape | default('', true) }}</textarea>
         </div>
-         <div class="mb-3">
-            <label for="department_id" class="form-label">Assign to Department</label>
-            <select class="form-select" id="department_id" name="department_id">
-                <option value="">-- None --</option> {# Important: Empty value for unlinked #}
-                {% set current_dept_id = request.form.get('department_id', specialization.department_id) %}
-                {% for dept in departments %}
-                    <option value="{{ dept.department_id }}" {% if current_dept_id|int == dept.department_id %}selected{% endif %}>
-                        {{ dept.name | escape }}
-                    </option>
-                {% endfor %}
-            </select>
+
+        {# --- Image Handling Section --- #}
+        <div class="mb-3">
+            <label class="form-label">Current Image</label>
+            <div class="current-dept-img-container">
+                {% if department.image_filename %}
+                    <img src="{{ department.image_url }}" alt="Current image for {{ department.name | escape }}" class="current-dept-img mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="1" id="delete_image" name="delete_image">
+                        <label class="form-check-label delete-img-label" for="delete_image">
+                            Delete Current Image
+                        </label>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No image uploaded.</p>
+                {% endif %}
+            </div>
         </div>
+
+        <div class="mb-3">
+            <label for="department_image" class="form-label">Upload New Image (Optional)</label>
+            <input type="file" class="form-control" id="department_image" name="department_image" accept="image/png, image/jpeg, image/gif, image/webp">
+            <small class="text-muted">Allowed: png, jpg, gif, webp. Uploading a new image will replace the current one (if not deleted).</small>
+        </div>
+        {# --- End Image Handling --- #}
 
         <div class="mt-4">
             <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
-            <a href="{{ url_for('admin_structure.manage_structure') }}#specializations-section" class="btn btn-secondary">Cancel</a>
+            <a href="{{ url_for('admin_structure.manage_structure') }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 {% endblock %}

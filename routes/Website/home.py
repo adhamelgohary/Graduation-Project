@@ -13,10 +13,16 @@ home_bp = Blueprint(
 
 # --- Helper to fetch ALL departments including image filename from DB ---
 def get_all_departments_from_db():
-    """Fetches ALL departments from the database, including image filename."""
+    """
+    Fetches ALL departments from the database, including image filename.
+    Uses the 'image_filename' value directly as the image path.
+    """
     departments_data = []
     conn = None
     cursor = None
+    # Define the path for your placeholder image. Ensure this path is
+    # resolvable by the browser in the same way your database paths are.
+    placeholder_image_path = "images/placeholder.jpg" # Example: Adjust if needed
 
     try:
         conn = get_db_connection()
@@ -25,44 +31,43 @@ def get_all_departments_from_db():
 
         cursor = conn.cursor(dictionary=True)
 
-        # Query ALL departments, including the image_filename column
-        # Ensure the 'image_filename' column exists in your 'departments' table!
         query = """
             SELECT
                 department_id,
                 name,
                 description,
-                image_filename  -- Fetch the image filename
+                image_filename  -- Fetch the image path/filename stored in the DB
             FROM departments
             ORDER BY name ASC
         """
-        # Removed ORDER BY FIELD as we are fetching all
 
         cursor.execute(query)
         results = cursor.fetchall()
 
-        # Process results to create the final image URL path
+        # Process results to create the image URL path
         for dept in results:
-            # Get filename from DB, default to placeholder if NULL or empty
-            db_filename = dept.get('image_filename')
-            if db_filename:
-                 # Construct path relative to static folder root
-                dept['image_url'] = f"images/{db_filename}"
+            # Get the path/filename from DB
+            db_image_path = dept.get('image_filename')
+
+            # --- UPDATED LOGIC ---
+            # Use the database path directly if it exists, otherwise use the placeholder path
+            if db_image_path:
+                dept['image_url'] = db_image_path # Use the exact value from the DB
             else:
-                # Use a generic placeholder if DB field is empty/NULL
-                dept['image_url'] = "images/placeholder.jpg" # Default department image
-                current_app.logger.debug(f"No image filename found in DB for department: {dept.get('name')}. Using placeholder.")
+                dept['image_url'] = placeholder_image_path # Use the defined placeholder path
+            # --- END UPDATED LOGIC ---
 
             # Optional cleanup: remove raw filename if not needed in template
+            # (You might keep it if the template logic differs based on whether it's a placeholder)
             # if 'image_filename' in dept:
             #    del dept['image_filename']
 
             departments_data.append(dept)
 
     except mysql.connector.Error as db_err:
-        # Check if the error is due to the missing column 'image_filename'
+        # Specific check for missing column 'image_filename'
         if db_err.errno == 1054 and 'image_filename' in str(db_err):
-             current_app.logger.error(f"Database error fetching departments: Column 'image_filename' likely missing in 'departments' table. Please run ALTER TABLE departments ADD COLUMN image_filename VARCHAR(255) NULL; Error: {db_err}")
+             current_app.logger.error(f"Database error fetching departments: Column 'image_filename' might be missing in the 'departments' table. Please verify schema. Error: {db_err}")
         else:
              current_app.logger.error(f"Database error fetching all departments: {db_err}")
     except ConnectionError as conn_err:
@@ -73,39 +78,28 @@ def get_all_departments_from_db():
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
-    current_app.logger.info(f"Fetched and processed {len(departments_data)} departments from database.")
+    current_app.logger.info(f"Fetched and processed {len(departments_data)} departments from database (using direct image paths).")
     return departments_data
 
 
-# --- Main Homepage Route ---
+# --- Main Homepage Route (No changes needed here) ---
 @home_bp.route('/')
 def index():
     """
     Renders the public homepage.
     Fetches ALL departments from the database for the categories section.
     """
-    # Fetch dynamic data for the homepage categories using the updated DB function
     all_departments = get_all_departments_from_db()
 
-    # Select *which* departments to feature on the homepage
-    # Option 1: Define names to feature
     featured_names = [
-        "Cardiology", "Neurology", "Dermatology",
-        "Orthopedics", "Nutrition Services", "General Medicine" # Example 6
+       "Cardiology", "Neurology", "Dermatology",
+       "Orthopedics", "Nutrition Services", "General Medicine"
     ]
-    featured_departments = [dept for dept in all_departments if dept['name'] in featured_names]
+    name_to_dept = {dept['name']: dept for dept in all_departments}
+    featured_departments = [name_to_dept.get(name) for name in featured_names if name_to_dept.get(name)]
 
-    # Option 2: Just take the first N departments (less specific)
-    # featured_departments = all_departments[:6] # Example: take first 6 alphabetically
-
-    # Ensure the order matches the desired display if using featured_names
-    # This preserves the order from featured_names list
-    if featured_names:
-        name_to_dept = {dept['name']: dept for dept in featured_departments}
-        featured_departments = [name_to_dept.get(name) for name in featured_names if name_to_dept.get(name)]
-
+    if len(featured_departments) < len(featured_names):
+        current_app.logger.warning(f"Requested featured departments {featured_names}, but only found {len(featured_departments)}. Check names or database.")
 
     current_app.logger.info(f"Displaying {len(featured_departments)} featured departments on homepage.")
-
-    # Render the template, passing the *featured* list
     return render_template('Website/home.html', featured_departments=featured_departments)
