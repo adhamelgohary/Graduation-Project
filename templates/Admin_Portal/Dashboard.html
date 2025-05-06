@@ -29,8 +29,6 @@
 
     {{ stat_card('primary', 'fas fa-user-md', total_doctors, 'Total Doctors', url_for('admin_users.view_doctors') if false else '#') }} {# Replace '#' with actual link later #}
     {{ stat_card('success', 'fas fa-user-injured', total_patients, 'Total Patients', url_for('admin_users.view_patients') if false else '#') }} {# Replace '#' with actual link later #}
-    {{ stat_card('warning', 'fas fa-calendar-day', appointments_today, "Today's Appointments", url_for('admin_appointments.view_appointments', filter='today') if false else '#') }} {# Replace '#' with actual link later #}
-    {{ stat_card('danger', 'fas fa-clock', pending_appointment_approvals, 'Pending Appt. Approvals', url_for('admin_appointments.view_appointments', status='pending-approval') if false else '#') }} {# Replace '#' with actual link later #}
     {{ stat_card('info', 'fas fa-user-check', pending_doctor_verification, 'Pending Doctor Verifications', url_for('admin_users.view_doctors', status='pending') if false else '#') }} {# Replace '#' with actual link later #}
 </div>
 
@@ -118,67 +116,6 @@
     </div>
 </div>
 
-<div class="dashboard-card full-width">
-    <div class="card-header">
-        <h3><i class="fas fa-calendar-check"></i> Recent Appointments</h3>
-        {# Ensure this route exists in your Flask app #}
-        <a href="{{ url_for('admin_appointments.list_appointments') }}" class="btn btn-outline"><i class="fas fa-external-link-alt"></i> View All</a>
-    </div>
-    <div class="card-body">
-        {% if appointments %}
-        <div class="table-responsive-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Patient</th>
-                        <th>Doctor</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for appointment in appointments %}
-                    <tr>
-                        <td>#{{ appointment.appointment_id }}</td>
-                        <td>{{ appointment.patient_name }}</td>
-                        <td>{{ appointment.doctor_name }}</td>
-                        <td>{{ appointment.appointment_date.strftime('%b %d, %Y') if appointment.appointment_date else 'N/A' }}</td>
-                        <td>{{ appointment.start_time.strftime('%I:%M %p') if appointment.start_time else 'N/A' }}</td>
-                        <td>
-                            {# Using appointment_type for class, assuming values like 'routine', 'emergency' etc. #}
-                            <span class="badge type-{{ appointment.appointment_type | lower | replace(' ', '-') | default('unknown') }}">
-                                {{ appointment.appointment_type | capitalize | default('N/A') }}
-                            </span>
-                        </td>
-                        <td>
-                            {# Using status for class, assuming values like 'pending-approval', 'confirmed', 'cancelled' etc. #}
-                             <span class="status-badge status-{{ appointment.status | lower | replace(' ', '-') | default('unknown') }}">
-                                {{ appointment.status | replace('-', ' ') | title | default('N/A') }}
-                            </span>
-                        </td>
-                        <td>
-                            <div class="actions">
-                                {# Replace '#' with actual action URLs later #}
-                                <a href="#" class="btn-icon view" title="View Details"><i class="fas fa-eye"></i></a>
-                                <a href="#" class="btn-icon edit" title="Edit Appointment"><i class="fas fa-edit"></i></a>
-                                {# Optional: Add more actions like cancel #}
-                                {# <button class="btn-icon danger" title="Cancel Appointment"><i class="fas fa-times-circle"></i></button> #}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-            <p class="text-center">No recent appointments found.</p>
-        {% endif %}
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}

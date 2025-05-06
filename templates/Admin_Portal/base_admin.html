@@ -81,16 +81,10 @@
             <li>
                  {# Parent Toggle Link #}
                  <a href="#appointmentsSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_appt_mgmt_active else 'false' }}" class="dropdown-toggle {% if is_appt_mgmt_active %}active{% endif %}">
-                     <i class="fas fa-calendar-alt fa-fw me-2"></i> Appointments
+                     <i class="fas fa-calendar-alt fa-fw me-2"></i> Appointments Configurations
                  </a>
                  {# Submenu Content #}
                  <ul class="collapse list-unstyled {% if is_appt_mgmt_active %}show{% endif %}" id="appointmentsSubmenu">
-                     {# Appointments List #}
-                     <li class="{% if request.endpoint == 'admin_appointments.list_appointments' %}active{% endif %}">
-                          <a class="ps-3" href="{{ url_for('admin_appointments.list_appointments') }}">
-                              <i class="fas fa-calendar-check fa-fw me-2"></i> List & Edit
-                          </a>
-                      </li>
                       {# Configuration Sub-section (Inner Collapse) #}
                        {% set is_appt_config_active = request.endpoint.startswith('admin_appointments.configure_') %}
                       <li>

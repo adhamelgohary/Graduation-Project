@@ -855,7 +855,7 @@ def manage_roles():
     """Displays a list of defined roles."""
     if current_user.user_type != "admin":
         flash("Access denied", "danger")
-        return redirect(url_for('login.login'))
+        return redirect(url_for('login.login_route'))
 
     connection = None
     cursor = None
@@ -884,7 +884,7 @@ def add_role():
     """Handles adding a new role definition."""
     if current_user.user_type != "admin":
         flash("Access denied", "danger")
-        return redirect(url_for('login.login'))
+        return redirect(url_for('login.login_route'))
 
     if request.method == 'POST':
         role_name = request.form.get('role_name', '').strip()
@@ -1014,7 +1014,7 @@ def delete_role(role_id):
     """Processes the deletion of a role definition."""
     if current_user.user_type != "admin":
         flash("Access denied", "danger")
-        return redirect(url_for('login.login'))
+        return redirect(url_for('login.login_route'))
 
     # Optional: Add GET route for confirmation page if desired
     # Optional: Prevent deletion of core roles like 'Admin'

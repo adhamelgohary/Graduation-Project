@@ -1,13 +1,9 @@
-{% extends "Website/base.html" %} {# Extends the main website base #}
-{# REMOVED Macro Import: {% from "macros/_appointment_card.html" import render_appointment_card %} #}
+{% extends "Website/base.html" %}
 
 {% block title %}{{ view_title | default("My Appointments") }}{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}"> {# Specific CSS for appointments list #}
-    {# Link components.css if card styles are defined there #}
-    {# <link rel="stylesheet" href="{{ url_for('static', filename='Website/components.css') }}"> #}
-    {# Add inline style or link specific CSS for appointment cards if needed #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}">
     <style>
         .appointment-list-grid {
             display: grid;
@@ -15,11 +11,10 @@
             gap: 1.5rem;
         }
         .appointment-card {
-            /* Add or reference card styles from base/components */
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
+            border-radius: var(--border-radius-md, 8px); /* Use base.css variable if available */
+            box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1)); /* Use base.css variable */
             display: flex;
             flex-direction: column;
             height: 100%;
@@ -34,120 +29,106 @@
             font-size: 1.1em; font-weight: 600; margin-bottom: 1rem;
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 0.5rem;
-             border-bottom: 1px dashed var(--border-color); /* Add separator */
-             padding-bottom: 0.75rem;
+            border-bottom: 1px dashed var(--border-color-light, var(--border-color));
+            padding-bottom: 0.75rem;
         }
         .appointment-card .card-title .status-badge {
-            font-size: 0.8em; padding: 0.3em 0.6em;
+            font-size: 0.8em; padding: 0.3em 0.6em; border-radius: var(--border-radius-sm, 4px);
         }
         .appointment-card .card-text {
             font-size: 0.95em; color: var(--text-secondary); margin-bottom: 0.6rem;
             display: flex; align-items: center; gap: 0.5rem;
         }
-        .appointment-card .card-text i {
-            color: var(--text-secondary); width: 16px; text-align: center;
+        .appointment-card .card-text i.fas { /* More specific icon styling */
+            color: var(--text-muted, var(--text-secondary)); width: 16px; text-align: center; margin-right: 0.25rem;
         }
         .appointment-card .card-text.doctor-name { color: var(--text-color); font-weight: 500; }
         .appointment-card .card-text.reason-snippet { font-style: italic; }
         .appointment-card .card-actions {
-            margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color);
+            margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color-light, var(--border-color));
             display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;
         }
-        .appointment-list-table .table { margin-bottom: 0; }
+        .appointment-list-table .table { margin-bottom: 0; } /* Bootstrap table styles */
         .appointment-list-table th { white-space: nowrap; }
-        .no-results { padding: 2rem; text-align: center; color: var(--text-secondary); }
+        .no-results { padding: 2rem; text-align: center; color: var(--text-secondary); background-color: var(--bg-secondary); border-radius: var(--border-radius-md, 8px); margin-top: 1rem;}
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="main-container"> {# Use the main container from base.css #}
-    <div class="page-header"> {# Standard page header style #}
+<div class="main-container">
+    <div class="page-header">
         <h1>{{ view_title | default("My Appointments") }}</h1>
-        <a href="{{ url_for('doctor.list_doctors') }}" class="button button-primary button-small">
+        <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=0) if not doctor else url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}" class="button button-primary button-small"> {# Default to a generic schedule page or last doctor #}
              <i class="fas fa-calendar-plus fa-fw"></i> Schedule New Appointment
          </a>
     </div>
 
-    {% include '_flash_messages.html' %} {# Include flash messages partial #}
+    {% include '_flash_messages.html' %}
 
-    {# --- Upcoming Appointments --- #}
     <section class="appointment-section upcoming-appointments">
         <h2 class="section-title">Upcoming Appointments</h2>
         {% if upcoming_appointments %}
-            <div class="appointment-list-grid"> {# Use a grid for cards #}
+            <div class="appointment-list-grid">
                 {% for appt in upcoming_appointments %}
-                    {# --- START: Inline Appointment Card Structure --- #}
-                    <div class="appointment-card card"> {# Using card styles #}
+                    <div class="appointment-card card">
                         <div class="card-body">
                              <div class="card-title">
-                                 {# Date and Time #}
                                  <span>
                                      <i class="fas fa-calendar-alt fa-fw"></i>
-                                     {{ appt.appointment_date.strftime('%a, %b %d, %Y') }} at {{ appt.display_start_time }}
+                                     {# Assuming appt.appointment_date is a date object from backend #}
+                                     {{ appt.appointment_date.strftime('%a, %b %d, %Y') if appt.appointment_date else appt.display_date }} at {{ appt.display_time }}
                                  </span>
-                                 {# Status Badge #}
-                                 <span class="status-badge status-{{ appt.status | status_badge }}">
+                                 <span class="status-badge status-{{ appt.status_badge_class }}">
                                      {{ appt.status | title }}
                                  </span>
                              </div>
-
-                             {# Doctor Info #}
                              <p class="card-text doctor-name">
-                                 <i class="fas fa-user-md fa-fw"></i> {{ appt.doctor_full_name }}
+                                 <i class="fas fa-user-md fa-fw"></i>
+                                 {{ appt.other_party_name }} {# From backend logic #}
                              </p>
-                             {% if appt.department_name %}
-                                <p class="card-text"><i class="fas fa-building fa-fw"></i> {{ appt.department_name }}</p>
+                             {% if appt.context_info and current_user.user_type == 'patient' %} {# Context info is specialization for patient view #}
+                                <p class="card-text"><i class="fas fa-stethoscope fa-fw"></i> {{ appt.context_info }}</p>
                              {% endif %}
-
-                             {# Appointment Type #}
                              <p class="card-text">
-                                 <i class="fas fa-notes-medical fa-fw"></i> Type: {{ appt.appointment_type | title }}
+                                 <i class="fas fa-notes-medical fa-fw"></i> Type: {{ appt.appointment_type_name | default('N/A') | title }} {# <<< CHANGED HERE #}
                              </p>
-
-                             {# Location #}
                              {% if appt.location_name %}
                                 <p class="card-text"><i class="fas fa-map-marker-alt fa-fw"></i> {{ appt.location_name }}</p>
                              {% endif %}
-
-                             {# Reason Snippet #}
-                              {% if appt.reason %}
-                                <p class="card-text reason-snippet"><i class="fas fa-comment-medical fa-fw"></i> Reason: {{ appt.reason | truncate(50) }}</p>
-                             {% endif %}
-
-                             {# Actions #}
+                              {# Reason is not typically shown in list view, but can be added if appt dict has it #}
                              <div class="card-actions">
                                 <a href="{{ url_for('appointment.view_appointment_detail', appointment_id=appt.appointment_id) }}" class="button button-small button-outline">View Details</a>
-                                {% if appt.status in ['scheduled', 'confirmed'] %}
+                                {% if appt.status in ['scheduled', 'confirmed'] and current_user.user_type == 'patient' %}
                                     <a href="{{ url_for('appointment.reschedule_appointment_start', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-secondary">Reschedule</a>
                                     <form action="{{ url_for('appointment.cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
                                         <button type="submit" class="button button-small button-danger button-outline">Cancel</button>
                                     </form>
+                                {% elif appt.status in ['scheduled', 'confirmed'] and current_user.user_type == 'doctor' %}
+                                    {# Doctor might have different actions e.g. confirm/start telehealth #}
                                 {% endif %}
                              </div>
                         </div>
                     </div>
-                    {# --- END: Inline Appointment Card Structure --- #}
                 {% endfor %}
             </div>
         {% else %}
-            <div class="no-results card content-section"> {# Use card for consistency #}
+            <div class="no-results card">
                 <p>You have no upcoming appointments scheduled.</p>
             </div>
         {% endif %}
     </section>
 
-     {# --- Past Appointments --- #}
     <section class="appointment-section past-appointments mt-5">
         <h2 class="section-title">Past Appointments</h2>
          {% if past_appointments %}
-            <div class="appointment-list-table card content-section p-0"> {# Wrap table in card, remove padding #}
+            <div class="appointment-list-table card content-section p-0">
                  <div class="table-responsive">
-                    <table class="table table-striped table-hover mb-0"> {# Add striped/hover from base if desired #}
+                    <table class="table table-striped table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Date</th>
                                 <th>Time</th>
-                                <th>Doctor</th>
+                                <th>{{ 'Doctor' if current_user.user_type == 'patient' else 'Patient' }}</th>
                                 <th>Type</th>
                                 <th>Status</th>
                                 <th>Action</th>
@@ -156,11 +137,11 @@
                         <tbody>
                             {% for appt in past_appointments %}
                             <tr>
-                                <td>{{ appt.appointment_date.strftime('%Y-%m-%d') }}</td>
-                                <td>{{ appt.display_start_time }}</td>
-                                <td>{{ appt.doctor_full_name }}</td>
-                                <td>{{ appt.appointment_type | title }}</td>
-                                <td><span class="status-badge status-{{ appt.status | status_badge }}">{{ appt.status | title }}</span></td>
+                                <td>{{ appt.appointment_date.strftime('%Y-%m-%d') if appt.appointment_date else appt.display_date }}</td>
+                                <td>{{ appt.display_time }}</td>
+                                <td>{{ appt.other_party_name }}</td>
+                                <td>{{ appt.appointment_type_name | default('N/A') | title }}</td> {# <<< CHANGED HERE #}
+                                <td><span class="status-badge status-{{ appt.status_badge_class }}">{{ appt.status | title }}</span></td>
                                 <td class="action-buttons">
                                     <a href="{{ url_for('appointment.view_appointment_detail', appointment_id=appt.appointment_id) }}" class="button button-small button-outline">View Details</a>
                                 </td>
@@ -171,11 +152,10 @@
                  </div>
             </div>
         {% else %}
-            <div class="no-results card content-section">
+            <div class="no-results card">
                  <p>No past appointment history found.</p>
              </div>
         {% endif %}
     </section>
-
-</div> {# End main-container #}
+</div>
 {% endblock %}

@@ -1,0 +1,712 @@
+{% extends "Website/base.html" %}
+
+{% block title %}{{ page_title | default("Schedule Appointment") }}{% endblock %}
+
+{% block head_extra %}
+    {# Your existing appointments.css - might contain general styles for appointment pages #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}">
+
+    {# Styles specifically adapted from your "new UI" example for this form #}
+    <style>
+        /* --- Variables (Assuming these are or will be defined in your base.css/theme) ---
+        /* If not, you might need to define them here or in a linked sheet for this page */
+        /*
+        :root { / * Or [data-theme="dark"], [data-theme="light"] if theme-dependent * /
+            --neon-blue: #00f0ff;
+            --accent-pink: #ff3b5c;
+            --bg-primary: #05152a; / * Dark theme example * /
+            --bg-secondary: rgba(8, 28, 56, 0.8); / * Dark theme example * /
+            --text-color: white; / * Dark theme example * /
+            --border-color: rgba(255, 255, 255, 0.1); / * Dark theme example * /
+            --input-bg: rgba(5, 21, 42, 0.8); / * Dark theme example * /
+            --placeholder-color: rgba(255, 255, 255, 0.4); / * Dark theme example * /
+        }
+        */
+
+        /* --- Container for the form, mimicking the standalone example's centered layout --- */
+        .appointment-form-container { /* NEW WRAPPER CLASS */
+            max-width: 900px; /* Or your preferred width */
+            margin: 2rem auto; /* Centering */
+            padding: 20px; /* Padding like the standalone .container */
+        }
+
+        /* --- Form Section Styling (from standalone, applied to your existing card) --- */
+        .appointment-form-card.form-section-styled { /* ADD .form-section-styled CLASS to your card */
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 25px; /* Standalone had 25px */
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Standalone shadow */
+            transition: all 0.3s ease;
+        }
+        .appointment-form-card.form-section-styled:hover {
+            box-shadow: 0 15px 35px rgba(0, 240, 255, 0.15); /* Standalone hover */
+            border-color: var(--neon-blue); /* Standalone hover */
+        }
+
+        /* --- Page Header H1 (from your Flask template) - Apply standalone H2 style --- */
+        .page-header h1 { /* Target your existing .page-header h1 */
+            color: var(--text-color);
+            font-size: 28px; /* Standalone H2 size */
+            font-weight: 600;
+            /* margin-bottom: 24px; */ /* Your base.html might handle this */
+            position: relative;
+            padding-bottom: 10px; /* Space for underline */
+        }
+        .page-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0; /* Adjust if your h1 has different padding/margin */
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--accent-pink));
+            border-radius: 2px;
+        }
+
+        /* --- Doctor Info Card (refining existing styles to match standalone intent) --- */
+        .doctor-info-card {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem; /* Increased gap */
+            background-color: var(--input-bg); /* Use input-bg for a nested feel */
+            padding: 1.5rem;
+            border-radius: 8px; /* Slightly less rounded than main card */
+            margin-bottom: 2.5rem; /* More space */
+            border: 1px solid var(--border-color);
+        }
+        .doctor-info-card img {
+            width: 70px; height: 70px;
+            border-radius: 50%; object-fit: cover;
+            border: 3px solid var(--neon-blue); /* Neon border */
+        }
+        .doctor-info-card h4 { /* Target h4 within this specific card */
+            margin: 0 0 0.3rem 0; font-size: 1.25em; color: var(--text-color);
+            padding: 0; border: none;
+        }
+        .doctor-info-card h4::after { display: none; } /* Remove general h4 underlines here */
+        .doctor-info-card p { margin: 0; font-size: 0.9em; color: var(--text-secondary); }
+
+
+        /* --- Form Group and Input Styling (from standalone) --- */
+        .form-section-styled .form-group { /* Target form-groups within our styled card */
+            margin-bottom: 20px;
+        }
+        .form-section-styled .form-label { /* Target labels within our styled card */
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500; /* Slightly bolder labels */
+        }
+        .form-section-styled input[type="text"],
+        .form-section-styled input[type="tel"],
+        .form-section-styled input[type="date"],
+        .form-section-styled select,
+        .form-section-styled textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 25px; /* Rounded inputs */
+            font-size: 16px;
+            color: var(--text-color);
+            outline: none;
+            background-color: var(--input-bg);
+            transition: all 0.3s;
+        }
+        .form-section-styled input:focus,
+        .form-section-styled select:focus,
+        .form-section-styled textarea:focus {
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+        .form-section-styled input::placeholder,
+        .form-section-styled textarea::placeholder {
+            color: var(--placeholder-color);
+        }
+        .form-section-styled select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); /* Neon blue arrow */
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            padding-right: 40px; /* Space for arrow */
+        }
+        .form-section-styled .form-row { /* For side-by-side fields */
+            display: flex;
+            gap: 20px;
+            /* margin-bottom: 20px; /* Applied to form-group instead */
+        }
+        .form-section-styled .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0; /* Remove bottom margin if in a row, row has it */
+        }
+        .form-section-styled .date-field,
+        .form-section-styled .time-field { /* Standalone styling for fields with icons */
+            position: relative;
+        }
+        .form-section-styled .date-field input,
+        .form-section-styled .time-field input {
+            padding-left: 40px; /* Space for icon */
+        }
+        .form-section-styled .date-icon, /* Assuming you add these SVGs or FontAwesome icons */
+        .form-section-styled .time-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neon-blue);
+            width: 20px;
+            height: 20px;
+            pointer-events: none; /* So icon doesn't block input click */
+        }
+
+        /* --- Error Styling (from standalone) --- */
+        .error-message {
+          color: var(--accent-pink); /* Use theme variable */
+          font-size: 0.8rem;
+          margin-top: 4px;
+          display: none;
+        }
+        .form-section-styled input.error, /* Scope to styled form */
+        .form-section-styled select.error,
+        .form-section-styled textarea.error {
+          border-color: var(--accent-pink) !important;
+        }
+
+        /* --- Time Slots (from previous, adapted) --- */
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 0.8rem;
+            background-color: var(--bg-primary); /* Slightly different from input-bg for contrast */
+            border-radius: 8px; /* Less rounded than inputs */
+            border: 1px solid var(--border-color);
+        }
+        .time-slot {
+            padding: 0.6rem;
+            border: 1px solid var(--border-color);
+            border-radius: 25px; /* Match input rounding */
+            text-align: center;
+            cursor: pointer;
+            background-color: var(--input-bg);
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+        .time-slot:hover {
+            border-color: var(--neon-blue);
+            background-color: rgba(0, 240, 255, 0.1);
+        }
+        .time-slot.selected {
+            background: linear-gradient(90deg, var(--neon-blue), var(--accent-pink));
+            color: var(--bg-primary); /* Text color for dark themes on gradient */
+            border-color: var(--accent-pink);
+            font-weight: 600;
+        }
+        [data-theme="light"] .time-slot.selected {
+             color: white; /* Ensure contrast on light theme */
+        }
+        .loading-slots, .time-slots .initial-prompt {
+            text-align: center; padding: 1rem; color: var(--placeholder-color);
+            font-style: italic; grid-column: 1 / -1;
+        }
+        #appointment_time_display { /* Style for selected time text */
+            font-weight: normal; /* Normal weight */
+            margin-left: 8px;
+            color: var(--neon-blue);
+            font-size: 0.9em;
+        }
+
+        /* --- Submit Button Row & Button (from standalone) --- */
+        .form-section-styled .form-actions { /* Target your existing .form-actions */
+             text-align: right;
+             margin-top: 30px; /* Standalone had 20px for button-row */
+             padding-top: 20px; /* Add padding */
+             border-top: 1px solid var(--border-color);
+        }
+        .btn-submit { /* General class for the submit button for standalone style */
+            background-color: rgba(255, 59, 92, 0.2);
+            color: var(--accent-pink);
+            border: 1px solid rgba(255, 59, 92, 0.3);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex; /* Changed from flex to inline-flex for single button */
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            /* flex: 1; /* Remove if only one button, or adjust */
+        }
+        .btn-submit:hover {
+            background-color: rgba(255, 59, 92, 0.3);
+            border-color: rgba(255, 59, 92, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 59, 92, 0.2);
+        }
+        .btn-submit svg { /* Ensure SVG inherits color if needed or set explicitly */
+            stroke: currentColor;
+        }
+        .btn-submit:disabled {
+            background-color: var(--border-color) !important; /* Use important if base styles override */
+            border-color: var(--border-color) !important;
+            color: var(--placeholder-color) !important;
+            opacity: 0.7;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        [data-theme="dark"] .btn-submit:disabled {
+             background-color: rgba(255,255,255,0.1) !important;
+             border-color: rgba(255,255,255,0.1) !important;
+             color: rgba(255,255,255,0.3) !important;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="appointment-form-container"> {# New overall container for layout #}
+    <div class="page-header"> {# Your existing page header #}
+        <h1>{{ page_title | default("Schedule Appointment") }}</h1>
+        <a href="{{ url_for('doctor.list_doctors') }}" class="button button-outline button-secondary button-small">
+            <i class="fas fa-arrow-left fa-fw"></i> Back to Doctors
+        </a>
+    </div>
+
+    {# Flash messages and errors should be styled by your base.html or _flash_messages.html #}
+    {# For demonstration, adding some basic styling for the error block if it's not styled elsewhere #}
+    {% if is_reschedule %}
+    <div class="alert alert-info" role="alert" style="background-color: rgba(0,120,255,0.1); border:1px solid var(--neon-blue); color: var(--text-color); border-radius: 8px; padding: 10px 15px; margin-bottom: 20px;">
+        You are rescheduling your appointment.
+        {% if original_appointment_id %}Original ID: {{ original_appointment_id }}.{% endif %}
+        Please select a new date and time.
+    </div>
+    {% endif %}
+
+    {% include '_flash_messages.html' %}
+    {% if errors %}
+        <div class="alert alert-danger" role="alert" style="background-color: rgba(255,59,92,0.1); border:1px solid var(--accent-pink); color: var(--text-color); border-radius: 8px; padding: 10px 15px; margin-bottom: 20px;">
+            <strong>Please correct the following errors:</strong>
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {# Apply .form-section-styled to your existing card to get the new UI's card look #}
+    <div class="card content-section appointment-form-card form-section-styled">
+        <div class="card-body"> {# Your existing card-body #}
+            {% if doctor %}
+            <div class="doctor-info-card">
+                <img src="{{ url_for('static', filename=doctor.profile_photo_url or 'images/default_doctor.png') }}" alt="Dr. {{ doctor.last_name }}">
+                <div>
+                    <h4>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h4>
+                    <p>{{ doctor.specialization_name | default('Doctor') }}{% if doctor.department_name %} | {{ doctor.department_name }}{% endif %}</p>
+                </div>
+            </div>
+
+            <form id="schedule-form" action="{{ url_for('appointment.schedule_appointment_datetime', doctor_id=doctor.user_id) }}" method="POST">
+                <input type="hidden" name="doctor_id" value="{{ doctor.user_id }}">
+                {% if is_reschedule and original_appointment_id %}
+                    <input type="hidden" name="original_appointment_id" value="{{ original_appointment_id }}">
+                {% endif %}
+
+                {# Row for Location and Day of Week #}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="location_id">Clinic Location *</label>
+                        <select id="location_id" name="location_id" required>
+                            <option value="" {% if not selected_location_id %}selected{% endif %} disabled>-- Choose Clinic --</option>
+                            {% set current_location_str = selected_location_id | default('') | string %}
+                            {% for loc in scheduling_info.locations %}
+                            <option value="{{ loc.location_id }}" {% if current_location_str == loc.location_id|string %}selected{% endif %}>
+                                {{ loc.name }} {% if loc.address %} ({{ loc.address | truncate(30) }}) {% endif %}
+                            </option>
+                            {% endfor %}
+                            {% if not scheduling_info.locations %}
+                            <option value="" disabled>No schedulable locations.</option>
+                            {% endif %}
+                        </select>
+                        <p class="error-message" id="location_id-error"></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="day_of_week_select">Day of Week *</label>
+                        <div id="day-select-container">
+                            <select id="day_of_week_select_placeholder" class="form-select" disabled><option>Select location first</option></select>
+                        </div>
+                        <p class="error-message" id="day_of_week_select-error"></p> {# For dynamically created select #}
+                    </div>
+                </div>
+
+                {# Row for Date and Time Slots #}
+                 <div class="form-row">
+                    <div class="form-group">
+                        <label for="appointment_date">Date *</label>
+                        <div class="date-field">
+                            <i class="fas fa-calendar-alt date-icon"></i> {# Using FontAwesome icon #}
+                            <input type="date" id="appointment_date" name="appointment_date"
+                                   value="{{ selected_date | default('') }}" required min="{{ today_date }}" disabled
+                                   list="valid-dates-for-day">
+                            <datalist id="valid-dates-for-day"></datalist>
+                        </div>
+                        <p class="error-message" id="appointment_date-error"></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="appointment_time_select">Available Time * <span id="appointment_time_display"></span></label>
+                        <div id="time-slots-container" class="time-slots">
+                            <p class="text-muted initial-prompt">Select location, day, and date.</p>
+                        </div>
+                        <input type="hidden" id="appointment_time" name="appointment_time" required value="{{ selected_time | default('') }}">
+                        <p class="error-message" id="appointment_time-error"></p>
+                    </div>
+                </div>
+
+                {# Row for Type and Phone #}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="appointment_type_id">Appointment Type *</label>
+                        <select id="appointment_type_id" name="appointment_type_id" required>
+                            <option value="" disabled {% if not selected_appointment_type_id %}selected{% endif %}>-- Select Type --</option>
+                            {% set current_type_id = selected_appointment_type_id | default('') | string %}
+                            {% for type_obj in appointment_types %}
+                                <option value="{{ type_obj.type_id }}" {% if type_obj.type_id|string == current_type_id %}selected{% endif %}>
+                                    {{ type_obj.type_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <p class="error-message" id="appointment_type_id-error"></p>
+                    </div>
+                    <div class="form-group">
+                        <label for="patient_phone">Phone Number *</label>
+                        <input type="tel" id="patient_phone" name="patient_phone"
+                               value="{{ phone_value | default(current_user.phone | default('')) }}" required placeholder="(123) 456-7890">
+                        <p class="error-message" id="patient_phone-error"></p>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;"> {# Add margin-top to separate from rows #}
+                    <label for="reason">Reason for Visit (Briefly)</label>
+                    <textarea id="reason" name="reason" rows="3" placeholder="Optional: State your reason...">{{ reason_value | default('') }}</textarea>
+                </div>
+
+                <div class="form-actions"> {# Use .form-actions for styling #}
+                    <button type="submit" class="btn-submit" id="submit-button" disabled>
+                        Submit Appointment
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                </div>
+            </form>
+            {% else %}
+                 <p class="text-muted">Doctor information could not be loaded.</p>
+            {% endif %}
+        </div> {# end card-body #}
+    </div> {# end .form-section-styled #}
+</div> {# end .appointment-form-container #}
+{% endblock %}
+
+{% block scripts %}
+{# Your existing dynamic JS for location/day/date/time selection #}
+{# PLUS the client-side validation JS adapted from standalone #}
+<script>
+// --- Dynamic Appointment JS (Location -> Day -> Date -> Time) ---
+document.addEventListener('DOMContentLoaded', function() {
+    const doctorId = '{{ doctor.user_id if doctor else "" }}';
+    const locationSelect = document.getElementById('location_id');
+    const daySelectContainer = document.getElementById('day-select-container');
+    const dateInput = document.getElementById('appointment_date');
+    const dateDatalist = document.getElementById('valid-dates-for-day');
+    const timeSlotsContainer = document.getElementById('time-slots-container');
+    const hiddenTimeInput = document.getElementById('appointment_time');
+    const submitFormButton = document.getElementById('submit-button');
+    const selectedTimeDisplay = document.getElementById('appointment_time_display');
+
+    const schedulingInfo = JSON.parse('{{ scheduling_info | tojson | safe if scheduling_info else "{}" }}');
+    const displayDaysMap = JSON.parse('{{ display_days_map | tojson | safe if display_days_map else "{}" }}');
+    const todayDate = '{{ today_date }}';
+
+    function clearHtml(el) { if (el) el.innerHTML = ''; }
+    function setHtml(el, html) { if (el) el.innerHTML = html; }
+    function enable(el) { if (el) el.disabled = false; }
+    function disable(el) { if (el) el.disabled = true; }
+
+    function resetDaySelect() {
+        setHtml(daySelectContainer, '<select id="day_of_week_select_placeholder" class="form-select" disabled><option>Select location first</option></select>'); // Match styling
+    }
+    function resetDateInput() {
+        if (dateInput) { dateInput.value = ''; disable(dateInput); }
+        if (dateDatalist) clearHtml(dateDatalist);
+    }
+    function resetTimeSlots() {
+        console.log("[JS APPT] clearTimeSlots");
+        setHtml(timeSlotsContainer, '<p class="text-muted initial-prompt">Select location, day, and date.</p>');
+        if (hiddenTimeInput) hiddenTimeInput.value = '';
+        if (selectedTimeDisplay) selectedTimeDisplay.textContent = '';
+        if (submitFormButton) disable(submitFormButton);
+    }
+
+    function populateDays(selectedLocationId) {
+        console.log("[JS APPT] populateDays for loc:", selectedLocationId);
+        resetDaySelect(); resetDateInput(); resetTimeSlots();
+        const locData = schedulingInfo.locations.find(loc => loc.location_id == selectedLocationId);
+        if (locData && locData.working_days_db && locData.working_days_db.length > 0) {
+            const daySelect = document.createElement('select');
+            daySelect.id = 'day_of_week_select';
+            daySelect.name = 'day_of_week_db';
+            daySelect.classList.add('form-select'); // From base.html form styling
+            daySelect.required = true;
+            setHtml(daySelect, '<option value="" selected disabled>-- Select Day --</option>');
+            locData.working_days_db.forEach(dbDow => {
+                const opt = document.createElement('option');
+                opt.value = dbDow;
+                opt.textContent = displayDaysMap[dbDow.toString()] || `Day ${dbDow}`;
+                daySelect.appendChild(opt);
+            });
+            daySelect.addEventListener('change', function() {
+                this.value ? fetchDatesForDay(this.value) : resetDateInput();
+            });
+            clearHtml(daySelectContainer);
+            daySelectContainer.appendChild(daySelect);
+        } else {
+            setHtml(daySelectContainer, '<p class="text-muted">No working days set for this location.</p>');
+        }
+    }
+
+    async function fetchDatesForDay(dbDayOfWeek) {
+        console.log("[JS APPT] fetchDatesForDay (DB DOW):", dbDayOfWeek);
+        resetDateInput(); resetTimeSlots(); disable(dateInput);
+        if (!doctorId || dbDayOfWeek === "") return;
+        try {
+            const url = `/appointments/dates-for-day/${doctorId}/${dbDayOfWeek}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            console.log("[JS APPT] Dates for DOW " + dbDayOfWeek + ":", data);
+            if (dateDatalist) clearHtml(dateDatalist);
+            if (data.error) {
+                setHtml(timeSlotsContainer, `<p class="text-danger">${data.error}</p>`);
+            } else if (data.available_dates && data.available_dates.length > 0) {
+                dateInput.min = todayDate;
+                data.available_dates.forEach(dStr => {
+                    if (dateDatalist) { const opt = document.createElement('option'); opt.value = dStr; dateDatalist.appendChild(opt); }
+                });
+                enable(dateInput);
+                setHtml(timeSlotsContainer, '<p class="text-muted">Select a date (suggestions available).</p>');
+            } else {
+                setHtml(timeSlotsContainer, '<p class="text-muted">No available dates for the selected day.</p>');
+            }
+        } catch (err) {
+            console.error('Error fetching dates:', err);
+            setHtml(timeSlotsContainer, '<p class="text-danger">Could not load dates.</p>');
+        }
+    }
+
+    if (dateInput) {
+        dateInput.addEventListener('change', function() {
+            const dateVal = this.value; const locId = locationSelect ? locationSelect.value : null;
+            console.log("[JS APPT] Date changed:", dateVal, "Loc:", locId, "Disabled:", this.disabled);
+            if (this.disabled) return;
+            if (dateVal && locId) {
+                const daySel = document.getElementById('day_of_week_select');
+                if (daySel && daySel.value !== "") {
+                    const selDbDow = parseInt(daySel.value);
+                    const [y,m,d] = dateVal.split('-').map(Number);
+                    const dateObj = new Date(Date.UTC(y,m-1,d));
+                    if (dateObj.getUTCDay() !== selDbDow) {
+                        alert('Selected date doesn\'t match chosen day of week.');
+                        this.value = ''; resetTimeSlots(); return;
+                    }
+                }
+                fetchAndDisplaySlots(dateVal, locId);
+            } else { resetTimeSlots(); }
+        });
+    }
+
+    async function fetchAndDisplaySlots(selectedDate, selectedLocationId) {
+        console.log("[JS APPT] fetchAndDisplaySlots Date:", selectedDate, "Loc:", selectedLocationId);
+        if (!selectedDate || !doctorId || !selectedLocationId) { resetTimeSlots(); return; }
+        setHtml(timeSlotsContainer, '<div class="loading-slots"><i class="fas fa-spinner fa-spin"></i> Loading times...</div>');
+        if(hiddenTimeInput) hiddenTimeInput.value = '';
+        if(selectedTimeDisplay) selectedTimeDisplay.textContent = '';
+        if(submitFormButton) disable(submitFormButton);
+        try {
+            const url = `/appointments/availability/${doctorId}/${selectedDate}?location_id=${selectedLocationId}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            console.log("[JS APPT] Time slots:", data);
+            clearHtml(timeSlotsContainer);
+            if (data.error) {
+                setHtml(timeSlotsContainer, `<p class="text-danger">${data.error}</p>`);
+            } else if (data.available_slots && data.available_slots.length > 0) {
+                data.available_slots.forEach(slot => {
+                    const el = document.createElement('div'); el.className = 'time-slot';
+                    el.textContent = formatTime(slot); el.dataset.timeValue = slot;
+                    if (hiddenTimeInput && hiddenTimeInput.value === slot) {
+                        el.classList.add('selected');
+                        if(selectedTimeDisplay) selectedTimeDisplay.textContent = `(${formatTime(slot)})`;
+                        if(submitFormButton) enable(submitFormButton);
+                    }
+                    el.addEventListener('click', handleSlotSelection);
+                    timeSlotsContainer.appendChild(el);
+                });
+            } else {
+                setHtml(timeSlotsContainer, '<p class="text-muted">No available slots for this date/location.</p>');
+            }
+        } catch (err) {
+            console.error('Error fetching availability:', err);
+            setHtml(timeSlotsContainer, '<p class="text-danger">Could not load times.</p>');
+        }
+    }
+
+    function handleSlotSelection(event) {
+        timeSlotsContainer.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+        const selSlot = event.target.closest('.time-slot'); if (!selSlot) return;
+        selSlot.classList.add('selected');
+        if(hiddenTimeInput) hiddenTimeInput.value = selSlot.dataset.timeValue;
+        if(selectedTimeDisplay) selectedTimeDisplay.textContent = `(${selSlot.textContent})`;
+        if(submitFormButton) enable(submitFormButton);
+    }
+
+    function formatTime(timeStr24) {
+       try { const [h,m] = timeStr24.split(':').map(Number); const d=new Date(); d.setHours(h,m,0,0);
+             return `${d.getHours()%12||12}:${('0'+m).slice(-2)} ${d.getHours()>=12?'PM':'AM'}`;
+       } catch (e) { return timeStr24; }
+    }
+
+    if (locationSelect) {
+        locationSelect.addEventListener('change', function() {
+            this.value ? populateDays(this.value) : clearDaysAndSubsequent();
+        });
+        const initLocId = '{{ selected_location_id | default("") }}';
+        if (initLocId) {
+            locationSelect.value = initLocId; populateDays(initLocId);
+            const initDayDb = '{{ selected_day_db | default("") }}';
+            if (initDayDb) {
+                setTimeout(() => {
+                    const daySel = document.getElementById('day_of_week_select');
+                    if (daySel) { daySel.value = initDayDb;
+                        fetchDatesForDay(initDayDb).then(() => {
+                            const initDate = '{{ selected_date | default("") }}';
+                            if (initDate && !dateInput.disabled) {
+                                dateInput.value = initDate;
+                                dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        });
+                    }
+                }, 150);
+            }
+        } else { clearDaysAndSubsequent(); }
+    } else { clearDaysAndSubsequent(); }
+
+    // --- Client-Side Validation (adapted) ---
+    const form = document.getElementById('schedule-form');
+    const patientPhoneInput = document.getElementById('patient_phone');
+    const appointmentTypeSelect = document.getElementById('appointment_type_id');
+    const reasonTextarea = document.getElementById('reason');
+
+    const validationPatterns = {
+        phone: /^\+?[0-9\s\-\(\)]{7,20}$/, // Example phone pattern
+        // No specific pattern for reason, just check required if it were
+    };
+
+    function displayError(inputElement, message) {
+        let errorElement = document.getElementById(inputElement.id + '-error');
+        if (!errorElement && inputElement.parentNode) { // Create error P if not exists
+            errorElement = document.createElement('p');
+            errorElement.className = 'error-message';
+            errorElement.id = inputElement.id + '-error';
+            // Insert after the input or its wrapper (like .date-field)
+            const wrapper = inputElement.closest('.date-field') || inputElement.closest('.time-field') || inputElement;
+            wrapper.parentNode.insertBefore(errorElement, wrapper.nextSibling);
+        }
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+        inputElement.classList.add('error');
+    }
+
+    function clearError(inputElement) {
+        const errorElement = document.getElementById(inputElement.id + '-error');
+        if (errorElement) {
+            errorElement.style.display = 'none';
+            errorElement.textContent = '';
+        }
+        inputElement.classList.remove('error');
+    }
+
+    function validateField(inputElement, pattern, errorMessage, isRequired = true) {
+        clearError(inputElement);
+        const value = inputElement.value.trim(); // Trim whitespace
+
+        if (isRequired && !value) {
+            // Use label text if available, otherwise generic
+            const label = document.querySelector(`label[for='${inputElement.id}']`);
+            const fieldName = label ? label.textContent.replace('*','').trim() : "This field";
+            displayError(inputElement, `${fieldName} is required.`);
+            return false;
+        }
+        if (value && pattern && !pattern.test(value)) { // Only test pattern if there's a value and a pattern
+            displayError(inputElement, errorMessage);
+            return false;
+        }
+        return true;
+    }
+
+    if (patientPhoneInput) {
+        patientPhoneInput.addEventListener('input', () => validateField(patientPhoneInput, validationPatterns.phone, 'Please enter a valid phone number.'));
+    }
+    // Add similar listeners for other fields if they have specific patterns
+    // For select elements, required is handled by the browser if an option with empty value is selected.
+    // We can add custom validation for them on submit too.
+
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            let isFormValid = true;
+
+            // Validate fields present in your Flask form
+            if (!validateField(locationSelect, null, 'Clinic Location is required.')) isFormValid = false;
+
+            const daySelect = document.getElementById('day_of_week_select'); // Get dynamically added select
+            if (!daySelect || !validateField(daySelect, null, 'Day of Week is required.')) isFormValid = false;
+
+            if (!validateField(dateInput, null, 'Date is required.')) isFormValid = false;
+            // Hidden time input validation (value should be set if a slot is selected)
+            if (!hiddenTimeInput.value) {
+                displayError(timeSlotsContainer, 'Please select an available time slot.'); // Display error near time slots
+                isFormValid = false;
+            } else {
+                clearError(timeSlotsContainer); // Clear if value exists
+            }
+            if (!validateField(appointmentTypeSelect, null, 'Appointment Type is required.')) isFormValid = false;
+            if (!validateField(patientPhoneInput, validationPatterns.phone, 'Please enter a valid phone number.')) isFormValid = false;
+            // Reason is optional, so no required validation unless you change that.
+
+            if (!isFormValid) {
+                event.preventDefault();
+                const firstErrorField = form.querySelector('.error, .error-message:not([style*="display: none"])');
+                if (firstErrorField) {
+                    firstErrorField.focus(); // Focus on the first field with an error
+                     // Or scroll to it: firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                // Optionally, show a general error message / use your flash message system
+                // For now, individual messages are shown.
+            } else {
+                if(submitFormButton) {
+                    submitFormButton.disabled = true;
+                    submitFormButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
