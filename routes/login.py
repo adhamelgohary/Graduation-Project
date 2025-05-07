@@ -200,7 +200,7 @@ def login_route():
                         flash('Login successful!', 'success')
                         return redirect(next_page_attempt)
                     else:
-                        default_redirect_url = url_for('main.index') # Define your main index route
+                        default_redirect_url = url_for('home.index') # Define your main index route
                         if user_for_login.is_admin():
                             flash('Admin login successful!', 'success')
                             default_redirect_url = url_for('admin_main.dashboard')

@@ -18,6 +18,8 @@ from routes.Website.home import home_bp
 from routes.Website.department import department_bp
 from routes.Website.doctor import doctor_bp # <-- Import doctor blueprint
 from routes.Website.appointments import appointment_bp # Example appointment blueprint
+from routes.Website.disease_info import disease_info_bp
+
 # routes of admin portal
 from routes.Admin_Portal.Dashboard import admin_main
 from routes.Admin_Portal.Admins_Management import admin_management
@@ -87,6 +89,7 @@ app.register_blueprint(appointment_bp) # Example
 app.register_blueprint(messaging_bp)
 app.register_blueprint(locations_bp)
 app.register_blueprint(structure_bp)
+app.register_blueprint(disease_info_bp)
 # Patient Portal
 app.register_blueprint(patient_profile_bp)
 app.register_blueprint(patient_medical_info_bp)
