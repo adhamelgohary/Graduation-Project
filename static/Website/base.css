@@ -1,215 +1,709 @@
 /* --- START OF FILE base.css --- */
 
+/* Universal box-sizing and basic reset */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', 'Arial', sans-serif; /* Use Inter as primary */
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
-  }
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', 'Arial', sans-serif; /* Use Inter as primary sans-serif font */
+  /* Global transition for smooth theme changes and interactions */
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+}
 
-  :root {
-    /* Dark theme variables */
-    --bg-primary: #05152a;
-    --bg-secondary: rgba(8, 28, 56, 0.8); /* Card/Panel background */
-    --bg-nav: rgba(5, 21, 42, 0.95);
-    --bg-footer: rgba(3, 13, 27, 0.9);
-    --nested-card-bg: rgba(5, 21, 42, 0.8); /* For cards within cards */
-    --accent-pink: #ff3b5c;
-    --neon-blue: #00f0ff;
-    --text-color: white;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --input-bg: rgba(5, 21, 42, 0.8);
-    --placeholder-color: rgba(255, 255, 255, 0.4);
-    --grid-color: rgba(0, 120, 255, 0.1);
-    --shadow-color: rgba(0, 0, 0, 0.2);
-    --shadow-glow: rgba(0, 240, 255, 0.15); /* Standardized glow */
-    --button-bg: rgba(255, 59, 92, 0.3); /* Default button background */
-    --button-hover: rgba(255, 59, 92, 0.5); /* Default button hover */
-    --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c); /* Common title underline */
-    --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* Common card shadow */
-    --card-hover-border: rgba(255, 255, 255, 0.2);
-    --doctor-avatar-bg: rgba(255, 255, 255, 0.05);
-    --emergency-bg: rgba(255, 59, 92, 0.1);
-    --emergency-border: rgba(255, 59, 92, 0.2);
-    --emergency-text: #ff3b5c;
-  }
+/* Root variables for theming and layout */
+:root {
+  /* Dark theme variables (default) */
+  --bg-primary: #05152a; /* Main background color */
+  --bg-secondary: rgba(8, 28, 56, 0.8); /* Background for cards, panels */
+  --bg-nav: rgba(5, 21, 42, 0.95); /* Navbar background */
+  --bg-footer: rgba(3, 13, 27, 0.9); /* Footer background */
+  --nested-card-bg: rgba(5, 21, 42, 0.8); /* Background for cards within other cards */
+  
+  --accent-pink: #ff3b5c; /* Primary accent color (pink) */
+  --neon-blue: #00f0ff; /* Secondary accent color (neon blue) */
+  
+  --text-color: white; /* Primary text color for dark theme */
+  --text-secondary: rgba(255, 255, 255, 0.7); /* Secondary text color (slightly transparent) */
+  
+  --border-color: rgba(255, 255, 255, 0.1); /* Default border color */
+  --card-hover-border: rgba(255, 255, 255, 0.2); /* Border color for cards on hover */
+  
+  --input-bg: rgba(5, 21, 42, 0.8); /* Background for input fields */
+  --placeholder-color: rgba(255, 255, 255, 0.4); /* Placeholder text color */
+  
+  --grid-color: rgba(0, 120, 255, 0.1); /* Color for background grid patterns */
+  --bg-pattern: radial-gradient(circle, var(--grid-color) 1px, transparent 1px); /* Background pattern */
 
-  [data-theme="light"] {
-    /* Light theme variables */
-    --bg-primary: #f0f4f8;
-    --bg-secondary: #ffffff;
-    --bg-nav: rgba(255, 255, 255, 0.95);
-    --bg-footer: rgba(239, 242, 247, 0.95);
-    --nested-card-bg: #f8fafd; /* Light nested card */
-    --accent-pink: #ff3b5c;
-    --neon-blue: #3182ce; /* Adjusted blue for light theme */
-    --text-color: #05152a;
-    --text-secondary: rgba(5, 21, 42, 0.7);
-    --border-color: rgba(5, 21, 42, 0.1);
-    --input-bg: rgba(240, 244, 248, 0.8);
-    --placeholder-color: rgba(5, 21, 42, 0.4);
-    --grid-color: rgba(59, 131, 255, 0.1);
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    --shadow-glow: rgba(59, 131, 255, 0.1); /* Reduced glow intensity */
-    --button-bg: rgba(255, 59, 92, 0.15);
-    --button-hover: rgba(255, 59, 92, 0.3);
-    --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c);
-    --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-    --card-hover-border: rgba(0, 0, 0, 0.15);
-    --doctor-avatar-bg: rgba(5, 21, 42, 0.05);
-    --emergency-bg: rgba(255, 59, 92, 0.1);
-    --emergency-border: rgba(255, 59, 92, 0.2);
-    --emergency-text: #d9304f; /* Darker red for light theme */
-  }
+  --shadow-color: rgba(0, 0, 0, 0.2); /* Standard shadow color */
+  --card-shadow: 0 10px 30px var(--shadow-color); /* Common shadow for cards */
+  --shadow-glow: rgba(0, 240, 255, 0.15); /* Glow effect shadow */
 
-  html { scroll-behavior: smooth; }
+  /* Button specific variables */
+  --button-bg: rgba(255, 59, 92, 0.3); /* Default button background (semi-transparent pink) */
+  --button-hover-bg: rgba(255, 59, 92, 0.5); /* Default button background on hover */
+  --button-text-color: var(--accent-pink); /* Default button text color */
+  --button-border-color: var(--accent-pink); /* Default button border color */
 
-  body {
-    background-color: var(--bg-primary);
-    color: var(--text-color);
-    line-height: 1.6;
-    min-height: 100vh;
-    background-image: var(--bg-pattern);
-    background-size: 30px 30px;
-    padding-top: 70px; /* Fixed navbar height */
-    display: flex;
-    flex-direction: column;
-  }
+  /* Emergency/Alert specific variables */
+  --emergency-bg: rgba(255, 59, 92, 0.1); /* Background for emergency notices (light pink) */
+  --emergency-border: rgba(255, 59, 92, 0.2); /* Border for emergency notices */
+  --emergency-text: #ff3b5c; /* Text color for emergency notices */
 
-  /* General container */
-  .main-container {
-    flex-grow: 1;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px 5%;
-    width: 100%;
-  }
+  /* Shared styling elements */
+  --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c); /* Gradient for title underlines */
+  --doctor-avatar-bg: rgba(255, 255, 255, 0.05); /* Background for doctor avatars */
 
-  /* --- Navbar --- */
-  .navbar {
-    position: fixed; top: 0; left: 0; width: 100%;
-    background-color: var(--bg-nav); backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: 0 2px 15px var(--shadow-color); z-index: 1000;
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0 5%; height: 70px;
-  }
-  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-  .nav-logo h1, .nav-logo span { font-size: 20px; font-weight: 600; color: var(--text-color); letter-spacing: 1px; }
-  .nav-logo svg { width: 28px; height: 28px; stroke: var(--accent-pink); }
-  .nav-links { display: flex; gap: 30px; list-style: none; }
-  .nav-links a, .navbar ul li a, .navbar ul li button { color: var(--text-color); text-decoration: none; font-size: 15px; font-weight: 500; position: relative; padding: 5px 0; background: none; border: none; cursor: pointer; }
-  .nav-links a:after, .navbar ul li a:after { content: ''; position: absolute; width: 0; height: 2px; bottom: 0; left: 0; background: linear-gradient(90deg, var(--neon-blue), var(--accent-pink)); transition: width 0.3s; }
-  .nav-links a:hover:after, .navbar ul li a:hover:after { width: 100%; }
-  .nav-links a:hover, .navbar ul li a:hover, .navbar ul li button:hover { color: var(--accent-pink); }
-  .nav-links a.active::after { width: 100%; } /* Active link underline */
-  .nav-links a.active { color: var(--accent-pink); } /* Active link color */
+  /* Spacing Variables */
+   --spacing-xs: 5px;
+   --spacing-sm: 10px;
+   --spacing-md: 15px;
+   --spacing-lg: 25px;
+   --spacing-xl: 40px;
 
-  /* --- Theme Toggle --- */
-  .theme-toggle { background: var(--button-bg); border: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-color); width: 38px; height: 38px; border-radius: 50%; padding: 5px; margin-left: 15px; }
-  .theme-toggle:hover { background-color: var(--button-hover); }
-  .sun-icon, .moon-icon { width: 20px; height: 20px; }
-  [data-theme="dark"] .sun-icon { display: block; } [data-theme="dark"] .moon-icon { display: none; }
-  [data-theme="light"] .sun-icon { display: none; } [data-theme="light"] .moon-icon { display: block; }
+   /* Border Radius */
+   --border-radius: 12px; /* Standard border radius for elements like cards */
 
-  /* --- Mobile Menu --- */
-  .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; color: var(--text-color); padding: 5px; margin-left: 10px; }
-  .mobile-menu-btn svg { width: 24px; height: 24px; }
-  .mobile-menu { position: fixed; top: 70px; left: -100%; width: 80%; max-width: 300px; height: calc(100% - 70px); background-color: var(--bg-secondary); padding: 20px; border-right: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; z-index: 999; box-shadow: 5px 0 15px var(--shadow-color); transition: left 0.4s ease-in-out; }
-  .mobile-menu.active { left: 0; }
-  .mobile-menu a { color: var(--text-color); text-decoration: none; font-size: 16px; padding: 12px 5px; border-bottom: 1px solid var(--border-color); text-align: left; }
-  .mobile-menu a:last-child { border-bottom: none; }
-  .mobile-menu a.active { color: var(--accent-pink); font-weight: 600; }
-  .mobile-menu hr { border: none; border-top: 1px solid var(--border-color); margin: 10px 0; }
+  /* Department Theme Colors (Define all department colors here) */
+  --dept-color-dermatology: #00A99D; /* Teal/Turquoise */
+  --dept-color-dermatology-rgb: 0, 169, 157;
 
-  /* --- Footer --- */
-  .site-footer { background-color: var(--bg-footer); padding: 30px 5%; margin-top: auto; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary); font-size: 14px; }
-  .footer-content { max-width: 1200px; margin: 0 auto; }
-  .footer-content h2 { font-size: 24px; margin-bottom: 15px; color: var(--text-color); }
+  --dept-color-cardiology: #E91E63; /* Pink/Magenta (Used by cardio.css) */
+  --dept-color-cardiology-rgb: 233, 30, 99;
 
-  /* --- Common Page Elements --- */
-  .page-title {
-    text-align: center; margin-bottom: 40px; font-size: 2.5em;
-    color: var(--text-color); font-weight: 600; position: relative; padding-bottom: 15px;
-  }
-  .page-title::after {
-   content: ''; display: block; width: 70px; height: 3px;
-   background: var(--section-title-gradient); margin: 15px auto 0; border-radius: 2px;
-  }
-  .section-title { /* For sections within pages */
-    font-size: 2em; margin-bottom: 30px; text-align: center; position: relative;
-    color: var(--text-color); font-weight: 600; padding-bottom: 10px;
-  }
-  .section-title::after {
-    content: ''; display: block; width: 60px; height: 3px;
-    background: var(--section-title-gradient); margin: 10px auto 20px; border-radius: 2px;
-  }
+  --dept-color-neurology: #3F51B5; /* Indigo */
+  --dept-color-neurology-rgb: 63, 81, 181;
 
-  /* Basic Button Style (can be overridden) */
-  .button, button, input[type="submit"] { /* Target different elements */
-      display: inline-block;
-      padding: 10px 20px;
-      border-radius: 5px;
-      font-size: 1rem;
-      font-weight: 500;
-      text-align: center;
-      text-decoration: none;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: all 0.3s ease;
-      background-color: var(--button-bg);
-      color: var(--accent-pink);
-      border-color: var(--accent-pink);
-  }
-  .button:hover, button:hover, input[type="submit"]:hover {
-      background-color: var(--button-hover);
-      color: white;
-      border-color: var(--button-hover);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 10px rgba(255, 59, 92, 0.2);
-  }
-  /* Button Variants */
-  .button-primary { background-color: var(--accent-pink); color: white; border-color: var(--accent-pink); }
-  .button-primary:hover { background-color: var(--button-hover); border-color: var(--button-hover); }
-  .button-secondary { background-color: transparent; color: var(--text-secondary); border-color: var(--border-color); }
-  .button-secondary:hover { background-color: var(--grid-color); color: var(--text-color); border-color: var(--text-secondary); }
-  .button-outline { background-color: transparent; }
-  .button-outline.button-secondary { color: var(--text-secondary); border-color: var(--text-secondary); }
-  .button-outline.button-secondary:hover { background-color: var(--button-bg); color: var(--accent-pink); border-color: var(--accent-pink); }
-  .button-small { padding: 6px 12px; font-size: 0.9em; }
-  .button-xsmall { padding: 4px 8px; font-size: 0.8em; }
+  --dept-color-oncology: #FF9800; /* Orange */
+  --dept-color-oncology-rgb: 255, 152, 0;
 
-  /* General Card Style (for sections) */
-  .content-section {
-      background-color: var(--bg-secondary);
-      padding: 25px 30px;
-      border-radius: 12px;
-      margin-bottom: 30px;
-      border: 1px solid var(--border-color);
-      box-shadow: var(--card-shadow);
-  }
+  --dept-color-pediatrics: #4CAF50; /* Green */
+  --dept-color-pediatrics-rgb: 76, 175, 80;
+}
 
-  /* Status Badge Styles (Based on filter logic) */
-  .status-badge { display: inline-block; padding: .3em .6em; font-size: .8em; font-weight: 600; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: .375rem; }
-  .status-success { color: #fff; background-color: #198754; } /* Green */
-  .status-warning { color: #000; background-color: #ffc107; } /* Yellow */
-  .status-danger { color: #fff; background-color: #dc3545; } /* Red */
-  .status-info { color: #000; background-color: #0dcaf0; } /* Cyan */
-  .status-secondary { color: #fff; background-color: #6c757d; } /* Grey */
+/* Light theme variable overrides */
+[data-theme="light"] {
+  --bg-primary: #f0f4f8;
+  --bg-secondary: #ffffff;
+  --bg-nav: rgba(255, 255, 255, 0.95);
+  --bg-footer: rgba(239, 242, 247, 0.95);
+  --nested-card-bg: #f8fafd;
+  
+  /* --accent-pink remains the same */
+  --neon-blue: #3182ce; /* Adjusted blue for better visibility on light theme */
+  
+  --text-color: #05152a; /* Dark text for light theme */
+  --text-secondary: rgba(5, 21, 42, 0.7);
+  
+  --border-color: rgba(5, 21, 42, 0.1);
+  --card-hover-border: rgba(0, 0, 0, 0.15);
+  
+  --input-bg: rgba(240, 244, 248, 0.8);
+  --placeholder-color: rgba(5, 21, 42, 0.4);
+  
+  --grid-color: rgba(59, 131, 255, 0.1);
+  /* --bg-pattern updates automatically as --grid-color changes */
+
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  --shadow-glow: rgba(59, 131, 255, 0.1);
+
+  /* Button specific variables for light theme */
+  --button-bg: rgba(255, 59, 92, 0.15); /* Lighter semi-transparent pink */
+  --button-hover-bg: rgba(255, 59, 92, 0.3);
+  --button-text-color: var(--accent-pink); /* Pink text for default button */
+  /* --button-border-color remains --accent-pink */
+
+  /* Emergency/Alert specific variables for light theme */
+  --emergency-bg: rgba(255, 59, 92, 0.1);
+  --emergency-border: rgba(255, 59, 92, 0.2);
+  --emergency-text: #d9304f; /* Darker red for better contrast on light theme */
+  
+  --doctor-avatar-bg: rgba(5, 21, 42, 0.05);
+}
+
+/* Smooth scrolling behavior */
+html { scroll-behavior: smooth; }
+
+/* Body base styles */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-color);
+  line-height: 1.6;
+  min-height: 100vh; /* Ensure body takes at least full viewport height */
+  background-image: var(--bg-pattern); /* Apply grid pattern */
+  background-size: 30px 30px; /* Size of the grid pattern */
+  padding-top: 70px; /* Fixed navbar height, content starts below navbar */
+  display: flex; /* Allow footer to stick to bottom */
+  flex-direction: column; /* Stack content and footer vertically */
+}
+
+/* General container for main page content */
+.main-container {
+  flex-grow: 1; /* Allows container to expand and push footer down */
+  max-width: 1400px; /* Maximum width of content */
+  margin: 0 auto; /* Center content on the page */
+  padding: var(--spacing-lg) 5%; /* Padding around content (top/bottom by spacing-lg, left/right by 5%) */
+  width: 100%; /* Ensure it takes full available width up to max-width */
+}
+/* --- EXTRACTED AND ENHANCED NAVBAR & THEME TOGGLE STYLES --- */
+
+/* --- Navbar --- */
+.navbar {
+  background-color: var(--bg-nav); /* Changed from --bg-secondary to --bg-nav for clarity from base.css */
+  padding: 12px 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px); /* From base.css */
+  /* Relies on global * transition for background-color, box-shadow */
+  /* Or add explicitly: transition: background-color 0.3s ease, box-shadow 0.3s ease; */
+}
+
+.navbar:hover {
+  background-color: var(--bg-nav); /* Can be same or slightly different if desired */
+  /* Enhanced shadow from neuro.css, using a variable consistent with base.css if possible */
+  /* Ensure --neon-blue-rgb is defined, base.css has shadow-glow using (0, 240, 255, 0.15) */
+  /* Using --shadow-glow directly might be an option if its RGB components match expectations */
+  box-shadow: 0 4px 20px var(--shadow-glow); /* Using --shadow-glow from base.css */
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+}
+
+.nav-logo h1, 
+.nav-logo span {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-color);
+  letter-spacing: 1px;
+  transition: color 0.3s ease; /* Added for smooth text color change */
+}
+
+.nav-logo:hover h1,
+.nav-logo:hover span {
+  color: var(--accent-pink); /* Or var(--neon-blue) for a different highlight */
+}
+
+.nav-logo svg {
+  width: 28px;
+  height: 28px;
+  stroke: var(--accent-pink); /* Default logo icon color from base.css */
+  fill: none; /* Assuming stroke-based icon, adjust if it's fill-based */
+  transition: stroke 0.3s ease, filter 0.3s ease; /* Smooth transition for stroke and filter */
+}
+
+.nav-logo:hover svg {
+  stroke: var(--neon-blue); /* Change stroke color on hover */
+  /* Glow effect from neuro.css concept, using neon-blue */
+  filter: drop-shadow(0 0 4px var(--neon-blue));
+}
+
+.nav-links {
+  display: flex;
+  gap: var(--spacing-lg);
+  list-style: none;
+}
+
+.nav-links a, 
+.navbar ul li a, /* Retaining for broader compatibility if ul > li structure is used elsewhere */
+.navbar ul li button { /* For button-styled links */
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  position: relative;
+  padding: var(--spacing-xs) var(--spacing-sm); /* Adjusted padding for hover bg */
+  background: none;
+  border: none;
+  border-radius: 4px; /* Added for background hover */
+  cursor: pointer;
+  /* Transitions for color, background-color, transform, box-shadow */
+  /* Global * transition covers color. Adding others here. */
+  transition: color 0.3s ease, background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.nav-links a:after, 
+.navbar ul li a:after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px; /* Adjusted to not overlap padding */
+  left: 50%; /* Start animation from center */
+  transform: translateX(-50%); /* Center the underline */
+  background: var(--section-title-gradient);
+  transition: width 0.3s ease; /* Smooth animation for underline */
+}
+
+.nav-links a:hover, 
+.navbar ul li a:hover, 
+.navbar ul li button:hover {
+  color: var(--accent-pink);
+  /* neuro.css enhancements for hover */
+  background-color: var(--nav-hover-bg); /* Define --nav-hover-bg, e.g., rgba(255,255,255,0.05) or from neuro.css */
+  transform: translateY(-2px);
+  /* Using --shadow-glow from base.css for consistency */
+  box-shadow: 0 4px 8px var(--shadow-glow); 
+}
+
+.nav-links a:hover:after, 
+.navbar ul li a:hover:after {
+  width: calc(100% - var(--spacing-sm) * 2); /* Underline respects padding */
+}
+
+.nav-links a.active {
+  color: var(--accent-pink);
+  /* Optionally, make active link background persistent */
+  /* background-color: var(--nav-hover-bg); */
+}
+
+.nav-links a.active::after {
+  width: calc(100% - var(--spacing-sm) * 2); /* Underline respects padding */
+}
 
 
-  /* Responsive Nav/Mobile Menu */
-  @media (max-width: 992px) { /* Adjust breakpoint if needed */
-      .nav-links { display: none; }
-      .mobile-menu-btn { display: block; }
-      .navbar { padding: 0 20px; }
-  }
-  @media (max-width: 768px) {
-      .main-container { padding: 20px; }
-      .page-title { font-size: 2em; }
-      .section-title { font-size: 1.6em; }
-  }
+/* --- Theme Toggle Button --- */
+.theme-toggle {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  padding: var(--spacing-xs);
+  margin-left: var(--spacing-md);
+  /* Global * transition covers background-color. Adding transform. */
+  transition: background-color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  /* background-color: var(--card-bg); base.css has this, but --input-bg slightly darker is fine too */
+  background-color: color-mix(in srgb, var(--input-bg) 90%, var(--text-color) 5%); /* Slightly interactive bg */
+  border-color: var(--neon-blue);
+  transform: rotate(30deg); /* From neuro.css */
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--text-color); /* Use --text-color, was --text-primary in neuro which is same for dark */
+  transition: fill 0.3s ease;
+}
+
+.theme-toggle:hover svg {
+  fill: var(--neon-blue); /* Was --text-highlight in neuro.css, using --neon-blue from base.css for consistency */
+}
+
+.sun-icon, .moon-icon {
+  width: 20px;
+  height: 20px;
+  /* Transition for display/opacity if you were to fade them in/out instead of display:none/block */
+  /* For now, display toggling is instant, which is fine */
+}
+
+[data-theme="dark"] .sun-icon { display: block; }
+[data-theme="dark"] .moon-icon { display: none; }
+[data-theme="light"] .sun-icon { display: none; }
+[data-theme="light"] .moon-icon { display: block; }
+
+
+/* --- Mobile Menu (Hamburger Menu) --- */
+.mobile-menu-btn {
+  display: none; /* Hidden on larger screens by default */
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-color);
+  padding: var(--spacing-xs);
+  margin-left: var(--spacing-sm);
+  transition: color 0.3s ease; /* Smooth color transition for the button itself */
+}
+
+.mobile-menu-btn:hover {
+  color: var(--accent-pink);
+}
+
+.mobile-menu-btn svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor; /* Inherit color from button, allows hover effect */
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 70px; /* Matches navbar height from base.css assumption */
+  left: -100%; /* Initially off-screen */
+  width: 80%;
+  max-width: 300px;
+  height: calc(100% - 70px);
+  background-color: var(--bg-secondary); /* Use a slightly more opaque bg for mobile menu if needed */
+  padding: var(--spacing-lg);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  z-index: 999;
+  box-shadow: 5px 0 15px var(--shadow-color); /* --shadow-color from base.css */
+  transition: left 0.4s ease-in-out; /* Smooth slide-in/out animation */
+}
+
+.mobile-menu.active {
+  left: 0;
+}
+
+.mobile-menu a {
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 16px;
+  padding: var(--spacing-md) var(--spacing-xs);
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  border-radius: 4px; /* For subtle hover */
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+.mobile-menu a:hover {
+  color: var(--accent-pink);
+  background-color: rgba(255,255,255,0.03); /* Subtle hover for mobile links */
+}
+
+.mobile-menu a:last-child {
+  border-bottom: none;
+}
+
+.mobile-menu a.active {
+  color: var(--accent-pink);
+  font-weight: 600;
+}
+
+.mobile-menu hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: var(--spacing-sm) 0;
+}
+
+/* Responsive Adjustments from base.css for Navbar/Mobile Menu visibility */
+@media (max-width: 992px) {
+  .nav-links { display: none; }
+  .mobile-menu-btn { display: block; }
+  .navbar { padding: 12px var(--spacing-lg); } /* Keep vertical padding, adjust horizontal */
+}
+/* --- Footer --- */
+.site-footer {
+  background-color: var(--bg-footer);
+  padding: var(--spacing-xl) 5%;
+  margin-top: auto; /* Pushes footer to bottom if content is short */
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.footer-content h2 { /* Optional heading in footer */
+  font-size: 24px;
+  margin-bottom: var(--spacing-md);
+  color: var(--text-color);
+}
+
+/* --- Common Page Elements --- */
+/* Style for main page titles (e.g., "Cardiology Department") */
+.page-title {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+  font-size: 2.5em; /* Large font size */
+  color: var(--text-color);
+  font-weight: 600;
+  position: relative;
+  padding-bottom: var(--spacing-md);
+}
+.page-title::after { /* Decorative underline for page titles */
+ content: '';
+ display: block;
+ width: 70px;
+ height: 3px;
+ background: var(--section-title-gradient); /* Use consistent gradient */
+ margin: var(--spacing-md) auto 0;
+ border-radius: 2px;
+}
+
+/* Style for titles of sections within a page (e.g., "Common Diseases") */
+.section-title {
+  font-size: 2em;
+  margin-bottom: var(--spacing-lg);
+  text-align: center;
+  position: relative;
+  color: var(--text-color);
+  font-weight: 600;
+  padding-bottom: var(--spacing-sm);
+}
+.section-title::after { /* Decorative underline for section titles */
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: var(--section-title-gradient);
+  margin: var(--spacing-sm) auto var(--spacing-lg); /* Adjusted margin */
+  border-radius: 2px;
+}
+
+/* --- Generic Card Style --- */
+.card {
+  background-color: var(--bg-secondary); /* Use secondary background for cards */
+  border-radius: var(--border-radius); /* Consistent rounded corners */
+  overflow: hidden; /* Clip content that might overflow rounded corners */
+  border: 1px solid var(--border-color); /* Subtle border */
+  padding: var(--spacing-lg); /* Padding inside the card */
+  box-shadow: var(--card-shadow); /* Consistent shadow for depth */
+  transition: all 0.3s ease; /* Smooth transitions for hover effects */
+}
+.card:hover {
+  transform: translateY(-5px); /* Slight lift effect on hover */
+  box-shadow: 0 10px 25px var(--shadow-glow); /* Enhanced shadow/glow on hover */
+  border-color: var(--card-hover-border); /* Change border color on hover */
+}
+/* Light theme specific card hover, if different glow is needed */
+[data-theme="light"] .card:hover {
+  box-shadow: 0 10px 25px rgba(var(--neon-blue-rgb, 49, 130, 206), 0.15); /* Using neon-blue for glow in light */
+}
+
+
+/* --- Basic Button Styles --- */
+/* Targets .button class, <button> elements, and submit inputs */
+.button, button, input[type="submit"] {
+    display: inline-block; /* Allows padding and margin */
+    padding: var(--spacing-sm) var(--spacing-lg); /* Default padding (10px 20px) */
+    border-radius: 5px; /* Slightly rounded corners */
+    font-size: 1rem; /* Standard font size */
+    font-weight: 500; /* Medium font weight */
+    text-align: center;
+    text-decoration: none; /* Remove underline from <a> styled as buttons */
+    cursor: pointer;
+    border: 1px solid var(--button-border-color); /* Use variable for border color */
+    background-color: var(--button-bg); /* Use variable for background */
+    color: var(--button-text-color); /* Use variable for text color */
+    transition: all 0.3s ease; /* Smooth transitions for hover effects */
+}
+.button:hover, button:hover, input[type="submit"]:hover {
+    background-color: var(--button-hover-bg); /* Use variable for hover background */
+    color: white; /* Typically white text on darker hover background */
+    border-color: var(--button-hover-bg); /* Match border with hover background */
+    transform: translateY(-2px); /* Slight lift effect */
+    box-shadow: 0 4px 10px rgba(255, 59, 92, 0.2); /* Shadow for depth */
+}
+
+/* Light theme adjustments for default button */
+[data-theme="light"] .button, 
+[data-theme="light"] button, 
+[data-theme="light"] input[type="submit"] {
+    background-color: var(--button-bg); /* Uses light theme --button-bg */
+    color: var(--button-text-color); /* Uses light theme --button-text-color (still pink) */
+    border-color: var(--button-border-color); /* Uses light theme --button-border-color (still pink) */
+}
+[data-theme="light"] .button:hover, 
+[data-theme="light"] button:hover, 
+[data-theme="light"] input[type="submit"]:hover {
+    background-color: var(--button-hover-bg);
+    color: white; /* White text on solid pink hover */
+    border-color: var(--button-hover-bg);
+}
+
+
+/* --- Button Variants --- */
+/* Primary Button (Solid Accent Color) */
+.button-primary {
+  background-color: var(--accent-pink);
+  color: white;
+  border-color: var(--accent-pink);
+}
+.button-primary:hover {
+  background-color: color-mix(in srgb, var(--accent-pink) 85%, black); /* Darken pink on hover */
+  border-color: color-mix(in srgb, var(--accent-pink) 85%, black);
+  color: white;
+}
+[data-theme="light"] .button-primary {
+  /* Light theme primary button can be the same or adjusted if needed */
+  background-color: var(--accent-pink);
+  color: white;
+  border-color: var(--accent-pink);
+}
+[data-theme="light"] .button-primary:hover {
+  background-color: color-mix(in srgb, var(--accent-pink) 85%, black);
+  border-color: color-mix(in srgb, var(--accent-pink) 85%, black);
+}
+
+/* Emergency Button (Solid Accent Color, distinct from default button) */
+.button-emergency {
+  background-color: var(--accent-pink); /* Solid pink */
+  color: white;
+  border: 1px solid var(--accent-pink);
+}
+.button-emergency:hover {
+   background-color: color-mix(in srgb, var(--accent-pink) 80%, black); /* Darker pink */
+   border-color: color-mix(in srgb, var(--accent-pink) 80%, black);
+   color: white;
+}
+[data-theme="light"] .button-emergency {
+  background-color: var(--accent-pink); /* Pink in light theme */
+  color: white;
+  border: 1px solid var(--accent-pink);
+}
+[data-theme="light"] .button-emergency:hover {
+  background-color: #e31b3d; /* Specific darker red for light theme emergency hover */
+  border-color: #e31b3d;
+}
+
+/* Secondary Button (Subtle, often for less critical actions) */
+.button-secondary {
+  background-color: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+.button-secondary:hover {
+  background-color: var(--grid-color); /* Use grid color for subtle background */
+  color: var(--text-color);
+  border-color: var(--text-secondary);
+}
+
+/* Small and Extra Small Button Sizes */
+.button-small { padding: calc(var(--spacing-sm) * 0.6) calc(var(--spacing-lg) * 0.6); font-size: 0.9em; }
+.button-xsmall { padding: calc(var(--spacing-sm) * 0.4) calc(var(--spacing-lg) * 0.4); font-size: 0.8em; }
+
+
+/* --- Generic Content Section (alternative to .card if simpler box needed) --- */
+.content-section {
+    background-color: var(--bg-secondary);
+    padding: var(--spacing-lg) var(--spacing-xl); /* 25px 30px (adjust based on vars) */
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-xl); /* 30px (adjust based on vars) */
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+/* --- Search Bar (Generic styling) --- */
+.search-bar {
+  background-color: rgba(255, 255, 255, 0.1); /* Default for dark theme */
+  border-radius: 20px; /* Rounded edges */
+  padding: var(--spacing-xs) var(--spacing-md); /* 8px 15px */
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  max-width: 250px; /* Or adjust as needed */
+}
+.search-bar input {
+  background: transparent;
+  border: none;
+  color: var(--text-color); /* Primary text color */
+  outline: none;
+  width: 100%; /* Take available width */
+  font-size: 14px;
+  padding-left: var(--spacing-xs);
+}
+.search-bar input::placeholder {
+  color: var(--placeholder-color); /* Use placeholder variable */
+}
+.search-bar .search-icon { /* Assumes an icon element with this class */
+  color: var(--text-secondary);
+  margin-right: var(--spacing-xs); /* 5px */
+  font-size: 1.1em; /* Adjust icon size if needed */
+}
+/* Light theme for search bar */
+[data-theme="light"] .search-bar {
+  background-color: rgba(0, 0, 0, 0.05); /* Darker, subtle background for light theme */
+}
+[data-theme="light"] .search-bar input {
+  color: var(--text-color); /* Uses light theme's primary text color */
+}
+[data-theme="light"] .search-bar input::placeholder {
+  color: var(--placeholder-color); /* Uses light theme's placeholder color */
+}
+[data-theme="light"] .search-bar .search-icon {
+  color: var(--text-secondary); /* Uses light theme's secondary text color */
+}
+
+/* --- Notice / Alert Blocks --- */
+/* Emergency Notice Block (e.g., for warnings or critical info) */
+.notice-emergency {
+  margin-top: var(--spacing-lg); /* 1.5rem equivalent */
+  padding: var(--spacing-md) var(--spacing-lg); /* 1rem 1.25rem equivalent */
+  border: 1px solid var(--emergency-border);
+  background-color: var(--emergency-bg);
+  border-radius: var(--border-radius);
+  color: var(--emergency-text); /* Text color inherits from variable */
+  font-size: 0.95rem;
+}
+.notice-emergency h4 { /* Heading within the notice */
+  color: var(--emergency-text); /* Ensure heading also uses emergency text color */
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm); /* 0.75rem equivalent */
+  font-size: 1.1em;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  /* Override general h4 styles if they exist, like underlines */
+  border-bottom: none; 
+  padding-bottom: 0;
+}
+.notice-emergency h4::after { display: none; } /* Explicitly remove underlines if any base style adds them */
+.notice-emergency h4 i { margin-right: var(--spacing-xs); } /* Icon spacing */
+.notice-emergency ul, .notice-emergency p {
+  margin-bottom: 0;
+  color: var(--emergency-text); /* Ensure lists and paragraphs also use the color */
+}
+.notice-emergency ul li::before { /* Bullet point color for lists inside */
+  color: var(--emergency-text);
+  /* Add other ::before styling if needed (e.g., content, position) */
+}
+
+
+/* --- Status Badge Styles (Example, can be expanded) --- */
+.status-badge {
+  display: inline-block;
+  padding: .3em .6em;
+  font-size: .8em;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .375rem; /* Bootstrap-like radius */
+}
+.status-success { color: #fff; background-color: #198754; } /* Green */
+.status-warning { color: #000; background-color: #ffc107; } /* Yellow */
+.status-danger { color: #fff; background-color: #dc3545; } /* Red */
+.status-info { color: #000; background-color: #0dcaf0; } /* Cyan */
+.status-secondary { color: #fff; background-color: #6c757d; } /* Grey */
+
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 992px) { /* Tablet and smaller */
+    .nav-links { display: none; } /* Hide desktop nav links */
+    .mobile-menu-btn { display: block; } /* Show hamburger menu button */
+    .navbar { padding: 0 var(--spacing-lg); } /* Adjust navbar padding */
+}
+@media (max-width: 768px) { /* Mobile */
+    .main-container { padding: var(--spacing-lg); } /* Reduce padding for smaller screens */
+    .page-title { font-size: 2em; } /* Smaller page titles */
+    .section-title { font-size: 1.6em; } /* Smaller section titles */
+    .button, button, input[type="submit"] {
+        padding: var(--spacing-sm) var(--spacing-md); /* Adjust button padding */
+        font-size: 0.95rem;
+    }
+}
 
 /* --- END OF FILE base.css --- */

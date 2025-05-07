@@ -1,36 +1,24 @@
 /* --- START OF FILE cardio.css --- */
-/* Specific styles for Cardiology LANDING page, assumes base.css is loaded */
 
-/* Use Cardiology specific accent color if needed, otherwise base.css vars are used */
-:root {
-    --dept-highlight-color: #ff3b5c; /* Example override if needed */
-    --dept-accent-color: #ff3b5c;
-    --dept-neon-color: #00f0ff;
-    /* Add other cardio-specific vars if necessary */
+root {
+    --bg-primary: #05152a;
+    --bg-secondary: rgba(5, 21, 42, 0.95);
+    --text-primary: white;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --text-highlight: #3182ce;
+    --accent-color: #3182ce;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --particle-bg: rgba(0, 180, 255, 0.05);
+    --neon-blue: #00f0ff;
+    --hero-bg: rgba(5, 21, 42, 0.7);
+    --card-bg: rgba(8, 28, 56, 0.8);
+    --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c);
 }
-:root.light-mode {
-     --dept-highlight-color: #ff3b5c;
-     --dept-accent-color: #ff3b5c;
-     --dept-neon-color: #3182ce;
-}
-
-/* Specific styles for the logo area if needed */
-.navbar .logo-icon svg path {
-     stroke: var(--dept-accent-color, var(--accent-pink)); /* Use specific or fallback */
-}
-
-/* Specific Nav Link Background? (If only for this page) */
-/* Consider if this should be a class instead if used elsewhere */
-/* .nav-links {
-     background: linear-gradient(90deg, var(--dept-neon-color, var(--neon-blue)), var(--dept-accent-color, var(--accent-pink)));
-} */
-
 
 /* --- Hero Section Specifics --- */
 .hero-section {
     /* Keep padding, background, position, overflow, border */
     padding: 150px 0 80px;
-    background-color: var(--hero-bg, rgba(5, 21, 42, 0.7)); /* Use specific or fallback var */
     position: relative;
     overflow: hidden;
     border-bottom: 1px solid var(--border-color);
@@ -78,7 +66,7 @@
 }
 
 .hero-content h1 .highlight {
-    color: var(--dept-highlight-color, var(--accent-pink)); /* Use specific or fallback */
+    color: var(--dept-color-cardiology, var(--dept-color-cardiology)); /* Use specific or fallback */
     font-weight: bold;
 }
 
@@ -175,7 +163,6 @@
 
 /* Card styling - If EXACTLY same as home.css .container-card, remove. Keep if different */
 .card {
-    background-color: var(--card-bg, rgba(8, 28, 56, 0.8)); /* Use specific or fallback */
     border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);
     display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease;
     box-shadow: var(--shadow-color); /* Use base shadow */
@@ -217,7 +204,7 @@
 /* Button Styling - Keep if different from a potential base button */
 .btn {
     background-color: var(--button-bg, rgba(255, 59, 92, 0.3)); /* Use base vars */
-    color: var(--accent-pink, #f6f6ff); /* Use base accent */
+    color: var(--accent-white, #ffffff); /* Use base accent */
     border: 1px solid var(--accent-pink, var(--accent-color));
     padding: 12px 25px; border-radius: 5px; text-decoration: none;
     font-size: 14px; transition: all 0.3s; display: block; cursor: pointer;

@@ -5,33 +5,6 @@
 
 {% block head_extra %}
   <link rel="stylesheet" href="{{ url_for('static', filename=condition.specific_css | default('website/generic_disease.css')) }}">
-  <style>
-    /* Keep association-list for risk factors & protocols */
-    .association-list {
-        list-style: disc; /* Standard bullet points */
-        padding-left: 25px;
-        margin-top: 0.5rem;
-        margin-bottom: 1rem; /* Add bottom margin */
-    }
-    .association-list li {
-        margin-bottom: 0.5rem; /* Increase spacing slightly */
-    }
-    /* --- NEW/MODIFIED: Vertical Symptom List Styling --- */
-    .symptom-list-vertical { /* New class for vertical list */
-        list-style: disc; /* Use bullets */
-        padding-left: 25px; /* Indentation */
-        margin: 0.5rem 0 1rem 0;
-    }
-    .symptom-list-vertical li {
-        margin-bottom: 0.4rem;
-        /* Remove background/border/padding from inline style */
-    }
-    /* --- End Symptom List Styling --- */
-
-    .protocol-link { margin-left: 8px; font-size: 0.9em; }
-    hr.section-divider { margin: 1.5rem 0; border-top: 1px dashed var(--border-color-light, #ddd); }
-    /* ... Keep other existing styles ... */
-  </style>
 {% endblock %}
 
 {% block content %}

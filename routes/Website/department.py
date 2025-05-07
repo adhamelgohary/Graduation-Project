@@ -110,6 +110,11 @@ def get_department_by_id(dept_id):
                 department['hero_icon'] = 'fa-brain'
                 department['hero_highlight'] = 'Neurology'
                 department['hero_main'] = 'Expertise'
+            elif dept_name == 'Orthopedics':
+                department['specific_css'] = 'website/ortho.css' # FIXED
+                department['hero_icon'] = 'fa-bone'
+                department['hero_highlight'] = 'Orthopedics'
+                department['hero_main'] = 'Expertise'
             # Add elif blocks for other specific departments...
             else: # Default fallback
                 department['specific_css'] = 'website/generic_department.css' # FIXED
