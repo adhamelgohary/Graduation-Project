@@ -238,33 +238,108 @@ def update_associations(cursor, condition_id, selected_ids, table_name, link_id_
 
 # --- Routes ---
 
+# your_project/routes/Doctor_Portal/disease_management.py
+
 @disease_management_bp.route('/', methods=['GET'])
 @login_required
 def list_diseases():
-    # ... (logic to fetch doctor dept and filters as before) ...
-    if not check_doctor_authorization(current_user): abort(403)
-    doctor_department_id = None; doctor_department_name = "All"
-    # ... (fetch doctor department logic - ensure try/finally closes conn/cursor) ...
-    page = request.args.get('page', 1, type=int); search = request.args.get('search', '').strip()
-    sort_by = request.args.get('sort_by', DEFAULT_SORT_COLUMN).lower(); sort_dir = request.args.get('sort_dir', DEFAULT_SORT_DIRECTION).upper()
+    if not check_doctor_authorization(current_user):
+        abort(403)
+
+    doctor_department_id = None
+    doctor_department_name = "All Departments" # Default display name
+
+    # --- Fetch the logged-in doctor's department ID ---
+    conn = None
+    cursor = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        # Assuming current_user.id holds the PK from the 'users' table,
+        # and the 'doctors' table has a 'user_id' FK and 'department_id' FK.
+        # Adjust the query if your schema is different.
+        sql_get_doctor_dept = """
+            SELECT doc.department_id, dep.name as department_name
+            FROM doctors doc
+            JOIN departments dep ON doc.department_id = dep.department_id
+            WHERE doc.user_id = %s
+        """
+        cursor.execute(sql_get_doctor_dept, (current_user.id,))
+        doctor_info = cursor.fetchone()
+
+        if doctor_info:
+            doctor_department_id = doctor_info.get('department_id')
+            doctor_department_name = doctor_info.get('department_name', "Assigned Department")
+            if not doctor_department_id:
+                current_app.logger.warning(f"Doctor user_id {current_user.id} found but department_id is NULL.")
+                doctor_department_name = "Department Not Assigned" # Or handle as error
+        else:
+            current_app.logger.warning(f"No doctor record found for user_id {current_user.id}. Showing all diseases.")
+            # doctor_department_id remains None, doctor_department_name remains "All Departments"
+            # Or, you could choose to show an error/no diseases if department is mandatory
+
+    except mysql.connector.Error as err:
+        current_app.logger.error(f"Database error fetching doctor's department: {err}", exc_info=True)
+        flash("Error retrieving your department information. Showing all diseases.", "warning")
+        # Keep doctor_department_id as None so all diseases are shown as a fallback
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error fetching doctor's department: {e}", exc_info=True)
+        flash("An unexpected error occurred. Showing all diseases.", "warning")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+    # ---------------------------------------------------
+
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '').strip()
+    sort_by = request.args.get('sort_by', DEFAULT_SORT_COLUMN).lower()
+    sort_dir = request.args.get('sort_dir', DEFAULT_SORT_DIRECTION).upper()
+
     filters = {k: request.args.get(f'filter_{k}') for k in ['urgency', 'type'] if request.args.get(f'filter_{k}')}
-    for k_id in ['testing_type_id', 'diagnosis_type_id']: val = request.args.get(f'filter_{k_id}', type=int); filters[k_id] = val if val else filters.get(k_id)
-    if sort_by not in VALID_SORT_COLUMNS: sort_by = DEFAULT_SORT_COLUMN
-    if sort_dir not in ['ASC', 'DESC']: sort_dir = DEFAULT_SORT_DIRECTION
-    result = get_paginated_diseases(page, ITEMS_PER_PAGE, search, sort_by, sort_dir, filters, doctor_department_id)
+    for k_id in ['testing_type_id', 'diagnosis_type_id']:
+        val = request.args.get(f'filter_{k_id}', type=int)
+        filters[k_id] = val if val else filters.get(k_id)
+
+    if sort_by not in VALID_SORT_COLUMNS:
+        sort_by = DEFAULT_SORT_COLUMN
+    if sort_dir not in ['ASC', 'DESC']:
+        sort_dir = DEFAULT_SORT_DIRECTION
+
+    # Now doctor_department_id will be the actual ID or None (if not found/error)
+    result = get_paginated_diseases(
+        page=page,
+        per_page=ITEMS_PER_PAGE,
+        search_term=search,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+        filters=filters,
+        doctor_department_id=doctor_department_id # Pass the fetched ID
+    )
+
     total_pages = math.ceil(result['total'] / ITEMS_PER_PAGE) if ITEMS_PER_PAGE > 0 else 0
-    # Fetch filter options
+
     filter_options = {
         'urgency_levels': get_enum_values('conditions', 'urgency_level'),
         'condition_types': get_enum_values('conditions', 'condition_type'),
         'testing_types': get_all_testing_types(),
         'diagnosis_types': get_all_diagnosis_types(),
     }
-    return render_template('Doctor_Portal/Diseases/disease_list.html', diseases=result['items'], search_term=search,
-                           current_page=page, total_pages=total_pages, sort_by=sort_by, sort_dir=sort_dir,
-                           filters=filters, valid_sort_columns=VALID_SORT_COLUMNS,
-                           doctor_department_name=doctor_department_name, **filter_options)
 
+    return render_template(
+        'Doctor_Portal/Diseases/disease_list.html',
+        diseases=result['items'],
+        search_term=search,
+        current_page=page,
+        total_pages=total_pages,
+        sort_by=sort_by,
+        sort_dir=sort_dir,
+        filters=filters,
+        valid_sort_columns=VALID_SORT_COLUMNS,
+        doctor_department_name=doctor_department_name, # Pass the name for display
+        **filter_options
+    )
 
 @disease_management_bp.route('/<int:condition_id>', methods=['GET'])
 @login_required
