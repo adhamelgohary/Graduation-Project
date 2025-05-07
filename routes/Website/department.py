@@ -263,60 +263,6 @@ def get_condition_details_by_id(condition_id):
 
     return condition # Returns None if error or not found
 
-def get_doctors_by_department(dept_id):
-    # ... (keep as is - no changes needed here for read more) ...
-    """Fetches active and approved doctors associated with a department ID."""
-    doctors = []
-    conn = None
-    cursor = None
-    logger = current_app.logger if current_app else print
-    log_method_error = logger.error if hasattr(logger, 'error') else logger
-    log_method_exception = logger.exception if hasattr(logger, 'exception') else logger
-
-    try:
-        conn = get_db_connection()
-        if not conn:
-             log_method_error(f"Failed to get DB connection for doctors in dept {dept_id}")
-             return []
-        cursor = conn.cursor(dictionary=True)
-        query = """
-            SELECT
-                u.user_id, u.first_name, u.last_name,
-                u.profile_picture, d.specialization_id, s.name AS specialization_name,
-                d.biography
-            FROM users u
-            JOIN doctors d ON u.user_id = d.user_id
-            LEFT JOIN specializations s ON d.specialization_id = s.specialization_id
-            WHERE
-                u.user_type = 'doctor'
-            AND u.account_status = 'active'
-            AND d.department_id = %s
-            AND d.verification_status = 'approved'
-            ORDER BY u.last_name ASC, u.first_name ASC
-        """
-        params = (dept_id,)
-        cursor.execute(query, params)
-        doctors_raw = cursor.fetchall()
-        for doc in doctors_raw:
-            doc['specialization'] = doc.get('specialization_name', 'Specialist')
-            # Keep url_for for images
-            profile_pic_filename = doc.get('profile_picture')
-            if profile_pic_filename:
-                doc['profile_picture_url'] = url_for('static', filename=f'images/profile_pics/{profile_pic_filename}')
-            else:
-                doc['profile_picture_url'] = url_for('static', filename='images/profile_pics/default_avatar.png')
-            bio = doc.get('biography')
-            doc['short_bio'] = (bio[:150] + '...') if bio and len(bio) > 150 else bio
-            doctors.append(doc)
-    except mysql.connector.Error as db_err:
-        log_method_error(f"Database error fetching doctors for dept {dept_id}: {db_err}")
-    except Exception as e:
-        log_method_exception(f"Unexpected error fetching doctors for dept {dept_id}: {e}")
-    finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-    return doctors
-
 
 # --- Routes ---
 
@@ -352,44 +298,6 @@ def department_landing(dept_id):
         template_path,
         department=department,
         conditions=department_conditions
-    )
-
-
-@department_bp.route('/conditions/<int:condition_id>')
-def view_condition(condition_id):
-    # ... (keep as is - logic is correct, relies on updated get_condition_details_by_id) ...
-    """Renders the details page for a specific condition."""
-    condition = get_condition_details_by_id(condition_id) # Now returns snippets and flags
-
-    if not condition:
-        if current_app:
-            current_app.logger.warning(f"Condition details requested for ID {condition_id}, but get_condition_details_by_id returned None. Check for DB errors or if condition exists and is active.")
-        abort(404, description=f"Condition with ID {condition_id} not found or not available.")
-
-    if current_app:
-        current_app.logger.debug(f"Successfully fetched condition data for ID {condition_id}: {condition.get('name')}")
-
-    related_doctors = []
-    department_id_for_condition = condition.get('department_id')
-
-    if department_id_for_condition:
-        if current_app:
-            current_app.logger.debug(f"Fetching related doctors for department ID: {department_id_for_condition} (Condition: {condition.get('name')})")
-        related_doctors = get_doctors_by_department(department_id_for_condition)
-        if current_app:
-             current_app.logger.debug(f"Found {len(related_doctors)} related approved/active doctors for dept {department_id_for_condition}.")
-    elif current_app:
-        current_app.logger.warning(f"Condition {condition_id} ('{condition.get('name')}') has no associated department_id. Cannot fetch related doctors.")
-
-    template_path = 'Website/Departments/disease_detail.html'
-    if current_app:
-        current_app.logger.debug(f"Rendering condition detail template: {template_path}")
-
-    # Pass the condition object (now containing snippets and flags) to the template
-    return render_template(
-        template_path,
-        condition=condition,
-        doctors=related_doctors
     )
 
 # --- End of Routes ---

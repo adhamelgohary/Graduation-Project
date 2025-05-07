@@ -135,12 +135,14 @@
                     <h1>{{ condition.name | default('Condition') }}</h1>
                     <div class="image-text-container">
                         {# MODIFIED LINE BELOW #}
-                        <img src="{{ condition.image_url }}" alt="{{ condition.name }} Illustration">
+                        {% if condition.condition_image_filename %}
+    <img src="{{ url_for('disease_management.serve_condition_image', image_filename_in_db=condition.condition_image_filename) }}" alt="{{ condition.condition_name }}">
+{% endif %}
                         {# Use 'or' to provide an empty string if description is None or empty, then truncate #}
                         <p>{{ (condition.description or '') | truncate(120, True) | default('Learn more about this condition.', True) }}</p>
                     </div>
                 </div>
-                <a href="{{ url_for('department.view_condition', condition_id=condition.condition_id) }}" class="btn" >Read More</a>
+                <a href="{{ url_for('disease_info.view_condition', condition_id=condition.condition_id) }}" class="btn" >Read More</a>
             </div>
             {% endfor %}
         {% else %}

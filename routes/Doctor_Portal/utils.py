@@ -151,25 +151,62 @@ def get_enum_values(table_name, column_name):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
 
-def get_all_simple(table_name, id_col, name_col, order_by=None, where_clause=None, params=None):
-    """ Generic helper to fetch ID/Name pairs from simple tables, with optional WHERE """
-    conn = None; cursor = None; items = []
-    effective_order_by = order_by if order_by else name_col
-    where_sql = f" WHERE {where_clause}" if where_clause else ""
+# In ./utils.py (or wherever get_all_simple is defined)
+import mysql.connector
+from flask import current_app
+from db import get_db_connection # Assuming db.py is accessible
+
+# ... other utility functions like check_doctor_authorization, get_provider_id, get_enum_values ...
+
+def get_all_simple(table_name, id_column_name, name_column_name, order_by_column=None):
+    """
+    Fetches ID and Name columns from a table, ordered by name.
+    Returns a list of dictionaries with keys matching the column names.
+    """
+    conn = None
+    cursor = None
+    items = []
+    if order_by_column is None:
+        order_by_column = name_column_name # Default order by name
+
+    # Basic validation to prevent injection via table/column names if dynamic
+    # If these are always hardcoded, this is less critical but good practice
+    safe_table = "".join(c for c in table_name if c.isalnum() or c == '_')
+    safe_id_col = "".join(c for c in id_column_name if c.isalnum() or c == '_')
+    safe_name_col = "".join(c for c in name_column_name if c.isalnum() or c == '_')
+    safe_order_col = "".join(c for c in order_by_column if c.isalnum() or c == '_')
+    if not (safe_table == table_name and safe_id_col == id_column_name and
+            safe_name_col == name_column_name and safe_order_col == order_by_column):
+         current_app.logger.error(f"Invalid table/column name detected in get_all_simple: {table_name}, {id_column_name}, {name_column_name}, {order_by_column}")
+         return items # Prevent execution with potentially unsafe names
+
     try:
         conn = get_db_connection()
-        if not conn: raise ConnectionError("DB connection failed")
-        cursor = conn.cursor(dictionary=True)
-        # Use backticks for safety, though inputs are controlled internally
-        query = f"SELECT `{id_col}`, {name_col} as name FROM `{table_name}` {where_sql} ORDER BY {effective_order_by}"
-        cursor.execute(query, params or [])
+        if not conn:
+            current_app.logger.error(f"DB connection failed for get_all_simple({safe_table})")
+            return items
+        # Use dictionary=True to get column names as keys
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        query = f"SELECT `{safe_id_col}`, `{safe_name_col}` FROM `{safe_table}` ORDER BY `{safe_order_col}` ASC"
+        current_app.logger.debug(f"Executing get_all_simple query: {query}")
+        cursor.execute(query)
         items = cursor.fetchall()
-    except (mysql.connector.Error, ConnectionError) as e:
-        logger.error(f"Error get simple list from {table_name}: {e}")
+        # The result `items` should be like:
+        # [{'symptom_id': 1, 'symptom_name': 'Headache'}, {'symptom_id': 2, 'symptom_name': 'Fever'}, ...]
+        # The keys directly match the column names because of dictionary=True.
+        current_app.logger.debug(f"Fetched {len(items)} items for {safe_table}. First item example: {items[0] if items else 'None'}")
+
+    except mysql.connector.Error as err:
+        current_app.logger.error(f"DB error in get_all_simple({safe_table}): {err}")
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error in get_all_simple({safe_table}): {e}", exc_info=True)
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
     return items
+
+# ... rest of your utils.py ...
 
 # --- General Utilities ---
 
