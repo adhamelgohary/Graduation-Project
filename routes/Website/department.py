@@ -127,6 +127,143 @@ def get_department_by_id(dept_id):
         if conn and conn.is_connected(): conn.close()
     return department
 
+
+def get_conditions_by_department(dept_id):
+    # --- Added snippet generation for condition list descriptions ---
+    """Fetches active conditions, generates short descriptions for list view."""
+    conditions = []
+    conn = None
+    cursor = None
+    logger = current_app.logger if current_app else print
+    log_method_error = logger.error if hasattr(logger, 'error') else logger
+    log_method_exception = logger.exception if hasattr(logger, 'exception') else logger
+    SNIPPET_LENGTH_LIST = 100 # Shorter snippet for list view
+
+    try:
+        conn = get_db_connection()
+        if not conn:
+            log_method_error(f"Failed to get DB connection for conditions in dept {dept_id}")
+            return []
+        cursor = conn.cursor(dictionary=True)
+        query = """
+            SELECT condition_id, condition_name, description, condition_image_filename
+            FROM conditions
+            WHERE department_id = %s AND is_active = TRUE
+            ORDER BY condition_name ASC
+        """
+        cursor.execute(query, (dept_id,))
+        results = cursor.fetchall()
+        for condition_data in results:
+            # Keep url_for for images
+            condition_img_filename = condition_data.get('condition_image_filename')
+            condition_data['image_url'] = url_for('static', filename=f"images/conditions/{condition_img_filename}") if condition_img_filename else url_for('static', filename="images/conditions/disease_placeholder.png")
+
+            condition_data['name'] = condition_data.get('condition_name')
+            desc = condition_data.get('description', '')
+            # Use helper to generate snippet for the list view
+            condition_data['short_description'], _ = create_snippet(desc, SNIPPET_LENGTH_LIST) # Ignore 'has_more' flag for list view
+
+            conditions.append(condition_data)
+    except mysql.connector.Error as db_err:
+         if db_err.errno == 1054:
+             try: column_name = str(db_err).split("'")[1]
+             except IndexError: column_name = "unknown"
+             log_method_error(f"DB Error fetching conditions: Column '{column_name}' missing. Schema mismatch? Err: {db_err}")
+         elif db_err.errno == 1146:
+             log_method_error(f"DB Error fetching conditions: Table 'conditions' missing. Err: {db_err}")
+         else:
+             log_method_error(f"Database error fetching conditions for dept {dept_id}: {db_err}")
+    except Exception as e:
+        log_method_exception(f"Unexpected error fetching conditions for dept {dept_id}: {e}")
+    finally:
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
+    return conditions
+
+def get_condition_details_by_id(condition_id):
+    """
+    Fetches detailed condition info, generates snippets for long text fields,
+    and adds flags indicating if more content exists.
+    """
+    condition = None
+    conn = None
+    cursor = None
+    logger = current_app.logger if current_app else print
+    log_method_error = logger.error if hasattr(logger, 'error') else logger
+    log_method_exception = logger.exception if hasattr(logger, 'exception') else logger
+    SNIPPET_LENGTH_DETAIL = 250 # Define snippet length for detail view
+
+    try:
+        conn = get_db_connection()
+        if not conn:
+            log_method_error(f"Failed to get DB connection for condition ID {condition_id}")
+            return None
+        cursor = conn.cursor(dictionary=True)
+        # Fetch all necessary fields
+        query = """
+            SELECT
+                c.condition_id, c.condition_name AS name, c.description, c.overview,
+                c.symptoms_text AS symptoms, c.causes_text AS causes,
+                c.diagnosis_details AS diagnosis,
+                c.testing_details AS testing, c.educational_content,
+                c.icd_code, c.urgency_level, c.condition_type, c.age_relevance,
+                c.gender_relevance, c.specialist_type, c.self_treatable,
+                c.typical_duration, c.condition_image_filename,
+                dept.name AS department_name, dept.department_id
+            FROM conditions c
+            LEFT JOIN departments dept ON c.department_id = dept.department_id
+            WHERE c.condition_id = %s AND c.is_active = TRUE
+        """
+        cursor.execute(query, (condition_id,))
+        condition = cursor.fetchone()
+
+        if condition:
+            # --- Snippet Generation & Flags ---
+            fields_to_snippet = [ 'symptoms', 'causes', 'diagnosis', 'testing', 'educational_content', 'emergency_info']
+            for field in fields_to_snippet:
+                full_text = condition.get(field)
+                snippet, has_more = create_snippet(full_text, SNIPPET_LENGTH_DETAIL)
+                condition[f"{field}_snippet"] = snippet # e.g., condition['symptoms_snippet']
+                condition[f"{field}_has_more"] = has_more # e.g., condition['symptoms_has_more']
+            # --- End Snippet Generation ---
+
+            # Keep url_for for images
+            img_file = condition.get('condition_image_filename')
+            condition['image_url'] = url_for('static', filename=f"images/conditions/{img_file}") if img_file else url_for('static', filename="images/conditions/disease_placeholder.png")
+
+            # CSS Mapping (direct paths)
+            dept_name = condition.get('department_name')
+            if dept_name == 'Cardiology': condition['specific_css'] = 'website/cardisease.css'
+            elif dept_name == 'Neurology': condition['specific_css'] = 'website/neurodisease.css'
+            elif dept_name == 'Orthopedics': condition['specific_css'] = 'website/orthodisease.css'
+            elif dept_name == 'Dermatology': condition['specific_css'] = 'website/dermadisease.css'
+            elif dept_name == 'Oncology': condition['specific_css'] = 'website/oncologydisease.css'
+            else: condition['specific_css'] = 'website/generic_disease.css'
+
+            # Boolean Display
+            if 'self_treatable' in condition and condition['self_treatable'] is not None:
+                 condition['self_treatable_display'] = 'Yes' if condition['self_treatable'] else 'No'
+            else:
+                condition['self_treatable_display'] = 'N/A'
+
+    except mysql.connector.Error as db_err:
+         if db_err.errno == 1054:
+             try: column_name = str(db_err).split("'")[1]
+             except IndexError: column_name = "unknown"
+             log_method_error(f"DB Error fetching condition details: Column '{column_name}' missing. Schema mismatch? Err: {db_err}")
+         elif db_err.errno == 1146:
+             log_method_error(f"DB Error fetching condition details: Table 'conditions' or 'departments' missing. Err: {db_err}")
+         else:
+             log_method_error(f"Database error fetching condition ID {condition_id}: {db_err}")
+    except Exception as e:
+        log_method_exception(f"Unexpected error fetching condition ID {condition_id}: {e}")
+    finally:
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
+
+    return condition # Returns None if error or not found
+
+
 # --- Routes ---
 
 @department_bp.route('/')
