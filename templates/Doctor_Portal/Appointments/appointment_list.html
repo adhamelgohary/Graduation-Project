@@ -1,54 +1,63 @@
-{% extends "Doctor_Portal/base.html" %}
-{% block title %}Appointments{% endblock %}
+{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS #}
+
+{% block title %}Appointments - Doctor Portal{% endblock %}
 
 {% block head_extra %}
+{{ super() if super }} {# Include base head extras #}
 <style>
-    .filter-form .form-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: var(--spacing-md);
-        align-items: end;
-    }
-    .filter-form .actions { grid-column: 1 / -1; /* Span full width on small screens */ }
-     @media (min-width: 992px) {
-         .filter-form .actions { grid-column: auto; /* Reset span */ }
-     }
-    .pagination { list-style: none; display: flex; justify-content: center; padding: 0; margin-top: var(--spacing-lg); gap: var(--spacing-xs); }
-    .pagination li a, .pagination li span { display: inline-block; padding: 0.4rem 0.8rem; border: 1px solid var(--color-border); color: var(--color-primary); text-decoration: none; border-radius: var(--border-radius); background-color: var(--color-surface); }
-    .pagination li a:hover { background-color: #e9ecef; }
-    .pagination li.active a, .pagination li.active span { background-color: var(--color-primary); color: var(--color-text-light); border-color: var(--color-primary); }
-    .pagination li.disabled a, .pagination li.disabled span { color: var(--color-text-muted); background-color: #e9ecef; pointer-events: none; border-color: var(--color-border); }
-    .table th a { color: inherit; text-decoration: none; }
-    .table th a:hover { color: var(--color-primary); }
+    /* Styles remain the same as previously provided - aligned with Bootstrap */
+    body { background-color: #f8f9fa; }
+    .container-portal { background-color: #ffffff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07); margin-top: 20px; }
+    .table th, .table td { vertical-align: middle; font-size: 0.9rem; }
+    .table thead th { background-color: #eef2f7; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057; }
+    .table-hover tbody tr:hover { background-color: #f1f5f9; }
+    .btn-primary-medical { background-color: #0d6efd; border-color: #0d6efd; font-weight: 500; }
+    .btn-primary-medical:hover { background-color: #0b5ed7; border-color: #0a58ca; }
+    .btn-outline-primary-medical { color: #0d6efd; border-color: #0d6efd; font-weight: 500; }
+    .btn-outline-primary-medical:hover { color: #fff; background-color: #0d6efd; border-color: #0d6efd; }
+    .btn-outline-secondary-medical { color: #6c757d; border-color: #6c757d; font-weight: 500; }
+    .btn-outline-secondary-medical:hover { color: #fff; background-color: #6c757d; border-color: #6c757d; }
+    .filter-section { background-color: #f8f9fc; padding: 20px; border: 1px solid #e3e6f0; border-radius: 6px; margin-bottom: 25px; }
+    .form-control, .form-select { border-radius: 0.3rem; font-size: 0.9rem; }
+    .form-label { font-size: 0.85rem; font-weight: 500; color: #5a5c69; margin-bottom: 0.3rem; }
+    .status-badge { padding: 0.35em 0.65em; font-size: 0.8em; font-weight: 600; border-radius: 0.25rem; text-transform: capitalize; }
+    .status-scheduled    { background-color: #cfe2ff; color: #084298; border: 1px solid #b6d4fe;}
+    .status-confirmed    { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;}
+    .status-completed    { background-color: #e2e3e5; color: #41464b; border: 1px solid #d3d6d8;}
+    .status-canceled     { background-color: #f8d7da; color: #58151c; border: 1px solid #f1c6cb;}
+    .status-no-show      { background-color: #fff3cd; color: #664d03; border: 1px solid #ffe69c;}
+    .status-rescheduled  { background-color: #ffe5d0; color: #803A00; border: 1px solid #fedec6;}
+    .pagination .page-link { color: #0d6efd; border-radius: 0.25rem; margin: 0 2px; font-size: 0.9rem; }
+    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: white; }
+    .pagination .page-item.disabled .page-link { color: #868e96; }
+    .table th a { text-decoration: none; color: inherit; }
+    .table th a:hover { color: #0d6efd; }
+    .form-check-inline { margin-right: 0.8rem; } /* Space out status checkboxes */
+    .form-check-label { font-size: 0.85rem; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>My Appointments</h1>
-    <div class="header-actions">
-        <a href="{{ url_for('.calendar_view') }}" class="button button-outline button-info">
-             <i class="fas fa-calendar-day fa-fw"></i> Calendar View
-        </a>
-        <a href="{{ url_for('.create_appointment') }}" class="button button-success">
-            <i class="fas fa-plus fa-fw"></i> Create Appointment
+<div class="container-fluid container-portal">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-dark">Appointments</h1>
+        <a href="{{ url_for('appointments.create_appointment') }}" class="btn btn-sm btn-primary-medical">
+            <i class="fas fa-plus fa-sm me-1"></i> New Appointment
         </a>
     </div>
-</div>
 
-{# --- Filter and Search Form --- #}
-<div class="card mb-4 filter-form">
-    <div class="card-header">Filter & Search Appointments</div>
-    <div class="card-body">
-        <form method="GET" action="{{ url_for('.list_appointments') }}">
-             {# Preserve existing sort parameters #}
-             <input type="hidden" name="sort_by" value="{{ sort_by }}">
-             <input type="hidden" name="sort_dir" value="{{ sort_dir }}">
+    {% include '_flash_messages.html' %}
 
-            <div class="form-grid">
-                <div>
-                    <label for="view" class="form-label">View</label>
-                    <select name="view" id="view" class="form-select" onchange="this.form.submit()">
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('appointments.list_appointments') }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search Patient/Reason/Type</label>
+                    <input type="text" class="form-control form-control-sm" id="search" name="search" value="{{ search_term or '' }}" placeholder="e.g., Smith, Follow-up...">
+                </div>
+                <div class="col-md-2">
+                    <label for="view_mode" class="form-label">View Range</label>
+                    <select class="form-select form-select-sm" id="view_mode" name="view">
                         <option value="upcoming" {% if view_mode == 'upcoming' %}selected{% endif %}>Upcoming</option>
                         <option value="today" {% if view_mode == 'today' %}selected{% endif %}>Today</option>
                         <option value="week" {% if view_mode == 'week' %}selected{% endif %}>This Week</option>
@@ -57,136 +66,160 @@
                         <option value="custom" {% if view_mode == 'custom' %}selected{% endif %}>Custom Range</option>
                     </select>
                 </div>
-                <div>
+                <div class="col-md-2" id="start_date_col" {% if view_mode != 'custom' %}style="display:none;"{% endif %}>
                     <label for="start_date" class="form-label">Start Date</label>
-                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date_str or '' }}">
+                    <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" value="{{ start_date_str or '' }}">
                 </div>
-                <div>
+                <div class="col-md-2" id="end_date_col" {% if view_mode != 'custom' %}style="display:none;"{% endif %}>
                     <label for="end_date" class="form-label">End Date</label>
-                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date_str or '' }}">
+                    <input type="date" class="form-control form-control-sm" id="end_date" name="end_date" value="{{ end_date_str or '' }}">
                 </div>
-                <div>
-                    <label for="search" class="form-label">Search</label>
-                    <input type="search" name="search" id="search" class="form-control" value="{{ search_term or '' }}" placeholder="Patient, email, reason...">
-                </div>
-                <div>
-                    <label for="status" class="form-label">Status</label>
-                    <select name="status" id="status" class="form-select" multiple size="3">
-                        {% for stat in appointment_statuses %}
-                            <option value="{{ stat }}" {% if stat in filter_statuses %}selected{% endif %}>{{ stat|capitalize }}</option>
-                        {% endfor %}
-                    </select>
-                    <small class="text-muted">Ctrl/Cmd+click for multiple.</small>
-                </div>
-                <div>
-                    <label for="appointment_type" class="form-label">Type</label>
-                    <select name="appointment_type" id="appointment_type" class="form-select">
-                        <option value="">Any Type</option>
+                <div class="col-md-3">
+                    <label for="appointment_type_id" class="form-label">Type</label>
+                    <select class="form-select form-select-sm" id="appointment_type_id" name="appointment_type_id">
+                        <option value="">All Types</option>
                         {% for type in appointment_types %}
-                            <option value="{{ type }}" {% if type == filter_type %}selected{% endif %}>{{ type|capitalize }}</option>
+                        <option value="{{ type.id }}" {% if filter_type_id == type.id %}selected{% endif %}>{{ type.name }}</option>
                         {% endfor %}
                     </select>
-               </div>
-               <div class="actions d-flex gap-2">
-                    <button type="submit" class="button button-primary"><i class="fas fa-filter fa-fw"></i> Filter</button>
-                    <a href="{{ url_for('.list_appointments', view='upcoming') }}" class="button button-secondary"><i class="fas fa-undo fa-fw"></i> Reset</a>
+                </div>
+            </div>
+            <div class="row g-3 align-items-end mt-2">
+                 <div class="col-md-3">
+                    <label for="doctor_location_id" class="form-label">Location</label>
+                    <select class="form-select form-select-sm" id="doctor_location_id" name="doctor_location_id" {% if not provider_locations %}disabled{% endif %}>
+                        <option value="">All Locations</option>
+                        {% for loc in provider_locations %}
+                        <option value="{{ loc.doctor_location_id }}" {% if filter_location_id == loc.doctor_location_id %}selected{% endif %}>{{ loc.location_name }}</option>
+                        {% endfor %}
+                    </select>
+                     {% if not provider_locations %}
+                        <small class="text-muted d-block mt-1">No locations defined.</small>
+                     {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label d-block">Status</label>
+                    {% for status_val in appointment_statuses %}
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" name="status" id="status_{{ status_val }}" value="{{ status_val }}"
+                                {% if status_val in filter_statuses %}checked{% endif %}>
+                            <label class="form-check-label" for="status_{{ status_val }}">{{ status_val|capitalize }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-3 d-flex align-items-end justify-content-end">
+                    <button type="submit" class="btn btn-sm btn-primary-medical me-2">Apply Filters</button>
+                    <a href="{{ url_for('appointments.list_appointments') }}" class="btn btn-sm btn-outline-secondary-medical">Reset</a>
                 </div>
             </div>
         </form>
     </div>
-</div>
 
-{# --- Appointments Table --- #}
-<div class="table-responsive card"> {# Wrap table in card for consistency #}
-    <table class="table">
-        <thead>
-            <tr>
-                {% macro sortable_th(col_key, display_name) %}
-                    {% set current_sort_dir = 'DESC' if sort_by == col_key and sort_dir == 'ASC' else 'ASC' %}
-                    {% set url_params = request.args.to_dict() %}
-                    {% set _ = url_params.update({'sort_by': col_key, 'sort_dir': current_sort_dir}) %}
+    {% if appointments %}
+    <div class="table-responsive">
+        <table class="table table-hover align-middle"> {# Added align-middle #}
+            <thead>
+                <tr>
                     <th>
-                        <a href="{{ url_for(request.endpoint, **url_params) }}">
-                            {{ display_name }}
-                            {% if sort_by == col_key %}<i class="fas fa-sort-{{ 'up' if sort_dir == 'ASC' else 'down' }} ms-1"></i>{% endif %}
+                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='date', sort_dir='asc' if sort_by=='date' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
+                            Date & Time {% if sort_by == 'date' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
                         </a>
                     </th>
-                {% endmacro %}
-
-                {{ sortable_th('date', 'Date & Time') }}
-                {{ sortable_th('patient', 'Patient') }}
-                {{ sortable_th('type', 'Type') }}
-                {{ sortable_th('status', 'Status') }}
-                <th>Reason</th>
-                {{ sortable_th('location', 'Location') }}
-                <th class="text-end">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% if appointments %}
+                    <th>
+                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='patient', sort_dir='asc' if sort_by=='patient' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
+                            Patient {% if sort_by == 'patient' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='type', sort_dir='asc' if sort_by=='type' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
+                            Type {% if sort_by == 'type' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
+                        </a>
+                    </th>
+                     <th>
+                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='location', sort_dir='asc' if sort_by=='location' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
+                            Location {% if sort_by == 'location' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='status', sort_dir='asc' if sort_by=='status' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
+                            Status {% if sort_by == 'status' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
                 {% for appt in appointments %}
                 <tr>
-                    <td>
-                        {{ appt.appointment_date_str or 'N/A' }}<br>
-                        <small>{{ appt.start_time_str or 'N/A' }} - {{ appt.end_time_str or 'N/A' }}</small>
-                    </td>
-                    <td>{{ appt.patient_last_name or 'N/A' }}, {{ appt.patient_first_name or '' }}</td>
-                    <td>{{ appt.appointment_type|capitalize if appt.appointment_type else 'N/A' }}</td>
-                    <td>
-                        {# Use custom badge classes from base.css #}
-                        <span class="badge {{ 'badge-success' if appt.status == 'confirmed' else ('badge-secondary' if appt.status == 'completed' else ('badge-warning' if appt.status == 'no-show' else ('badge-danger' if appt.status == 'canceled' else 'badge-info'))) }}">
-                            {{ appt.status|capitalize if appt.status else 'N/A' }}
-                        </span>
-                    </td>
-                    <td>{{ appt.reason[:50] + '...' if appt.reason and appt.reason|length > 50 else (appt.reason or '-') }}</td>
+                    <td>{{ appt.appointment_date_str }}<br><small class="text-muted">{{ appt.start_time_str }} - {{ appt.end_time_str }}</small></td>
+                    <td>{{ appt.patient_last_name }}, {{ appt.patient_first_name }}</td>
+                    <td>{{ appt.type_name }}</td>
                     <td>{{ appt.location_name or 'N/A' }}</td>
-                    <td class="action-buttons"> {# Align buttons right #}
-                         <a href="{{ url_for('.view_appointment', appointment_id=appt.appointment_id) }}" class="button button-outline button-info button-small" title="View Details">
-                             <i class="fas fa-eye fa-fw"></i> View
-                         </a>
-                         {% if appt.status not in ['completed', 'canceled', 'no-show'] %}
-                            <a href="{{ url_for('.reschedule_appointment', appointment_id=appt.appointment_id) }}" class="button button-outline button-warning button-small" title="Reschedule">
-                                <i class="fas fa-calendar-alt fa-fw"></i> Reschedule
-                            </a>
-                            <form action="{{ url_for('.cancel_appointment', appointment_id=appt.appointment_id) }}" method="post" class="d-inline" onsubmit="return confirm('Cancel this appointment?');">
-                                <button type="submit" class="button button-outline button-danger button-small" title="Cancel">
-                                    <i class="fas fa-times-circle fa-fw"></i> Cancel
-                                </button>
-                            </form>
+                    <td><span class="status-badge status-{{ appt.status|lower|replace(' ', '-') }}">{{ appt.status }}</span></td>
+                    <td class="text-end">
+                        <a href="{{ url_for('appointments.view_appointment', appointment_id=appt.appointment_id) }}" class="btn btn-sm btn-outline-primary-medical me-1" title="View Details"><i class="fas fa-eye fa-fw"></i></a>
+                        {% if appt.status not in TERMINAL_APPT_STATUSES %} {# Use constant from Python if possible, or list #}
+                        <a href="{{ url_for('appointments.reschedule_appointment', appointment_id=appt.appointment_id) }}" class="btn btn-sm btn-outline-secondary-medical" title="Reschedule"><i class="fas fa-calendar-alt fa-fw"></i></a>
                         {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
-            {% else %}
-                <tr>
-                    <td colspan="7" class="text-center text-muted p-4">No appointments found matching your criteria.</td>
-                </tr>
-            {% endif %}
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('appointments.list_appointments', page=current_page-1, search=search_term, sort_by=sort_by, sort_dir=sort_dir, view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">«</a>
+            </li>
+            {% for page_num in range(1, total_pages + 1) %}
+             {# Consider adding logic here to show only a few page numbers if total_pages is very large #}
+            <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('appointments.list_appointments', page=page_num, search=search_term, sort_by=sort_by, sort_dir=sort_dir, view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">{{ page_num }}</a>
+            </li>
+            {% endfor %}
+            <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('appointments.list_appointments', page=current_page+1, search=search_term, sort_by=sort_by, sort_dir=sort_dir, view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">»</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="alert alert-light text-center mt-4" role="alert" style="border: 1px dashed #ccc;">
+        No appointments found matching your criteria.
+    </div>
+    {% endif %}
 </div>
-
-
-{% if total_items > 0 %}
-    <p class="text-center text-muted"> {{ total_items }} appointment(s) found.</p>
-{% endif %}
 
 {% endblock %}
 
 {% block scripts %}
-{# Keep the date range toggle JS if needed for 'custom' view #}
+{{ super() if super }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const viewSelect = document.getElementById('view');
-    const startDateInput = document.getElementById('start_date');
-    const endDateInput = document.getElementById('end_date');
+    const viewModeSelect = document.getElementById('view_mode');
+    const startDateCol = document.getElementById('start_date_col');
+    const endDateCol = document.getElementById('end_date_col');
 
-    function toggleDateInputs() {
-        const isCustom = viewSelect.value === 'custom';
-        startDateInput.disabled = !isCustom;
-        endDateInput.disabled = !isCustom;
+    function toggleDateFields() {
+        if (viewModeSelect.value === 'custom') {
+            startDateCol.style.display = 'block';
+            endDateCol.style.display = 'block';
+        } else {
+            startDateCol.style.display = 'none';
+            endDateCol.style.display = 'none';
+            // Optional: Clear date fields when switching away from custom
+            // document.getElementById('start_date').value = '';
+            // document.getElementById('end_date').value = '';
+        }
     }
-    if (viewSelect) { toggleDateInputs(); viewSelect.addEventListener('change', toggleDateInputs); }
+    if(viewModeSelect) { // Add check if element exists
+        viewModeSelect.addEventListener('change', toggleDateFields);
+        toggleDateFields(); // Initial setup
+    }
 });
 </script>
 {% endblock %}

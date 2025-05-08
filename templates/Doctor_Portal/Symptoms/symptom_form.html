@@ -1,0 +1,239 @@
+{% extends "Doctor_Portal/base.html" %} {# Assuming this is your correct base template #}
+
+{% block title %}{{ form_title }} - Doctor Portal{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <h1 class="page-title">{{ form_title }}</h1>
+
+    {% if errors %}
+        <div class="alert alert-danger">
+            <strong>Please correct the following errors:</strong>
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ form_action }}" class="styled-form card content-section">
+        {# CSRF token if using Flask-WTF #}
+        {# {{ form.csrf_token }} #}
+
+        <div class="form-section">
+            <h3 class="section-heading"><i class="fas fa-pencil-alt"></i> Basic Information</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="symptom_name">Symptom Name <span class="required">*</span></label>
+                    <input type="text" id="symptom_name" name="symptom_name" class="form-control"
+                           value="{{ (symptom.symptom_name if symptom else request.form.get('symptom_name')) or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="icd_code">ICD-10 Code (Optional)</label>
+                    <input type="text" id="icd_code" name="icd_code" class="form-control"
+                           value="{{ (symptom.icd_code if symptom else request.form.get('icd_code')) or '' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" rows="3">{{ (symptom.description if symptom else request.form.get('description')) or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+             <h3 class="section-heading"><i class="fas fa-tags"></i> Details & Classification</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="body_area">Body Area/System Affected</label>
+                    <input type="text" id="body_area" name="body_area" class="form-control"
+                           value="{{ (symptom.body_area if symptom else request.form.get('body_area')) or '' }}" placeholder="e.g., Respiratory, Head, Abdomen">
+                </div>
+
+                {% if symptom_categories %}
+                <div class="form-group">
+                    <label for="symptom_category">Symptom Category</label>
+                    <select id="symptom_category" name="symptom_category" class="form-control">
+                        <option value="">-- Select Category --</option>
+                        {% set current_category = (symptom.symptom_category if symptom else request.form.get('symptom_category')) %}
+                        {% for category in symptom_categories %}
+                            <option value="{{ category }}" {% if current_category == category %}selected{% endif %}>
+                                {{ category|capitalize }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age_relevance">Age Relevance</label>
+                    <input type="text" id="age_relevance" name="age_relevance" class="form-control"
+                           value="{{ (symptom.age_relevance if symptom else request.form.get('age_relevance')) or '' }}" placeholder="e.g., Infants, Adults, All Ages">
+                </div>
+
+                {% if gender_relevance_opts %}
+                <div class="form-group">
+                    <label for="gender_relevance">Gender Relevance</label>
+                    <select id="gender_relevance" name="gender_relevance" class="form-control">
+                         {% set current_gender_relevance = (symptom.gender_relevance if symptom else request.form.get('gender_relevance', 'all')) %}
+                        {% for relevance in gender_relevance_opts %}
+                            <option value="{{ relevance }}" {% if current_gender_relevance == relevance %}selected{% endif %}>
+                                {{ relevance|capitalize }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="common_causes">Common Causes</label>
+                <textarea id="common_causes" name="common_causes" class="form-control" rows="2">{{ (symptom.common_causes if symptom else request.form.get('common_causes')) or '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="severity_scale">Severity Scale/Notes</label>
+                <input type="text" id="severity_scale" name="severity_scale" class="form-control"
+                           value="{{ (symptom.severity_scale if symptom else request.form.get('severity_scale')) or '' }}" placeholder="e.g., Mild to Severe, Pain Scale 1-10">
+            </div>
+        </div>
+
+        <div class="form-section">
+             <h3 class="section-heading"><i class="fas fa-comments"></i> Questioning & Follow-up</h3>
+            <div class="form-group">
+                <label for="question_text">Initial Question Text (for patient)</label>
+                <textarea id="question_text" name="question_text" class="form-control" rows="2">{{ (symptom.question_text if symptom else request.form.get('question_text')) or '' }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="follow_up_questions">Follow-up Questions (JSON or comma-separated)</label>
+                <textarea id="follow_up_questions" name="follow_up_questions" class="form-control" rows="2">{{ (symptom.follow_up_questions if symptom else request.form.get('follow_up_questions')) or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3 class="section-heading"><i class="fas fa-link"></i> Associations</h3>
+            
+            {# Body Sublocations - Assumes get_all_body_locations_with_sublocations returns dicts correctly #}
+            {% if all_body_locations_with_sub %}
+                <div class="form-group">
+                    <label for="sublocation_ids">Associated Body Sublocations</label>
+                    <p class="form-text">Select one or more relevant sublocations. (Hold Ctrl/Cmd to select multiple)</p>
+                    <select id="sublocation_ids" name="sublocation_ids" class="form-control select-multiple" multiple size="8">
+                        {% for main_loc in all_body_locations_with_sub %}
+                            <optgroup label="{{ main_loc['location_name'] }}"> {# Use bracket notation #}
+                                {% for sub_loc in main_loc['sublocations'] %} {# Use bracket notation #}
+                                    {# Ensure IDs are integers for comparison #}
+                                    {% set sub_id = sub_loc['sublocation_id']|int %} {# Use bracket notation #}
+                                    <option value="{{ sub_id }}"
+                                            {% if sub_id in (associated_sublocation_ids|map('int')|list or []) %}selected{% endif %}>
+                                        {{ sub_loc['sublocation_name'] }} {# Use bracket notation #}
+                                    </option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% else %}
+                <p>No body locations defined.</p>
+            {% endif %}
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="button button-primary">
+                <i class="fas fa-save"></i> {% if symptom and symptom.symptom_id %}Update Symptom{% else %}Add Symptom{% endif %}
+            </button>
+            <a href="{{ url_for('symptom_management.list_symptoms') }}" class="button button-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{# Link Font Awesome if not in base template #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+    .main-container { max-width: 1000px; margin: 20px auto; padding: 0 3%; } /* Adjusted max-width for forms */
+    .page-title { margin-bottom: var(--spacing-lg); text-align: center; }
+    .card.content-section { background-color: var(--card-bg-color); padding: var(--spacing-lg); border-radius: var(--border-radius); box-shadow: var(--card-shadow); border: 1px solid var(--border-color);}
+    .styled-form { width: 100%; } /* Ensure form takes width */
+
+    .form-section {
+        margin-bottom: var(--spacing-xl);
+        padding-bottom: var(--spacing-lg);
+        border-bottom: 1px solid var(--border-color);
+    }
+    .form-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+     .section-heading { /* Replaces h3 direct styling for flexibility */
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-xs);
+        border-bottom: 2px solid var(--accent-color);
+        display: inline-flex; /* Keep underline tight */
+        align-items: center;
+    }
+     .section-heading i {
+         margin-right: var(--spacing-sm);
+     }
+
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-lg); /* Larger gap between fields in a row */
+        margin-bottom: var(--spacing-md);
+    }
+    .form-group {
+        flex: 1 1 calc(50% - var(--spacing-lg) / 2); /* Attempt 2 columns */
+        min-width: 280px; /* Prevent too narrow columns */
+        margin-bottom: var(--spacing-md);
+    }
+    /* Override for single-column layout */
+    .form-group:has(textarea), /* Make textarea groups take full width */
+    .form-group:has(select[multiple]) { /* Make multi-select groups take full width */
+       flex-basis: 100%;
+    }
+
+    .form-group label { display: block; margin-bottom: var(--spacing-xs); font-weight: 500; color: var(--text-secondary); }
+    .form-group label .required { color: var(--emergency-text, red); margin-left: 3px; }
+    .form-control {
+        display: block; width: 100%; padding: 12px 15px;
+        border: 1px solid var(--border-color); border-radius: var(--border-radius); /* Use global radius */
+        background-color: var(--input-bg, var(--background-color));
+        color: var(--text-color); font-size: 1rem; line-height: 1.5;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-control:focus {
+        outline: none; border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb, 170, 52, 164), 0.2);
+    }
+    textarea.form-control { min-height: 100px; resize: vertical; }
+    select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23{text_color}'%3E%3Cpath fill-rule='evenodd' d='M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.7rem center; background-size: 1.2em 1.2em; padding-right: 2.5rem; }
+    [data-theme='dark'] select.form-control { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3E%3Cpath fill-rule='evenodd' d='M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z'/%3E%3C/svg%3E");}
+
+    select.select-multiple { min-height: 200px; background-color: var(--input-bg, var(--background-color)); color: var(--text-color); appearance: none; background-image: none; padding-right: 15px;}
+    select.select-multiple option { padding: 8px 10px; }
+    select.select-multiple optgroup { font-weight: bold; margin-top: 10px; color: var(--accent-color); }
+    select.select-multiple option:checked { background-color: rgba(var(--accent-color-rgb), 0.2); color: var(--accent-color); font-weight: 500; }
+
+    .form-text { font-size: 0.85em; color: var(--text-secondary); margin-top: -10px; margin-bottom: 10px; padding-left: 2px; }
+    .form-actions { margin-top: var(--spacing-xl); text-align: right; padding-top: var(--spacing-lg); border-top: 1px solid var(--border-color);}
+    .form-actions .button { margin-left: var(--spacing-sm); padding: 12px 25px;}
+    .form-actions .button i { margin-right: 8px; }
+
+    /* Alerts - Reuse styles from list view */
+    .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: var(--border-radius); }
+    .alert-danger { color: #a94442; background-color: #f2dede; border-color: #ebccd1; }
+    .alert-success { color: #3c763d; background-color: #dff0d8; border-color: #d6e9c6; }
+    .alert-warning { color: #8a6d3b; background-color: #fcf8e3; border-color: #faebcc; }
+    [data-theme="dark"] .alert-danger { background-color: rgba(255,0,0,0.2); color: #ffdddd; border-color: rgba(255,0,0,0.4);}
+    [data-theme="dark"] .alert-success { background-color: rgba(0,255,0,0.1); color: #ddffdd; border-color: rgba(0,255,0,0.3);}
+    [data-theme="dark"] .alert-warning { background-color: rgba(255,255,0,0.1); color: #ffffdd; border-color: rgba(255,255,0,0.3);}
+</style>
+{% endblock %}

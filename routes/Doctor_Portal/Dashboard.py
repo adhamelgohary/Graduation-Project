@@ -77,7 +77,7 @@ def dashboard():
         query_appointments = """
             SELECT
                 a.appointment_id, a.appointment_date, a.start_time, a.end_time,
-                a.appointment_type, a.status,
+                a.appointment_type_id, a.status,
                 p_user.first_name AS patient_first_name,
                 p_user.last_name AS patient_last_name,
                 a.patient_id AS patient_user_id

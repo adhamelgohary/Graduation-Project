@@ -1,98 +1,248 @@
-{% extends "Doctor_Portal/base.html" %}
+{% extends "Doctor_Portal/base.html" %} {# Make sure this points to your actual base file #}
 
 {% block title %}My Patients{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/patients_list.css') }}">
-    {# Font Awesome needed for icons #}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {{ super() if super }} {# Include base head extras #}
+    {# Link to specific CSS if you have one, otherwise rely on base styles + inline #}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/patients_list.css') }}"> #}
+    {# Ensure Font Awesome is loaded in base.html or uncomment below #}
+    {# <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" /> #}
+    <style>
+        /* Basic styles for layout and cards */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .search-form {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fc;
+            border: 1px solid #e3e6f0;
+            border-radius: 0.375rem;
+        }
+        .patient-card-list {
+            margin-top: 1rem;
+        }
+        .patient-card {
+            margin-bottom: 1.5rem;
+            border: 1px solid #e3e6f0;
+            transition: box-shadow .15s ease-in-out;
+        }
+        .patient-card:hover {
+            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+        }
+        .patient-card .card-body {
+            padding: 1rem;
+        }
+        .patient-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .patient-avatar-initials {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #0d6efd; /* Bootstrap primary blue */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+        .patient-card-header h5 {
+            margin-bottom: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+         .patient-card-header h5 a {
+            color: #343a40;
+            text-decoration: none;
+            transition: color .15s ease-in-out;
+         }
+         .patient-card-header h5 a:hover {
+            color: #0d6efd;
+         }
+
+        .patient-info dl {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+        }
+        .patient-info dt {
+            font-weight: 600;
+            color: #6c757d; /* Secondary text color */
+            width: 70px; /* Fixed width for alignment */
+            float: left;
+            clear: left;
+            text-align: right;
+            margin-right: 10px; /* Space between dt and dd */
+        }
+        .patient-info dd {
+            margin-left: 80px; /* dt width + margin */
+            margin-bottom: 0.3rem; /* Space between rows */
+            word-break: break-word; /* Prevent long emails/phones from overflowing */
+        }
+        .patient-info dd a {
+             color: #0d6efd;
+             text-decoration: none;
+        }
+         .patient-info dd a:hover {
+             text-decoration: underline;
+         }
+        .patient-info .text-muted {
+             color: #6c757d !important; /* Ensure muted text is visible */
+             font-size: 0.9em;
+        }
+        .card-footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #e3e6f0;
+            padding: 0.75rem 1rem;
+        }
+        .no-patients-card {
+             text-align: center;
+             padding: 2rem;
+             color: #6c757d;
+             background-color: #f8f9fc;
+             border: 1px dashed #ced4da;
+        }
+        .no-patients-card i {
+             font-size: 2rem;
+             display: block;
+             margin-bottom: 0.5rem;
+        }
+        .button-small { /* Example for small buttons */
+            font-size: 0.8rem; padding: 0.25rem 0.5rem;
+        }
+        .input-group-text { font-size: 0.9rem; }
+        .form-control { font-size: 0.9rem; }
+    </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-     <h1>My Patients</h1>
-     {# Optional: Add New Patient Button #}
-     {# <a href="#" class="button button-primary"><i class="fas fa-user-plus fa-fw"></i> Add Patient</a> #}
-</div>
+<div class="container-fluid mt-3"> {# Added container and margin #}
+    <div class="page-header">
+        <h1 class="h3 mb-0">My Patients</h1>
+        {# Optional: Add New Patient Button - Requires a separate route/form #}
+        {# <a href="{{ url_for('.add_patient') }}" class="btn btn-sm btn-primary"><i class="fas fa-user-plus fa-fw me-1"></i> Add Patient</a> #}
+    </div>
 
-{# Search Form #}
-<form method="GET" action="{{ url_for('patients.patients_list') }}" class="search-form">
-    <div class="row g-2 align-items-center"> {# Use align-items-center for vertical alignment #}
-        <div class="col flex-grow-1">
-            <label for="search" class="form-label visually-hidden">Search Patients</label>
-            <div class="input-group input-group-sm"> {# Input group for icon #}
-                 <span class="input-group-text"><i class="fas fa-search fa-fw"></i></span>
-                <input type="search" class="form-control" id="search" name="search" placeholder="Search by Name, Email, ID..." value="{{ search_term | default('') }}">
+    {# Search Form - Uses Bootstrap form controls #}
+    <form method="GET" action="{{ url_for('.patients_list') }}" class="search-form">
+        <div class="row g-2 align-items-center">
+            <div class="col flex-grow-1">
+                <label for="search" class="form-label visually-hidden">Search Patients</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="fas fa-search fa-fw"></i></span>
+                    <input type="search" class="form-control" id="search" name="search" placeholder="Search by Name, Email, ID..." value="{{ search_term | default('') }}">
+                </div>
             </div>
+             {% if search_term %}
+                <div class="col-auto">
+                    <a href="{{ url_for('.patients_list') }}" class="btn btn-sm btn-outline-secondary">Clear Search</a>
+                </div>
+            {% else %}
+                 <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-primary">Search</button> {# Add explicit search button #}
+                </div>
+            {% endif %}
         </div>
-         {% if search_term %}
-            <div class="col-auto">
-                <a href="{{ url_for('patients.patients_list') }}" class="button button-outline button-secondary button-small">Clear Search</a>
+    </form>
+
+    {# Patient List Grid #}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-3 patient-card-list"> {# Bootstrap grid classes #}
+        {% if patients %}
+            {% for patient in patients %}
+            <div class="col">
+                <div class="card patient-card h-100 shadow-sm"> {# h-100 for equal height cards #}
+                    <div class="card-body d-flex flex-column"> {# Use flex for footer alignment #}
+                        <div class="patient-card-header">
+                             <div class="patient-avatar-initials">
+                                {{ patient.first_name[0] | upper if patient.first_name else '?' }}{{ patient.last_name[0] | upper if patient.last_name else '?' }}
+                             </div>
+                             <h5 class="card-title">
+                                <a href="{{ url_for('.view_patient_profile', patient_id=patient.user_id) }}" title="View {{ patient.first_name }} {{ patient.last_name }}'s Profile">
+                                    {{ patient.last_name }}, {{ patient.first_name }}
+                                </a>
+                            </h5>
+                        </div>
+
+                        <div class="patient-info mt-2">
+                            <dl>
+                                <dt>ID:</dt><dd>{{ patient.user_id }}</dd>
+                                <dt>DOB:</dt><dd>{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else 'N/A' }} {% if patient.age is not none %}<span class="text-muted">({{ patient.age }}y)</span>{% endif %}</dd>
+                                <dt>Gender:</dt><dd>{{ patient.gender | title | replace('_', ' ') if patient.gender else 'N/A' }}</dd>
+                                {% if patient.phone %}
+                                    <dt>Phone:</dt><dd><a href="tel:{{ patient.phone }}" title="Call {{ patient.first_name }}">{{ patient.phone }}</a></dd>
+                                {% endif %}
+                                {% if patient.email %}
+                                    <dt>Email:</dt><dd><a href="mailto:{{ patient.email }}" title="Email {{ patient.first_name }}">{{ patient.email }}</a></dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end mt-auto"> {# mt-auto pushes footer down #}
+                         <a href="{{ url_for('.view_patient_profile', patient_id=patient.user_id) }}" class="btn btn-sm btn-outline-primary button-small"> {# Added Bootstrap classes #}
+                             View Profile <i class="fas fa-angle-right ms-1"></i>
+                         </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12"> {# Take full width if no results #}
+                <div class="card no-patients-card">
+                    <div class="card-body">
+                         <i class="fas fa-user-slash"></i>
+                        <p class="mt-2 mb-0">
+                        {% if search_term %}
+                            No patients found matching your search: "{{ search_term }}".
+                        {% else %}
+                            No patients associated with your account yet.
+                        {% endif %}
+                        </p>
+                    </div>
+                </div>
             </div>
         {% endif %}
-        {# Submit button might be implicit on enter, but can add if desired #}
-        {# <div class="col-auto"> <button type="submit" class="button button-primary button-small">Search</button> </div> #}
     </div>
-</form>
 
-{# Patient List Grid #}
-<div class="row patient-card-list">
-    {% if patients %}
-        {% for patient in patients %}
-        <div class="col-sm-6 col-lg-4 col-xl-3"> {# Adjust column counts for density #}
-            <div class="card patient-card shadow-sm">
-                <div class="card-body">
-                    <div class="patient-card-header">
-                         <div class="patient-avatar patient-avatar-initials">
-                            {# Display initials #}
-                            {{ patient.first_name[0] | upper if patient.first_name else '?' }}{{ patient.last_name[0] | upper if patient.last_name else '?' }}
-                         </div>
-                         <h5>
-                            <a href="{{ url_for('patients.view_patient_profile', patient_id=patient.user_id) }}" title="View {{ patient.first_name }} {{ patient.last_name }}'s Profile">
-                                {{ patient.last_name }}, {{ patient.first_name }} {# Last Name First format #}
-                            </a>
-                        </h5>
-                    </div>
-
-                    {# Use Definition List (dl) for key info #}
-                    <div class="patient-info">
-                        <dl>
-                            <dt>ID:</dt><dd>{{ patient.user_id }}</dd>
-                            <dt>DOB:</dt><dd>{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else 'N/A' }} <span class="text-muted">({{ patient.age if patient.age is not none else 'N/A' }}y)</span></dd>
-                            <dt>Gender:</dt><dd>{{ patient.gender | title | replace('_', ' ') if patient.gender else 'N/A' }}</dd>
-                            {% if patient.phone %}
-                            <dt>Phone:</dt><dd><a href="tel:{{ patient.phone }}" title="Call {{ patient.first_name }}">{{ patient.phone }}</a></dd>
-                             {% endif %}
-                            {% if patient.email %}
-                            <dt>Email:</dt><dd><a href="mailto:{{ patient.email }}" title="Email {{ patient.first_name }}">{{ patient.email }}</a></dd>
-                            {% endif %}
-                        </dl>
-                    </div>
-                </div>
-                <div class="card-footer text-end">
-                     <a href="{{ url_for('patients.view_patient_profile', patient_id=patient.user_id) }}" class="button button-outline button-small">
-                         View Profile <i class="fas fa-angle-right ms-1"></i>
-                     </a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <div class="col">
-            <div class="card no-patients-card">
-                <div class="card-body">
-                     <i class="fas fa-user-slash"></i>
-                    {% if search_term %}
-                        No patients found matching your search criteria: "{{ search_term }}".
-                    {% else %}
-                        No patients associated with your account yet.
-                    {% endif %}
-                </div>
-            </div>
-        </div>
+    {# TODO: Add Pagination Controls Here if needed and implemented in backend #}
+    {# Example structure (requires pagination variables from backend):
+    {% if pagination and pagination.pages > 1 %}
+    <nav aria-label="Patient list navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+                <a class="page-link" href="{{ url_for('.patients_list', page=pagination.prev_num, search=search_term) if pagination.has_prev else '#' }}">« Prev</a>
+            </li>
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if page_num %}
+                    <li class="page-item {{ 'active' if page_num == pagination.page }}">
+                        <a class="page-link" href="{{ url_for('.patients_list', page=page_num, search=search_term) }}">{{ page_num }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+                <a class="page-link" href="{{ url_for('.patients_list', page=pagination.next_num, search=search_term) if pagination.has_next else '#' }}">Next »</a>
+            </li>
+        </ul>
+    </nav>
     {% endif %}
+    #}
+
 </div>
+{% endblock %}
 
-{# TODO: Add Pagination Controls Here if needed #}
-
+{% block scripts %}
+{# Add scripts if needed, e.g., for advanced filtering or interactions #}
+{{ super() if super }}
 {% endblock %}

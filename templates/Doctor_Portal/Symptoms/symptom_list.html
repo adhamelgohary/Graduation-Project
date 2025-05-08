@@ -1,0 +1,194 @@
+{% extends "Doctor_Portal/base.html" %} {# Assuming this is your correct base template #}
+
+{% block title %}Symptom Management - Doctor Portal{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <h1 class="page-title">Symptom Management</h1>
+
+
+    <div class="card content-section">
+        <div class="controls-header">
+            <a href="{{ url_for('symptom_management.add_symptom') }}" class="button button-primary">Add New Symptom</a>
+        </div>
+
+        {# Search and Filter Form - No changes needed here other than styling via CSS block #}
+        <form method="GET" action="{{ url_for('symptom_management.list_symptoms') }}" class="filter-form mb-4">
+             <div class="form-row">
+                 <div class="form-group">
+                     <label for="search">Search Symptoms:</label>
+                     <input type="text" id="search" name="search" value="{{ search_term or '' }}" class="form-control" placeholder="Name, Description, ICD...">
+                 </div>
+                 {% if symptom_categories %}
+                 <div class="form-group">
+                     <label for="filter_category">Category:</label>
+                     <select id="filter_category" name="filter_category" class="form-control">
+                         <option value="">All Categories</option>
+                         {% for category in symptom_categories %}
+                             <option value="{{ category }}" {% if filters.get('category') == category %}selected{% endif %}>{{ category|capitalize }}</option>
+                         {% endfor %}
+                     </select>
+                 </div>
+                 {% endif %}
+                 <div class="form-group">
+                     <label for="filter_body_area">Body Area (contains):</label>
+                     <input type="text" id="filter_body_area" name="filter_body_area" value="{{ filters.get('body_area') or '' }}" class="form-control" placeholder="e.g. Head">
+                 </div>
+                 <div class="form-group">
+                     <label for="sort_by">Sort By:</label>
+                     <select id="sort_by" name="sort_by" class="form-control">
+                         {% for key, value in valid_sort_columns.items() %}
+                             <option value="{{ key }}" {% if sort_by == key %}selected{% endif %}>{{ key|replace('_', ' ')|title }}</option>
+                         {% endfor %}
+                     </select>
+                 </div>
+                 <div class="form-group">
+                     <label for="sort_dir">Direction:</label>
+                     <select id="sort_dir" name="sort_dir" class="form-control">
+                         <option value="ASC" {% if sort_dir == 'ASC' %}selected{% endif %}>Ascending</option>
+                         <option value="DESC" {% if sort_dir == 'DESC' %}selected{% endif %}>Descending</option>
+                     </select>
+                 </div>
+             </div>
+             <button type="submit" class="button button-primary">Filter/Search</button>
+             <a href="{{ url_for('symptom_management.list_symptoms') }}" class="button button-secondary">Reset</a>
+        </form>
+
+        {% if symptoms %}
+        <div class="table-responsive">
+            <table class="styled-table">
+                 <thead>
+                    <tr>
+                         {# Use icons for sorting indication #}
+                        <th><a href="{{ url_for('symptom_management.list_symptoms', sort_by='id', sort_dir='ASC' if sort_by=='id' and sort_dir=='DESC' else 'DESC', **request.args.to_dict(flat=False)) }}">ID {% if sort_by == 'id' %}<i class="fas fa-sort-{{ 'up' if sort_dir == 'ASC' else 'down' }}"></i>{% endif %}</a></th>
+                        <th><a href="{{ url_for('symptom_management.list_symptoms', sort_by='name', sort_dir='ASC' if sort_by=='name' and sort_dir=='DESC' else 'DESC', **request.args.to_dict(flat=False)) }}">Name {% if sort_by == 'name' %}<i class="fas fa-sort-{{ 'up' if sort_dir == 'ASC' else 'down' }}"></i>{% endif %}</a></th>
+                        <th>Description (Snippet)</th>
+                        <th>Category</th>
+                        <th>Body Area</th>
+                        <th>ICD Code</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for symptom in symptoms %}
+                    <tr>
+                        <td>{{ symptom.symptom_id }}</td>
+                        <td><a href="{{ url_for('symptom_management.view_symptom', symptom_id=symptom.symptom_id) }}">{{ symptom.symptom_name }}</a></td>
+                        <td>{{ (symptom.description or '')[:80] }}{% if (symptom.description or '')|length > 80 %}...{% endif %}</td>
+                        <td>{{ symptom.symptom_category|capitalize if symptom.symptom_category else 'N/A' }}</td>
+                        <td>{{ symptom.body_area or 'N/A' }}</td>
+                        <td>{{ symptom.icd_code or 'N/A' }}</td>
+                        <td class="action-buttons">
+                            <a href="{{ url_for('symptom_management.view_symptom', symptom_id=symptom.symptom_id) }}" class="button button-xsmall button-secondary" title="View Details"><i class="fas fa-eye"></i></a>
+                            <a href="{{ url_for('symptom_management.edit_symptom', symptom_id=symptom.symptom_id) }}" class="button button-xsmall" title="Edit Symptom"><i class="fas fa-edit"></i></a>
+                            <form action="{{ url_for('symptom_management.delete_symptom', symptom_id=symptom.symptom_id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this symptom? This action cannot be undone and will remove associated links.');">
+                                <button type="submit" class="button button-xsmall button-danger" title="Delete Symptom"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination #}
+        {% if total_pages > 1 %}
+        <nav aria-label="Symptom navigation" class="pagination-nav">
+            <ul class="pagination">
+                 {% if current_page > 1 %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('symptom_management.list_symptoms', page=current_page-1, **request.args.to_dict(flat=False)) }}">« Prev</a></li>
+                 {% else %}
+                    <li class="page-item disabled"><span class="page-link">« Prev</span></li>
+                 {% endif %}
+
+                 {# Page numbers with Ellipsis (Simplified example) #}
+                 {% set page_window = 2 %}
+                 {% for page_num in range(1, total_pages + 1) %}
+                    {% if page_num == 1 or page_num == total_pages or (page_num >= current_page - page_window and page_num <= current_page + page_window) %}
+                       {% if loop.previtem is defined and page_num > loop.previtem + 1 %}
+                           <li class="page-item disabled"><span class="page-link">...</span></li>
+                       {% endif %}
+                       <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                           <a class="page-link" href="{{ url_for('symptom_management.list_symptoms', page=page_num, **request.args.to_dict(flat=False)) }}">{{ page_num }}</a>
+                       </li>
+                   {% endif %}
+                 {% endfor %}
+
+
+                 {% if current_page < total_pages %}
+                    <li class="page-item"><a class="page-link" href="{{ url_for('symptom_management.list_symptoms', page=current_page+1, **request.args.to_dict(flat=False)) }}">Next »</a></li>
+                 {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next »</span></li>
+                 {% endif %}
+            </ul>
+        </nav>
+        {% endif %} {# end pagination #}
+        {% else %}
+            <p class="no-results">No symptoms found matching your criteria.</p>
+        {% endif %} {# end if symptoms #}
+    </div> {# end card #}
+</div> {# end main-container #}
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{# Link Font Awesome if not in base template #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+    /* General Page Structure */
+    .main-container { max-width: 1400px; margin: 20px auto; padding: 0 3%; }
+    .page-title { margin-bottom: var(--spacing-lg); }
+    .card.content-section { background-color: var(--card-bg-color); padding: var(--spacing-lg); border-radius: var(--border-radius); box-shadow: var(--card-shadow); }
+    .controls-header { display: flex; justify-content: flex-end; margin-bottom: var(--spacing-lg); }
+
+    /* Filter Form */
+    .filter-form { display: flex; flex-wrap: wrap; gap: var(--spacing-md); align-items: flex-end; background-color: var(--nested-card-bg); padding: var(--spacing-md); border-radius: var(--border-radius); margin-bottom: var(--spacing-lg); border: 1px solid var(--border-color); }
+    .filter-form .form-row { display: contents; } /* Allow groups to wrap directly */
+    .filter-form .form-group { flex: 1 1 200px; /* Allow flexible wrapping */ min-width: 180px; }
+    .filter-form label { display: block; margin-bottom: var(--spacing-xs); font-weight: 500; font-size: 0.9em; color: var(--text-secondary); }
+    .filter-form .form-control { display: block; width: 100%; padding: 8px 10px; border-radius: 4px; border: 1px solid var(--border-color); background-color: var(--input-bg, var(--background-color)); color: var(--text-color); font-size: 0.95em; }
+    .filter-form button, .filter-form a.button { align-self: flex-end; /* Pushes buttons to bottom in flex layout */ }
+
+    /* Table */
+    .table-responsive { overflow-x: auto; }
+    .styled-table { width: 100%; border-collapse: collapse; margin: var(--spacing-md) 0; font-size: 0.9em; border: 1px solid var(--border-color); border-radius: var(--border-radius); overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .styled-table thead tr { background-color: var(--accent-color); color: #ffffff; text-align: left; }
+    .styled-table th, .styled-table td { padding: 10px 15px; border-bottom: 1px solid var(--border-color); }
+    .styled-table th { white-space: nowrap; }
+    .styled-table tbody tr { transition: background-color 0.2s ease; }
+    .styled-table tbody tr:nth-of-type(even) { background-color: var(--nested-card-bg); }
+    .styled-table tbody tr:last-of-type { border-bottom: 2px solid var(--accent-color); }
+    .styled-table tbody tr:hover { background-color: rgba(var(--accent-color-rgb, 170, 52, 164), 0.1); }
+    .styled-table th a { color: inherit; text-decoration: none; }
+    .styled-table th a:hover { text-decoration: underline; }
+    .styled-table th i.fas { margin-left: 5px; font-size: 0.8em; } /* Sort icon */
+    .styled-table td a { color: var(--accent-color); text-decoration: none; }
+    .styled-table td a:hover { text-decoration: underline; }
+
+    .action-buttons { white-space: nowrap; text-align: right;}
+    .action-buttons .button { margin-left: 5px; padding: 4px 8px; font-size: 0.85em; /* Use xsmall vars */ }
+    .action-buttons form { display: inline; margin-left: 5px; }
+    .action-buttons .button i { margin-right: 0; /* Icons only for xsmall */ }
+
+    /* Pagination */
+    .pagination-nav { margin-top: var(--spacing-lg); text-align: center; }
+    .pagination { list-style: none; display: inline-flex; padding: 0; margin: 0; border-radius: var(--border-radius); overflow: hidden; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .pagination .page-item { display: inline; border-right: 1px solid var(--border-color);}
+    .pagination .page-item:last-child { border-right: none; }
+    .pagination .page-link, .pagination .page-item.disabled .page-link { color: var(--text-secondary); padding: 8px 15px; display: block; text-decoration: none; background-color: var(--nested-card-bg); transition: background-color 0.2s ease; }
+    .pagination .page-item.disabled .page-link { color: rgba(var(--text-secondary-rgb, 255, 255, 255), 0.4); cursor: not-allowed; background-color: transparent;}
+    .pagination .page-link:hover { background-color: rgba(var(--accent-color-rgb, 170, 52, 164), 0.1); color: var(--accent-color); }
+    .pagination .page-item.active .page-link { background-color: var(--accent-color); color: white; border-color: var(--accent-color); cursor: default; }
+
+    .no-results { text-align: center; color: var(--text-secondary); padding: 20px; font-style: italic; }
+
+    /* Alerts (copy from form styles) */
+    .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: var(--border-radius); }
+    .alert-danger { color: #a94442; background-color: #f2dede; border-color: #ebccd1; }
+    .alert-success { color: #3c763d; background-color: #dff0d8; border-color: #d6e9c6; }
+    .alert-warning { color: #8a6d3b; background-color: #fcf8e3; border-color: #faebcc; }
+    [data-theme="dark"] .alert-danger { background-color: rgba(255,0,0,0.2); color: #ffdddd; border-color: rgba(255,0,0,0.4);}
+    [data-theme="dark"] .alert-success { background-color: rgba(0,255,0,0.1); color: #ddffdd; border-color: rgba(0,255,0,0.3);}
+    [data-theme="dark"] .alert-warning { background-color: rgba(255,255,0,0.1); color: #ffffdd; border-color: rgba(255,255,0,0.3);}
+</style>
+{% endblock %}

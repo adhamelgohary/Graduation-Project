@@ -83,6 +83,12 @@
                                 <i class="fas fa-book-medical fa-fw"></i> Disease Catalog
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ url_for('symptom_management.list_symptoms') }}" 
+                               class="{{ 'active' if request.blueprint == 'symptom_management' else '' }}">
+                               Symptom Management
+                            </a>
+                        </li>
                         <li> {# Messages Link #}
                             <a href="{{ url_for('messaging.message_list') }}"
                                class="{% if request.endpoint.startswith('messaging.') %}active{% endif %}">

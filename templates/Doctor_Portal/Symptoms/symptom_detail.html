@@ -1,0 +1,188 @@
+{% extends "Doctor_Portal/base.html" %} {# Assuming this is your correct base template #}
+
+{% block title %}{{ details.symptom.symptom_name }} - Symptom Details{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    {% if details and details.symptom %}
+        <div class="page-header-actions">
+            <h1 class="page-title"><i class="fas fa-stethoscope icon-title"></i> {{ details.symptom.symptom_name }}</h1>
+            <div>
+                <a href="{{ url_for('symptom_management.edit_symptom', symptom_id=details.symptom.symptom_id) }}" class="button"><i class="fas fa-edit"></i> Edit Symptom</a>
+                <a href="{{ url_for('symptom_management.list_symptoms') }}" class="button button-secondary"><i class="fas fa-list"></i> Back to List</a>
+            </div>
+        </div>
+
+        <div class="card content-section symptom-details-grid">
+            {# Section 1: Basic Info #}
+            <div class="detail-section">
+                <h3 class="section-heading"><i class="fas fa-info-circle"></i> Basic Information</h3>
+                <dl class="dl-horizontal">
+                    <dt>Symptom ID:</dt>
+                    <dd>{{ details.symptom.symptom_id }}</dd>
+
+                    <dt>ICD-10 Code:</dt>
+                    <dd>{{ details.symptom.icd_code or 'N/A' }}</dd>
+
+                    <dt>Description:</dt>
+                    <dd>{{ details.symptom.description | safe or 'N/A' }}</dd> {# nl2br converts newlines #}
+
+                    <dt>Created:</dt>
+                    <dd>{{ details.symptom.created_at.strftime('%Y-%m-%d %H:%M') if details.symptom.created_at else 'N/A' }}</dd>
+
+                    <dt>Updated:</dt>
+                    <dd>{{ details.symptom.updated_at.strftime('%Y-%m-%d %H:%M') if details.symptom.updated_at else 'N/A' }}</dd>
+                </dl>
+            </div>
+
+            {# Section 2: Classification #}
+            <div class="detail-section">
+                <h3 class="section-heading"><i class="fas fa-tags"></i> Classification & Details</h3>
+                <dl class="dl-horizontal">
+                    <dt>Category:</dt>
+                    <dd>{{ details.symptom.symptom_category|capitalize if details.symptom.symptom_category else 'N/A' }}</dd>
+
+                    <dt>Body Area/System:</dt>
+                    <dd>{{ details.symptom.body_area or 'N/A' }}</dd>
+
+                    <dt>Age Relevance:</dt>
+                    <dd>{{ details.symptom.age_relevance or 'N/A' }}</dd>
+
+                    <dt>Gender Relevance:</dt>
+                    <dd>{{ details.symptom.gender_relevance|capitalize if details.symptom.gender_relevance else 'N/A' }}</dd>
+
+                    <dt>Common Causes:</dt>
+                    <dd>{{ details.symptom.common_causes or 'N/A' }}</dd>
+
+                    <dt>Severity Scale/Notes:</dt>
+                    <dd>{{ details.symptom.severity_scale or 'N/A' }}</dd>
+                </dl>
+            </div>
+
+            {# Section 3: Questioning #}
+             <div class="detail-section">
+                <h3 class="section-heading"><i class="fas fa-comments"></i> Questioning & Follow-up</h3>
+                 <dl class="dl-horizontal">
+                    <dt>Initial Question Text:</dt>
+                    <dd>{{ details.symptom.question_text or 'N/A' }}</dd>
+
+                    <dt>Follow-up Questions:</dt>
+                    <dd>{{ details.symptom.follow_up_questions or 'N/A' }}</dd>
+                 </dl>
+            </div>
+
+            {# Section 4: Associations (Conditional) #}
+             <div class="detail-section associations-section">
+                 <h3 class="section-heading"><i class="fas fa-link"></i> Associations</h3>
+
+                 {% if details.body_sublocations %}
+                    <h4 class="sub-heading"><i class="fas fa-map-marker-alt"></i> Associated Body Sublocations</h4>
+                    <ul class="styled-list">
+                        {% for subloc in details.body_sublocations %}
+                            <li><strong>{{ subloc.location_name }}</strong>: {{ subloc.sublocation_name }}</li>
+                        {% else %}
+                             <li>None associated.</li>
+                        {% endfor %}
+                    </ul>
+                    <hr class="association-divider">
+                 {% endif %}
+
+             </div> {# end associations-section #}
+        </div> {# end symptom-details-grid #}
+
+    {% else %}
+         <div class="alert alert-warning">Symptom details not found.</div>
+        <a href="{{ url_for('symptom_management.list_symptoms') }}" class="button">Back to Symptom List</a>
+    {% endif %} {# end if details #}
+</div> {# end main-container #}
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+{# Link Font Awesome if not in base template #}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<style>
+    .main-container { max-width: 1200px; margin: 20px auto; padding: 0 3%; }
+    .page-title { margin-bottom: var(--spacing-md); } /* Reduced margin for title with actions */
+    .page-title i { margin-right: 10px; color: var(--accent-color); }
+    .page-header-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-md); margin-bottom: var(--spacing-lg); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-md); }
+    .page-header-actions h1 { margin-bottom: 0; }
+    .page-header-actions div .button { margin-left: var(--spacing-sm); }
+    .page-header-actions .button i { margin-right: 6px; }
+
+    .card.content-section { background-color: var(--card-bg-color); padding: var(--spacing-lg); border-radius: var(--border-radius); box-shadow: var(--card-shadow); border: 1px solid var(--border-color);}
+    .symptom-details-grid { display: grid; gap: var(--spacing-lg); grid-template-columns: 1fr; }
+    /* Adjust columns for wider screens if desired */
+     @media (min-width: 992px) {
+        .symptom-details-grid {
+            grid-template-columns: repeat(2, 1fr); /* Example: Two columns */
+            grid-template-rows: auto auto auto; /* Adjust based on content flow */
+            /* You might want to specifically place items if layout gets complex */
+            /* Example: .section-associations { grid-column: 1 / -1; } */
+        }
+    }
+     @media (min-width: 1200px) {
+        /* Example: could go to 3 columns if space allows and content fits well */
+         /* .symptom-details-grid { grid-template-columns: repeat(3, 1fr); } */
+    }
+
+    .detail-section { background-color: var(--nested-card-bg); padding: var(--spacing-lg); border-radius: var(--border-radius); border: 1px solid var(--border-color); display: flex; flex-direction: column;}
+
+    .section-heading { /* Shared style for section titles */
+        font-size: 1.3rem; color: var(--accent-color); font-weight: 600;
+        margin-top: 0; margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm); border-bottom: 1px solid var(--border-color);
+        display: flex; align-items: center;
+    }
+     .section-heading i { margin-right: var(--spacing-sm); }
+     .sub-heading { /* For headings within a section */
+         font-size: 1.1rem; color: var(--text-secondary); font-weight: 600;
+         margin-top: var(--spacing-md); margin-bottom: var(--spacing-sm);
+         display: flex; align-items: center;
+     }
+     .sub-heading:first-of-type { margin-top: 0; }
+     .sub-heading i { margin-right: var(--spacing-sm); font-size: 0.9em; }
+
+    .dl-horizontal { display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-sm) var(--spacing-lg); align-items: baseline; }
+    .dl-horizontal dt { font-weight: 600; color: var(--text-secondary); grid-column: 1; text-align: right; white-space: nowrap; }
+    .dl-horizontal dd { margin-left: 0; color: var(--text-color); grid-column: 2; word-break: break-word; }
+
+    /* Associations Section Styling */
+     .associations-section ul.styled-list {
+         list-style: none; padding-left: 0; margin-top: 5px; margin-bottom: 15px;
+         flex-grow: 1; /* Allows list to fill space */
+         overflow-y: auto; /* Add scroll if list gets long */
+         max-height: 300px; /* Example max height */
+         padding-right: 10px; /* Space for scrollbar */
+    }
+    .associations-section ul.styled-list li {
+        background-color: rgba(var(--accent-color-rgb, 170, 52, 164), 0.07);
+        padding: 10px 15px; border-radius: 5px; margin-bottom: 10px;
+        border-left: 4px solid var(--accent-color);
+        transition: background-color 0.2s ease;
+    }
+     .associations-section ul.styled-list li:hover {
+         background-color: rgba(var(--accent-color-rgb, 170, 52, 164), 0.15);
+     }
+    .associations-section ul.styled-list li strong { color: var(--text-secondary); margin-right: 5px; }
+    .associations-section ul.styled-list li a { color: var(--accent-color); text-decoration: none; font-weight: 500;}
+    .associations-section ul.styled-list li a:hover { text-decoration: underline; }
+
+     .details-badge { font-size: 0.8em; background-color: rgba(var(--text-secondary-rgb, 255,255,255), 0.1); color: var(--text-secondary); padding: 2px 6px; border-radius: 3px; margin-left: 8px; }
+     .required-badge { background-color: var(--emergency-bg); color: var(--emergency-text); border: 1px solid var(--emergency-border); }
+
+     .association-divider {
+         border: none; height: 1px; background-color: var(--border-color);
+         margin: var(--spacing-md) 0;
+     }
+
+    /* Alerts - Reuse styles from list/form view */
+    .alert { padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: var(--border-radius); }
+    .alert-danger { color: #a94442; background-color: #f2dede; border-color: #ebccd1; }
+    .alert-success { color: #3c763d; background-color: #dff0d8; border-color: #d6e9c6; }
+    .alert-warning { color: #8a6d3b; background-color: #fcf8e3; border-color: #faebcc; }
+    [data-theme="dark"] .alert-danger { background-color: rgba(255,0,0,0.2); color: #ffdddd; border-color: rgba(255,0,0,0.4);}
+    [data-theme="dark"] .alert-success { background-color: rgba(0,255,0,0.1); color: #ddffdd; border-color: rgba(0,255,0,0.3);}
+    [data-theme="dark"] .alert-warning { background-color: rgba(255,255,0,0.1); color: #ffffdd; border-color: rgba(255,255,0,0.3);}
+</style>
+{% endblock %}

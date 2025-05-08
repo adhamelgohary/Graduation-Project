@@ -1,155 +1,308 @@
-{% extends "Doctor_Portal/base.html" %}
-{% block title %}Appointment Details{% endblock %}
+{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS #}
+
+{% block title %}Appointment Details - {{ appointment.patient_first_name }} {{ appointment.patient_last_name }}{% endblock %}
 
 {% block head_extra %}
+{{ super() if super }} {# Include base head extras #}
 <style>
-    .detail-grid { display: grid; grid-template-columns: 150px 1fr; gap: var(--spacing-sm) var(--spacing-md); margin-bottom: var(--spacing-md); }
-    .detail-grid strong { font-weight: 600; color: var(--color-text-muted); text-align: right; }
-    .detail-grid .full-width { grid-column: 1 / -1; }
-    .detail-grid hr { grid-column: 1 / -1; margin: var(--spacing-md) 0; border: 0; border-top: 1px solid var(--color-border); }
-    .action-header { display: flex; justify-content: space-between; align-items: center; }
-    #appointment-status-badge { font-size: 1em; vertical-align: middle; margin-left: var(--spacing-sm); }
+    /* Styles remain the same as previously provided - aligned with Bootstrap */
+    body { background-color: #f8f9fa; }
+    .container-portal { background-color: #ffffff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07); margin-top: 20px; }
+    .detail-header { border-bottom: 1px solid #e3e6f0; padding-bottom: 15px; margin-bottom: 25px; }
+    .detail-label { font-weight: 600; color: #5a5c69; font-size: 0.85rem; padding-top: 0.4rem; }
+    .detail-value { color: #333; font-size: 0.9rem; }
+    .card-custom { border: 1px solid #e3e6f0; border-radius: 6px; }
+    .card-header-custom { background-color: #eef2f7; font-weight: 600; color: #495057; padding: 0.75rem 1.25rem; border-bottom: 1px solid #e3e6f0; }
+    .status-badge { padding: 0.4em 0.7em; font-size: 0.9em; font-weight: 600; border-radius: 0.3rem; display: inline-block; text-transform: capitalize; }
+    .status-scheduled    { background-color: #cfe2ff; color: #084298; border: 1px solid #b6d4fe;}
+    .status-confirmed    { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;}
+    .status-completed    { background-color: #e2e3e5; color: #41464b; border: 1px solid #d3d6d8;}
+    .status-canceled     { background-color: #f8d7da; color: #58151c; border: 1px solid #f1c6cb;}
+    .status-no-show      { background-color: #fff3cd; color: #664d03; border: 1px solid #ffe69c;}
+    .status-rescheduled  { background-color: #ffe5d0; color: #803A00; border: 1px solid #fedec6;}
+    .btn-primary-medical { background-color: #0d6efd; border-color: #0d6efd; font-weight: 500;}
+    .btn-primary-medical:hover { background-color: #0b5ed7; border-color: #0a58ca; }
+    .btn-outline-secondary-medical { color: #6c757d; border-color: #6c757d; font-weight: 500;}
+    .btn-outline-secondary-medical:hover { color: #fff; background-color: #6c757d; border-color: #6c757d; }
+    .btn-danger-medical { background-color: #dc3545; border-color: #dc3545; font-weight: 500;}
+    .btn-danger-medical:hover { background-color: #bb2d3b; border-color: #b02a37; }
+    #notesTextarea { font-size: 0.9rem; }
+    .form-select-sm { font-size: 0.85rem; }
+    .btn-sm { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
+    .text-muted small { font-size: 0.8em; } /* Ensure nested small tags are legible */
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Appointment Details</h1>
-    <a href="{{ request.referrer or url_for('.list_appointments') }}" class="button button-outline button-secondary">
-        <i class="fas fa-arrow-left fa-fw"></i> Back
-    </a>
-</div>
-
-<div class="card">
-    <div class="card-header action-header">
-        <span>
-            ID: {{ appointment.appointment_id }} - Status:
-            <span id="appointment-status-badge" class="badge {{ 'badge-success' if appointment.status == 'confirmed' else ('badge-secondary' if appointment.status == 'completed' else ('badge-warning' if appointment.status == 'no-show' else ('badge-danger' if appointment.status == 'canceled' else 'badge-info'))) }}">
-                {{ appointment.status|capitalize if appointment.status else 'N/A' }}
-            </span>
-        </span>
-         {% if appointment.status not in ['completed', 'canceled', 'no-show'] %}
-         <div class="d-flex gap-2"> {# Use flex for button group #}
-             <a href="{{ url_for('.reschedule_appointment', appointment_id=appointment.appointment_id) }}" class="button button-warning button-small"><i class="fas fa-calendar-alt fa-fw"></i> Reschedule</a>
-             <form action="{{ url_for('.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="post" class="d-inline" onsubmit="return confirm('Cancel this appointment?');">
-                 <button type="submit" class="button button-danger button-small"><i class="fas fa-times-circle fa-fw"></i> Cancel</button>
-             </form>
-         </div>
-         {% endif %}
+<div class="container-fluid container-portal">
+    <div class="detail-header d-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-0 text-dark">Appointment Details</h1>
+        <a href="{{ url_for('appointments.list_appointments') }}" class="btn btn-sm btn-outline-secondary-medical">
+            <i class="fas fa-arrow-left fa-sm me-1"></i> Back to List
+        </a>
     </div>
-    <div class="card-body">
-        <div class="detail-grid">
-            {# Appointment Info #}
-            <strong>Date:</strong>       <div>{{ appointment.appointment_date_str or 'N/A' }}</div>
-            <strong>Time:</strong>       <div>{{ appointment.start_time_str or 'N/A' }} - {{ appointment.end_time_str or 'N/A' }}</div>
-            <strong>Type:</strong>       <div>{{ appointment.appointment_type|capitalize if appointment.appointment_type else 'N/A' }}</div>
-            <strong>Location:</strong>   <div>{{ appointment.location_name or 'N/A' }} {% if appointment.location_address %}<small class="text-muted d-block">{{ appointment.location_address }}</small>{% endif %}</div>
 
-            {# Patient Info #}
-            <hr><strong class="full-width">Patient Information</strong>
-            <strong>Name:</strong>       <div>{{ appointment.patient_last_name or 'N/A' }}, {{ appointment.patient_first_name or '' }}</div>
-            <strong>DOB:</strong>        <div>{{ appointment.date_of_birth.strftime('%Y-%m-%d') if appointment.date_of_birth else 'N/A' }} {% if appointment.patient_age is not none %}(Age: {{ appointment.patient_age }}){% endif %}</div>
-            <strong>Gender:</strong>     <div>{{ appointment.gender|capitalize if appointment.gender else 'N/A' }}</div>
-            <strong>Email:</strong>      <div>{{ appointment.patient_email or 'N/A' }}</div>
-            <strong>Phone:</strong>      <div>{{ appointment.patient_phone or 'N/A' }}</div>
+    {% include '_flash_messages.html' %}
 
-            {# Context & Notes #}
-            <hr><strong class="full-width">Appointment Context</strong>
-            <strong>Reason:</strong>     <div>{{ appointment.reason or 'N/A' }}</div>
-            <strong class="full-width pt-2">Provider Notes:</strong>
-            <div class="full-width">
-                 <textarea class="form-control" id="appointment_notes" rows="4" {% if appointment.status in ['completed', 'canceled'] %}readonly{% endif %}>{{ appointment.notes or '' }}</textarea>
-                 {% if appointment.status not in ['completed', 'canceled'] %}
-                 <button id="save-notes-btn" class="button button-outline button-success button-small mt-2"><i class="fas fa-save fa-fw"></i> Save Notes</button>
-                 <span id="notes-save-status" class="ms-2 text-muted"></span>
-                 {% endif %}
+    <div class="row">
+        <div class="col-lg-5 mb-4">
+            <div class="card card-custom h-100">
+                <div class="card-header-custom">
+                    Patient Information
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4 detail-label">Name:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.patient_first_name }} {{ appointment.patient_last_name }}</dd>
+
+                        <dt class="col-sm-4 detail-label">Patient ID:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.patient_id }}</dd>
+
+                        <dt class="col-sm-4 detail-label">DOB / Age:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.date_of_birth.strftime('%b %d, %Y') if appointment.date_of_birth else 'N/A' }} {% if appointment.patient_age is not none %}({{ appointment.patient_age }} years){% endif %}</dd>
+
+                        <dt class="col-sm-4 detail-label">Gender:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.gender|capitalize if appointment.gender else 'N/A' }}</dd>
+
+                        <dt class="col-sm-4 detail-label">Email:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.patient_email or 'N/A' }}</dd>
+
+                        <dt class="col-sm-4 detail-label">Phone:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.patient_phone or 'N/A' }}</dd>
+
+                        <dt class="col-sm-4 detail-label">Insurance:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.insurance_provider_name or 'N/A' }}</dd>
+                    </dl>
+                </div>
             </div>
+        </div>
 
-             {# Status Update #}
-             {% if appointment.status not in ['canceled'] %}
-             <hr><strong class="full-width">Actions</strong>
-             <strong>Update Status:</strong>
-             <div>
-                 <select id="update-status-select" class="form-select form-select-sm d-inline-block" style="width: auto;" {% if appointment.status == 'completed' %}disabled{% endif %}>
-                     {% for stat in appointment_statuses %}
-                         {% if stat != 'canceled' %}
-                             <option value="{{ stat }}" {% if stat == appointment.status %}selected{% endif %}>{{ stat|capitalize }}</option>
-                         {% endif %}
-                     {% endfor %}
-                 </select>
-                 <button id="update-status-btn" class="button button-outline button-info button-small ms-2" {% if appointment.status == 'completed' %}disabled{% endif %}><i class="fas fa-check fa-fw"></i> Update</button>
-                 <span id="status-update-status" class="ms-2 text-muted"></span>
+        <div class="col-lg-7 mb-4">
+            <div class="card card-custom h-100 d-flex flex-column"> {# Added flex classes for footer #}
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                    <span>Appointment #{{ appointment.appointment_id }}</span>
+                    <span class="status-badge status-{{ appointment.status|lower|replace(' ', '-') }}">{{ appointment.status }}</span>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-4 detail-label">Date:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.appointment_date_str }}</dd>
+
+                        <dt class="col-sm-4 detail-label">Time:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.start_time_str }} - {{ appointment.end_time_str }} ({{ appointment.default_duration_minutes }} min)</dd>
+
+                        <dt class="col-sm-4 detail-label">Type:</dt>
+                        <dd class="col-sm-8 detail-value">{{ appointment.type_name }}</dd>
+
+                        <dt class="col-sm-4 detail-label">Location:</dt>
+                        <dd class="col-sm-8 detail-value">
+                            {{ appointment.location_name or 'N/A' }}
+                            {% if appointment.location_address %}
+                            <br><small class="text-muted">{{ appointment.location_address }}</small>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 detail-label">Reason:</dt>
+                        <dd class="col-sm-8 detail-value" style="white-space: pre-wrap;">{{ appointment.reason or 'N/A' }}</dd>
+
+                        <dt class="col-sm-4 detail-label">Notes:</dt>
+                        <dd class="col-sm-8 detail-value">
+                            <div id="notesDisplay" style="white-space: pre-wrap;">{{ appointment.notes or 'No notes provided.' }}</div>
+                            {% if is_editable %}
+                            <button id="editNotesBtn" class="btn btn-sm btn-link p-0 mt-1" style="font-size:0.8rem;">Edit Notes</button>
+                            <div id="notesEditForm" style="display:none;">
+                                <textarea id="notesTextarea" class="form-control form-control-sm mt-1" rows="3">{{ appointment.notes or '' }}</textarea>
+                                <button id="saveNotesBtn" class="btn btn-sm btn-primary-medical mt-2">Save</button>
+                                <button id="cancelNotesBtn" type="button" class="btn btn-sm btn-outline-secondary mt-2 ms-1">Cancel</button> {# type="button" #}
+                            </div>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4 detail-label">Status Update:</dt>
+                        <dd class="col-sm-8 detail-value">
+                            {% if is_editable %}
+                            <div class="input-group input-group-sm">
+                                <select id="statusSelect" class="form-select form-select-sm">
+                                    {% for status_val in appointment_statuses %}
+                                    <option value="{{ status_val }}" {% if status_val == appointment.status %}selected{% endif %}>
+                                        {{ status_val|capitalize }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button id="updateStatusBtn" class="btn btn-outline-primary-medical btn-sm" type="button">Update</button>
+                            </div>
+                            {% else %}
+                            {{ appointment.status|capitalize }}
+                            {% endif %}
+                        </dd>
+                    </dl>
+                    <hr class="my-3">
+                     <p class="mb-1"><small class="text-muted">Created by: {{ appointment.created_by_username or 'System' }} on {{ appointment.created_at.strftime('%Y-%m-%d %H:%M') if appointment.created_at else 'N/A' }}</small></p>
+                    {% if appointment.updated_by_username and appointment.updated_at %}
+                    <p class="mb-0"><small class="text-muted">Last updated by: {{ appointment.updated_by_username }} on {{ appointment.updated_at.strftime('%Y-%m-%d %H:%M') }}</small></p>
+                    {% endif %}
+                </div>
+                {% if is_editable %}
+                <div class="card-footer bg-light text-end py-2 mt-auto"> {# mt-auto to push footer down #}
+                    <a href="{{ url_for('appointments.reschedule_appointment', appointment_id=appointment.appointment_id) }}" class="btn btn-sm btn-primary-medical me-2">
+                        <i class="fas fa-calendar-alt fa-sm me-1"></i> Reschedule
+                    </a>
+                    <button type="button" class="btn btn-sm btn-danger-medical" data-bs-toggle="modal" data-bs-target="#cancelAppointmentModal">
+                        <i class="fas fa-times-circle fa-sm me-1"></i> Cancel Appointment
+                    </button>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
-
-            {# Metadata #}
-            <hr><strong class="full-width">Metadata</strong>
-            <strong>Created:</strong>    <div><small>{{ appointment.created_at.strftime('%Y-%m-%d %H:%M') if appointment.created_at else 'N/A' }} by {{ appointment.created_by_username or 'System' }}</small></div>
-            <strong>Updated:</strong>    <div><small>{{ appointment.updated_at.strftime('%Y-%m-%d %H:%M') if appointment.updated_at else 'N/A' }} by {{ appointment.updated_by_username or 'System' }}</small></div>
         </div>
     </div>
 </div>
+
+<!-- Cancel Appointment Modal -->
+<div class="modal fade" id="cancelAppointmentModal" tabindex="-1" aria-labelledby="cancelAppointmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius: 6px;">
+      <div class="modal-header" style="border-bottom: 1px solid #e3e6f0; padding: 0.8rem 1rem;">
+        <h5 class="modal-title h6" id="cancelAppointmentModalLabel">Confirm Cancellation</h5>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" style="font-size: 0.9rem; padding: 1rem 1rem;">
+        Are you sure you want to cancel this appointment for <strong>{{ appointment.patient_first_name }} {{ appointment.patient_last_name }}</strong> on {{ appointment.appointment_date_str }} at {{ appointment.start_time_str }}? This action cannot be undone.
+      </div>
+      <div class="modal-footer" style="border-top: 1px solid #e3e6f0; padding: 0.7rem 1rem;">
+        <button type="button" class="btn btn-sm btn-outline-secondary-medical" data-bs-dismiss="modal">Close</button>
+        <form action="{{ url_for('appointments.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST" style="display: inline;">
+             {# Removed CSRF token here as per backend code #}
+            <button type="submit" class="btn btn-sm btn-danger-medical">Yes, Cancel Appointment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
-{% block scripts %}
-<script>
-// --- JS for Save Notes & Update Status (Needs slight adaptation for badge class) ---
-document.addEventListener('DOMContentLoaded', function() {
-    const appointmentId = '{{ appointment.appointment_id }}';
-    const csrfToken = null; // Add CSRF if needed
 
-    // --- Update Notes ---
-    const notesTextarea = document.getElementById('appointment_notes');
-    const saveNotesBtn = document.getElementById('save-notes-btn');
-    const notesSaveStatus = document.getElementById('notes-save-status');
-    if (saveNotesBtn) { /* Keep Existing saveNotesBtn AJAX logic */
-        saveNotesBtn.addEventListener('click', async () => {
-             const notes = notesTextarea.value; notesSaveStatus.textContent = 'Saving...'; notesSaveStatus.className = 'ms-2 text-muted'; saveNotesBtn.disabled = true;
-             try { /* ... fetch POST /update_notes ... */
-                const result = await response.json();
-                if (result.success) { notesSaveStatus.textContent = 'Saved!'; notesSaveStatus.className = 'ms-2 text-success'; }
-                else { notesSaveStatus.textContent = `Error: ${result.message}`; notesSaveStatus.className = 'ms-2 text-danger'; }
-            } catch (e) { /* ... error handling ... */ } finally { saveNotesBtn.disabled = false; setTimeout(() => { notesSaveStatus.textContent = ''; }, 3000); }
+{% block scripts %}
+{{ super() if super }}
+<script>
+// Attempt to get CSRF token if provided in meta tag by base template
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || "";
+
+document.addEventListener('DOMContentLoaded', function() {
+    const appointmentId = {{ appointment.appointment_id }};
+
+    const editNotesBtn = document.getElementById('editNotesBtn');
+    const notesDisplay = document.getElementById('notesDisplay');
+    const notesEditForm = document.getElementById('notesEditForm');
+    const notesTextarea = document.getElementById('notesTextarea');
+    const saveNotesBtn = document.getElementById('saveNotesBtn');
+    const cancelNotesBtn = document.getElementById('cancelNotesBtn');
+
+    // --- Notes Edit Logic ---
+    if (editNotesBtn && notesDisplay && notesEditForm && notesTextarea && saveNotesBtn && cancelNotesBtn) {
+        editNotesBtn.addEventListener('click', function() {
+            notesDisplay.style.display = 'none';
+            editNotesBtn.style.display = 'none';
+            notesEditForm.style.display = 'block';
+            notesTextarea.focus();
+        });
+
+        cancelNotesBtn.addEventListener('click', function() {
+            notesDisplay.style.display = 'block';
+            editNotesBtn.style.display = 'inline'; // Show edit button again
+            notesEditForm.style.display = 'none';
+            // Reset textarea value to original (use textContent from display for safety)
+            notesTextarea.value = notesDisplay.textContent === 'No notes provided.' ? '' : notesDisplay.textContent;
+        });
+
+        saveNotesBtn.addEventListener('click', function() {
+            const newNotes = notesTextarea.value;
+            saveNotesBtn.disabled = true; // Prevent double-click
+            saveNotesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            fetch(`/portal/appointments/${appointmentId}/update_notes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken // Send CSRF token if available
+                },
+                body: JSON.stringify({ notes: newNotes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update display immediately, then reload to ensure consistency and flash messages
+                    notesDisplay.textContent = newNotes.trim() || 'No notes provided.'; // Update display
+                    notesDisplay.style.display = 'block';
+                    editNotesBtn.style.display = 'inline';
+                    notesEditForm.style.display = 'none';
+                    // Use location.reload() to ensure state is fully updated and flash messages shown
+                    location.reload();
+                    // // Alternative: Show temporary success without reload (requires flash message JS handling)
+                    // const flashContainer = document.querySelector('.container-portal'); // Target where flash messages appear
+                    // if (flashContainer) {
+                    //     const successAlert = `<div class="alert alert-success alert-dismissible fade show" role="alert">Notes updated successfully.<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+                    //     flashContainer.insertAdjacentHTML('afterbegin', successAlert);
+                    // }
+                } else {
+                    alert('Error updating notes: ' + data.message); // Show error from backend
+                }
+            })
+            .catch(error => {
+                console.error('Error saving notes:', error);
+                alert('An unexpected network or server error occurred while saving notes.');
+            })
+            .finally(() => {
+                 // Re-enable button regardless of outcome
+                saveNotesBtn.disabled = false;
+                saveNotesBtn.innerHTML = 'Save';
+            });
         });
     }
 
-    // --- Update Status ---
-    const statusSelect = document.getElementById('update-status-select');
-    const updateStatusBtn = document.getElementById('update-status-btn');
-    const statusUpdateStatus = document.getElementById('status-update-status');
-    const statusBadge = document.getElementById('appointment-status-badge');
-    if (updateStatusBtn) { /* Keep Existing updateStatusBtn AJAX logic, ADAPT BADGE CLASS */
-        updateStatusBtn.addEventListener('click', async () => {
-            const newStatus = statusSelect.value; statusUpdateStatus.textContent = 'Updating...'; updateStatusBtn.disabled = true; statusSelect.disabled = true;
-             try { /* ... fetch POST /update_status ... */
-                const result = await response.json();
-                if (result.success) {
-                    statusUpdateStatus.textContent = 'Updated!'; statusUpdateStatus.className = 'ms-2 text-success';
-                    if (statusBadge) {
-                        statusBadge.textContent = result.new_status.charAt(0).toUpperCase() + result.new_status.slice(1);
-                        // *** Update badge class based on base.css ***
-                        let badgeClass = 'badge-info'; // default
-                        if (result.new_status === 'confirmed') badgeClass = 'badge-success';
-                        else if (result.new_status === 'completed') badgeClass = 'badge-secondary';
-                        else if (result.new_status === 'no-show') badgeClass = 'badge-warning';
-                        else if (result.new_status === 'canceled') badgeClass = 'badge-danger';
-                        statusBadge.className = `badge ${badgeClass}`;
-                    }
-                    if (['completed', 'canceled', 'no-show'].includes(result.new_status)) {
-                        // Disable buttons/selects
-                        document.querySelector('a.button-warning')?.classList.add('disabled'); // Reschedule link
-                        document.querySelector('button.button-danger')?.setAttribute('disabled', 'disabled'); // Cancel button
-                        if(saveNotesBtn) saveNotesBtn.disabled = true; // Disable notes save too
-                        if(notesTextarea) notesTextarea.readOnly = true;
-                        statusSelect.disabled = true;
-                        updateStatusBtn.disabled = true;
-                    }
-                } else { /* ... error handling, revert select value ... */ statusUpdateStatus.textContent = `Error: ${result.message}`; statusUpdateStatus.className = 'ms-2 text-danger'; statusSelect.value = "{{ appointment.status }}"; }
-             } catch (e) { /* ... error handling ... */ statusSelect.value = "{{ appointment.status }}"; }
-              finally { /* Re-enable if not final status */
-                  if (!['completed', 'canceled', 'no-show'].includes(statusSelect.value)) { updateStatusBtn.disabled = false; statusSelect.disabled = false; }
-                   setTimeout(() => { statusUpdateStatus.textContent = ''; }, 3000);
-              }
+    // --- Status Update Logic ---
+    const updateStatusBtn = document.getElementById('updateStatusBtn');
+    const statusSelect = document.getElementById('statusSelect');
+
+    if (updateStatusBtn && statusSelect) {
+        updateStatusBtn.addEventListener('click', function() {
+            const newStatus = statusSelect.value;
+            const currentStatus = "{{ appointment.status }}"; // Get current status from template
+
+            if (newStatus === currentStatus) {
+                // Optionally provide feedback that status is already set
+                // e.g., flash a small message or do nothing
+                return;
+            }
+
+            updateStatusBtn.disabled = true;
+            updateStatusBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+            fetch(`/portal/appointments/${appointmentId}/update_status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken // Send CSRF token if available
+                },
+                body: JSON.stringify({ status: newStatus })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload(); // Reload to reflect changes and show flash message
+                } else {
+                    alert('Error updating status: ' + data.message); // Show error from backend
+                    // Re-enable button on failure
+                    updateStatusBtn.disabled = false;
+                    updateStatusBtn.innerHTML = 'Update';
+                }
+            })
+            .catch(error => {
+                console.error('Error updating status:', error);
+                alert('An unexpected network or server error occurred while updating status.');
+                 // Re-enable button on failure
+                updateStatusBtn.disabled = false;
+                updateStatusBtn.innerHTML = 'Update';
+            });
         });
     }
 });

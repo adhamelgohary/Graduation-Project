@@ -1,224 +1,502 @@
-{% extends "Doctor_Portal/base.html" %}
+{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS #}
 
 {% block title %}Patient Profile - {{ patient.user_info.first_name }} {{ patient.user_info.last_name }}{% endblock %}
 
 {% block head_extra %}
-    {# Bootstrap CSS required for Tabs/Accordion #}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    {# Link the specific CSS for this page #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/patient_profile.css') }}">
+    {{ super() if super }} {# Include base head extras #}
+    {# Ensure Bootstrap CSS/JS and Font Awesome are loaded via base.html #}
+    <style>
+        /* Basic Styles - Combine with your base.css or a specific patient_profile.css */
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: #eef2f7; /* Light background */
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #dee2e6;
+        }
+        .profile-header h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.25rem;
+            color: #343a40;
+        }
+        .patient-meta {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .header-actions .button-small { /* Example */
+             font-size: 0.8rem; padding: 0.25rem 0.5rem;
+        }
+        .nav-tabs { margin-bottom: 1.5rem; border-bottom-color: #dee2e6; }
+        .nav-tabs .nav-link {
+            border-radius: 0.375rem 0.375rem 0 0;
+            border-color: #dee2e6 #dee2e6 #dee2e6;
+            color: #0d6efd; /* Primary link color */
+            font-weight: 500;
+            padding: 0.6rem 1rem;
+            font-size: 0.95rem;
+        }
+        .nav-tabs .nav-link.active {
+            color: #495057; /* Darker text for active */
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+            border-bottom: 2px solid #0d6efd; /* Active indicator */
+        }
+         .nav-tabs .nav-link:hover:not(.active) {
+             border-color: #e9ecef #e9ecef #dee2e6;
+             isolation: isolate;
+             background-color: #f8f9fa; /* Slight hover */
+         }
+         .nav-tabs .nav-link i { margin-right: 0.4rem; }
+
+        .tab-content { padding: 1.5rem; background-color: #fff; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 0.375rem 0.375rem; }
+
+        .patient-details-section h4 { font-size: 1.1rem; margin-top: 1rem; margin-bottom: 0.75rem; color: #495057; padding-bottom: 0.3rem; border-bottom: 1px solid #eee; }
+        .patient-details-section h4:first-of-type { margin-top: 0; }
+        .patient-details dt { font-weight: 600; color: #6c757d; font-size: 0.85rem; }
+        .patient-details dd { font-size: 0.9rem; color: #333; }
+        .allergies-list .list-group-item { padding: 0.5rem 0; border-bottom: 1px solid #f1f1f1; font-size: 0.9rem;}
+        .allergies-list .list-group-item:last-child { border-bottom: none; }
+        .allergies-list .badge { font-size: 0.75em; vertical-align: middle; }
+
+        .history-section .accordion-button {
+             background-color: #f8f9fa;
+             font-weight: 500;
+             color: #495057;
+             padding: 0.8rem 1.2rem;
+             font-size: 1rem;
+        }
+        .history-section .accordion-button:not(.collapsed) {
+            color: #0c63e4;
+            background-color: #e7f1ff;
+            box-shadow: inset 0 -1px 0 rgba(0,0,0,.125);
+        }
+        .history-section .accordion-button:focus { box-shadow: none; }
+        .history-section .accordion-button::after { /* Style accordion icon if needed */ }
+        .history-section .accordion-body { padding: 0; /* Remove body padding for table */}
+        .history-table { margin-bottom: 0; font-size: 0.85rem; }
+        .history-table thead th { background-color: #eef2f7; font-weight: 600; padding: 0.5rem; }
+        .history-table tbody td { padding: 0.5rem; vertical-align: middle; }
+        .status-badge { padding: 0.3em 0.6em; font-size: 0.8em; border-radius: 0.25rem; text-transform: capitalize; font-weight: 600; }
+        .status-scheduled    { background-color: #cfe2ff; color: #084298; border: 1px solid #b6d4fe;}
+        .status-confirmed    { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;}
+        .status-completed    { background-color: #e2e3e5; color: #41464b; border: 1px solid #d3d6d8;}
+        .status-canceled     { background-color: #f8d7da; color: #58151c; border: 1px solid #f1c6cb;}
+        .status-no-show      { background-color: #fff3cd; color: #664d03; border: 1px solid #ffe69c;}
+        .status-rescheduled  { background-color: #ffe5d0; color: #803A00; border: 1px solid #fedec6;}
+
+        .add-form-section { margin-bottom: 1.5rem; border: 1px solid #e3e6f0; }
+        .add-form-section .card-header { padding: 0.75rem 1.25rem; }
+        .add-form-section h4 { font-size: 1.1rem; }
+        .add-form-section .card-body { padding: 1.5rem; }
+        .form-control-sm, .form-select-sm { font-size: 0.875rem; }
+        .form-check-label { font-size: 0.9rem; }
+
+        /* Ensure form groups have bottom margin */
+        .add-form-section .form-group { margin-bottom: 1rem; }
+        .add-form-section .row .form-group { margin-bottom: 0; } /* Reset for row items */
+        .text-end { text-align: right !important; }
+    </style>
 {% endblock %}
 
 {% block content %}
+<div class="container-fluid mt-3"> {# Added container and margin #}
 
-{# --- Patient Header --- #}
-<div class="profile-header">
-    <div>
-        <h1>{{ patient.user_info.first_name }} {{ patient.user_info.last_name }}</h1>
-        <div class="patient-meta">
-            Patient ID: {{ patient.user_info.user_id }}
-            <span class="mx-2">|</span>
-            Age: {{ patient.patient_info.age if patient.patient_info.age is not none else 'N/A' }}
-            <span class="mx-2">|</span>
-            Gender: {{ patient.patient_info.gender | title | replace('_', ' ') if patient.patient_info.gender else 'N/A' }}
+    {# --- Patient Header --- #}
+    <div class="profile-header">
+        <div>
+            <h1>{{ patient.user_info.first_name }} {{ patient.user_info.last_name }}</h1>
+            <div class="patient-meta">
+                Patient ID: {{ patient.user_info.user_id }}
+                <span class="mx-2">|</span>
+                Age: {{ patient.patient_info.age if patient.patient_info.age is not none else 'N/A' }}
+                <span class="mx-2">|</span>
+                Gender: {{ patient.patient_info.gender | title | replace('_', ' ') if patient.patient_info.gender else 'N/A' }}
+            </div>
+        </div>
+        <div class="header-actions">
+            {# TODO: Replace # with actual URLs if Chat/Scheduling is implemented #}
+            {# <a href="#" class="btn btn-sm btn-outline-secondary"><i class="fas fa-comments fa-fw me-1"></i> Chat</a> #}
+            <a href="{{ url_for('appointments.create_appointment', patient_id=patient.user_info.user_id) }}" class="btn btn-sm btn-primary"><i class="fas fa-calendar-plus fa-fw me-1"></i> Schedule Appt</a>
         </div>
     </div>
-    <div class="header-actions">
-        {# TODO: Replace # with actual URLs #}
-        <a href="#" class="button button-outline button-secondary button-small"><i class="fas fa-comments fa-fw"></i> Chat</a>
-        <a href="#" class="button button-primary button-small"><i class="fas fa-calendar-plus fa-fw"></i> Schedule Appt</a>
-    </div>
-</div>
 
-{# --- Tab Navigation --- #}
-<ul class="nav nav-tabs" id="patientTab" role="tablist">
-  <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">
-        <i class="fas fa-user-circle fa-fw"></i> Details
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
-        <i class="fas fa-notes-medical fa-fw"></i> Medical History
-    </button>
-  </li>
-   <li class="nav-item" role="presentation">
-    <button class="nav-link" id="add-entry-tab" data-bs-toggle="tab" data-bs-target="#add-entry" type="button" role="tab" aria-controls="add-entry" aria-selected="false">
-        <i class="fas fa-plus-circle fa-fw"></i> Add New Entry
-    </button>
-  </li>
-   {# Add other tabs as needed (e.g., Medications, Labs) #}
-</ul>
+     {% include '_flash_messages.html' %} {# Display flash messages #}
 
-{# --- Tab Content --- #}
-<div class="tab-content" id="patientTabContent">
+    {# --- Tab Navigation --- #}
+    <ul class="nav nav-tabs" id="patientTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="details-tab" data-bs-toggle="tab" data-bs-target="#details" type="button" role="tab" aria-controls="details" aria-selected="true">
+            <i class="fas fa-user-circle fa-fw"></i> Details
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+            <i class="fas fa-notes-medical fa-fw"></i> Medical History
+        </button>
+      </li>
+       <li class="nav-item" role="presentation">
+        <button class="nav-link" id="add-entry-tab" data-bs-toggle="tab" data-bs-target="#add-entry" type="button" role="tab" aria-controls="add-entry" aria-selected="false">
+            <i class="fas fa-plus-circle fa-fw"></i> Add New Entry
+        </button>
+      </li>
+       {# Add other tabs as needed (e.g., Medications, Labs) #}
+    </ul>
 
-  {# --- Details Tab --- #}
-  <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab">
-    <div class="row patient-details-section">
-        <div class="col-lg-6">
-            <h4>Demographics & Contact</h4>
-            <dl class="patient-details">
-                <div class="row"><dt class="col-sm-4">Full Name</dt><dd class="col-sm-8">{{ patient.user_info.first_name }} {{ patient.user_info.last_name }}</dd></div>
-                <div class="row"><dt class="col-sm-4">Date of Birth</dt><dd class="col-sm-8">{{ patient.patient_info.date_of_birth.strftime('%B %d, %Y') if patient.patient_info.date_of_birth else 'N/A' }}</dd></div>
-                <div class="row"><dt class="col-sm-4">Age</dt><dd class="col-sm-8">{{ patient.patient_info.age if patient.patient_info.age is not none else 'N/A' }}</dd></div>
-                <div class="row"><dt class="col-sm-4">Gender</dt><dd class="col-sm-8">{{ patient.patient_info.gender | title | replace('_', ' ') if patient.patient_info.gender else 'N/A' }}</dd></div>
-                <div class="row"><dt class="col-sm-4">Email</dt><dd class="col-sm-8">{{ patient.user_info.email | default('N/A') }}</dd></div>
-                <div class="row"><dt class="col-sm-4">Phone</dt><dd class="col-sm-8">{{ patient.user_info.phone | default('N/A') }}</dd></div>
-                <div class="row"><dt class="col-sm-4">Country</dt><dd class="col-sm-8">{{ patient.user_info.country | default('N/A') }}</dd></div>
-                <div class="row"><dt class="col-sm-4">Marital Status</dt><dd class="col-sm-8">{{ patient.patient_info.marital_status | title if patient.patient_info.marital_status else 'N/A' }}</dd></div>
-                <div class="row"><dt class="col-sm-4">Occupation</dt><dd class="col-sm-8">{{ patient.patient_info.occupation | default('N/A') }}</dd></div>
-            </dl>
-        </div>
-        <div class="col-lg-6">
-            <h4>Medical Information</h4>
-             <dl class="patient-details">
-                 <div class="row"><dt class="col-sm-4">Blood Type</dt><dd class="col-sm-8">{{ patient.patient_info.blood_type | default('N/A') }}</dd></div>
-                 <div class="row"><dt class="col-sm-4">Height</dt><dd class="col-sm-8">{{ '%g'|format(patient.patient_info.height_cm) if patient.patient_info.height_cm else 'N/A' }} cm</dd></div>
-                 <div class="row"><dt class="col-sm-4">Weight</dt><dd class="col-sm-8">{{ '%g'|format(patient.patient_info.weight_kg) if patient.patient_info.weight_kg else 'N/A' }} kg</dd></div>
-                 {# TODO: Add BMI calculation here: BMI = weight (kg) / (height (m)^2) #}
-                 {# <div class="row"><dt class="col-sm-4">BMI</dt><dd class="col-sm-8">Calculate Here</dd></div> #}
-             </dl>
+    {# --- Tab Content --- #}
+    <div class="tab-content pt-0" id="patientTabContent"> {# Removed default padding #}
 
-             <h4 class="mt-4">Insurance</h4>
-             {% if patient.insurance_info or patient.patient_info.insurance_policy_number %}
-                <dl class="patient-details">
-                    {% if patient.insurance_info %}
-                     <div class="row"><dt class="col-sm-4">Provider</dt><dd class="col-sm-8">{{ patient.insurance_info.provider_name }}</dd></div>
-                    {% endif %}
-                    <div class="row"><dt class="col-sm-4">Policy #</dt><dd class="col-sm-8">{{ patient.patient_info.insurance_policy_number | default('N/A') }}</dd></div>
-                    <div class="row"><dt class="col-sm-4">Group #</dt><dd class="col-sm-8">{{ patient.patient_info.insurance_group_number | default('N/A') }}</dd></div>
-                    <div class="row"><dt class="col-sm-4">Expiration</dt><dd class="col-sm-8">{{ patient.patient_info.insurance_expiration.strftime('%Y-%m-%d') if patient.patient_info.insurance_expiration else 'N/A' }}</dd></div>
+      {# --- Details Tab --- #}
+      <div class="tab-pane fade show active" id="details" role="tabpanel" aria-labelledby="details-tab" style="padding: 1.5rem; background-color: #fff; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 0.375rem 0.375rem;">
+        <div class="row patient-details-section">
+            <div class="col-lg-6">
+                <h4>Demographics & Contact</h4>
+                <dl class="patient-details row"> {# Use row for Bootstrap grid system #}
+                    <dt class="col-sm-4">Full Name</dt><dd class="col-sm-8">{{ patient.user_info.first_name }} {{ patient.user_info.last_name }}</dd>
+                    <dt class="col-sm-4">Date of Birth</dt><dd class="col-sm-8">{{ patient.patient_info.date_of_birth.strftime('%B %d, %Y') if patient.patient_info.date_of_birth else 'N/A' }}</dd>
+                    <dt class="col-sm-4">Age</dt><dd class="col-sm-8">{{ patient.patient_info.age if patient.patient_info.age is not none else 'N/A' }}</dd>
+                    <dt class="col-sm-4">Gender</dt><dd class="col-sm-8">{{ patient.patient_info.gender | title | replace('_', ' ') if patient.patient_info.gender else 'N/A' }}</dd>
+                    <dt class="col-sm-4">Email</dt><dd class="col-sm-8">{{ patient.user_info.email | default('N/A') }}</dd>
+                    <dt class="col-sm-4">Phone</dt><dd class="col-sm-8">{{ patient.user_info.phone | default('N/A') }}</dd>
+                    <dt class="col-sm-4">Country</dt><dd class="col-sm-8">{{ patient.user_info.country | default('N/A') }}</dd>
+                    <dt class="col-sm-4">Marital Status</dt><dd class="col-sm-8">{{ patient.patient_info.marital_status | title if patient.patient_info.marital_status else 'N/A' }}</dd>
+                    <dt class="col-sm-4">Occupation</dt><dd class="col-sm-8">{{ patient.patient_info.occupation | default('N/A') }}</dd>
                 </dl>
-             {% else %}
-                <p class="text-muted">No insurance information on file.</p>
-             {% endif %}
+            </div>
+            <div class="col-lg-6">
+                <h4>Medical Information</h4>
+                 <dl class="patient-details row">
+                     <dt class="col-sm-4">Blood Type</dt><dd class="col-sm-8">{{ patient.patient_info.blood_type | default('N/A') }}</dd>
+                     <dt class="col-sm-4">Height</dt><dd class="col-sm-8">{{ ('%g'|format(patient.patient_info.height_cm) + ' cm') if patient.patient_info.height_cm else 'N/A' }}</dd>
+                     <dt class="col-sm-4">Weight</dt><dd class="col-sm-8">{{ ('%g'|format(patient.patient_info.weight_kg) + ' kg') if patient.patient_info.weight_kg else 'N/A' }}</dd>
+                     {# TODO: Add BMI calculation if needed (requires height in meters) #}
+                     {# {% if patient.patient_info.height_cm and patient.patient_info.weight_kg %}
+                        {% set height_m = patient.patient_info.height_cm / 100 %}
+                        {% set bmi = patient.patient_info.weight_kg / (height_m * height_m) %}
+                        <dt class="col-sm-4">BMI</dt><dd class="col-sm-8">{{ '%.1f'|format(bmi) }}</dd>
+                     {% endif %} #}
+                 </dl>
 
-             <h4 class="mt-4">Allergies</h4>
-             {% if patient.allergies %}
-                <ul class="list-group list-group-flush allergies-list">
-                    {% for allergy in patient.allergies %}
-                        <li class="list-group-item">
-                            <strong>{{ allergy.allergy_name }}</strong> ({{ allergy.allergy_type | title }})
-                            {% if allergy.severity and allergy.severity != 'unknown' %}<span class="badge rounded-pill bg-warning text-dark ms-2">{{ allergy.severity | title }}</span>{% endif %}
-                            {% if allergy.reaction_description %}<small class="d-block text-muted mt-1">Reaction: {{ allergy.reaction_description }}</small>{% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-             {% else %}
-                <p class="text-muted">No known allergies recorded.</p>
-             {% endif %}
+                 <h4 class="mt-4">Insurance</h4>
+                 {% if patient.insurance_info or patient.patient_info.insurance_policy_number %}
+                    <dl class="patient-details row">
+                        {% if patient.insurance_info %}
+                         <dt class="col-sm-4">Provider</dt><dd class="col-sm-8">{{ patient.insurance_info.provider_name }}</dd>
+                        {% endif %}
+                        <dt class="col-sm-4">Policy #</dt><dd class="col-sm-8">{{ patient.patient_info.insurance_policy_number | default('N/A') }}</dd>
+                        <dt class="col-sm-4">Group #</dt><dd class="col-sm-8">{{ patient.patient_info.insurance_group_number | default('N/A') }}</dd>
+                        <dt class="col-sm-4">Expiration</dt><dd class="col-sm-8">{{ patient.patient_info.insurance_expiration.strftime('%Y-%m-%d') if patient.patient_info.insurance_expiration else 'N/A' }}</dd>
+                    </dl>
+                 {% else %}
+                    <p class="text-muted">No insurance information on file.</p>
+                 {% endif %}
+
+                 <h4 class="mt-4">Allergies</h4>
+                 {% if patient.allergies %}
+                    <ul class="list-group list-group-flush allergies-list">
+                        {% for allergy in patient.allergies %}
+                            <li class="list-group-item">
+                                <strong>{{ allergy.allergy_name }}</strong> ({{ allergy.allergy_type | title }})
+                                {% if allergy.severity and allergy.severity != 'unknown' %}<span class="badge rounded-pill bg-warning text-dark ms-2">{{ allergy.severity | title }}</span>{% endif %}
+                                {% if allergy.reaction_description %}<small class="d-block text-muted mt-1">Reaction: {{ allergy.reaction_description }}</small>{% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                 {% else %}
+                    <p class="text-muted">No known allergies recorded.</p>
+                 {% endif %}
+            </div>
         </div>
-    </div>
-  </div>
+      </div>{# End Details Tab #}
 
-  {# --- Medical History Tab --- #}
-  <div class="tab-pane fade history-section" id="history" role="tabpanel" aria-labelledby="history-tab">
-        <div class="accordion" id="historyAccordion">
-            {# Appointments Section #}
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingAppointments"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAppointments" aria-expanded="false" aria-controls="collapseAppointments"> Appointments History (Last 50) </button></h2>
-                <div id="collapseAppointments" class="accordion-collapse collapse" aria-labelledby="headingAppointments" data-bs-parent="#historyAccordion">
-                    <div class="accordion-body">
-                        {% if patient.appointments %}
-                            <div class="table-responsive"> <table class="table table-sm table-striped history-table"> <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Status</th><th>Doctor</th><th>Reason</th></tr></thead> <tbody>
-                            {% for appt in patient.appointments %}<tr> <td>{{ appt.appointment_date.strftime('%Y-%m-%d') if appt.appointment_date else 'N/A'}}</td> <td>{{ appt.start_time | timedelta_to_time if appt.start_time else '--:--' }}</td> <td>{{ appt.appointment_type | title }}</td> <td><span class="status-badge status-{{ appt.status | lower | replace(' ', '-') }}">{{ appt.status | title | replace('-', ' ') }}</span></td> <td>Dr. {{ appt.doctor_first_name }} {{ appt.doctor_last_name }}</td> <td>{{ appt.reason | default('') | truncate(50) }}</td> </tr> {% endfor %}
-                            </tbody> </table> </div>
-                        {% else %} <p class="text-muted">No appointment history found.</p> {% endif %}
-                    </div>
+      {# --- Medical History Tab --- #}
+<div class="tab-pane fade history-section" id="history" role="tabpanel" aria-labelledby="history-tab" style="padding: 1.5rem; background-color: #fff; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 0.375rem 0.375rem;">
+    <div class="accordion" id="historyAccordion">
+        {# Appointments Section #}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingAppointments"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAppointments" aria-expanded="false" aria-controls="collapseAppointments"> Appointments History </button></h2>
+            <div id="collapseAppointments" class="accordion-collapse collapse" aria-labelledby="headingAppointments" data-bs-parent="#historyAccordion">
+                <div class="accordion-body">
+                    {% if patient.appointments %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped history-table">
+                                <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Status</th><th>Doctor</th><th>Reason</th></tr></thead>
+                                <tbody>
+                                {% for appt in patient.appointments %}
+                                    <tr>
+                                        <td>{{ appt.appointment_date.strftime('%Y-%m-%d') if appt.appointment_date else 'N/A'}}</td>
+                                        <td>{{ appt.start_time_str | default('--:--') }}</td>
+                                        <td>{{ appt.appointment_type_name | default('N/A') | title }}</td> {# Use type_name #}
+                                        <td><span class="status-badge status-{{ appt.status | lower | replace(' ', '-') }}">{{ appt.status | title | replace('-', ' ') }}</span></td>
+                                        <td>Dr. {{ appt.doctor_last_name | default('N/A') }}{{ ', ' ~ appt.doctor_first_name[0] if appt.doctor_first_name else '' }}.</td>
+                                        {# *** CORRECTED LINE BELOW *** #}
+                                        <td>{% if appt.reason %}{{ appt.reason | truncate(50) }}{% else %} {% endif %}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %} <p class="text-muted m-3">No appointment history found.</p> {% endif %}
                 </div>
             </div>
-            {# Diagnoses Section #}
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingDiagnoses"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDiagnoses" aria-expanded="false" aria-controls="collapseDiagnoses"> Diagnoses History (Last 50) </button></h2>
-                <div id="collapseDiagnoses" class="accordion-collapse collapse" aria-labelledby="headingDiagnoses" data-bs-parent="#historyAccordion">
-                    <div class="accordion-body">
-                         {% if patient.diagnoses %}
-                            <div class="table-responsive"> <table class="table table-sm table-striped history-table"> <thead><tr><th>Date</th><th>Diagnosis</th><th>Type</th><th>Status</th><th>Doctor</th><th>Notes</th></tr></thead> <tbody>
-                            {% for dx in patient.diagnoses %}<tr> <td>{{ dx.diagnosis_date.strftime('%Y-%m-%d') if dx.diagnosis_date else 'N/A' }}</td> <td>{{ dx.diagnosis_name }} {% if dx.diagnosis_code %}({{ dx.diagnosis_code }}){% endif %}</td> <td>{{ dx.diagnosis_type | title }}</td> <td> {% if dx.is_resolved %}Resolved <small>({{ dx.resolved_date.strftime('%Y-%m-%d') if dx.resolved_date else 'N/A' }})</small> {% elif dx.is_chronic %}Chronic {% else %}Active {% endif %} <small>({{ dx.severity | title if dx.severity != 'unknown' else 'Sev. Unk.' }})</small> </td> <td>Dr. {{ dx.doctor_first_name | default('') }} {{ dx.doctor_last_name | default('N/A') }}</td> <td>{{ dx.notes | default('') | truncate(50) }}</td> </tr> {% endfor %}
-                            </tbody> </table> </div>
-                        {% else %} <p class="text-muted">No diagnosis history found.</p> {% endif %}
-                    </div>
+        </div> {# End Appointments Accordion Item #}
+
+        {# Diagnoses Section (No change needed here for this error) #}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingDiagnoses"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDiagnoses" aria-expanded="false" aria-controls="collapseDiagnoses"> Diagnoses History </button></h2>
+            <div id="collapseDiagnoses" class="accordion-collapse collapse" aria-labelledby="headingDiagnoses" data-bs-parent="#historyAccordion">
+                <div class="accordion-body">
+                     {% if patient.diagnoses %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped history-table">
+                                <thead><tr><th>Date</th><th>Diagnosis</th><th>Type</th><th>Status</th><th>Doctor</th><th>Notes</th></tr></thead>
+                                <tbody>
+                                {% for dx in patient.diagnoses %}
+                                    <tr>
+                                        <td>{{ dx.diagnosis_date.strftime('%Y-%m-%d') if dx.diagnosis_date else 'N/A' }}</td>
+                                        <td>{{ dx.diagnosis_name }} {% if dx.diagnosis_code %}<small class="text-muted">({{ dx.diagnosis_code }})</small>{% endif %}</td>
+                                        <td>{{ dx.diagnosis_type | title }}</td>
+                                        <td>
+                                            {% if dx.is_resolved %}Resolved <small class="text-muted">({{ dx.resolved_date.strftime('%Y-%m-%d') if dx.resolved_date else 'N/A' }})</small>
+                                            {% elif dx.is_chronic %}Chronic
+                                            {% else %}Active
+                                            {% endif %}
+                                            {% if dx.severity != 'unknown' %}<small class="text-muted"> ({{ dx.severity | title }})</small>{% endif %}
+                                        </td>
+                                        <td>Dr. {{ dx.doctor_last_name | default('N/A') }}{{ ', ' ~ dx.doctor_first_name[0] if dx.doctor_first_name else '' }}.</td>
+                                        <td>{% if dx.notes %}{{ dx.notes | truncate(50) }}{% else %} {% endif %}</td> {# Applied same fix to notes #}
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %} <p class="text-muted m-3">No diagnosis history found.</p> {% endif %}
                 </div>
             </div>
-            {# Symptoms Section #}
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="headingSymptoms"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSymptoms" aria-expanded="false" aria-controls="collapseSymptoms"> Reported Symptoms History (Last 100) </button></h2>
-                <div id="collapseSymptoms" class="accordion-collapse collapse" aria-labelledby="headingSymptoms" data-bs-parent="#historyAccordion">
-                    <div class="accordion-body">
-                         {% if patient.symptoms %}
-                            <div class="table-responsive"> <table class="table table-sm table-striped history-table"> <thead><tr><th>Reported</th><th>Symptom</th><th>Onset</th><th>Severity</th><th>Frequency</th><th>Reported By</th><th>Notes</th></tr></thead> <tbody>
-                            {% for sym in patient.symptoms %}<tr> <td>{{ sym.reported_date.strftime('%Y-%m-%d') if sym.reported_date else 'N/A' }}</td> <td>{{ sym.symptom_name }}</td> <td>{{ sym.onset_date.strftime('%Y-%m-%d') if sym.onset_date else 'N/A' }}</td> <td>{{ sym.severity | default('N/A') }}</td> <td>{{ sym.frequency | title if sym.frequency else 'N/A' }}</td> <td>{{ sym.reporter_first_name }} {{ sym.reporter_last_name }}</td> <td>{{ sym.notes | default('') | truncate(50) }}</td> </tr> {% endfor %}
-                            </tbody> </table> </div>
-                        {% else %} <p class="text-muted">No symptom history found.</p> {% endif %}
-                    </div>
+        </div> {# End Diagnoses Accordion Item #}
+
+        {# Symptoms Section (No change needed here for this error) #}
+         <div class="accordion-item">
+            <h2 class="accordion-header" id="headingSymptoms"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSymptoms" aria-expanded="false" aria-controls="collapseSymptoms"> Reported Symptoms History </button></h2>
+            <div id="collapseSymptoms" class="accordion-collapse collapse" aria-labelledby="headingSymptoms" data-bs-parent="#historyAccordion">
+                <div class="accordion-body">
+                     {% if patient.symptoms %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped history-table">
+                                <thead><tr><th>Reported</th><th>Symptom</th><th>Onset</th><th>Severity</th><th>Frequency</th><th>Reported By</th><th>Notes</th></tr></thead>
+                                <tbody>
+                                {% for sym in patient.symptoms %}
+                                    <tr>
+                                        <td>{{ sym.reported_date.strftime('%Y-%m-%d') if sym.reported_date else 'N/A' }}</td>
+                                        <td>{{ sym.symptom_name }}</td>
+                                        <td>{{ sym.onset_date.strftime('%Y-%m-%d') if sym.onset_date else 'N/A' }}</td>
+                                        <td>{{ sym.severity | default('N/A') }}</td>
+                                        <td>{{ sym.frequency | title if sym.frequency else 'N/A' }}</td>
+                                        <td>{{ sym.reporter_last_name | default('N/A') }}, {{ sym.reporter_first_name | default('') }}</td>
+                                        <td>{% if sym.notes %}{{ sym.notes | truncate(50) }}{% else %} {% endif %}</td> {# Applied same fix to notes #}
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %} <p class="text-muted m-3">No symptom history found.</p> {% endif %}
                 </div>
             </div>
-        </div> {# End Accordion #}
-  </div>
+        </div> {# End Symptoms Accordion Item #}
 
-  {# --- Add New Entry Tab --- #}
-  <div class="tab-pane fade" id="add-entry" role="tabpanel" aria-labelledby="add-entry-tab">
-        {# Add Diagnosis Form #}
-        <div class="add-form-section card shadow-sm">
-            <div class="card-header bg-light"> <h4 class="mb-0"><i class="fas fa-stethoscope fa-fw"></i> Add New Diagnosis</h4> </div>
-            <div class="card-body">
-                <form action="{{ url_for('patients.add_diagnosis', patient_id=patient.user_info.user_id) }}" method="POST">
-                    {# Add CSRF token if needed #}
-                    <div class="row mb-3"> <div class="col-md-4 form-group"> <label for="diag-date" class="form-label">Diagnosis Date *</label> <input type="date" id="diag-date" name="diagnosis_date" class="form-control form-control-sm" required value="{{ today_date.isoformat() if today_date else ''}}"> </div> <div class="col-md-8 form-group"> <label for="diag-name" class="form-label">Diagnosis Name *</label> <input type="text" id="diag-name" name="diagnosis_name" class="form-control form-control-sm" required placeholder="e.g., Hypertension Stage 1"> </div> </div>
-                    <div class="row mb-3"> <div class="col-md-4 form-group"> <label for="diag-code" class="form-label">Diagnosis Code (e.g., ICD-10)</label> <input type="text" id="diag-code" name="diagnosis_code" class="form-control form-control-sm" placeholder="Optional"> </div> <div class="col-md-4 form-group"> <label for="diag-type" class="form-label">Diagnosis Type</label> <select id="diag-type" name="diagnosis_type" class="form-select form-select-sm"> {% for type in diagnosis_types %} <option value="{{ type }}" {% if type == 'final' %}selected{% endif %}>{{ type | title }}</option> {% endfor %} </select> </div> <div class="col-md-4 form-group"> <label for="diag-severity" class="form-label">Severity</label> <select id="diag-severity" name="severity" class="form-select form-select-sm"> {% for sev in diagnosis_severities %} <option value="{{ sev }}" {% if sev == 'unknown' %}selected{% endif %}>{{ sev | title }}</option> {% endfor %} </select> </div> </div>
-                    <div class="form-group mb-3"> <label for="diag-desc" class="form-label">Description / Clinical Findings</label> <textarea id="diag-desc" name="description" class="form-control form-control-sm" rows="2" placeholder="Optional"></textarea> </div>
-                    <div class="form-group mb-3"> <label for="diag-treat" class="form-label">Treatment Plan</label> <textarea id="diag-treat" name="treatment_plan" class="form-control form-control-sm" rows="3" placeholder="Optional"></textarea> </div>
-                    <div class="form-group mb-3"> <label for="diag-notes" class="form-label">Internal Notes</label> <textarea id="diag-notes" name="notes" class="form-control form-control-sm" rows="2" placeholder="Optional notes for record"></textarea> </div>
-                    <div class="row mb-3 align-items-center"> <div class="col-auto form-check form-switch"> <input class="form-check-input" type="checkbox" role="switch" id="diag-chronic" name="is_chronic"> <label class="form-check-label" for="diag-chronic">Chronic</label> </div> <div class="col-auto form-check form-switch"> <input class="form-check-input" type="checkbox" role="switch" id="diag-resolved" name="is_resolved"> <label class="form-check-label" for="diag-resolved">Resolved</label> </div> <div class="col form-group mb-0" id="diag-resolved-date-group" style="display: none;"> <label for="diag-resolved-date" class="form-label visually-hidden">Resolved Date</label> <input type="date" id="diag-resolved-date" name="resolved_date" class="form-control form-control-sm" title="Resolved Date"> </div> </div>
-                    <div class="row mb-3 align-items-end"> <div class="col-auto form-check form-switch"> <input class="form-check-input" type="checkbox" role="switch" id="diag-followup" name="follow_up_required"> <label class="form-check-label" for="diag-followup">Follow-up Required</label> </div> <div class="col row gx-2" id="diag-followup-details" style="display: none;"> <div class="col-md-6 form-group mb-0"> <label for="diag-followup-date" class="form-label visually-hidden">Follow-up Date</label> <input type="date" id="diag-followup-date" name="follow_up_date" class="form-control form-control-sm" title="Follow-up Date"> </div> <div class="col-md-6 form-group mb-0"> <label for="diag-followup-type" class="form-label visually-hidden">Follow-up Type</label> <input type="text" id="diag-followup-type" name="follow_up_type" class="form-control form-control-sm" placeholder="Follow-up Type (e.g., Check-up)"> </div> </div> </div>
-                    <div class="text-end"> <button type="submit" class="button button-primary"><i class="fas fa-save"></i> Add Diagnosis</button> </div>
-                </form>
-            </div> {# end card-body #}
-        </div> {# end card #}
+    </div> {# End Accordion #}
+</div> {# End History Tab #}
 
-        <hr class="my-4">
+{# ... rest of patient_profile.html ... #}
 
-        {# Add Symptom Form #}
-        <div class="add-form-section card shadow-sm">
-             <div class="card-header bg-light"> <h4 class="mb-0"><i class="fas fa-head-side-cough fa-fw"></i> Record New Symptom</h4> </div>
-             <div class="card-body">
-                <form action="{{ url_for('patients.add_symptom', patient_id=patient.user_info.user_id) }}" method="POST">
-                    {# Add CSRF token if needed #}
-                    <div class="row mb-3"> <div class="col-md-6 form-group"> <label for="symp-id" class="form-label">Symptom *</label> <input type="text" list="symptomsDataList" id="symp-id-input" name="symptom_name_or_id" class="form-control form-control-sm" required placeholder="Type or select symptom"> <datalist id="symptomsDataList"> {% for sym_catalog in symptoms_catalog %} <option value="{{ sym_catalog.symptom_id }}">{{ sym_catalog.symptom_name }}</option> {% else %} <option value="" disabled>(No symptoms in catalog)</option> {% endfor %} </datalist> <input type="hidden" name="symptom_id" id="symp-id"> {# Hidden field for ID #} </div> <div class="col-md-3 form-group"> <label for="symp-report-date" class="form-label">Reported Date *</label> <input type="date" id="symp-report-date" name="reported_date" class="form-control form-control-sm" required value="{{ today_date.isoformat() if today_date else ''}}"> </div> <div class="col-md-3 form-group"> <label for="symp-onset-date" class="form-label">Onset Date</label> <input type="date" id="symp-onset-date" name="onset_date" class="form-control form-control-sm"> </div> </div>
-                    <div class="row mb-3"> <div class="col-md-4 form-group"> <label for="symp-severity" class="form-label">Severity</label> <input type="text" id="symp-severity" name="severity" class="form-control form-control-sm" placeholder="e.g., Mild, 5/10"> </div> <div class="col-md-4 form-group"> <label for="symp-duration" class="form-label">Duration</label> <input type="text" id="symp-duration" name="duration" class="form-control form-control-sm" placeholder="e.g., 3 days, Constant"> </div> <div class="col-md-4 form-group"> <label for="symp-frequency" class="form-label">Frequency</label> <select id="symp-frequency" name="frequency" class="form-select form-select-sm"> <option value="" selected>-- Optional --</option> {% for freq in symptom_frequencies %} <option value="{{ freq }}">{{ freq | title }}</option> {% endfor %} </select> </div> </div>
-                    <div class="form-group mb-3"> <label for="symp-notes" class="form-label">Notes / Description</label> <textarea id="symp-notes" name="notes" class="form-control form-control-sm" rows="3" placeholder="e.g., Worse in morning, relieved by rest..."></textarea> </div>
-                    <div class="text-end"> <button type="submit" class="button button-primary"><i class="fas fa-save"></i> Record Symptom</button> </div>
-                </form>
-             </div> {# end card-body #}
-         </div> {# end card #}
-  </div> {# End add-entry tab-pane #}
-</div> {# End tab-content #}
+      {# --- Add New Entry Tab --- #}
+      <div class="tab-pane fade" id="add-entry" role="tabpanel" aria-labelledby="add-entry-tab" style="padding: 1.5rem; background-color: #fff; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 0.375rem 0.375rem;">
+            {# Add Diagnosis Form #}
+            <div class="add-form-section card shadow-sm mb-4">
+                <div class="card-header bg-light"> <h4 class="mb-0 h5"><i class="fas fa-stethoscope fa-fw me-2"></i> Add New Diagnosis</h4> </div>
+                <div class="card-body">
+                    <form action="{{ url_for('patients.add_diagnosis', patient_id=patient.user_info.user_id) }}" method="POST">
+                        {# No CSRF token unless using Flask-WTF #}
+                        <div class="row mb-3">
+                             <div class="col-md-4 form-group">
+                                 <label for="diag-date" class="form-label">Diagnosis Date <span class="text-danger">*</span></label>
+                                 <input type="date" id="diag-date" name="diagnosis_date" class="form-control form-control-sm" required value="{{ today_date.isoformat() if today_date else ''}}">
+                             </div>
+                             <div class="col-md-8 form-group">
+                                 <label for="diag-name" class="form-label">Diagnosis Name <span class="text-danger">*</span></label>
+                                 <input type="text" id="diag-name" name="diagnosis_name" class="form-control form-control-sm" required placeholder="e.g., Hypertension Stage 1">
+                             </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4 form-group">
+                                <label for="diag-code" class="form-label">Diagnosis Code (e.g., ICD-10)</label>
+                                <input type="text" id="diag-code" name="diagnosis_code" class="form-control form-control-sm" placeholder="Optional">
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label for="diag-type" class="form-label">Diagnosis Type</label>
+                                <select id="diag-type" name="diagnosis_type" class="form-select form-select-sm">
+                                    {% for type_val in diagnosis_types %} {# *** USE DYNAMIC LIST *** #}
+                                        <option value="{{ type_val }}" {% if type_val == 'final' %}selected{% endif %}>{{ type_val | title }}</option>
+                                    {% else %}
+                                        <option value="final" selected>Final</option> {# Fallback if list empty #}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                             <div class="col-md-4 form-group">
+                                 <label for="diag-severity" class="form-label">Severity</label>
+                                 <select id="diag-severity" name="severity" class="form-select form-select-sm">
+                                    {% for sev_val in diagnosis_severities %} {# *** USE DYNAMIC LIST *** #}
+                                        <option value="{{ sev_val }}" {% if sev_val == 'unknown' %}selected{% endif %}>{{ sev_val | title }}</option>
+                                     {% else %}
+                                         <option value="unknown" selected>Unknown</option> {# Fallback #}
+                                    {% endfor %}
+                                 </select>
+                             </div>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="diag-desc" class="form-label">Description / Clinical Findings</label>
+                            <textarea id="diag-desc" name="description" class="form-control form-control-sm" rows="2" placeholder="Optional clinical details"></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="diag-treat" class="form-label">Treatment Plan</label>
+                            <textarea id="diag-treat" name="treatment_plan" class="form-control form-control-sm" rows="3" placeholder="Medications, lifestyle changes, referrals..."></textarea>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="diag-notes" class="form-label">Internal Notes</label>
+                            <textarea id="diag-notes" name="notes" class="form-control form-control-sm" rows="2" placeholder="Optional notes for provider record"></textarea>
+                        </div>
+                        <div class="row mb-3 align-items-center">
+                             <div class="col-auto form-check form-switch">
+                                 <input class="form-check-input" type="checkbox" role="switch" id="diag-chronic" name="is_chronic">
+                                 <label class="form-check-label" for="diag-chronic">Is Chronic</label>
+                             </div>
+                             <div class="col-auto form-check form-switch">
+                                 <input class="form-check-input" type="checkbox" role="switch" id="diag-resolved" name="is_resolved">
+                                 <label class="form-check-label" for="diag-resolved">Is Resolved</label>
+                             </div>
+                             <div class="col form-group mb-0" id="diag-resolved-date-group" style="display: none;">
+                                 <label for="diag-resolved-date" class="form-label visually-hidden">Resolved Date</label>
+                                 <input type="date" id="diag-resolved-date" name="resolved_date" class="form-control form-control-sm" title="Resolved Date">
+                             </div>
+                        </div>
+                        <div class="row mb-3 align-items-end">
+                            <div class="col-auto form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="diag-followup" name="follow_up_required">
+                                <label class="form-check-label" for="diag-followup">Follow-up Required</label>
+                            </div>
+                             <div class="col row gx-2" id="diag-followup-details" style="display: none;">
+                                <div class="col-md-6 form-group mb-0">
+                                    <label for="diag-followup-date" class="form-label visually-hidden">Follow-up Date</label>
+                                    <input type="date" id="diag-followup-date" name="follow_up_date" class="form-control form-control-sm" title="Follow-up Date">
+                                </div>
+                                 <div class="col-md-6 form-group mb-0">
+                                    <label for="diag-followup-type" class="form-label visually-hidden">Follow-up Type</label>
+                                    <input type="text" id="diag-followup-type" name="follow_up_type" class="form-control form-control-sm" placeholder="Follow-up Type (e.g., 3-month Check)">
+                                 </div>
+                             </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i> Add Diagnosis</button>
+                        </div>
+                    </form>
+                </div>
+            </div>{# End Diagnosis Card #}
 
+            <hr class="my-4">
+
+            {# Add Symptom Form #}
+            <div class="add-form-section card shadow-sm">
+                 <div class="card-header bg-light"> <h4 class="mb-0 h5"><i class="fas fa-head-side-cough fa-fw me-2"></i> Record New Symptom</h4> </div>
+                 <div class="card-body">
+                    <form action="{{ url_for('patients.add_symptom', patient_id=patient.user_info.user_id) }}" method="POST">
+                        {# No CSRF token unless using Flask-WTF #}
+                        <div class="row mb-3">
+                             <div class="col-md-6 form-group">
+                                 <label for="symp-id-input" class="form-label">Symptom <span class="text-danger">*</span></label>
+                                 <input type="text" list="symptomsDataList" id="symp-id-input" name="symptom_name_or_id" class="form-control form-control-sm" required placeholder="Type or select symptom">
+                                 <datalist id="symptomsDataList">
+                                     {% for sym_catalog_item in symptoms_catalog %} {# *** USE DYNAMIC LIST *** #}
+                                         <option value="{{ sym_catalog_item.id }}">{{ sym_catalog_item.name }}</option>
+                                     {% else %}
+                                         <option value="" disabled>(No symptoms in catalog)</option>
+                                     {% endfor %}
+                                 </datalist>
+                                 <input type="hidden" name="symptom_id" id="symp-id"> {# Hidden field for actual ID #}
+                             </div>
+                             <div class="col-md-3 form-group">
+                                 <label for="symp-report-date" class="form-label">Reported Date <span class="text-danger">*</span></label>
+                                 <input type="date" id="symp-report-date" name="reported_date" class="form-control form-control-sm" required value="{{ today_date.isoformat() if today_date else ''}}">
+                             </div>
+                             <div class="col-md-3 form-group">
+                                 <label for="symp-onset-date" class="form-label">Onset Date</label>
+                                 <input type="date" id="symp-onset-date" name="onset_date" class="form-control form-control-sm">
+                             </div>
+                        </div>
+                        <div class="row mb-3">
+                             <div class="col-md-4 form-group">
+                                 <label for="symp-severity" class="form-label">Severity</label>
+                                 <input type="text" id="symp-severity" name="severity" class="form-control form-control-sm" placeholder="e.g., Mild, 5/10">
+                             </div>
+                             <div class="col-md-4 form-group">
+                                 <label for="symp-duration" class="form-label">Duration</label>
+                                 <input type="text" id="symp-duration" name="duration" class="form-control form-control-sm" placeholder="e.g., 3 days, Constant">
+                             </div>
+                             <div class="col-md-4 form-group">
+                                 <label for="symp-frequency" class="form-label">Frequency</label>
+                                 <select id="symp-frequency" name="frequency" class="form-select form-select-sm">
+                                     <option value="" selected>-- Optional --</option>
+                                     {% for freq_val in symptom_frequencies %} {# *** USE DYNAMIC LIST *** #}
+                                         <option value="{{ freq_val }}">{{ freq_val | title }}</option>
+                                     {% else %}
+                                          <option value="constant">Constant</option> {# Fallback #}
+                                          <option value="intermittent">Intermittent</option>
+                                     {% endfor %}
+                                 </select>
+                             </div>
+                        </div>
+                        <div class="form-group mb-3">
+                             <label for="symp-notes" class="form-label">Notes / Description</label>
+                             <textarea id="symp-notes" name="notes" class="form-control form-control-sm" rows="3" placeholder="e.g., Worse in morning, relieved by rest..."></textarea>
+                        </div>
+                        <div class="text-end">
+                             <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save me-1"></i> Record Symptom</button>
+                        </div>
+                    </form>
+                 </div> {# end card-body #}
+             </div> {# end card #}
+      </div> {# End add-entry tab-pane #}
+    </div> {# End tab-content #}
+
+</div>{# End Container #}
 {% endblock %}
 
 {% block scripts %}
-    {# Bootstrap JS Bundle (Place BEFORE your custom script) #}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    {{ super() if super }} {# Include base scripts #}
+    {# Bootstrap JS Bundle MUST be included in base.html or here for tabs/modals/accordion #}
+    {# <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script> #}
 
-    {# Custom script for this page #}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Toggle visibility of conditional form fields
+            // --- Toggle conditional form fields ---
             const followupCheckbox = document.getElementById('diag-followup');
             const followupDetails = document.getElementById('diag-followup-details');
             const followupDateInput = document.getElementById('diag-followup-date');
             if (followupCheckbox && followupDetails && followupDateInput) {
+                const followupTypeInput = followupDetails.querySelector('#diag-followup-type');
                 function toggleFollowup() {
                     const isChecked = followupCheckbox.checked;
-                    followupDetails.style.display = isChecked ? 'flex' : 'none'; // Use flex for row layout
+                    followupDetails.style.display = isChecked ? 'flex' : 'none'; // Use flex for row alignment
                     followupDateInput.required = isChecked;
-                    if (!isChecked) followupDateInput.value = ''; // Clear date if unchecked
-                    const followupTypeInput = followupDetails.querySelector('#diag-followup-type');
-                    if(followupTypeInput) followupTypeInput.required = isChecked; // Make type required too? Optional.
+                    if (followupTypeInput) followupTypeInput.required = isChecked; // Make type required too?
+                    if (!isChecked) { // Clear values if unchecked
+                         followupDateInput.value = '';
+                         if (followupTypeInput) followupTypeInput.value = '';
+                    }
                 }
                 followupCheckbox.addEventListener('change', toggleFollowup);
-                toggleFollowup(); // Initial state
+                toggleFollowup(); // Set initial state
             }
 
             const resolvedCheckbox = document.getElementById('diag-resolved');
@@ -229,59 +507,93 @@
                     const isChecked = resolvedCheckbox.checked;
                      resolvedDateGroup.style.display = isChecked ? 'block' : 'none';
                      resolvedDateInput.required = isChecked;
-                     if (!isChecked) resolvedDateInput.value = ''; // Clear date if unchecked
+                     if (!isChecked) resolvedDateInput.value = ''; // Clear date
                 }
                 resolvedCheckbox.addEventListener('change', toggleResolved);
-                toggleResolved(); // Initial state
+                toggleResolved(); // Set initial state
             }
 
-            // Persist active tab using localStorage
-            const triggerTabList = [].slice.call(document.querySelectorAll('#patientTab button[data-bs-toggle="tab"]'));
-            triggerTabList.forEach(function (triggerEl) {
-                const tabTrigger = new bootstrap.Tab(triggerEl);
-                triggerEl.addEventListener('shown.bs.tab', function (event) { // Use shown.bs.tab event
-                    localStorage.setItem('activePatientTab', event.target.getAttribute('data-bs-target'));
-                    // Optionally update URL hash without page jump
-                    // history.replaceState(null, null, event.target.getAttribute('data-bs-target'));
-                });
+            // --- Persist active tab using localStorage ---
+            const triggerTabList = document.querySelectorAll('#patientTab button[data-bs-toggle="tab"]');
+            triggerTabList.forEach(triggerEl => {
+                // Ensure bootstrap is loaded before creating Tab instance
+                if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                    const tabTrigger = new bootstrap.Tab(triggerEl);
+                    triggerEl.addEventListener('shown.bs.tab', event => {
+                        localStorage.setItem('activePatientTab', event.target.getAttribute('data-bs-target'));
+                         // Update hash without page jump for direct linking/bookmarking
+                         // Use replaceState to avoid adding to browser history
+                        if(history.replaceState) {
+                            history.replaceState(null, null, event.target.getAttribute('data-bs-target'));
+                        }
+                    });
+                } else {
+                    console.warn("Bootstrap Tab component not found. Tab persistence might not work.");
+                }
             });
 
-            const activeTabTarget = localStorage.getItem('activePatientTab');
-            const hashTarget = window.location.hash; // Check hash first for direct linking
-            const targetSelector = (hashTarget && document.querySelector(`#patientTab button[data-bs-target="${hashTarget}"]`)) ? hashTarget : activeTabTarget;
+            // --- Activate stored tab or hash target ---
+            let activeTabTarget = localStorage.getItem('activePatientTab');
+            const hashTarget = window.location.hash;
+            let targetSelector = null;
 
-            if (targetSelector) {
-                const activeTabElement = document.querySelector(`#patientTab button[data-bs-target="${targetSelector}"]`);
-                if (activeTabElement) {
-                    const tab = new bootstrap.Tab(activeTabElement);
-                    tab.show();
-                }
+            // Prioritize hash in URL for direct links
+            if (hashTarget && document.querySelector(`#patientTab button[data-bs-target="${hashTarget}"]`)) {
+                 targetSelector = hashTarget;
+                 // Clear localStorage if hash is used, so it doesn't override on next visit without hash
+                 localStorage.removeItem('activePatientTab');
+            } else if (activeTabTarget && document.querySelector(`#patientTab button[data-bs-target="${activeTabTarget}"]`)) {
+                targetSelector = activeTabTarget; // Use localStorage if no valid hash
+            } else {
+                 targetSelector = '#details'; // Default to details tab
             }
 
-             // Simple Datalist ID setting (for symptom selection example)
+            const activeTabElement = document.querySelector(`#patientTab button[data-bs-target="${targetSelector}"]`);
+            if (activeTabElement && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                const tab = new bootstrap.Tab(activeTabElement);
+                tab.show();
+            }
+
+             // --- Datalist ID setting for symptoms ---
              const sympInput = document.getElementById('symp-id-input');
              const sympIdHidden = document.getElementById('symp-id');
              const sympDatalist = document.getElementById('symptomsDataList');
              if (sympInput && sympIdHidden && sympDatalist) {
                  sympInput.addEventListener('input', function (e) {
-                     const value = e.target.value;
-                     sympIdHidden.value = ''; // Clear hidden ID field
-                     for (let option of sympDatalist.options) {
-                         // Check if input matches either the option value (ID) or text content (Name)
-                         if (option.value === value || option.textContent === value) {
+                     const inputValue = e.target.value.trim(); // Get trimmed input value
+                     sympIdHidden.value = ''; // Clear hidden ID field initially
+                     // Find matching option based on either value (ID) or text content (Name)
+                     for (const option of sympDatalist.options) {
+                         if (option.value === inputValue || option.textContent.trim().toLowerCase() === inputValue.toLowerCase()) {
                              sympIdHidden.value = option.value; // Set hidden field to the ID
+                             // Optional: Update the input field to the official name if match was by ID?
+                             // if (option.value === inputValue && option.textContent.trim() !== inputValue) {
+                             //     sympInput.value = option.textContent.trim();
+                             // }
                              break;
                          }
                      }
                  });
-                 // Clear hidden field if input is manually cleared
+                 // Clear hidden field if input is manually cleared or doesn't match
                  sympInput.addEventListener('change', function(e){
-                    if(e.target.value === '') {
+                    if(e.target.value.trim() === '') {
                         sympIdHidden.value = '';
+                    } else {
+                         // Re-check on change in case user tabbed away without exact match
+                        let foundMatch = false;
+                         for (const option of sympDatalist.options) {
+                            if (option.value === e.target.value.trim() || option.textContent.trim().toLowerCase() === e.target.value.trim().toLowerCase()) {
+                                sympIdHidden.value = option.value;
+                                foundMatch = true;
+                                break;
+                            }
+                        }
+                        if (!foundMatch) {
+                             sympIdHidden.value = ''; // Clear if final value doesn't match anything
+                        }
                     }
-                 })
+                 });
              }
-
         });
     </script>
 {% endblock %}

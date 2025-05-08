@@ -43,6 +43,7 @@ from routes.Doctor_Portal.diet_plan_management import diet_plans_bp
 from routes.Doctor_Portal.appointment_management import appointments_bp
 from routes.Doctor_Portal.messaging import messaging_bp
 from routes.Doctor_Portal.location_management import locations_bp
+from routes.Doctor_Portal.symptom_management import symptom_management_bp
 
 # --- Create Flask App ---
 app = Flask(__name__)
@@ -90,6 +91,7 @@ app.register_blueprint(messaging_bp)
 app.register_blueprint(locations_bp)
 app.register_blueprint(structure_bp)
 app.register_blueprint(disease_info_bp)
+app.register_blueprint(symptom_management_bp)
 # Patient Portal
 app.register_blueprint(patient_profile_bp)
 app.register_blueprint(patient_medical_info_bp)

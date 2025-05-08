@@ -1,78 +1,228 @@
-{% extends "Doctor_Portal/base.html" %}
-{% block title %}Create Appointment{% endblock %}
+{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS #}
+
+{% set is_reschedule = appointment is defined and appointment %} {# Check if it's reschedule mode #}
+{% set form_title = "Reschedule Appointment #" ~ appointment.appointment_id if is_reschedule else "Create New Appointment" %}
+{% set submit_button_text = "Save Changes" if is_reschedule else "Create Appointment" %}
+{% set form_action = url_for('appointments.reschedule_appointment', appointment_id=appointment.appointment_id) if is_reschedule else url_for('appointments.create_appointment') %}
+
+{% block title %}{{ form_title }} - Doctor Portal{% endblock %}
+
+{% block head_extra %}
+{{ super() if super }} {# Include base head extras #}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<style>
+    /* Styles remain the same as previously provided - aligned with Bootstrap */
+    body { background-color: #f8f9fa; }
+    .container-portal { background-color: #ffffff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07); margin-top: 20px; max-width: 750px; margin-left: auto; margin-right: auto; }
+    .form-label { font-weight: 500; color: #5a5c69; font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .form-control, .form-select { border-radius: 0.3rem; font-size: 0.9rem; }
+    .form-control:disabled, .form-control[readonly] { background-color: #e9ecef; opacity: 0.7; }
+    .btn-primary-medical { background-color: #0d6efd; border-color: #0d6efd; font-weight: 500;}
+    .btn-primary-medical:hover { background-color: #0b5ed7; border-color: #0a58ca; }
+    .btn-outline-secondary-medical { color: #6c757d; border-color: #6c757d; font-weight: 500;}
+    .btn-outline-secondary-medical:hover { color: #fff; background-color: #6c757d; border-color: #6c757d; }
+    .select2-container--bootstrap-5 .select2-selection { font-size: 0.9rem; min-height: calc(1.5em + .75rem + 2px); padding-top: 0.275rem; }
+    .select2-container--bootstrap-5 .select2-dropdown { border-color: #ced4da; font-size: 0.9rem; }
+    .reschedule-info-box { background-color: #eef2f7; border: 1px solid #d6dbdf; border-radius: 0.3rem; font-size: 0.85rem; padding: 1rem; }
+    .reschedule-info-box strong { color: #495057; }
+    .text-danger { font-size: 0.8rem; color: var(--bs-danger); } /* Use Bootstrap variable */
+    .alert-danger ul { margin-bottom: 0; padding-left: 1.2rem; }
+    .form-text { font-size: 0.75rem; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Create New Appointment</h1>
-    <a href="{{ url_for('.list_appointments') }}" class="button button-outline button-secondary">
-        <i class="fas fa-arrow-left fa-fw"></i> Back to List
-    </a>
-</div>
-
-{# Display form errors #}
-{% if errors %}
-<div class="alert alert-danger"> {# Use base.css alert class #}
-    <strong>Please correct the errors:</strong>
-    <ul>
-        {% for error in errors %}<li>{{ error }}</li>{% endfor %}
-    </ul>
-</div>
-{% endif %}
-
-<div class="card">
-    <div class="card-body">
-        <form action="{{ url_for('.create_appointment') }}" method="post">
-             {# Use basic grid or simple divs #}
-             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-md);">
-                <div>
-                    <label for="patient_id" class="form-label">Patient</label>
-                    <select class="form-select" id="patient_id" name="patient_id" required>
-                        <option value="">Select Patient...</option>
-                        {% for patient in patients %}<option value="{{ patient.user_id }}" {% if form_data and form_data.patient_id|int == patient.user_id %}selected{% endif %}>{{ patient.name }}</option>{% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label">Provider</label>
-                    <input type="text" class="form-control" value="{{ doctors[0].name }}" disabled>
-                    <input type="hidden" name="doctor_id" value="{{ doctors[0].user_id }}">
-                </div>
-                <div>
-                    <label for="appointment_date" class="form-label">Date</label>
-                    <input type="date" class="form-control" id="appointment_date" name="appointment_date" value="{{ form_data.appointment_date if form_data else '' }}" required min="{{ today_iso }}"> {# Use Jinja's now() #}
-                </div>
-                <div>
-                    <label for="start_time" class="form-label">Start Time</label>
-                    <input type="time" class="form-control" id="start_time" name="start_time" value="{{ form_data.start_time if form_data else '' }}" required step="900"> {# 15min increments #}
-                </div>
-                <div>
-                    <label for="appointment_type" class="form-label">Appointment Type</label>
-                    <select class="form-select" id="appointment_type" name="appointment_type" required>
-                        <option value="">Select Type...</option>
-                        {% for type in appointment_types %}<option value="{{ type }}" {% if form_data and form_data.appointment_type == type %}selected{% endif %}>{{ type|capitalize }}</option>{% endfor %}
-                    </select>
-                </div>
-                 <div>
-                     <label for="location_id" class="form-label">Location</label>
-                     <select class="form-select" id="location_id" name="location_id" required {% if not locations %}disabled{% endif %}>
-                         <option value="">Select Location...</option>
-                         {% for loc in locations %}<option value="{{ loc.location_id }}" {% if form_data and form_data.location_id|int == loc.location_id %}selected{% endif %}>{{ loc.name }}</option>{% endfor %}
-                     </select>
-                     {% if not locations %}<small class="text-danger d-block mt-1">No locations available.</small>{% endif %}
-                </div>
-                 {# Span full width for text inputs #}
-                 <div style="grid-column: 1 / -1;">
-                    <label for="reason" class="form-label">Reason for Visit (Optional)</label>
-                    <input type="text" class="form-control" id="reason" name="reason" value="{{ form_data.reason if form_data else '' }}">
-                </div>
-                 <div style="grid-column: 1 / -1;">
-                    <label for="notes" class="form-label">Provider Notes (Optional)</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ form_data.notes if form_data else '' }}</textarea>
-                </div>
-             </div>
-            <button type="submit" class="button button-success mt-4" {% if not locations %}disabled{% endif %}>
-                 <i class="fas fa-check fa-fw"></i> Create Appointment
-             </button>
-        </form>
+<div class="container-fluid container-portal">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 1px solid #e3e6f0;">
+        <h1 class="h3 mb-0 text-dark">{{ form_title }}</h1>
+        <a href="{{ url_for('appointments.list_appointments') }}" class="btn btn-sm btn-outline-secondary-medical">
+            <i class="fas fa-arrow-left fa-sm me-1"></i> Back to List
+        </a>
     </div>
+
+    {% include '_flash_messages.html' %}
+    {% if errors %}
+        <div class="alert alert-danger py-2" role="alert" style="font-size: 0.85rem;">
+            <strong class="d-block mb-1">Please correct the following errors:</strong>
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ form_action }}" id="appointmentForm">
+        {# No CSRF token here unless using Flask-WTF CSRF on this form #}
+
+        {% if is_reschedule %}
+        <div class="mb-3 reschedule-info-box">
+            <h6 class="mb-2">Rescheduling for: <strong>{{ appointment.p_fname }} {{ appointment.p_lname }}</strong></h6>
+            <p class="mb-1">Original Date: <strong>{{ appointment.appointment_date.strftime('%Y-%m-%d') }} at {{ appointment.start_time_str if appointment.start_time_str != 'N/A' else appointment.start_time.strftime('%H:%M') }}</strong></p>
+            <p class="mb-1">Original Type: <strong>{{ appointment.type_name }} ({{ appointment.default_duration_minutes }} min)</strong></p>
+            <p class="mb-0">Original Location: <strong>{{ appointment.location_name or 'N/A' }}</strong></p>
+            <input type="hidden" name="original_appointment_type_id" id="original_appointment_type_id" value="{{ appointment.appointment_type_id }}">
+            <input type="hidden" name="original_duration" id="original_duration" value="{{ appointment.default_duration_minutes }}">
+        </div>
+        {% else %} {# Create Form Fields #}
+        <div class="mb-3">
+            <label for="patient_id" class="form-label">Patient <span class="text-danger">*</span></label>
+            <select class="form-select" id="patient_id" name="patient_id" required>
+                <option value="" disabled {% if not form_data.get('patient_id') %}selected{% endif %}>Search and select a patient...</option>
+                {% for patient_user in patients %}
+                {# *** CORRECTED ACCESS TO form_data *** #}
+                <option value="{{ patient_user.id }}" {% if form_data.get('patient_id') | default(0) | int == patient_user.id %}selected{% endif %}>
+                    {{ patient_user.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="appointment_type_id" class="form-label">Appointment Type <span class="text-danger">*</span></label>
+            <select class="form-select" id="appointment_type_id" name="appointment_type_id" required>
+                <option value="" disabled {% if not form_data.get('appointment_type_id') %}selected{% endif %}>Select type...</option>
+                {% for type in appointment_types %}
+                 {# *** CORRECTED ACCESS TO form_data *** #}
+                <option value="{{ type.id }}" data-duration="{{ type.default_duration_minutes }}"
+                        {% if form_data.get('appointment_type_id') | default(0) | int == type.id %}selected{% endif %}>
+                    {{ type.name }} ({{ type.default_duration_minutes }} min)
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %} {# End Create Form Fields #}
+
+        {# Fields common to Create and Reschedule #}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="appointment_date" class="form-label">New Date <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="appointment_date" name="appointment_date"
+                       value="{{ form_data.get('appointment_date', (appointment.appointment_date_str if is_reschedule else today_iso)) }}" required
+                       min="{{ today_iso }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="start_time" class="form-label">New Start Time <span class="text-danger">*</span></label>
+                <input type="time" class="form-control" id="start_time" name="start_time"
+                       value="{{ form_data.get('start_time', (appointment.start_time_str if is_reschedule else '')) }}" required step="900"> {# 15 min steps #}
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="end_time_display" class="form-label">Estimated End Time</label>
+            <input type="text" class="form-control" id="end_time_display" readonly placeholder="Calculated automatically">
+            <small class="form-text text-muted">Based on appointment type and start time.</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="doctor_location_id" class="form-label">Practice Location <span class="text-danger">*</span></label>
+            <select class="form-select" id="doctor_location_id" name="doctor_location_id" required {% if not locations %}disabled{% endif %}>
+                 {# *** CORRECTED ACCESS TO form_data *** #}
+                <option value="" disabled {% if not (form_data.get('doctor_location_id') or (is_reschedule and appointment.doctor_location_id)) %}selected{% endif %}>Select location...</option>
+                {% set current_location_id = form_data.get('doctor_location_id') | default(0) | int if form_data.get('doctor_location_id') else (appointment.doctor_location_id if is_reschedule else 0) %}
+                {% for loc in locations %}
+                <option value="{{ loc.doctor_location_id }}"
+                        {% if current_location_id == loc.doctor_location_id %}selected{% endif %}>
+                    {{ loc.location_name }}
+                </option>
+                {% endfor %}
+            </select>
+             {% if not locations %}
+                <div class="alert alert-warning mt-2 p-2" role="alert" style="font-size:0.8rem;">
+                    No practice locations found. Please <a href="{{ url_for('availability.manage_locations') }}">add a location</a> in settings first.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="reason" class="form-label">Reason for Visit</label>
+             {# *** CORRECTED ACCESS TO form_data *** #}
+            <textarea class="form-control" id="reason" name="reason" rows="2">{{ form_data.get('reason', (appointment.reason if is_reschedule else '')) }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="notes" class="form-label">Internal Notes</label>
+             {# *** CORRECTED ACCESS TO form_data *** #}
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ form_data.get('notes', (appointment.notes if is_reschedule else '')) }}</textarea>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4 pt-3" style="border-top: 1px solid #e3e6f0;">
+            <a href="{{ url_for('appointments.list_appointments') }}" class="btn btn-outline-secondary-medical me-2">Cancel</a>
+            <button type="submit" class="btn btn-primary-medical">{{ submit_button_text }}</button>
+        </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() if super }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+function calculateEndTime() {
+    const dateStr = $('#appointment_date').val();
+    const startTimeStr = $('#start_time').val();
+    let durationMinutes;
+
+    {% if is_reschedule %}
+        durationMinutes = parseInt($('#original_duration').val());
+    {% else %}
+        const selectedTypeOption = $('#appointment_type_id').find('option:selected');
+        durationMinutes = parseInt(selectedTypeOption.data('duration'));
+    {% endif %}
+
+    if (dateStr && startTimeStr && !isNaN(durationMinutes) && durationMinutes > 0) {
+        const timeParts = startTimeStr.split(':');
+        if (timeParts.length < 2) {
+            $('#end_time_display').val('Invalid start time');
+            return;
+        }
+        try {
+            let startDate = new Date(dateStr + 'T' + startTimeStr);
+            if (isNaN(startDate.getTime())) {
+                 console.warn("Direct ISO date parsing failed, using fallback.");
+                 startDate = new Date();
+                 startDate.setFullYear(parseInt(dateStr.substring(0,4)), parseInt(dateStr.substring(5,7)) - 1, parseInt(dateStr.substring(8,10)));
+                 startDate.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), timeParts[2] ? parseInt(timeParts[2]) : 0, 0);
+            }
+            if (isNaN(startDate.getTime())) {
+                 $('#end_time_display').val('Invalid date/time');
+                return;
+            }
+            const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+            const hours = endDate.getHours().toString().padStart(2, '0');
+            const minutes = endDate.getMinutes().toString().padStart(2, '0');
+            $('#end_time_display').val(hours + ':' + minutes);
+        } catch (e) {
+            console.error("Error calculating end time:", e);
+             $('#end_time_display').val('Calculation error');
+        }
+    } else {
+        $('#end_time_display').val('');
+    }
+}
+
+$(document).ready(function() {
+    if ($('#patient_id').length) {
+        $('#patient_id').select2({
+            theme: "bootstrap-5", placeholder: "Search and select a patient...", width: '100%', dropdownParent: $('#appointmentForm')
+        });
+    }
+    if ($('#appointment_type_id').length) {
+        $('#appointment_type_id').select2({
+            theme: "bootstrap-5", minimumResultsForSearch: Infinity, width: '100%', dropdownParent: $('#appointmentForm')
+        });
+    }
+     $('#doctor_location_id').select2({
+        theme: "bootstrap-5", minimumResultsForSearch: Infinity, width: '100%', dropdownParent: $('#appointmentForm')
+    });
+
+    $('#appointment_date, #start_time').on('change input', calculateEndTime);
+    {% if not is_reschedule %}
+    $('#appointment_type_id').on('change', calculateEndTime);
+    {% endif %}
+    calculateEndTime();
+});
+</script>
 {% endblock %}
