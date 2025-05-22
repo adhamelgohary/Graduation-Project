@@ -885,6 +885,14 @@ def reschedule_appointment(appointment_id):
     # No finally needed here as conn_fetch/cursor_fetch are closed within the try
 
 
+# routes/Doctor_Portal/appointment_management.py
+
+# ... (other imports and functions) ...
+
+# routes/Doctor_Portal/appointment_management.py
+
+# ... (other imports and functions) ...
+
 @appointments_bp.route('/<int:appointment_id>/update_status', methods=['POST'])
 @login_required
 def update_appointment_status(appointment_id):
@@ -899,45 +907,81 @@ def update_appointment_status(appointment_id):
     if not new_status or new_status not in available_statuses:
         return jsonify(success=False, message="Invalid status provided."), 400
 
-    conn = None; cursor = None
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
+        if not conn:
+            logger.error(f"DB Connection failed for update_appointment_status (Appt ID: {appointment_id})")
+            return jsonify(success=False, message="Database connection error."), 500
+
+        # Fetch current status
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT status FROM appointments WHERE appointment_id = %s AND doctor_id = %s", (appointment_id, provider_user_id))
+        cursor.execute("SELECT status FROM appointments WHERE appointment_id = %s AND doctor_id = %s",
+                       (appointment_id, provider_user_id))
         appt = cursor.fetchone()
+        cursor.close() # Close this cursor
+
         if not appt:
             return jsonify(success=False, message="Appointment not found or access denied."), 404
 
+        # ... (your status validation logic) ...
         if appt['status'] in TERMINAL_APPT_STATUSES and appt['status'] != new_status:
-             # More specific: allow changing *between* terminal states if needed,
-             # but not from terminal to non-terminal without special override logic.
-             # For now, simplified: if terminal, only allow change to another terminal.
             if new_status not in TERMINAL_APPT_STATUSES:
                 return jsonify(success=False, message=f"Appointment status is '{appt['status']}' and cannot be changed to a non-terminal state like '{new_status}'."), 400
-
         if appt['status'] == new_status:
-            return jsonify(success=True, message="Status is already set to the desired value."), 200
+            return jsonify(success=True, message="Status is already set to the desired value.", new_status=new_status), 200
 
-        if cursor.is_connected(): cursor.close() # Close dict cursor
-        cursor = conn.cursor() # Use standard cursor for update
-        conn.start_transaction()
-        cursor.execute("UPDATE appointments SET status=%s, updated_by=%s, updated_at=NOW() WHERE appointment_id=%s",
-                       (new_status, provider_user_id, appointment_id))
-        conn.commit()
+
+        # Perform the update - if autocommit is False, this will start a transaction
+        cursor = conn.cursor() # Get a new cursor for the DML operation
+        
+        # REMOVED: conn.start_transaction() - The UPDATE will start one if autocommit is false.
+        
+        cursor.execute("UPDATE appointments SET status=%s, updated_by=%s, updated_at=NOW() WHERE appointment_id=%s AND doctor_id=%s",
+                       (new_status, provider_user_id, appointment_id, provider_user_id))
+        
         if cursor.rowcount > 0:
+            conn.commit() # Commit the transaction started by the UPDATE
             return jsonify(success=True, message="Appointment status updated successfully.", new_status=new_status)
         else:
-            if conn.in_transaction: conn.rollback()
-            return jsonify(success=False, message="Failed to update status. The appointment might have been modified concurrently."), 409
+            # No rows affected could mean appointment not found with that doctor_id, or status was already as desired
+            # or it was already in a terminal state that prevented update by some other logic (not present here but possible in complex systems)
+            conn.rollback() # Rollback if no rows were updated (though not strictly necessary if no transaction was started)
+            logger.warning(f"Update status for appointment {appointment_id} affected 0 rows. Current status in DB may differ or WHERE clause didn't match.")
+            return jsonify(success=False, message="Failed to update status. Appointment may not exist or conditions not met."), 409
 
+    except mysql.connector.Error as db_err:
+        logger.error(f"DB error updating status for appointment {appointment_id} to {new_status}: {db_err}", exc_info=True)
+        if conn and conn.is_connected(): # Check if conn exists before checking in_transaction
+            try:
+                # Only rollback if a transaction was indeed active.
+                # Hard to tell definitively without checking conn.in_transaction if available,
+                # or by assuming any DML implies a transaction if autocommit is off.
+                # If autocommit is on, rollback does nothing.
+                # For safety with mysql.connector, explicitly check and rollback.
+                if conn.in_transaction: # This attribute should exist on the connection object
+                    conn.rollback()
+                    logger.info(f"Rolled back transaction for appointment {appointment_id} due to DB error.")
+            except Exception as rb_err:
+                logger.error(f"Error during rollback attempt: {rb_err}")
+        return jsonify(success=False, message=f"Database error: {db_err.msg}"), 500
     except Exception as err:
         logger.error(f"Error updating status for appointment {appointment_id} to {new_status}: {err}", exc_info=True)
-        if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
+        if conn and conn.is_connected():
+            try:
+                if conn.in_transaction:
+                    conn.rollback()
+                    logger.info(f"Rolled back transaction for appointment {appointment_id} due to general error.")
+            except Exception as rb_err:
+                logger.error(f"Error during rollback attempt: {rb_err}")
         return jsonify(success=False, message="A server error occurred while updating status."), 500
     finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+# ... (rest of the file)
 @appointments_bp.route('/<int:appointment_id>/update_notes', methods=['POST'])
 @login_required
 def update_appointment_notes(appointment_id):

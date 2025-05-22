@@ -106,7 +106,7 @@ def dashboard():
                 CONCAT(d_user.first_name, ' ', d_user.last_name) as doctor_name,
                 a.appointment_date,
                 a.start_time,
-                a.appointment_type,
+                a.appointment_type_id,
                 a.status
             FROM appointments a
             JOIN patients p ON a.patient_id = p.user_id

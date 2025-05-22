@@ -47,7 +47,9 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="date_of_birth">Date of Birth *</label>
-                        <input type="date" id="date_of_birth" name="date_of_birth" value="{{ profile_data.date_of_birth.strftime('%Y-%m-%d') if profile_data and profile_data.date_of_birth else request.form.get('date_of_birth', '') }}" required>
+                        {# This line is updated #}
+                        <input type="date" id="date_of_birth" name="date_of_birth" 
+                        value="{{ profile_data.date_of_birth.strftime('%Y-%m-%d') if profile_data and profile_data.date_of_birth and hasattr(profile_data.date_of_birth, 'strftime') else profile_data.date_of_birth | default('') }}"
                     </div>
                     <div class="form-group">
                         <label for="gender">Gender *</label>
@@ -137,33 +139,34 @@
             <hr>
 
              {# Insurance Information #}
-            <section class="profile-section">
-                <h4>Insurance Information</h4>
-                 <div class="form-group">
-                    <label for="insurance_provider_id">Insurance Provider</label>
-                    <select id="insurance_provider_id" name="insurance_provider_id">
-                         <option value="" {% if not profile_data.insurance_provider_id %}selected{% endif %}>-- None / Self-pay --</option>
-                         {% set current_provider = profile_data.insurance_provider_id | default(request.form.get('insurance_provider_id', '')) | string %}
-                         {% for provider in insurance_providers %}
-                            <option value="{{ provider.id }}" {% if current_provider == provider.id|string %}selected{% endif %}>{{ provider.provider_name }}</option>
-                         {% endfor %}
-                    </select>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="insurance_policy_number">Policy Number</label>
-                        <input type="text" id="insurance_policy_number" name="insurance_policy_number" value="{{ profile_data.insurance_policy_number | default(request.form.get('insurance_policy_number', '')) }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="insurance_group_number">Group Number</label>
-                        <input type="text" id="insurance_group_number" name="insurance_group_number" value="{{ profile_data.insurance_group_number | default(request.form.get('insurance_group_number', '')) }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="insurance_expiration">Expiration Date</label>
-                        <input type="date" id="insurance_expiration" name="insurance_expiration" value="{{ profile_data.insurance_expiration.strftime('%Y-%m-%d') if profile_data and profile_data.insurance_expiration else request.form.get('insurance_expiration', '') }}">
-                    </div>
-                </div>
-            </section>
+             {# Insurance Information #}
+             <section class="profile-section">
+                 <h4>Insurance Information</h4>
+                  <div class="form-group"> {# This is likely a single column group for the provider dropdown #}
+                     <label for="insurance_provider_id">Insurance Provider</label>
+                     <select id="insurance_provider_id" name="insurance_provider_id" class="form-select">
+                          <option value="" {% if not profile_data.insurance_provider_id %}selected{% endif %}>-- None / Self-pay --</option>
+                          {% set current_provider = profile_data.insurance_provider_id | default(request.form.get('insurance_provider_id', '')) | string %}
+                          {% for provider in insurance_providers %}
+                             <option value="{{ provider.id }}" {% if current_provider == provider.id|string %}selected{% endif %}>{{ provider.provider_name }}</option>
+                          {% endfor %}
+                     </select>
+                 </div>
+                 <div class="form-row"> {# This row contains multiple inputs #}
+                     <div class="form-group">
+                         <label for="insurance_policy_number">Policy Number</label>
+                         <input type="text" id="insurance_policy_number" name="insurance_policy_number" class="form-control" value="{{ profile_data.insurance_policy_number | default(request.form.get('insurance_policy_number', '')) }}">
+                     </div>
+                     <div class="form-group">
+                         <label for="insurance_group_number">Group Number</label>
+                         <input type="text" id="insurance_group_number" name="insurance_group_number" class="form-control" value="{{ profile_data.insurance_group_number | default(request.form.get('insurance_group_number', '')) }}">
+                     </div>
+                     <div class="form-group">
+                         <label for="insurance_expiration">Expiration Date</label>
+                         <input type="date" id="insurance_expiration" name="insurance_expiration" class="form-control" value="{{ profile_data.insurance_expiration.strftime('%Y-%m-%d') if profile_data and profile_data.insurance_expiration and hasattr(profile_data.insurance_expiration, 'strftime') else profile_data.insurance_expiration | default('') }}">
+                     </div>
+                 </div>
+             </section>
 
             <div class="form-actions">
                 <button type="submit" class="button button-primary">Save Profile Changes</button>

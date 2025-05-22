@@ -2,16 +2,13 @@
 {% block title %}My Medical History{% endblock %}
 
 {% block head_extra %}
-    {# <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}"> #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
     <h1>My Medical History</h1>
     <div>
-        <a href="{{ url_for('.add_history_entry') }}" class="button button-primary button-small">
-            <i class="fas fa-plus"></i> Add History Entry
-        </a>
         <a href="{{ url_for('.view_medical_dashboard') }}" class="button button-outline button-secondary button-small ms-2">
             <i class="fas fa-arrow-left fa-fw"></i> Back to Medical Info
         </a>

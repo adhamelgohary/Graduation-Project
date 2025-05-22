@@ -442,7 +442,7 @@ textarea.form-control { min-height: calc(1.5em + 1rem + 2px); resize: vertical; 
 .alert-dismissible .btn-close { position: absolute; top: 0; right: 0; z-index: 2; padding: 0.85rem 1rem; color: inherit; }
 
 /* Badges */
-.badge { display: inline-block; padding: 0.35em 0.65em; font-size: 75%; font-weight: 700; line-height: 1; color: var(--color-text-light); text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: var(--border-radius); }
+.badge { display: inline-block; padding: 0.35em 0.65em; font-size: 75%; font-weight: 700; line-height: 1; ; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: var(--border-radius); }
 /* Specific Badge Colors (Using semantic names) */
 .badge-primary { background-color: var(--color-primary); }
 .badge-secondary { background-color: var(--color-secondary); }

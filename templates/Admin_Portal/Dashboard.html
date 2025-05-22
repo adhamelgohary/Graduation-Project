@@ -279,10 +279,10 @@ document.addEventListener('DOMContentLoaded', function() {
           const statusCounts = JSON.parse('{{ appointment_status_stats|map(attribute="count")|list|tojson|safe }}');
           // Map statuses to colors (adjust colors as needed)
           const statusColorMap = {
-                'pending-approval': 'rgba(241, 196, 15, 0.8)', // Warning
+                'scheduled': '',
                 'confirmed': 'rgba(46, 204, 113, 0.8)',        // Success
                 'completed': 'rgba(52, 152, 219, 0.8)',        // Primary
-                'cancelled': 'rgba(231, 76, 60, 0.8)',         // Danger
+                'canceled': 'rgba(231, 76, 60, 0.8)',         // Danger
                 'no-show': 'rgba(149, 165, 166, 0.8)',         // Grey
                 'rescheduled': 'rgba(155, 89, 182, 0.8)'       // Purple
           };

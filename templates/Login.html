@@ -85,10 +85,10 @@
             {% include '_flash_messages.html' %}
 
             <!-- *** ADDED: Hidden Input Field for 'next' Redirect Target *** -->
-            {# Reads the 'next' variable passed from the Flask route.
-               Value is empty if 'next' is None or not provided.
-               This ensures the desired redirect URL persists across failed login attempts. #}
-            <input type="hidden" name="next" value="{{ next or '' }}">
+            {# If 'next' was passed to the template, include it as a hidden field #}
+    {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
 
             <!-- Login Fields -->
             <div class="form-group">

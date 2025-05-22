@@ -2,28 +2,49 @@
 {% block title %}{{ form_title }}{% endblock %}
 
 {% block head_extra %}
-    {# Add CSS for form structure, meal/item blocks if needed #}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> {# Example for multi-select #}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
     <style>
-        .meal-form-block, .item-form-block { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 5px; background: #f9f9f9;}
+        .meal-form-block, .item-form-block { border: 1px solid #ddd; padding: 1rem 1rem 0.5rem 1rem; margin-bottom: 1rem; border-radius: 5px; background: #f9f9f9; position: relative; }
+        .item-form-block { padding: 0.75rem; background: #fff; border: 1px dashed #eee; }
         .meal-form-block h5, .item-form-block h6 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem;}
-        .remove-button { color: red; cursor: pointer; font-weight: bold; margin-left: 10px; }
+        .remove-button { cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 1.2em; line-height: 1; display: inline-block; vertical-align: middle; }
+        .remove-meal-btn { color: var(--color-danger); }
+        .remove-item-btn { color: #dc3545; font-size: 1em; }
+        .meal-header-controls { float: right; }
+        .food-search-container { position: relative; }
+        .food-search-results { position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; border: 1px solid #ccc; background-color: white; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .food-search-results .list-group-item { cursor: pointer; font-size: 0.9em; padding: 0.5rem 0.75rem; }
+        .food-search-results .list-group-item:hover { background-color: #f0f0f0; }
+        .input-group-sm .btn { padding: 0.25rem 0.5rem; font-size: .875rem; }
+        .item-form-block .row > div { margin-bottom: 0.5rem; }
+        .form-label-sm { font-size: 0.875em; margin-bottom: 0.2rem; display: block; font-weight: 500; }
+        .form-control-sm { height: calc(1.5em + 0.5rem + 2px); padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+        .form-select-sm { padding-top: 0.25rem; padding-bottom: 0.25rem; padding-left: 0.5rem; font-size: .875rem; }
+        .select2-container .select2-selection--single { height: calc(1.5em + .75rem + 2px)!important; padding: .375rem .75rem; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered{ line-height: 1.5; padding-left: 0;}
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: calc(1.5em + .75rem)!important;}
+        .select2-container .select2-selection--multiple { min-height: calc(1.5em + .75rem + 2px)!important; padding: .3rem .75rem 0 .3rem; }
+        .select2-results__option { font-size: 0.9em; }
+        .calculated-nutrient-display { font-size: 0.9em; color: #555; margin-top: 0.25rem; }
     </style>
 {% endblock %}
 
 {% block content %}
  <div class="page-header">
     <h1>{{ form_title }}</h1>
-    <a href="{{ url_for('.list_diet_plans') }}" class="button button-outline button-secondary"><i class="fas fa-arrow-left"></i> Cancel</a>
+    {% if plan and plan.plan_id %}
+         <a href="{{ url_for('.view_diet_plan', plan_id=plan.plan_id) }}" class="button button-outline button-secondary"><i class="fas fa-times fa-fw"></i> Cancel Edit</a>
+    {% else %}
+        <a href="{{ url_for('.list_diet_plans') }}" class="button button-outline button-secondary"><i class="fas fa-arrow-left fa-fw"></i> Cancel Creation</a>
+    {% endif %}
 </div>
 
-{# Display Errors/Flash messages here #}
- {% include '_flash_messages.html' %} {# Assuming a partial for flash messages #}
+ {% include '_flash_messages.html' %}
 
-<form action="{{ form_action }}" method="POST" class="card shadow-sm content-section data-form">
+<form id="dietPlanForm" action="{{ form_action }}" method="POST" class="card shadow-sm content-section data-form">
     <div class="card-body">
-        <h4>Plan Details</h4>
-        {# Plan Fields: plan_name, plan_type, description, macros, is_public etc. #}
+        <h4><i class="fas fa-info-circle fa-fw"></i> Plan Details</h4>
          <div class="row">
              <div class="col-md-6 form-group mb-3">
                 <label for="plan_name" class="form-label">Plan Name <span class="text-danger">*</span></label>
@@ -40,172 +61,407 @@
                 </select>
              </div>
          </div>
-        {# ... Other plan fields (calories, protein, etc.) ... #}
          <div class="form-group mb-3">
-            <label for="target_conditions" class="form-label">Target Conditions (Optional)</label>
-            <select id="target_conditions" name="target_conditions" class="form-select select2-multiple" multiple="multiple">
-                {# Pre-select based on plan.target_conditions_list #}
-                {% set selected_conditions = plan.target_conditions_list if plan else request.form.getlist('target_conditions') %}
+            <label for="description" class="form-label">Description (Optional)</label>
+            <textarea id="description" name="description" class="form-control" rows="3">{{ plan.description | default(request.form.get('description', '')) }}</textarea>
+         </div>
+         <hr>
+         <h5>Nutritional Estimates (Calculated from Meals)</h5>
+         {# Display calculated nutrients if editing an existing plan #}
+         {% if plan and plan.plan_id %}
+         <div class="row calculated-nutrient-display mb-3">
+             <div class="col-md-2 col-4"><strong>Calories:</strong><br>{{ plan.calories | default('N/A') }} kcal</div>
+             <div class="col-md-2 col-4"><strong>Protein:</strong><br>{{ '%g'|format(plan.protein_grams) if plan.protein_grams is not none else 'N/A' }} g</div>
+             <div class="col-md-2 col-4"><strong>Carbs:</strong><br>{{ '%g'|format(plan.carbs_grams) if plan.carbs_grams is not none else 'N/A' }} g</div>
+             <div class="col-md-2 col-4"><strong>Fat:</strong><br>{{ '%g'|format(plan.fat_grams) if plan.fat_grams is not none else 'N/A' }} g</div>
+             <div class="col-md-2 col-4"><strong>Fiber:</strong><br>{{ '%g'|format(plan.fiber_grams) if plan.fiber_grams is not none else 'N/A' }} g</div>
+             <div class="col-md-2 col-4"><strong>Sodium:</strong><br>{{ plan.sodium_mg | default('N/A') }} mg</div>
+         </div>
+         {% else %}
+         <p class="text-muted small fst-italic mb-3">Nutritional totals will be calculated once meals and food items are added.</p>
+         {% endif %}
+         {# The direct input fields for plan-level calories, protein, etc. are REMOVED. #}
+         {# You can still have separate form fields for OTHER plan properties if needed, but not these calculated ones. #}
+
+         <div class="form-group mb-3">
+            <label for="target_conditions" class="form-label">Target Conditions (Optional, select multiple)</label>
+            <select id="target_conditions" name="target_conditions" class="form-select select2-multiple" multiple="multiple" style="width: 100%;">
+                {% set selected_conditions = plan.target_conditions_list if plan and not request.form.getlist('target_conditions') else request.form.getlist('target_conditions') %}
                 {% for condition in conditions %}
                 <option value="{{ condition.condition_name }}" {% if condition.condition_name in selected_conditions %}selected{% endif %}>{{ condition.condition_name }}</option>
                 {% endfor %}
             </select>
          </div>
          <div class="form-check form-switch mb-3">
-              <input class="form-check-input" type="checkbox" role="switch" id="is_public" name="is_public" {% if plan.is_public or request.form.get('is_public') == 'on' %}checked{% endif %}>
+              <input class="form-check-input" type="checkbox" role="switch" id="is_public" name="is_public" {% if (plan and plan.is_public and request.method != 'POST') or (request.method == 'POST' and request.form.get('is_public') == 'on') %}checked{% endif %}>
               <label class="form-check-label" for="is_public">Make Publicly Available</label>
          </div>
-
         <hr>
-        <h4>Meals & Food Items</h4>
+
+        <h4><i class="fas fa-calendar-alt fa-fw"></i> Meals & Food Items</h4>
         <div id="meals-container">
-            {# Loop through existing meals (if editing) #}
-            {% if plan and meals %}
+            {% if plan and meals %} {# Loop through existing meals if editing #}
                 {% for meal in meals %}
-                <div class="meal-form-block" data-meal-id="{{ meal.meal_id }}">
-                    <input type="hidden" name="meal_id" value="{{ meal.meal_id }}"> {# Track existing ID #}
-                    <h5>
-                        Edit Meal
-                        <span class="remove-button" onclick="removeMeal(this, '{{ meal.meal_id }}')">× Remove Meal</span>
-                    </h5>
+                <div class="meal-form-block existing-meal-block" data-meal-id="{{ meal.meal_id }}">
+                    <input type="hidden" name="meal_id" value="{{ meal.meal_id }}">
+                    <div class="meal-header-controls">
+                         <span class="remove-button remove-meal-btn" onclick="removeMeal(this, '{{ meal.meal_id }}')" title="Remove This Meal">×</span>
+                    </div>
+                    <h5><i class="fas fa-edit fa-fw"></i> Edit Meal</h5>
                      <div class="row">
-                         <div class="col-md-5 form-group mb-2">
-                             <label>Meal Name</label>
-                             <input type="text" name="meal_name[{{ meal.meal_id }}]" class="form-control form-control-sm" value="{{ meal.meal_name }}">
+                         <div class="col-md-6 form-group mb-2"> {# Increased width for meal name #}
+                             <label class="form-label-sm">Meal Name <span class="text-danger">*</span></label>
+                             <input type="text" name="meal_name[{{ meal.meal_id }}]" class="form-control form-control-sm" value="{{ meal.meal_name }}" required>
                          </div>
-                         <div class="col-md-4 form-group mb-2">
-                             <label>Meal Type</label>
-                             <select name="meal_type[{{ meal.meal_id }}]" class="form-select form-select-sm">
+                         <div class="col-md-3 form-group mb-2">
+                             <label class="form-label-sm">Meal Type <span class="text-danger">*</span></label>
+                             <select name="meal_type[{{ meal.meal_id }}]" class="form-select form-select-sm" required>
                                  {% for mtype in meal_types %}<option value="{{ mtype }}" {% if meal.meal_type == mtype %}selected{% endif %}>{{ mtype | title }}</option>{% endfor %}
                              </select>
                          </div>
-                         <div class="col-md-3 form-group mb-2">
-                             <label>Time (HH:MM)</label>
-                             {# --- UPDATED LINE --- #}
+                         <div class="col-md-3 form-group mb-2"> {# Increased width for time #}
+                             <label class="form-label-sm">Time (HH:MM)</label>
                              <input type="time" name="meal_time[{{ meal.meal_id }}]" class="form-control form-control-sm" value="{{ meal.time_of_day | timedelta_to_time('%H:%M') if meal.time_of_day else '' }}">
-                             {# --- END UPDATED LINE --- #}
                          </div>
+                         {# REMOVED direct meal_calories input #}
                      </div>
-                     <div class="form-group mb-3">
-                         <label>Meal Description</label>
+                     <div class="form-group mb-2">
+                         <label class="form-label-sm">Meal Description (Optional)</label>
                          <textarea name="meal_desc[{{ meal.meal_id }}]" class="form-control form-control-sm" rows="2">{{ meal.description | default('') }}</textarea>
                      </div>
 
-                     {# ... rest of meal item form ... #}
+                     {# *** APPLY FIX HERE for Display calculated meal nutrients *** #}
+                     <div class="calculated-nutrient-display mb-2 small">
+                         <strong>Approx. Meal Totals:</strong>
+                         Cals: {{ meal.calories if 'calories' in meal and meal.calories is not none else 'N/A' }} |
+                         P: {{ '%g'|format(meal.protein_grams) if 'protein_grams' in meal and meal.protein_grams is not none else 'N/A' }}g |
+                         C: {{ '%g'|format(meal.carbs_grams) if 'carbs_grams' in meal and meal.carbs_grams is not none else 'N/A' }}g |
+                         F: {{ '%g'|format(meal.fat_grams) if 'fat_grams' in meal and meal.fat_grams is not none else 'N/A' }}g
+                         {# You can add fiber and sodium here too if desired, with similar checks #}
+                         {# | Fiber: {{ '%g'|format(meal.fiber_grams) if 'fiber_grams' in meal and meal.fiber_grams is not none else 'N/A' }}g #}
+                         {# | Sodium: {{ meal.sodium_mg if 'sodium_mg' in meal and meal.sodium_mg is not none else 'N/A' }}mg #}
+                     </div>
+
+                     <h6><i class="fas fa-apple-alt fa-fw"></i> Food Items</h6>
+                     <div class="items-container items-container-{{ meal.meal_id }}">
+                        {# ... existing food items loop ... (this part was likely okay) ... #}
+                        {% if meal.food_items %}
+                            {% for item in meal.food_items %}
+                                <div class="item-form-block existing-item-row mb-2" data-item-id="{{ item.item_id }}">
+                                    <input type="hidden" name="item_id[{{ meal.meal_id }}]" value="{{ item.item_id }}">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-4 food-search-container">
+                                            <label class="form-label-sm mb-0">Food Name <span class="text-danger">*</span></label>
+                                            <input type="text" name="item_food_name[{{ item.item_id }}]" value="{{ item.food_name }}" class="form-control form-control-sm food-item-name-input" placeholder="Food Name" required>
+                                             <div class="food-search-results list-group"></div>
+                                        </div>
+                                        <div class="col-md-3">
+                                             <label class="form-label-sm mb-0">Serving <span class="text-danger">*</span></label>
+                                            <input type="text" name="item_serving_size[{{ item.item_id }}]" value="{{ item.serving_size }}" class="form-control form-control-sm food-item-serving-input" placeholder="Serving Size" required>
+                                        </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label-sm mb-0">Cals</label>
+                                            <input type="number" step="any" min="0" name="item_calories[{{ item.item_id }}]" value="{{ item.calories | default('', true) }}" class="form-control form-control-sm food-item-calories-input">
+                                        </div>
+                                         <div class="col-md-1">
+                                            <label class="form-label-sm mb-0">Prot</label>
+                                            <input type="number" step="any" min="0" name="item_protein[{{ item.item_id }}]" value="{{ item.protein_grams | default('', true) }}" class="form-control form-control-sm food-item-protein-input" title="Protein (g)">
+                                        </div>
+                                         <div class="col-md-1">
+                                            <label class="form-label-sm mb-0">Carb</label>
+                                            <input type="number" step="any" min="0" name="item_carbs[{{ item.item_id }}]" value="{{ item.carbs_grams | default('', true) }}" class="form-control form-control-sm food-item-carbs-input" title="Carbs (g)">
+                                        </div>
+                                         <div class="col-md-1">
+                                            <label class="form-label-sm mb-0">Fat</label>
+                                            <input type="number" step="any" min="0" name="item_fat[{{ item.item_id }}]" value="{{ item.fat_grams | default('', true) }}" class="form-control form-control-sm food-item-fat-input" title="Fat (g)">
+                                        </div>
+                                        <div class="col-md-5 mt-1">
+                                             <label class="form-label-sm mb-0 visually-hidden">Notes</label>
+                                             <input type="text" name="item_notes[{{ item.item_id }}]" value="{{ item.notes | default('') }}" class="form-control form-control-sm food-item-notes-input" placeholder="Optional Notes">
+                                        </div>
+                                         <div class="col-md-5 mt-1">
+                                             <label class="form-label-sm mb-0 visually-hidden">Alternatives</label>
+                                             <input type="text" name="item_alternatives[{{ item.item_id }}]" value="{{ item.alternatives | default('') }}" class="form-control form-control-sm food-item-alternatives-input" placeholder="Optional Alternatives">
+                                        </div>
+                                        <div class="col-md-1 text-end align-self-end pb-1">
+                                            <span class="remove-button remove-item-btn" onclick="removeItem(this, '{{ item.item_id }}')" title="Remove This Item">×</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                     </div>
+                      <button type="button" class="button button-outline button-success button-xsmall mt-2 mb-3" onclick="addItemForm('{{ meal.meal_id }}')"><i class="fas fa-plus fa-fw"></i> Add Food Item</button>
                 </div>
                 {% endfor %}
             {% endif %}
-        </div> {# End #meals-container #}
+        </div>
 
-        <button type="button" id="add-meal-btn" class="button button-outline button-info button-small mt-3"><i class="fas fa-plus"></i> Add Another Meal</button>
+        <button type="button" id="add-meal-btn" class="button button-outline button-info button-small mt-2"><i class="fas fa-plus-circle fa-fw"></i> Add Another Meal</button>
 
-         {# Hidden inputs to track deletions #}
-         <div id="deleted-inputs">
-             {# JS will add inputs like: <input type="hidden" name="deleted_meal_ids" value="ID_TO_DELETE"> #}
-         </div>
+         <div id="deleted-inputs" style="display: none;"></div>
 
-        <div class="form-actions mt-4 pt-3 border-top">
-            <a href="{{ url_for('.list_diet_plans') }}" class="button button-outline button-secondary">Cancel</a>
+        <div class="form-actions mt-4 pt-3 border-top text-end">
+             {% if plan and plan.plan_id %}
+                 <a href="{{ url_for('.view_diet_plan', plan_id=plan.plan_id) }}" class="button button-outline button-secondary">Cancel</a>
+            {% else %}
+                <a href="{{ url_for('.list_diet_plans') }}" class="button button-outline button-secondary">Cancel</a>
+            {% endif %}
             <button type="submit" class="button button-primary">
-                <i class="fas fa-save"></i> {{ 'Update Diet Plan' if plan else 'Save and Add Meals' }}
+                <i class="fas fa-save fa-fw"></i> {{ 'Update Diet Plan' if plan else 'Save Plan Details' }}
             </button>
         </div>
-    </div> {# End card-body #}
+    </div>
 </form>
 
-{# Templates for dynamic forms (used by JS) #}
+{# Template for adding a NEW Meal #}
 <template id="meal-form-template">
-     <div class="meal-form-block" data-new-meal-index="{index}">
-        <h5>
-            New Meal
-             <span class="remove-button" onclick="removeNewMeal(this)">× Remove Meal</span>
-         </h5>
-         <div class="row">
-             <div class="col-md-5 form-group mb-2"><label>Meal Name</label><input type="text" name="new_meal_name" class="form-control form-control-sm"></div>
-             <div class="col-md-4 form-group mb-2"><label>Meal Type</label><select name="new_meal_type" class="form-select form-select-sm">{% for mtype in meal_types %}<option value="{{ mtype }}">{{ mtype | title }}</option>{% endfor %}</select></div>
-             <div class="col-md-3 form-group mb-2"><label>Time (HH:MM)</label><input type="time" name="new_meal_time" class="form-control form-control-sm"></div>
+     <div class="meal-form-block new-meal-block" data-new-meal-index="{index}">
+         <div class="meal-header-controls">
+             <span class="remove-button remove-meal-btn" onclick="removeNewMeal(this)" title="Remove This New Meal">×</span>
          </div>
-         <div class="form-group mb-3"><label>Meal Description</label><textarea name="new_meal_desc" class="form-control form-control-sm" rows="2"></textarea></div>
-         <h6>Food Items</h6>
-         <div class="items-container-new_{index}"></div>
-         <button type="button" class="button button-outline button-success button-xsmall mt-2" onclick="addItemForm('new_{index}')"><i class="fas fa-plus"></i> Add Food Item to this Meal</button>
+        <h5><i class="fas fa-plus-square fa-fw"></i> New Meal</h5>
+         <div class="row">
+             <div class="col-md-6 form-group mb-2">
+                 <label class="form-label-sm">Meal Name <span class="text-danger">*</span></label>
+                 <input type="text" name="new_meal_name" class="form-control form-control-sm" required>
+             </div>
+             <div class="col-md-3 form-group mb-2">
+                 <label class="form-label-sm">Meal Type <span class="text-danger">*</span></label>
+                 <select name="new_meal_type" class="form-select form-select-sm" required>
+                    <option value="" disabled selected>-- Select --</option>
+                    {% for mtype in meal_types %}
+                        <option value="{{ mtype }}">{{ mtype | title }}</option>
+                    {% endfor %}
+                 </select>
+             </div>
+             <div class="col-md-3 form-group mb-2">
+                 <label class="form-label-sm">Time (HH:MM)</label>
+                 <input type="time" name="new_meal_time" class="form-control form-control-sm">
+             </div>
+             {# REMOVED direct new_meal_calories input #}
+         </div>
+         <div class="form-group mb-3">
+             <label class="form-label-sm">Meal Description (Optional)</label>
+             <textarea name="new_meal_desc" class="form-control form-control-sm" rows="2"></textarea>
+         </div>
+         <div class="calculated-nutrient-display mb-2 small new-meal-nutrient-display-new_{index}">
+            <strong>Approx. Meal Totals:</strong> (Will update after saving or with JS)
+         </div>
+         <h6><i class="fas fa-apple-alt fa-fw"></i> Food Items</h6>
+         <div class="items-container items-container-new_{index}">
+             <p class="text-muted small fst-italic new-item-placeholder">No items added yet.</p>
+         </div>
+         <button type="button" class="button button-outline button-success button-xsmall mt-2 mb-3" onclick="addItemForm('new_{index}')"><i class="fas fa-plus fa-fw"></i> Add Food Item</button>
     </div>
 </template>
+
+{# Template for adding a NEW Food Item #}
 <template id="item-form-template">
-     <div class="item-form-block" data-new-item="true">
-        <div class="row">
-            <div class="col-md-5"><input type="text" name="new_item_food_name[{meal_ref}]" placeholder="Food Name" class="form-control form-control-sm"></div>
-            <div class="col-md-4"><input type="text" name="new_item_serving_size[{meal_ref}]" placeholder="Serving Size" class="form-control form-control-sm"></div>
-            <div class="col-md-3"><span class="remove-button" onclick="removeNewItem(this)">× Remove Item</span></div>
+     <div class="item-form-block new-item-row mb-2" data-new-item="true">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4 food-search-container">
+                <label class="form-label-sm mb-0">Food Name <span class="text-danger">*</span></label>
+                <div class="input-group input-group-sm">
+                    <input type="text" name="new_item_food_name[{meal_ref}]" class="form-control form-control-sm food-item-name-input" placeholder="Type or search library..." required autocomplete="off">
+                </div>
+                <div class="food-search-results list-group"></div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label-sm mb-0">Serving <span class="text-danger">*</span></label>
+                <input type="text" name="new_item_serving_size[{meal_ref}]" class="form-control form-control-sm food-item-serving-input" placeholder="e.g., 1 cup" required>
+            </div>
+             <div class="col-md-1">
+                <label class="form-label-sm mb-0">Cals</label>
+                <input type="number" step="any" min="0" name="new_item_calories[{meal_ref}]" class="form-control form-control-sm food-item-calories-input">
+            </div>
+             <div class="col-md-1">
+                <label class="form-label-sm mb-0">Prot</label>
+                <input type="number" step="any" min="0" name="new_item_protein[{meal_ref}]" class="form-control form-control-sm food-item-protein-input" title="Protein (g)">
+            </div>
+             <div class="col-md-1">
+                <label class="form-label-sm mb-0">Carb</label>
+                <input type="number" step="any" min="0" name="new_item_carbs[{meal_ref}]" class="form-control form-control-sm food-item-carbs-input" title="Carbs (g)">
+            </div>
+             <div class="col-md-1">
+                <label class="form-label-sm mb-0">Fat</label>
+                <input type="number" step="any" min="0" name="new_item_fat[{meal_ref}]" class="form-control form-control-sm food-item-fat-input" title="Fat (g)">
+            </div>
+            <div class="col-md-5 mt-1">
+                 <label class="form-label-sm mb-0 visually-hidden">Notes</label>
+                 <input type="text" name="new_item_notes[{meal_ref}]" class="form-control form-control-sm food-item-notes-input" placeholder="Optional Notes">
+            </div>
+             <div class="col-md-5 mt-1">
+                 <label class="form-label-sm mb-0 visually-hidden">Alternatives</label>
+                 <input type="text" name="new_item_alternatives[{meal_ref}]" class="form-control form-control-sm food-item-alternatives-input" placeholder="Optional Alternatives">
+            </div>
+            <div class="col-md-1 text-end align-self-end pb-1">
+                <span class="remove-button remove-item-btn" onclick="removeNewItem(this)" title="Remove This Item">×</span>
+            </div>
         </div>
-        <textarea name="new_item_notes[{meal_ref}]" placeholder="Notes" class="form-control form-control-sm mt-1" rows="1"></textarea>
-        <textarea name="new_item_alternatives[{meal_ref}]" placeholder="Alternatives" class="form-control form-control-sm mt-1" rows="1"></textarea>
      </div>
 </template>
 
 {% endblock %}
 
 {% block scripts %}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> {# Select2 requires jQuery #}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('.select2-multiple').select2({
-                placeholder: "Select conditions",
+            $('#target_conditions').select2({
+                placeholder: "Select or type conditions",
                 allowClear: true,
-                tags: true // Allow adding new conditions if needed? Maybe not.
+                width: '100%'
             });
         });
 
-        let newMealIndex = 0;
+        let newMealIndex = {{ meals|length if meals else 0 }}; // Start index after existing meals
 
         function addMealForm() {
             const template = document.getElementById('meal-form-template');
             const container = document.getElementById('meals-container');
+            if (!template || !container) { console.error("Meal template or container not found!"); return; }
             let content = template.innerHTML.replace(/{index}/g, newMealIndex);
             container.insertAdjacentHTML('beforeend', content);
             newMealIndex++;
         }
 
-        function addItemForm(mealRef) { // mealRef is existing meal ID or 'new_{index}'
-            const template = document.getElementById('item-form-template');
-             // Find the correct container within the specific meal block
-            const container = document.querySelector(`.items-container-${mealRef}`);
-             if (!container) { console.error("Item container not found for", mealRef); return; }
-            let content = template.innerHTML.replace(/{meal_ref}/g, mealRef);
-            container.insertAdjacentHTML('beforeend', content);
-        }
-
-         function removeMeal(element, mealId) {
-             if (confirm('Remove this entire meal and its items?')) {
+        function removeMeal(element, mealId) {
+             if (confirm('Remove this entire meal and all its items? This cannot be undone immediately.')) {
                 const block = element.closest('.meal-form-block');
-                block.remove();
-                // Add hidden input to track deletion
+                if(block) block.remove();
                 const hiddenInput = `<input type="hidden" name="deleted_meal_ids" value="${mealId}">`;
                 document.getElementById('deleted-inputs').insertAdjacentHTML('beforeend', hiddenInput);
              }
          }
-          function removeNewMeal(element) {
-               if (confirm('Remove this new meal?')) {
-                   element.closest('.meal-form-block').remove();
-               }
+
+         function removeNewMeal(element) {
+             if (confirm('Remove this new meal?')) {
+                 const block = element.closest('.meal-form-block');
+                 if(block) block.remove();
+             }
          }
 
+         function addItemForm(mealRef) {
+            const template = document.getElementById('item-form-template');
+            const container = document.querySelector(`.items-container-${mealRef}`);
+            if (!template || !container) { console.error("Item template or container not found for meal reference:", mealRef); return; }
+             const placeholder = container.querySelector('.new-item-placeholder');
+             if (placeholder) placeholder.remove();
+            let content = template.innerHTML.replace(/{meal_ref}/g, mealRef);
+            container.insertAdjacentHTML('beforeend', content);
+        }
+
          function removeItem(element, itemId) {
-               if (confirm('Remove this food item?')) {
-                   const block = element.closest('.item-form-block');
-                   block.remove();
-                   const hiddenInput = `<input type="hidden" name="deleted_item_ids" value="${itemId}">`;
-                   document.getElementById('deleted-inputs').insertAdjacentHTML('beforeend', hiddenInput);
-               }
+             if (confirm('Remove this food item? This cannot be undone immediately.')) {
+                 const block = element.closest('.item-form-block');
+                 if(block) block.remove();
+                 const hiddenInput = `<input type="hidden" name="deleted_item_ids" value="${itemId}">`;
+                 document.getElementById('deleted-inputs').insertAdjacentHTML('beforeend', hiddenInput);
+             }
          }
+
          function removeNewItem(element) {
               if (confirm('Remove this new food item?')) {
-                  element.closest('.item-form-block').remove();
+                  const block = element.closest('.item-form-block');
+                  if(block) block.remove();
               }
         }
 
-        document.getElementById('add-meal-btn').addEventListener('click', addMealForm);
+        const addMealButton = document.getElementById('add-meal-btn');
+        if(addMealButton) addMealButton.addEventListener('click', addMealForm);
 
+        function debounce(func, wait) { /* ... (debounce function from before) ... */ 
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => { clearTimeout(timeout); func(...args); };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        function populateFoodItemFields(rowElement, foodItemData) { /* ... (populate function from before) ... */ 
+            if (!rowElement || !foodItemData) { return; }
+            const nameInput = rowElement.querySelector('.food-item-name-input');
+            const servingInput = rowElement.querySelector('.food-item-serving-input');
+            const caloriesInput = rowElement.querySelector('.food-item-calories-input');
+            const proteinInput = rowElement.querySelector('.food-item-protein-input');
+            const carbsInput = rowElement.querySelector('.food-item-carbs-input');
+            const fatInput = rowElement.querySelector('.food-item-fat-input');
+
+            if(nameInput) nameInput.value = foodItemData.item_name || '';
+            if(servingInput) servingInput.value = foodItemData.serving_size || '';
+            if(caloriesInput) caloriesInput.value = foodItemData.calories !== null ? foodItemData.calories : '';
+            if(proteinInput) proteinInput.value = foodItemData.protein_grams !== null ? foodItemData.protein_grams : '';
+            if(carbsInput) carbsInput.value = foodItemData.carbs_grams !== null ? foodItemData.carbs_grams : '';
+            if(fatInput) fatInput.value = foodItemData.fat_grams !== null ? foodItemData.fat_grams : '';
+
+            const resultsContainer = rowElement.querySelector('.food-search-results');
+            if (resultsContainer) { resultsContainer.innerHTML = ''; resultsContainer.style.display = 'none';}
+        }
+
+        const dietPlanForm = document.getElementById('dietPlanForm');
+        if (dietPlanForm) {
+            dietPlanForm.addEventListener('input', debounce(async (event) => { /* ... (food search AJAX from before) ... */ 
+                if (event.target.matches('.food-item-name-input')) {
+                    const inputElement = event.target;
+                    const query = inputElement.value.trim();
+                    const rowElement = inputElement.closest('.item-form-block');
+                    if (!rowElement) { return; }
+                    const resultsContainer = rowElement.querySelector('.food-search-results');
+                    if (!resultsContainer) { return; }
+                    if (!rowElement.hasAttribute('data-new-item')) {
+                         resultsContainer.innerHTML = ''; resultsContainer.style.display = 'none'; return;
+                    }
+                    if (query.length < 2) {
+                        resultsContainer.innerHTML = ''; resultsContainer.style.display = 'none'; return;
+                    }
+                    try {
+                         const searchUrl = "{{ url_for('food_items.search_food_items_json') }}";
+                         if (!searchUrl) { throw new Error("Search URL not configured."); }
+                        const response = await fetch(`${searchUrl}?q=${encodeURIComponent(query)}&limit=8`);
+                        if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                        const results = await response.json();
+                        resultsContainer.innerHTML = ''; 
+                        if (results && results.length > 0) {
+                             resultsContainer.style.display = 'block';
+                            results.forEach(item => { /* ... create result links ... */ 
+                                const div = document.createElement('a');
+                                div.href = '#';
+                                div.classList.add('list-group-item', 'list-group-item-action', 'p-1', 'small');
+                                div.textContent = `${item.item_name} (${item.serving_size || 'N/A'})`;
+                                div.dataset.foodItem = JSON.stringify(item);
+                                resultsContainer.appendChild(div);
+                            });
+                        } else { resultsContainer.style.display = 'none'; }
+                    } catch (error) {
+                        console.error('Food search AJAX failed:', error);
+                        resultsContainer.innerHTML = `<div class="list-group-item text-danger p-1 small">Search failed.</div>`;
+                        resultsContainer.style.display = 'block';
+                    }
+                }
+            }, 350));
+             dietPlanForm.addEventListener('click', (event) => { /* ... (click on search result from before) ... */ 
+                 const resultLink = event.target.closest('.food-search-results a');
+                 if (resultLink) {
+                     event.preventDefault();
+                     const rowElement = resultLink.closest('.item-form-block');
+                     if (!rowElement) { return; }
+                     try {
+                        const foodData = JSON.parse(resultLink.dataset.foodItem);
+                        populateFoodItemFields(rowElement, foodData);
+                         const servingInput = rowElement.querySelector('.food-item-serving-input');
+                         if (servingInput) servingInput.focus();
+                     } catch (e) { console.error("Error parsing food item data:", e); }
+                 }
+             });
+            document.addEventListener('click', (event) => { /* ... (hide search results from before) ... */ 
+                 if (!event.target.closest('.food-search-container')) {
+                     document.querySelectorAll('.food-search-results').forEach(container => {
+                         container.style.display = 'none';
+                     });
+                 }
+            });
+        }
     </script>
 {% endblock %}

@@ -1,0 +1,153 @@
+{% extends "Doctor_Portal/settings_layout.html" %}
+
+{% block settings_head_extra %}
+    {# Add any CSS specific to the profile form here #}
+{% endblock %}
+
+{% block settings_content %}
+<h3>Profile Information</h3>
+<hr>
+<form method="POST" action="{{ url_for('settings.profile_settings') }}">
+    {# Basic User Info #}
+    <h5>Basic Information</h5>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="first_name" name="first_name" value="{{ doctor_info.first_name | default('') }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="last_name" name="last_name" value="{{ doctor_info.last_name | default('') }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+            <input type="email" class="form-control form-control-sm" id="email" name="email" value="{{ doctor_info.email | default('') }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control form-control-sm" id="phone" name="phone" value="{{ doctor_info.phone | default('') }}">
+        </div>
+    </div>
+
+    {# Professional Details #}
+    <h5 class="mt-4">Professional Details</h5>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label for="department_id" class="form-label">Department</label>
+            <select class="form-select form-select-sm" id="department_id" name="department_id">
+                <option value="">Select Department (Optional)</option>
+                {% for dept in all_departments %}
+                <option value="{{ dept.department_id }}" {% if doctor_info.department_id == dept.department_id %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="specialization_id" class="form-label">Specialization <span class="text-danger">*</span></label>
+            <select class="form-select form-select-sm" id="specialization_id" name="specialization_id" required>
+                <option value="">Select Specialization</option>
+                {# Iterate over the Python list 'all_specializations' #}
+                {% for spec in all_specializations %} 
+                    <option value="{{ spec.specialization_id }}" data-department-id="{{ spec.department_id | default('') }}"
+                            {% if doctor_info.specialization_id == spec.specialization_id %}selected{% endif %}>
+                        {{ spec.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="npi_number" class="form-label">NPI Number</label>
+            <input type="text" class="form-control form-control-sm" id="npi_number" name="npi_number" value="{{ doctor_info.npi_number | default('') }}" pattern="\d{10}" title="NPI must be 10 digits">
+        </div>
+         <div class="col-md-6">
+            <label for="clinic_address" class="form-label">Primary Clinic Address (General)</label>
+            <input type="text" class="form-control form-control-sm" id="clinic_address" name="clinic_address" value="{{ doctor_info.clinic_address | default('') }}">
+            <small class="form-text text-muted">This is a general address. Manage specific practice locations separately.</small>
+        </div>
+    </div>
+
+    {# Licensing #}
+    <h5 class="mt-4">Licensing & Education</h5>
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="license_number" name="license_number" value="{{ doctor_info.license_number | default('') }}" required>
+        </div>
+        <div class="col-md-4">
+            <label for="license_state" class="form-label">License State <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="license_state" name="license_state" value="{{ doctor_info.license_state | default('') }}" required>
+        </div>
+        <div class="col-md-4">
+            <label for="license_expiration" class="form-label">License Expiration <span class="text-danger">*</span></label>
+            <input type="date" class="form-control form-control-sm" id="license_expiration" name="license_expiration" value="{{ doctor_info.license_expiration_str | default('') }}" required>
+        </div>
+        <div class="col-md-8">
+            <label for="medical_school" class="form-label">Medical School</label>
+            <input type="text" class="form-control form-control-sm" id="medical_school" name="medical_school" value="{{ doctor_info.medical_school | default('') }}">
+        </div>
+        <div class="col-md-4">
+            <label for="graduation_year" class="form-label">Graduation Year</label>
+            <input type="number" class="form-control form-control-sm" id="graduation_year" name="graduation_year" value="{{ doctor_info.graduation_year | default('') }}" min="1900" max="{{ current_year + 5 }}">
+        </div>
+    </div>
+
+    {# Other Details #}
+    <h5 class="mt-4">Additional Information</h5>
+    <div class="mb-3">
+        <label for="certifications" class="form-label">Certifications/Affiliations</label>
+        <textarea class="form-control form-control-sm" id="certifications" name="certifications" rows="2">{{ doctor_info.certifications | default('') }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="biography" class="form-label">Biography/Professional Statement</label>
+        <textarea class="form-control form-control-sm" id="biography" name="biography" rows="4">{{ doctor_info.biography | default('') }}</textarea>
+    </div>
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" {% if doctor_info.accepting_new_patients %}checked{% endif %}>
+        <label class="form-check-label" for="accepting_new_patients">
+            Accepting New Patients
+        </label>
+    </div>
+
+    <hr>
+    <button type="submit" class="button button-success">Save Profile Changes</button>
+</form>
+{% endblock %}
+
+{% block settings_scripts %}
+<script>
+$(document).ready(function() {
+    const allSpecializations = {{ all_specializations_json | safe }}; 
+    const departmentSelect = $('#department_id');
+    const specializationSelect = $('#specialization_id');
+    const currentSpecId = '{{ doctor_info.specialization_id | default("", true) }}';
+
+    function populateSpecializations(selectedDepartmentId) {
+        const currentVal = specializationSelect.val(); // Preserve current selection if possible
+        specializationSelect.empty().append('<option value="">Select Specialization</option>');
+        
+        allSpecializations.forEach(function(spec) {
+            if (!selectedDepartmentId || spec.department_id === null || spec.department_id == selectedDepartmentId) {
+                // If no department selected, or spec has no dept, or spec matches dept
+                let option = $('<option></option>')
+                    .val(spec.specialization_id)
+                    .text(spec.name)
+                    .attr('data-department-id', spec.department_id || '');
+                if (spec.specialization_id == currentSpecId || spec.specialization_id == currentVal) {
+                    option.prop('selected', true);
+                }
+                specializationSelect.append(option);
+            }
+        });
+    }
+
+    departmentSelect.on('change', function() {
+        const selectedDepartmentId = $(this).val() ? parseInt($(this).val()) : null;
+        populateSpecializations(selectedDepartmentId);
+    });
+
+    // Initial population
+    populateSpecializations(departmentSelect.val() ? parseInt(departmentSelect.val()) : null);
+});
+</script>
+{% endblock %}

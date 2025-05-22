@@ -1,0 +1,154 @@
+{% extends "Doctor_Portal/base.html" %}
+
+{% block title %}Vaccine: {{ vaccine.vaccine_name or 'Details' }}{% endblock %}
+
+{% block head_extra %}
+<style>
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: var(--spacing-lg);
+    }
+    .detail-card {
+        background-color: #fff;
+        padding: var(--spacing-lg);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--color-border);
+        box-shadow: var(--box-shadow-sm, 0 1px 3px rgba(0,0,0,0.07));
+    }
+    .detail-card h3 {
+        font-size: 1.1rem;
+        color: var(--color-primary);
+        margin-top: 0;
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 1px solid var(--color-border);
+    }
+    .detail-item {
+        margin-bottom: var(--spacing-sm);
+    }
+    .detail-label {
+        font-weight: 600;
+        color: var(--color-text-muted);
+        display: block;
+        font-size: 0.85rem;
+    }
+    .detail-value {
+        font-size: 0.95rem;
+        word-break: break-word;
+    }
+    .detail-value-block {
+        background-color: #f9f9f9;
+        padding: var(--spacing-sm);
+        border-radius: calc(var(--border-radius) * 0.5);
+        border: 1px solid #eee;
+        margin-top: var(--spacing-xs);
+    }
+    .text-block {
+        white-space: pre-wrap; /* Preserve formatting in text areas */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>
+        <i class="fas fa-syringe fa-fw"></i> {{ vaccine.vaccine_name }}
+        {% if vaccine.abbreviation %}<small class="text-muted"> ({{ vaccine.abbreviation }})</small>{% endif %}
+    </h1>
+    <div class="header-actions">
+        <a href="{{ url_for('vaccine_management.list_vaccines') }}" class="button button-outline button-secondary">
+            <i class="fas fa-arrow-left fa-fw"></i> Back to List
+        </a>
+        <a href="{{ url_for('vaccine_management.edit_vaccine', vaccine_id=vaccine.vaccine_id) }}" class="button button-warning">
+            <i class="fas fa-edit fa-fw"></i> Edit Vaccine
+        </a>
+    </div>
+</div>
+
+<div class="detail-grid">
+    <!-- Core Information Card -->
+    <div class="detail-card">
+        <h3>Core Information</h3>
+        <div class="detail-item">
+            <span class="detail-label">Full Name:</span>
+            <span class="detail-value">{{ vaccine.vaccine_name }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Abbreviation:</span>
+            <span class="detail-value">{{ vaccine.abbreviation or 'N/A' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Category:</span>
+            <span class="detail-value">{{ vaccine.category_name or 'N/A' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Vaccine Type:</span>
+            <span class="detail-value">{{ vaccine.vaccine_type or 'N/A' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Manufacturer:</span>
+            <span class="detail-value">{{ vaccine.manufacturer or 'N/A' }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Diseases Prevented:</span>
+            <div class="detail-value detail-value-block text-block">{{ vaccine.diseases_prevented or 'Not specified.' }}</div>
+        </div>
+    </div>
+
+    <!-- Usage & Schedule Card -->
+    <div class="detail-card">
+        <h3>Usage & Schedule</h3>
+        <div class="detail-item">
+            <span class="detail-label">Recommended For:</span>
+            <div class="detail-value detail-value-block text-block">{{ vaccine.recommended_for or 'Not specified.' }}</div>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Timing/Schedule:</span>
+            <div class="detail-value detail-value-block text-block">{{ vaccine.timing_schedule or 'Not specified.' }}</div>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Number of Doses:</span>
+            <span class="detail-value">{{ vaccine.number_of_doses or 'N/A' }}</span>
+        </div>
+         <div class="detail-item">
+            <span class="detail-label">Booster Information:</span>
+            <div class="detail-value detail-value-block text-block">{{ vaccine.booster_information or 'Not specified.' }}</div>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Administration Route:</span>
+            <span class="detail-value">{{ vaccine.administration_route or 'N/A' }}</span>
+        </div>
+    </div>
+
+    <!-- Benefits & Effects Card -->
+    <div class="detail-card">
+        <h3>Benefits & Effects</h3>
+        <div class="detail-item">
+            <span class="detail-label">Benefits:</span>
+            <div class="detail-value detail-value-block text-block">{{ vaccine.benefits or 'Not specified.' }}</div>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Common Side Effects:</span>
+            <div class="detail-value detail-value-block text-block">{{ vaccine.common_side_effects or 'Not specified.' }}</div>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Contraindications & Precautions:</span>
+            <div class="detail-value detail-value-block text-block">{{ vaccine.contraindications_precautions or 'Not specified.' }}</div>
+        </div>
+    </div>
+
+    {% if vaccine.notes %}
+    <!-- Additional Notes Card -->
+    <div class="detail-card" style="grid-column: 1 / -1;"> {# Span full width if it's the last main one #}
+        <h3>Additional Notes</h3>
+        <div class="detail-value detail-value-block text-block">{{ vaccine.notes }}</div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="mt-4 text-muted small">
+    <p>Record created: {{ vaccine.created_at.strftime('%Y-%m-%d %H:%M') if vaccine.created_at else 'N/A' }}<br>
+    Last updated: {{ vaccine.updated_at.strftime('%Y-%m-%d %H:%M') if vaccine.updated_at else 'N/A' }}</p>
+</div>
+{% endblock %}

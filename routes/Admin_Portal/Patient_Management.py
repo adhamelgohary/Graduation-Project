@@ -3,25 +3,23 @@
 import os
 import datetime # Keep for date formatting
 from flask import (Blueprint, render_template, request, session, flash,
-                   redirect, url_for, current_app) # Added current_app
+                   redirect, url_for, current_app)
 from flask_login import login_required, current_user
-from werkzeug.security import generate_password_hash # Needed for password hashing
+from werkzeug.security import generate_password_hash
 from db import get_db_connection
-from math import ceil # Needed for pagination
+from math import ceil
 
 patient_management = Blueprint('patient_management', __name__)
 
 # --- Constants ---
-PER_PAGE_PATIENTS = 15 # Patients per page
-ALLOWED_PATIENT_SORT_COLUMNS = { # Define columns allowed for sorting
+PER_PAGE_PATIENTS = 15
+ALLOWED_PATIENT_SORT_COLUMNS = {
     'first_name', 'last_name', 'email', 'date_of_birth', 'gender',
-    'insurance_provider_name', # Add sort by provider name
-    'created_at' # Add sort by registration date
+    'insurance_provider_name', 'created_at'
 }
 
 # --- Helper Function (Get Patient Base Info) ---
 def get_patient_base_info(patient_id):
-    """Fetches basic patient user info or returns None."""
     connection = get_db_connection()
     cursor = connection.cursor(dictionary=True)
     patient = None
@@ -33,7 +31,7 @@ def get_patient_base_info(patient_id):
         """, (patient_id,))
         patient = cursor.fetchone()
     except Exception as e:
-        current_app.logger.error(f"Error in get_patient_base_info for ID {patient_id}: {e}") # Use logger
+        current_app.logger.error(f"Error in get_patient_base_info for ID {patient_id}: {e}")
         flash("Database error fetching patient info.", "danger")
     finally:
         if cursor: cursor.close()
@@ -42,9 +40,7 @@ def get_patient_base_info(patient_id):
 
 # --- Helper to get ENUM values ---
 def get_enum_values(cursor, table_name, column_name):
-    """Fetches ENUM values for a given column."""
     try:
-        # Use DATABASE() function to avoid hardcoding schema name
         cursor.execute("""
             SELECT COLUMN_TYPE FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = DATABASE()
@@ -53,28 +49,26 @@ def get_enum_values(cursor, table_name, column_name):
         """, (table_name, column_name))
         result = cursor.fetchone()
         if result and result['COLUMN_TYPE']:
-            raw_values = result['COLUMN_TYPE'].strip('enum()')
-            values = [val.strip().strip("'") for val in raw_values.split(',')]
+            raw_values = result['COLUMN_TYPE'][5:-1] # Strip 'enum(' and ')'
+            values = [val.strip("'") for val in raw_values.split(',')]
             return values
         return []
     except Exception as e:
-        current_app.logger.error(f"Error fetching ENUM for {table_name}.{column_name}: {e}") # Use logger
+        current_app.logger.error(f"Error fetching ENUM for {table_name}.{column_name}: {e}")
         return []
 
 # --- Helper to get Current User ID ---
 def get_current_user_id():
-    """Safely gets the user ID from Flask-Login's current_user."""
     return getattr(current_user, 'user_id', getattr(current_user, 'id', None))
 
 # --- Routes ---
 
-# Index route to list patients (Updated Sort, Join for Insurance)
 @patient_management.route('/admin/patients', methods=['GET'])
 @login_required
 def index():
     if current_user.user_type != "admin":
         flash("Access denied", "danger")
-        return redirect(url_for('login.login')) # Use your login route
+        return redirect(url_for('login.login'))
 
     page = request.args.get('page', 1, type=int)
     search_term = request.args.get('q', '').strip()
@@ -128,9 +122,6 @@ def index():
     except Exception as e:
         flash(f"Database error fetching patients: {str(e)}", "danger")
         current_app.logger.error(f"Error fetching patients list: {e}")
-        # Optional: Redirect on severe error
-        # return redirect(url_for('admin_main.dashboard')) # Redirect to dashboard maybe
-
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
@@ -141,7 +132,6 @@ def index():
         search_term=search_term, sort_by=sort_by, sort_order=sort_order
     )
 
-# Add Patient Form (GET) - Fetches dropdown data
 @patient_management.route('/admin/patients/add', methods=['GET'])
 @login_required
 def add_patient_form():
@@ -168,10 +158,10 @@ def add_patient_form():
 
     return render_template('Admin_Portal/Patients/add_patient.html',
                            insurance_providers=insurance_providers,
-                           gender_options=gender_options, blood_types=blood_types,
+                           gender_options=gender_options, # Pass to template
+                           blood_types=blood_types,
                            marital_statuses=marital_statuses)
 
-# Add Patient Processing (POST) - Includes Hashing, Insurance ID, Audit
 @patient_management.route('/admin/patients/add', methods=['POST'])
 @login_required
 def add_patient():
@@ -179,40 +169,48 @@ def add_patient():
         flash("Access denied", "danger")
         return redirect(url_for('login.login'))
 
-    redirect_target = url_for('patient_management.add_patient_form') # Default redirect on error
+    redirect_target = url_for('patient_management.add_patient_form')
 
-    # Extract form data
     username = request.form.get('username')
     email = request.form.get('email')
-    password = request.form.get('password') # Ensure field exists in template
+    password = request.form.get('password')
     first_name = request.form.get('first_name')
     last_name = request.form.get('last_name')
     phone = request.form.get('phone') or None
     date_of_birth = request.form.get('date_of_birth') or None
-    gender = request.form.get('gender') or None
-    blood_type = request.form.get('blood_type') or None
+    gender = request.form.get('gender') # Will be a string, e.g. "Male" or "" if not selected (but it's required)
+    
+    blood_type = request.form.get('blood_type')
+    if blood_type == '': blood_type = None # Convert empty selection to NULL
+
     height_cm_str = request.form.get('height_cm')
     weight_kg_str = request.form.get('weight_kg')
     insurance_provider_id = request.form.get('insurance_provider_id') or None
     insurance_policy_number = request.form.get('insurance_policy_number') or None
     insurance_group_number = request.form.get('insurance_group_number') or None
     insurance_expiration = request.form.get('insurance_expiration') or None
-    marital_status = request.form.get('marital_status') or None
+    
+    marital_status = request.form.get('marital_status')
+    if marital_status == '': marital_status = None # Convert empty selection to NULL
+    
     occupation = request.form.get('occupation') or None
 
-    # Basic Validation
     if not all([username, email, password, first_name, last_name, date_of_birth, gender]):
         flash("Missing required fields (Username, Email, Password, Name, DOB, Gender).", "danger")
         return redirect(redirect_target)
+    
+    # Ensure gender is not an empty string if it's required.
+    # The `all()` check above handles if gender is None or empty string.
+    # The main issue is if the string `gender` is not a valid ENUM.
+    # This relies on the form select options matching DB ENUMs.
 
-    # Validate/Convert numeric fields
     height_cm, weight_kg, insurance_provider_id_int = None, None, None
     try:
         if height_cm_str: height_cm = float(height_cm_str)
         if weight_kg_str: weight_kg = float(weight_kg_str)
         if insurance_provider_id and insurance_provider_id != '':
              insurance_provider_id_int = int(insurance_provider_id)
-        else: insurance_provider_id_int = None # Allow setting to NULL
+        else: insurance_provider_id_int = None
     except ValueError:
         flash("Invalid number format for height, weight, or insurance ID.", "danger")
         return redirect(redirect_target)
@@ -233,11 +231,10 @@ def add_patient():
             flash("Email or Username already exists.", "danger")
             return redirect(redirect_target)
 
-        connection.start_transaction()
         cursor.execute("""
-            INSERT INTO users (username, email, password_hash, first_name, last_name, user_type, phone)
+            INSERT INTO users (username, email, password, first_name, last_name, user_type, phone)
             VALUES (%s, %s, %s, %s, %s, 'patient', %s)
-        """, (username, email, password_hash, first_name, last_name, phone))
+        """, (username, email, password, first_name, last_name, phone))
         new_user_id = cursor.lastrowid
 
         cursor.execute("""
@@ -259,18 +256,17 @@ def add_patient():
         redirect_target = url_for('patient_management.view_patient', patient_id=new_user_id)
 
     except Exception as e:
-        if connection.is_connected() and connection.in_transaction: connection.rollback()
+        current_app.logger.error(f"Error adding patient {username}: {e}") # Log before potential rollback
+        if connection.is_connected():
+            if connection.in_transaction:
+                connection.rollback()
         flash(f"Error adding patient: {str(e)}", "danger")
-        current_app.logger.error(f"Error adding patient {username}: {e}")
-        # Keep redirect target as the add form on error
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
     return redirect(redirect_target)
 
-
-# View Patient Details (Updated Insurance Join)
 @patient_management.route('/admin/patients/view/<int:patient_id>', methods=['GET'])
 @login_required
 def view_patient(patient_id):
@@ -283,7 +279,8 @@ def view_patient(patient_id):
     patient, allergies, diagnoses, upcoming_appointments = None, [], [], []
 
     try:
-        # Get patient profile details with insurance provider name
+        # Fetch patient profile details with insurance provider name
+        # Removed appointment_type join from main patient query for simplicity, fetch in appointments query
         cursor.execute("""
             SELECT u.*, p.*, ip.provider_name AS insurance_provider_name
             FROM users u JOIN patients p ON u.user_id = p.user_id
@@ -296,9 +293,8 @@ def view_patient(patient_id):
             flash("Patient not found", "danger")
             return redirect(url_for('patient_management.index'))
 
-        # Fetch related data (Allergies, Diagnoses, Appointments - add joins as needed)
         cursor.execute("""
-             SELECT a.allergy_name, a.allergy_type, pa.severity, pa.reaction_description, pa.diagnosed_date
+             SELECT a.allergy_name, a.allergy_type, pa.severity, pa.reaction_description, pa.diagnosed_date, pa.notes
              FROM patient_allergies pa JOIN allergies a ON pa.allergy_id = a.allergy_id
              WHERE pa.patient_id = %s ORDER BY a.allergy_name
          """, (patient_id,)); allergies = cursor.fetchall()
@@ -310,8 +306,11 @@ def view_patient(patient_id):
          """, (patient_id,)); diagnoses = cursor.fetchall()
 
         cursor.execute("""
-             SELECT app.*, CONCAT(doc_user.first_name, ' ', doc_user.last_name) as doctor_name
-             FROM appointments app JOIN users doc_user ON app.doctor_id = doc_user.user_id
+             SELECT app.*, CONCAT(doc_user.first_name, ' ', doc_user.last_name) as doctor_name,
+                    appt.type_name as appointment_type_name 
+             FROM appointments app 
+             JOIN users doc_user ON app.doctor_id = doc_user.user_id
+             LEFT JOIN appointment_types appt ON app.appointment_type_id = appt.type_id
              WHERE app.patient_id = %s AND app.appointment_date >= CURDATE()
              ORDER BY app.appointment_date ASC, app.start_time ASC
          """, (patient_id,)); upcoming_appointments = cursor.fetchall()
@@ -326,9 +325,9 @@ def view_patient(patient_id):
 
     return render_template('Admin_Portal/Patients/view_patient.html',
                            patient=patient, allergies=allergies, diagnoses=diagnoses,
-                           appointments=upcoming_appointments)
+                           upcoming_appointments=upcoming_appointments)
 
-# Edit Patient Form (GET) - Updated Insurance/ENUM fetching
+
 @patient_management.route('/admin/patients/edit/<int:patient_id>', methods=['GET'])
 @login_required
 def edit_patient_form(patient_id):
@@ -357,7 +356,6 @@ def edit_patient_form(patient_id):
         blood_types = get_enum_values(cursor, 'patients', 'blood_type')
         marital_statuses = get_enum_values(cursor, 'patients', 'marital_status')
 
-        # Format dates for input fields
         patient['dob_formatted'] = patient.get('date_of_birth').strftime('%Y-%m-%d') if patient.get('date_of_birth') else ''
         patient['insurance_exp_formatted'] = patient.get('insurance_expiration').strftime('%Y-%m-%d') if patient.get('insurance_expiration') else ''
 
@@ -371,10 +369,10 @@ def edit_patient_form(patient_id):
 
     return render_template('Admin_Portal/Patients/edit_patient.html',
                            patient=patient, insurance_providers=insurance_providers,
-                           gender_options=gender_options, blood_types=blood_types,
+                           gender_options=gender_options, # Pass to template
+                           blood_types=blood_types,
                            marital_statuses=marital_statuses)
 
-# Edit Patient Processing (POST) - Updated Insurance ID, Audit
 @patient_management.route('/admin/patients/edit/<int:patient_id>', methods=['POST'])
 @login_required
 def edit_patient(patient_id):
@@ -384,27 +382,33 @@ def edit_patient(patient_id):
 
     redirect_target = url_for('patient_management.edit_patient_form', patient_id=patient_id)
 
-    # Extract form data
     first_name = request.form.get('first_name')
     last_name = request.form.get('last_name')
     email = request.form.get('email')
     phone = request.form.get('phone') or None
     date_of_birth = request.form.get('date_of_birth') or None
-    gender = request.form.get('gender') or None
-    blood_type = request.form.get('blood_type') or None
+    gender = request.form.get('gender') # Value from form
+    
+    blood_type = request.form.get('blood_type')
+    if blood_type == '': blood_type = None # Convert empty selection to NULL
+    
     height_cm_str = request.form.get('height_cm')
     weight_kg_str = request.form.get('weight_kg')
     insurance_provider_id = request.form.get('insurance_provider_id') or None
     insurance_policy_number = request.form.get('insurance_policy_number') or None
     insurance_group_number = request.form.get('insurance_group_number') or None
     insurance_expiration = request.form.get('insurance_expiration') or None
-    marital_status = request.form.get('marital_status') or None
+    
+    marital_status = request.form.get('marital_status')
+    if marital_status == '': marital_status = None # Convert empty selection to NULL
+    
     occupation = request.form.get('occupation') or None
     new_password = request.form.get('new_password')
     confirm_password = request.form.get('confirm_password')
 
-    if not all([first_name, last_name, email]):
-        flash("Missing required fields (First Name, Last Name, Email).", "danger")
+    # Ensure required fields are present and gender is not empty
+    if not all([first_name, last_name, email, date_of_birth, gender]):
+        flash("Missing required fields (First Name, Last Name, Email, DOB, Gender).", "danger")
         return redirect(redirect_target)
 
     height_cm, weight_kg, insurance_provider_id_int = None, None, None
@@ -420,10 +424,14 @@ def edit_patient(patient_id):
 
     update_password = False; new_password_hash = None
     if new_password or confirm_password:
-        if not new_password or not confirm_password:
-            flash("Both New Password and Confirm Password are required.", "warning"); return redirect(redirect_target)
+        if not new_password :
+            flash("New Password is required if Confirm Password is provided.", "warning"); return redirect(redirect_target)
+        if not confirm_password :
+            flash("Confirm Password is required if New Password is provided.", "warning"); return redirect(redirect_target)
         if new_password != confirm_password:
             flash("New passwords do not match.", "danger"); return redirect(redirect_target)
+        if len(new_password) < 8 :
+            flash("New password must be at least 8 characters long.", "danger"); return redirect(redirect_target)
         new_password_hash = generate_password_hash(new_password); update_password = True
 
     current_admin_id = get_current_user_id()
@@ -440,11 +448,10 @@ def edit_patient(patient_id):
             flash("Email address already in use by another user.", "danger")
             return redirect(redirect_target)
 
-        connection.start_transaction()
         user_update_query = "UPDATE users SET first_name = %s, last_name = %s, email = %s, phone = %s"
         user_params = [first_name, last_name, email, phone]
         if update_password:
-            user_update_query += ", password_hash = %s"; user_params.append(new_password_hash)
+            user_update_query += ", password = %s"; user_params.append(new_password_hash)
         user_update_query += " WHERE user_id = %s"; user_params.append(patient_id)
         cursor.execute(user_update_query, tuple(user_params))
 
@@ -469,16 +476,18 @@ def edit_patient(patient_id):
         redirect_target = url_for('patient_management.view_patient', patient_id=patient_id)
 
     except Exception as e:
-        if connection.is_connected() and connection.in_transaction: connection.rollback()
+        current_app.logger.error(f"Error editing patient {patient_id}: {e}") # Log before potential rollback
+        if connection.is_connected():
+            if connection.in_transaction:
+                connection.rollback()
         flash(f"Error updating patient: {str(e)}", "danger")
-        current_app.logger.error(f"Error editing patient {patient_id}: {e}")
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
     return redirect(redirect_target)
 
-# Delete Patient Confirmation Form (GET)
+
 @patient_management.route('/admin/patients/delete/<int:patient_id>', methods=['GET'])
 @login_required
 def delete_patient_form(patient_id):
@@ -490,7 +499,7 @@ def delete_patient_form(patient_id):
         flash("Patient not found", "danger"); return redirect(url_for('patient_management.index'))
     return render_template('Admin_Portal/Patients/delete_confirmation.html', patient=patient)
 
-# Delete Patient Processing (POST) - Includes Audit
+
 @patient_management.route('/admin/patients/delete/<int:patient_id>', methods=['POST'])
 @login_required
 def delete_patient(patient_id):
@@ -507,10 +516,9 @@ def delete_patient(patient_id):
     cursor = connection.cursor()
 
     try:
-        connection.start_transaction()
-        # Assumes ON DELETE CASCADE is set correctly on FKs referencing users.user_id
-        # If not, add explicit DELETEs from child tables here first.
-        # e.g., cursor.execute("DELETE FROM patient_allergies WHERE patient_id = %s", (patient_id,))
+        # Assuming ON DELETE CASCADE is correctly set for foreign keys in 'patients' table
+        # and other related tables that point to 'users.user_id'.
+        # If not, you would need to delete from child tables first.
         cursor.execute("DELETE FROM users WHERE user_id = %s AND user_type = 'patient'", (patient_id,))
         deleted_rows = cursor.rowcount
 
@@ -522,13 +530,16 @@ def delete_patient(patient_id):
             connection.commit()
             flash("Patient and associated records deleted successfully.", "success")
         else:
-            connection.rollback() # Rollback if user wasn't found/deleted
+            if connection.in_transaction: # Should not be necessary if no DML before this check
+                connection.rollback()
             flash("Patient not found or already deleted.", "warning")
 
     except Exception as e:
-        if connection.is_connected() and connection.in_transaction: connection.rollback()
+        current_app.logger.error(f"Error deleting patient {patient_id}: {e}") # Log before potential rollback
+        if connection.is_connected():
+            if connection.in_transaction:
+                connection.rollback()
         flash(f"Error deleting patient: {str(e)}", "danger")
-        current_app.logger.error(f"Error deleting patient {patient_id}: {e}")
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()

@@ -6,53 +6,40 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='register.css') }}">
     <title>Register New Account - Health Portal</title>
      <script>
-        // IIFE for theme (remains the same)
+        // IIFE for theme
         (function() { const storedTheme = localStorage.getItem('theme'); const root = document.documentElement; if (storedTheme === 'light') { root.classList.add('light-mode'); } else { root.classList.remove('light-mode'); } })();
     </script>
 </head>
 <body class="{{ 'light-mode' if request.cookies.get('theme') == 'light' else '' }}">
 
-    <!-- Theme Toggle Button (remains the same) -->
     <button id="theme-toggle" title="Toggle Light/Dark Mode"><span class="theme-icon">☀️</span></button>
 
-    <!-- Background Visuals Container -->
     <div class="full-page-background">
-        <!-- EKG Heart Pulse - Now Scrolls -->
         <div class="heartbeat-wrapper">
             <div class="heartbeat-lines">
-                <!-- Duplicate SVG for seamless loop -->
                 <svg viewBox="0 0 600 100" preserveAspectRatio="none"><path d="M0,50 C20,50 40,20 60,50 S100,80 120,50 S160,30 180,50 S220,70 240,50 S280,40 300,50 S340,60 360,50 S400,35 420,50 S460,75 480,50 S520,45 540,50 S580,50 600,50" /></svg>
                 <svg viewBox="0 0 600 100" preserveAspectRatio="none"><path d="M0,50 C20,50 40,20 60,50 S100,80 120,50 S160,30 180,50 S220,70 240,50 S280,40 300,50 S340,60 360,50 S400,35 420,50 S460,75 480,50 S520,45 540,50 S580,50 600,50" /></svg>
             </div>
         </div>
-
-        <!-- Existing & Increased Illustrations -->
         <div class="medical-symbols">
-            <!-- Increased crosses -->
             <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div>
             <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div>
             <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div>
-             <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div> <!-- More -->
+            <div class="medical-cross"></div> <div class="medical-cross"></div> <div class="medical-cross"></div>
         </div>
         <div class="pills">
-             <!-- Increased pills -->
             <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div>
             <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div>
-            <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <!-- More -->
+            <div class="pill"></div> <div class="pill"></div> <div class="pill"></div> <div class="pill"></div>
         </div>
         <div class="caduceus"> <div class="caduceus-staff"></div> <div class="caduceus-wings"><div class="caduceus-wing"></div><div class="caduceus-wing"></div></div> <div class="caduceus-snake"><svg class="caduceus-snake-path" viewBox="0 0 60 100"><path d="M30,0 C40,10 20,30 30,40 C40,50 20,70 30,80 C40,90 20,110 30,120" /></svg></div> </div>
         <div class="caduceus caduceus-2"> <div class="caduceus-staff"></div> <div class="caduceus-wings"><div class="caduceus-wing"></div><div class="caduceus-wing"></div></div> <div class="caduceus-snake"><svg class="caduceus-snake-path" viewBox="0 0 60 100"><path d="M30,0 C40,10 20,30 30,40 C40,50 20,70 30,80 C40,90 20,110 30,120" /></svg></div> </div>
-
-        <!-- Existing Floating icons -->
         <div class="floating-icon stethoscope-icon"> <svg class="stethoscope-svg" viewBox="0 0 50 50"> <path d="M25,3 C18,3 14,8 14,15 C14,22 18,27 25,27 S36,22 36,15 C36,8 32,3 25,3 Z M25,25 C20,25 16,21 16,15 C16,9 20,5 25,5 C30,5 34,9 34,15 C34,21 30,25 25,25 Z"/><circle class="chestpiece-fill" cx="25" cy="15" r="8"/><path d="M14,15 Q14,35 8,40"/><path d="M36,15 Q36,35 42,40"/><circle cx="8" cy="42" r="3.5"/><circle cx="42" cy="42" r="3.5"/> </svg> </div>
         <div class="floating-icon dna-icon"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
         <div class="floating-icon molecule-icon"> <div class="css-icon-wrapper"> <div class="atom atom-1"></div> <div class="atom atom-2"></div> <div class="atom atom-3"></div> </div> </div>
-        <!-- More instances of existing -->
-         <div class="floating-icon stethoscope-icon stethoscope-icon-2"> <svg class="stethoscope-svg" viewBox="0 0 50 50"><path d="M25,3 C18,3 14,8 14,15 C14,22 18,27 25,27 S36,22 36,15 C36,8 32,3 25,3 Z M25,25 C20,25 16,21 16,15 C16,9 20,5 25,5 C30,5 34,9 34,15 C34,21 30,25 25,25 Z"/><circle class="chestpiece-fill" cx="25" cy="15" r="8"/><path d="M14,15 Q14,35 8,40"/><path d="M36,15 Q36,35 42,40"/><circle cx="8" cy="42" r="3.5"/><circle cx="42" cy="42" r="3.5"/> </svg> </div>
-         <div class="floating-icon dna-icon dna-icon-2"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
-         <div class="floating-icon molecule-icon molecule-icon-2"> <div class="css-icon-wrapper"> <div class="atom atom-1"></div> <div class="atom atom-2"></div> <div class="atom atom-3"></div> </div> </div>
-
-        <!-- NEW Floating Icons -->
+        <div class="floating-icon stethoscope-icon stethoscope-icon-2"> <svg class="stethoscope-svg" viewBox="0 0 50 50"><path d="M25,3 C18,3 14,8 14,15 C14,22 18,27 25,27 S36,22 36,15 C36,8 32,3 25,3 Z M25,25 C20,25 16,21 16,15 C16,9 20,5 25,5 C30,5 34,9 34,15 C34,21 30,25 25,25 Z"/><circle class="chestpiece-fill" cx="25" cy="15" r="8"/><path d="M14,15 Q14,35 8,40"/><path d="M36,15 Q36,35 42,40"/><circle cx="8" cy="42" r="3.5"/><circle cx="42" cy="42" r="3.5"/> </svg> </div>
+        <div class="floating-icon dna-icon dna-icon-2"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
+        <div class="floating-icon molecule-icon molecule-icon-2"> <div class="css-icon-wrapper"> <div class="atom atom-1"></div> <div class="atom atom-2"></div> <div class="atom atom-3"></div> </div> </div>
         <div class="floating-icon bandage-icon"> <div class="bandage-strip"></div> <div class="bandage-pad"></div> </div>
         <div class="floating-icon microscope-icon"> <svg viewBox="0 0 100 100"> <path d="M 40 95 L 60 95 L 60 85 L 40 85 Z M 50 85 L 50 65 M 40 65 L 60 65 M 50 65 Q 30 60 30 40 L 30 15 M 30 15 L 70 15 Q 70 30 60 30 L 60 50 Q 75 55 75 65 L 50 65 M 30 15 L 20 5 M 20 5 L 15 10 M 20 5 L 25 10" stroke="currentColor" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/> <circle cx="50" cy="57.5" r="5" fill="currentColor"/> </svg> </div>
         <div class="floating-icon test-tube-icon"> <svg viewBox="0 0 50 100"> <path d="M 10 0 L 10 80 Q 10 100 25 100 Q 40 100 40 80 L 40 0 Z" stroke="currentColor" stroke-width="4" fill="var(--illustration-element-fill)"/> <path d="M 10 50 L 40 50 L 40 80 Q 40 95 25 95 Q 10 95 10 80 Z" fill="var(--accent-primary)" opacity="0.5"/> </svg> </div>
@@ -63,37 +50,38 @@
         <div class="floating-icon mortar-pestle-icon"> <div class="mortar"></div> <div class="pestle"></div> </div>
         <div class="floating-icon first-aid-icon"> <div class="fa-box"></div> <div class="fa-cross-v"></div> <div class="fa-cross-h"></div> </div>
         <div class="floating-icon tooth-icon"> <svg viewBox="0 0 80 100"> <path d=" M 10 30 Q 10 0 40 0 Q 70 0 70 30 L 60 30 L 60 60 Q 60 80 70 95 L 55 100 L 50 70 L 30 70 L 25 100 L 10 95 Q 20 80 20 60 L 20 30 Z" fill="var(--illustration-element-bg)" stroke="currentColor" stroke-width="4"/> </svg> </div>
-
-        <!-- Add duplicates/reposition easily by adding more divs with existing classes -->
         <div class="floating-icon stethoscope-icon stethoscope-icon-3"> <svg class="stethoscope-svg" viewBox="0 0 50 50"><path d="M25,3 C18,3 14,8 14,15 C14,22 18,27 25,27 S36,22 36,15 C36,8 32,3 25,3 Z M25,25 C20,25 16,21 16,15 C16,9 20,5 25,5 C30,5 34,9 34,15 C34,21 30,25 25,25 Z"/><circle class="chestpiece-fill" cx="25" cy="15" r="8"/><path d="M14,15 Q14,35 8,40"/><path d="M36,15 Q36,35 42,40"/><circle cx="8" cy="42" r="3.5"/><circle cx="42" cy="42" r="3.5"/> </svg> </div>
         <div class="floating-icon dna-icon dna-icon-3"> <svg class="dna-svg" viewBox="0 0 32 50"> <path class="dna-strand-1" d="M 6 0 Q 16 12.5 6 25 T 6 50"/><path class="dna-strand-2" d="M 26 0 Q 16 12.5 26 25 T 26 50"/><line class="dna-connector" x1="6" y1="5" x2="26" y2="5"/><line class="dna-connector" x1="8" y1="10" x2="24" y2="10"/><line class="dna-connector" x1="11" y1="15" x2="21" y2="15"/><line class="dna-connector" x1="16" y1="20" x2="16" y2="20"/><line class="dna-connector" x1="11" y1="25" x2="21" y2="25"/><line class="dna-connector" x1="8" y1="30" x2="24" y2="30"/><line class="dna-connector" x1="6" y1="35" x2="26" y2="35"/><line class="dna-connector" x1="8" y1="40" x2="24" y2="40"/><line class="dna-connector" x1="11" y1="45" x2="21" y2="45"/> </svg> </div>
-         <div class="floating-icon bandage-icon bandage-icon-2"> <div class="bandage-strip"></div> <div class="bandage-pad"></div> </div>
+        <div class="floating-icon bandage-icon bandage-icon-2"> <div class="bandage-strip"></div> <div class="bandage-pad"></div> </div>
         <div class="floating-icon test-tube-icon test-tube-icon-2"> <svg viewBox="0 0 50 100"> <path d="M 10 0 L 10 80 Q 10 100 25 100 Q 40 100 40 80 L 40 0 Z" stroke="currentColor" stroke-width="4" fill="var(--illustration-element-fill)"/> <path d="M 10 50 L 40 50 L 40 80 Q 40 95 25 95 Q 10 95 10 80 Z" fill="var(--accent-primary)" opacity="0.5"/> </svg> </div>
-
         <div class="waves"> <div class="wave"></div> <div class="wave"></div> <div class="wave wave-3"></div> </div>
     </div>
 
-    <!-- Login Container (Form content remains exactly the same) -->
     <div class="login-container">
         <form method="POST" action="{{ url_for('register.register_route') }}" enctype="multipart/form-data" class="login-form needs-validation" novalidate>
-            <!-- Logo and Heading -->
-             <div class="logo"> <div class="logo-circle"></div> <div class="logo-text">Health Portal</div> </div>
+            <div class="logo"> <div class="logo-circle"></div> <div class="logo-text">Health Portal</div> </div>
             <h1>Create Your Account</h1>
 
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} <div class="flash-messages"> {% for category, message in messages %} {% set alert_class = 'alert-' + category if category in ['danger', 'warning', 'info', 'success'] else 'alert-secondary' %} <div class="alert {{ alert_class }}" role="alert">{{ message }}</div> {% endfor %} </div> {% endif %} {% endwith %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="flash-messages">
+                  {% for category, message in messages %}
+                    {% set alert_class = 'alert-' + category if category in ['danger', 'warning', 'info', 'success'] else 'alert-secondary' %}
+                    <div class="alert {{ alert_class }}" role="alert">{{ message }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
 
-            <!-- Core Fields -->
             <div class="form-group">
                 <label for="user_type">I am registering as a<span class="required-star">*</span></label>
-                <select name="user_type" id="user_type" required onchange="toggleUserTypeFields()">
+                <select name="user_type" id="user_type" required>
                     <option value="" {% if not form_data.get('user_type') %}selected{% endif %} disabled>-- Select Account Type --</option>
                     <option value="patient" {% if form_data.get('user_type') == 'patient' %}selected{% endif %}>Patient</option>
                     <option value="doctor" {% if form_data.get('user_type') == 'doctor' %}selected{% endif %}>Doctor / Healthcare Professional</option>
                 </select>
             </div>
 
-            <!-- Row wrapper for side-by-side inputs -->
             <div class="form-row">
                 <div class="form-group">
                     <label for="first_name">First Name<span class="required-star">*</span></label>
@@ -105,7 +93,6 @@
                 </div>
             </div>
 
-            <!-- Row wrapper -->
             <div class="form-row">
                  <div class="form-group">
                     <label for="username">Username<span class="required-star">*</span></label>
@@ -117,9 +104,9 @@
                 </div>
             </div>
 
-            <!-- Password fields -->
-             <div id="password_fields" class="{{ 'hidden' if form_data.get('user_type') == 'doctor' else '' }}">
-                 <div class="form-row">
+            <!-- Password fields - Now always visible structure-wise, JS controls 'required' and visibility -->
+            <div id="password_fields" class="hidden">
+                <div class="form-row">
                     <div class="form-group">
                         <label for="password">Create Password<span class="required-star">*</span></label>
                         <input type="password" name="password" id="password" autocomplete="new-password" minlength="8">
@@ -129,34 +116,32 @@
                         <label for="confirm_password">Confirm Password<span class="required-star">*</span></label>
                         <input type="password" name="confirm_password" id="confirm_password" autocomplete="new-password">
                     </div>
-                 </div>
-             </div>
+                </div>
+            </div>
 
-             <!-- Row wrapper -->
-             <div class="form-row">
-                 <div class="form-group">
+            <div class="form-row">
+                <div class="form-group">
                     <label for="phone">Phone Number</label>
                     <input type="tel" name="phone" id="phone" value="{{ form_data.get('phone', '') }}" placeholder="(Optional)" autocomplete="tel">
                 </div>
-                 <div class="form-group">
+                <div class="form-group">
                     <label for="country">Country</label>
                     <input type="text" name="country" id="country" value="{{ form_data.get('country', 'United States') }}" autocomplete="country-name">
                 </div>
             </div>
 
-
             <!-- Patient Specific Fields -->
             <div id="patient_fields" class="hidden field-section">
                 <hr>
                 <h3>Patient Information</h3>
-                 <div class="form-row">
-                     <div class="form-group">
+                <div class="form-row">
+                    <div class="form-group">
                         <label for="date_of_birth">Date of Birth<span class="required-star">*</span></label>
-                        <input type="date" name="date_of_birth" id="date_of_birth" value="{{ form_data.get('date_of_birth', '') }}" autocomplete="bday" required>
+                        <input type="date" name="date_of_birth" id="date_of_birth" value="{{ form_data.get('date_of_birth', '') }}" autocomplete="bday">
                     </div>
-                     <div class="form-group">
+                    <div class="form-group">
                         <label for="gender">Gender<span class="required-star">*</span></label>
-                        <select name="gender" id="gender" autocomplete="sex" required>
+                        <select name="gender" id="gender" autocomplete="sex">
                             <option value="" {% if not form_data.get('gender') %}selected{% endif %} disabled>-- Select --</option>
                             <option value="male" {% if form_data.get('gender') == 'male' %}selected{% endif %}>Male</option>
                             <option value="female" {% if form_data.get('gender') == 'female' %}selected{% endif %}>Female</option>
@@ -170,7 +155,7 @@
                     <input type="text" name="insurance_provider" id="insurance_provider" value="{{ form_data.get('insurance_provider', '') }}" placeholder="(Optional)">
                     <small>Enter the exact name if known.</small>
                 </div>
-                 <div class="form-row">
+                <div class="form-row">
                     <div class="form-group">
                         <label for="insurance_policy_number">Policy Number</label>
                         <input type="text" name="insurance_policy_number" id="insurance_policy_number" value="{{ form_data.get('insurance_policy_number', '') }}" placeholder="(Optional)">
@@ -184,35 +169,65 @@
 
             <!-- Doctor Specific Fields -->
             <div id="professional_fields" class="hidden field-section">
-                 <hr>
+                <hr>
                 <h3>Professional Information</h3>
-                 <p class="info-text">Administrator review required. Provide accurate details and supporting documents.</p>
+                <p class="info-text">Administrator review required. Provide accurate details and supporting documents.</p>
+           
                 <div class="form-group">
-                    <label for="specialization_id">Primary Specialization<span class="required-star">*</span></label>
-                    <select name="specialization_id" id="specialization_id" required>
-                         <option value="" {% if not form_data.get('specialization_id') %}selected{% endif %} disabled>-- Select Specialization --</option>
-                         {% if specializations %} {% for spec in specializations %} <option value="{{ spec.specialization_id }}" {% if form_data.get('specialization_id')|string == spec.specialization_id|string %}selected{% endif %}> {{ spec.name }} </option> {% endfor %} {% else %} <option value="" disabled>Error loading specializations</option> {% endif %}
+                    <label for="department_id">Department<span class="required-star">*</span></label>
+                    <select name="department_id" id="department_id">
+                        <option value="" {% if not form_data.get('department_id') %}selected{% endif %} disabled>-- Select Department --</option>
+                        {% if departments %}
+                            {% for dept in departments %}
+                                <option value="{{ dept.department_id }}" {% if form_data.get('department_id')|string == dept.department_id|string %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                            {% endfor %}
+                        {% else %}
+                            <option value="" disabled>Error loading departments</option>
+                        {% endif %}
                     </select>
                 </div>
-                 <div class="form-row">
+           
+                <div class="form-group">
+                    <label for="specialization_id">Primary Specialization<span class="required-star">*</span></label>
+                    <select name="specialization_id" id="specialization_id"
+                            {% if form_data.get('specialization_id') %}data-persisted-value="{{ form_data.get('specialization_id') }}"{% endif %}>
+                        <option value="" selected disabled>
+                            {% if form_data.get('department_id') %}
+                                -- Select Specialization --
+                            {% else %}
+                                -- Select Department First --
+                            {% endif %}
+                        </option>
+                        {% if form_data.get('department_id') and specializations_for_selected_dept %}
+                            {% for spec in specializations_for_selected_dept %}
+                                <option value="{{ spec.specialization_id }}" {% if form_data.get('specialization_id')|string == spec.specialization_id|string %}selected{% endif %}>
+                                    {{ spec.name }}
+                                </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label for="license_number">License Number<span class="required-star">*</span></label>
-                        <input type="text" name="license_number" id="license_number" value="{{ form_data.get('license_number', '') }}" required>
+                        <input type="text" name="license_number" id="license_number" value="{{ form_data.get('license_number', '') }}">
                     </div>
                     <div class="form-group">
                         <label for="license_state">License State/Jurisdiction<span class="required-star">*</span></label>
-                        <input type="text" name="license_state" id="license_state" value="{{ form_data.get('license_state', '') }}" placeholder="e.g., CA, NY, ON" required>
+                        <input type="text" name="license_state" id="license_state" value="{{ form_data.get('license_state', '') }}" placeholder="e.g., CA, NY, ON">
                     </div>
-                 </div>
-                <div class="form-group"> <!-- Keep Expiration Date full width -->
-                    <label for="license_expiration">License Expiration Date<span class="required-star">*</span></label>
-                    <input type="date" name="license_expiration" id="license_expiration" value="{{ form_data.get('license_expiration', '') }}" required>
                 </div>
-
+                <div class="form-group">
+                    <label for="license_expiration">License Expiration Date<span class="required-star">*</span></label>
+                    <input type="date" name="license_expiration" id="license_expiration" value="{{ form_data.get('license_expiration', '') }}">
+                </div>
+           
                 <h4>Supporting Documents <small>(Optional but Recommended)</small></h4>
                 <p class="info-text">Allowed types: PDF, JPG, PNG, DOC, DOCX.</p>
-
-                 <div class="form-row">
+           
+                <div class="form-row">
                     <div class="form-group file-input-group">
                         <label for="id_document" class="form-label">Identity Document</label>
                         <input class="form-control" type="file" id="id_document" name="id_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
@@ -222,7 +237,7 @@
                         <input class="form-control" type="file" id="license_document" name="license_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
                     </div>
                 </div>
-                 <div class="form-row">
+                <div class="form-row">
                     <div class="form-group file-input-group">
                         <label for="specialization_document" class="form-label">Proof of Specialization</label>
                         <input class="form-control" type="file" id="specialization_document" name="specialization_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
@@ -231,18 +246,182 @@
                         <label for="other_document" class="form-label">Other Supporting Document</label>
                         <input class="form-control" type="file" id="other_document" name="other_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
                     </div>
-                 </div>
+                </div>
             </div>
 
             <button type="submit" class="login-button">Register</button>
 
             <div class="login-link"> Already have an account? <a href="{{ url_for('login.login_route') }}">Login Here</a> </div>
         </form>
-    </div> <!-- End login-container -->
+    </div>
 
-    <!-- Scripts (remain the same) -->
-    <script> /* Theme Toggle Script */ document.addEventListener('DOMContentLoaded', () => { const themeToggle = document.getElementById('theme-toggle'); const root = document.documentElement; const body = document.body; const themeIcon = themeToggle.querySelector('.theme-icon'); const updateButton = () => { if (root.classList.contains('light-mode')) { themeIcon.textContent = '🌙'; themeToggle.title = 'Switch to Dark Mode'; } else { themeIcon.textContent = '☀️'; themeToggle.title = 'Switch to Light Mode'; } }; updateButton(); themeToggle.addEventListener('click', () => { root.classList.toggle('light-mode'); body.classList.toggle('light-mode'); if (root.classList.contains('light-mode')) { localStorage.setItem('theme', 'light'); } else { localStorage.removeItem('theme'); } updateButton(); }); }); </script>
-    <script> /* Field Toggle Script */ function toggleUserTypeFields() { const userType = document.getElementById('user_type').value; const patientFields = document.getElementById('patient_fields'); const professionalFields = document.getElementById('professional_fields'); const passwordFields = document.getElementById('password_fields'); const dobInput = document.getElementById('date_of_birth'); const genderSelect = document.getElementById('gender'); const specializationSelect = document.getElementById('specialization_id'); const licenseNumberInput = document.getElementById('license_number'); const licenseStateInput = document.getElementById('license_state'); const licenseExpirationInput = document.getElementById('license_expiration'); const passwordInput = document.getElementById('password'); const confirmPasswordInput = document.getElementById('confirm_password'); patientFields.classList.add('hidden'); professionalFields.classList.add('hidden'); passwordFields.classList.add('hidden'); if (dobInput) dobInput.required = false; if (genderSelect) genderSelect.required = false; if (specializationSelect) specializationSelect.required = false; if (licenseNumberInput) licenseNumberInput.required = false; if (licenseStateInput) licenseStateInput.required = false; if (licenseExpirationInput) licenseExpirationInput.required = false; if (passwordInput) passwordInput.required = false; if (confirmPasswordInput) confirmPasswordInput.required = false; if (userType === 'patient') { patientFields.classList.remove('hidden'); passwordFields.classList.remove('hidden'); if (dobInput) dobInput.required = true; if (genderSelect) genderSelect.required = true; if (passwordInput) passwordInput.required = true; if (confirmPasswordInput) confirmPasswordInput.required = true; } else if (userType === 'doctor') { professionalFields.classList.remove('hidden'); if (specializationSelect) specializationSelect.required = true; if (licenseNumberInput) licenseNumberInput.required = true; if (licenseStateInput) licenseStateInput.required = true; if (licenseExpirationInput) licenseExpirationInput.required = true; } } window.addEventListener('load', toggleUserTypeFields); </script>
+    <script>
+    // --- Theme Toggle Script ---
+    (function() { // IIFE for initial theme load
+        const storedTheme = localStorage.getItem('theme');
+        const root = document.documentElement;
+        if (storedTheme === 'light') {
+            root.classList.add('light-mode');
+        } else {
+            root.classList.remove('light-mode'); // Default to dark or no class
+        }
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            const root = document.documentElement;
+            const body = document.body;
+            const themeIcon = themeToggle.querySelector('.theme-icon');
+
+            const updateButton = () => {
+                if (root.classList.contains('light-mode')) {
+                    if(themeIcon) themeIcon.textContent = '🌙';
+                    themeToggle.title = 'Switch to Dark Mode';
+                } else {
+                    if(themeIcon) themeIcon.textContent = '☀️';
+                    themeToggle.title = 'Switch to Light Mode';
+                }
+            };
+            updateButton(); 
+
+            themeToggle.addEventListener('click', () => {
+                root.classList.toggle('light-mode');
+                if (body) body.classList.toggle('light-mode'); 
+
+                if (root.classList.contains('light-mode')) {
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    localStorage.removeItem('theme');
+                }
+                updateButton();
+            });
+        }
+    });
+
+    // --- User Type and Conditional Fields Script ---
+    function toggleUserTypeFields() {
+        const userTypeSelect = document.getElementById('user_type');
+        if (!userTypeSelect) return; 
+        const userType = userTypeSelect.value;
+
+        const patientFields = document.getElementById('patient_fields');
+        const professionalFields = document.getElementById('professional_fields');
+        const passwordFields = document.getElementById('password_fields'); 
+
+        const dobInput = document.getElementById('date_of_birth');
+        const genderSelect = document.getElementById('gender');
+        const departmentSelect = document.getElementById('department_id');
+        const specializationSelect = document.getElementById('specialization_id');
+        const licenseNumberInput = document.getElementById('license_number');
+        const licenseStateInput = document.getElementById('license_state');
+        const licenseExpirationInput = document.getElementById('license_expiration');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+
+        if (patientFields) patientFields.classList.add('hidden');
+        if (professionalFields) professionalFields.classList.add('hidden');
+        if (passwordFields) passwordFields.classList.add('hidden'); // Start hidden
+
+        if (dobInput) dobInput.required = false;
+        if (genderSelect) genderSelect.required = false;
+        if (departmentSelect) departmentSelect.required = false;
+        if (specializationSelect) specializationSelect.required = false;
+        if (licenseNumberInput) licenseNumberInput.required = false;
+        if (licenseStateInput) licenseStateInput.required = false;
+        if (licenseExpirationInput) licenseExpirationInput.required = false;
+        if (passwordInput) passwordInput.required = false;
+        if (confirmPasswordInput) confirmPasswordInput.required = false;
+
+        if (userType === 'patient') {
+            if (patientFields) patientFields.classList.remove('hidden');
+            if (passwordFields) passwordFields.classList.remove('hidden'); 
+
+            if (dobInput) dobInput.required = true;
+            if (genderSelect) genderSelect.required = true;
+            if (passwordInput) passwordInput.required = true;
+            if (confirmPasswordInput) confirmPasswordInput.required = true;
+        } else if (userType === 'doctor') {
+            if (professionalFields) professionalFields.classList.remove('hidden');
+            if (passwordFields) passwordFields.classList.remove('hidden'); // SHOW password fields for doctors
+
+            if (departmentSelect) departmentSelect.required = true;
+            if (specializationSelect) specializationSelect.required = true;
+            if (licenseNumberInput) licenseNumberInput.required = true;
+            if (licenseStateInput) licenseStateInput.required = true;
+            if (licenseExpirationInput) licenseExpirationInput.required = true;
+            if (passwordInput) passwordInput.required = true; // MAKE password required for doctors
+            if (confirmPasswordInput) confirmPasswordInput.required = true; // MAKE confirm password required
+        }
+    }
+
+    // --- Department and Specialization Cascading Dropdowns Script ---
+    async function fetchSpecializations(departmentId, specializationSelectElement, persistedSpecializationId) {
+        if (!specializationSelectElement) return;
+
+        specializationSelectElement.innerHTML = '<option value="" selected disabled>Loading specializations...</option>';
+        specializationSelectElement.disabled = true;
+
+        if (!departmentId) {
+            specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
+            specializationSelectElement.disabled = false; // Keep enabled
+            return;
+        }
+
+        try {
+            const response = await fetch(`/get_specializations_for_department/${departmentId}`);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({detail: "Unknown server error"}));
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.detail || response.statusText}`);
+            }
+            const specializations = await response.json();
+
+            specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Specialization --</option>';
+            if (specializations && specializations.length > 0) {
+                specializations.forEach(spec => {
+                    const option = document.createElement('option');
+                    option.value = spec.specialization_id;
+                    option.textContent = spec.name;
+                    specializationSelectElement.appendChild(option);
+                });
+                if (persistedSpecializationId && specializations.some(s => s.specialization_id.toString() === persistedSpecializationId)) {
+                    specializationSelectElement.value = persistedSpecializationId;
+                }
+            } else {
+                specializationSelectElement.innerHTML = '<option value="" selected disabled>-- No specializations found --</option>';
+            }
+        } catch (error) {
+            console.error('Error fetching specializations:', error);
+            specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Error loading specializations --</option>';
+        } finally {
+            specializationSelectElement.disabled = false;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const userTypeSelect = document.getElementById('user_type');
+        const departmentSelect = document.getElementById('department_id');
+        const specializationSelect = document.getElementById('specialization_id');
+
+        toggleUserTypeFields(); // Initial call
+        if (userTypeSelect) {
+            userTypeSelect.addEventListener('change', toggleUserTypeFields);
+        }
+
+        if (departmentSelect && specializationSelect) {
+            const persistedSpecId = specializationSelect.getAttribute('data-persisted-value');
+            departmentSelect.addEventListener('change', function() {
+                fetchSpecializations(this.value, specializationSelect, null); // Don't persist on user change
+            });
+
+            if (userTypeSelect && userTypeSelect.value === 'doctor' && departmentSelect.value) {
+                 fetchSpecializations(departmentSelect.value, specializationSelect, persistedSpecId);
+            } else if (userTypeSelect && userTypeSelect.value === 'doctor') {
+                specializationSelect.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
+            }
+        }
+    });
+    </script>
 
 </body>
 </html>

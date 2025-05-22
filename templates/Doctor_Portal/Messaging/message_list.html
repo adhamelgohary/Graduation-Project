@@ -64,7 +64,11 @@
                              <span class="badge bg-danger rounded-pill unread-count">{{ chat.unread_count }}</span>
                          {% endif %}
                     </h5>
-                    <small class="last-message">{{ chat.last_message_snippet | truncate(60) | default('No messages yet.') }}</small>
+                    {# templates/Doctor_Portal/Messaging/message_list.html #}
+
+{# ... inside the chat loop ... #}
+<small class="last-message">{{ (chat.last_message_snippet | default('', true)) | truncate(60) | default('No messages yet.', true) }}</small>
+{# ... #}
                 </div>
                 <small class="text-muted">
                     <span class="badge bg-secondary chat-status">{{ chat.status | title }}</span><br>

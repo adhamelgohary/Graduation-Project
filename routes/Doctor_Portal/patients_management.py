@@ -270,6 +270,79 @@ def get_patient_full_details(patient_id):
         if conn and conn.is_connected(): conn.close()
     return details
 
+    # routes/Doctor_Portal/patients_management.py
+# ... (other imports) ...
+
+# ... (existing code) ...
+
+@patients_bp.route('/conditions/search', methods=['GET'])
+@login_required
+def search_conditions_json():
+    """
+    Provides JSON search results for the conditions table.
+    Used via AJAX by the add diagnosis form.
+    """
+    if not check_doctor_authorization(current_user): # Or a more general logged-in check if appropriate
+        return jsonify({"error": "Access Denied"}), 403
+
+    search_query = request.args.get('q', '').strip()
+    limit = request.args.get('limit', 10, type=int)
+    current_logger = current_app.logger if has_app_context() else logger
+
+
+    if not search_query or len(search_query) < 2:
+        return jsonify([])
+
+    conn = None; cursor = None; conditions_list = []
+    try:
+        conn = get_db_connection()
+        if not conn:
+            current_logger.error("DB connection failed for condition search.")
+            return jsonify({"error": "Database connection error"}), 500
+        cursor = conn.cursor(dictionary=True)
+        
+        search_like = f"%{search_query}%"
+        search_prefix_like = f"{search_query}%"
+
+        # Search condition_name and icd_code
+        query = """
+            SELECT condition_id, condition_name, icd_code, description, overview, specialist_type
+            FROM conditions
+            WHERE is_active = TRUE AND (condition_name LIKE %s OR icd_code LIKE %s OR description LIKE %s)
+            ORDER BY
+                CASE
+                    WHEN condition_name LIKE %s THEN 0  -- Exact prefix match in name
+                    WHEN condition_name LIKE %s THEN 1  -- Contains in name
+                    WHEN icd_code LIKE %s THEN 2        -- Exact prefix match in ICD
+                    ELSE 3
+                END,
+                condition_name
+            LIMIT %s
+        """
+        # Add the query itself as a high-priority match for condition_name and icd_code
+        cursor.execute(query, (
+            search_like, search_like, search_like,  # General search
+            search_prefix_like,                     # Prioritize name prefix
+            search_like,                            # Contains in name
+            search_prefix_like,                     # Prioritize ICD prefix
+            limit
+        ))
+        conditions_list = cursor.fetchall()
+
+    except mysql.connector.Error as db_err:
+        current_logger.error(f"DB error searching conditions (JSON): {db_err}")
+        return jsonify({"error": "Database search failed"}), 500
+    except Exception as e:
+        current_logger.error(f"Error searching conditions (JSON): {e}", exc_info=True)
+        return jsonify({"error": "Search error"}), 500
+    finally:
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
+
+    return jsonify(conditions_list)
+
+# ... (rest of patients_management.py) ...
+
 # --- Patient Routes ---
 
 @patients_bp.route('/', methods=['GET'])
@@ -295,11 +368,16 @@ def patients_list():
         search_term=search_term
     )
 
+# routes/Doctor_Portal/patients_management.py
+
+# ... (other imports and code) ...
 
 @patients_bp.route('/<int:patient_id>', methods=['GET'])
 @login_required
 def view_patient_profile(patient_id):
     """Displays the comprehensive profile and history for a specific patient."""
+    current_logger = current_app.logger if has_app_context() else logger # Define logger at the start
+
     if not check_doctor_authorization(current_user):
         flash("Access denied.", "warning")
         return redirect(url_for('auth.login'))
@@ -309,21 +387,29 @@ def view_patient_profile(patient_id):
          flash("Could not identify your provider ID.", "danger")
          return redirect(url_for('doctor_portal.dashboard'))
 
-    # --- Authorization Check ---
-    # Use the helper function imported from utils
     if not is_doctor_authorized_for_patient(doctor_id, patient_id):
          flash("You are not authorized to view this patient's record.", "danger")
-         return redirect(url_for('.patients_list')) # Use '.' for blueprint route
+         return redirect(url_for('.patients_list'))
 
-    # --- Fetch Data ---
     patient_details = get_patient_full_details(patient_id)
 
-    if not patient_details or not patient_details.get("user_info"): # Check if core info exists
+    if not patient_details or not patient_details.get("user_info"):
         flash("Patient record not found or is incomplete.", "warning")
         return redirect(url_for('.patients_list'))
 
-    # --- Fetch dynamic lists for forms ---
+    # Initialize lists that will be populated
+    diagnosis_types_enum = []
+    diagnosis_severities_enum = []
+    symptom_frequencies_enum = []
+    symptoms_catalog_list = []
+    vaccines_list = []
+    patient_vaccinations = []
+    
+    conn = None  # Initialize conn and cursor to None
+    cursor = None
+
     try:
+        # Fetch dynamic lists for forms first
         diagnosis_types_enum = get_enum_values('diagnoses', 'diagnosis_type')
         diagnosis_severities_enum = get_enum_values('diagnoses', 'severity')
         symptom_frequencies_enum = get_enum_values('patient_symptoms', 'frequency')
@@ -333,25 +419,55 @@ def view_patient_profile(patient_id):
             name_column_expression='symptom_name',
             order_by='symptom_name'
         )
+        
+        # Now fetch vaccine data using a new connection/cursor block
+        conn = get_db_connection()
+        if not conn:
+            raise ConnectionError("DB Connection failed for vaccine data.")
+        cursor = conn.cursor(dictionary=True)
+
+        vaccines_list = get_all_simple( # Assuming get_all_simple handles its own connection or you pass one
+            table_name='vaccines',
+            id_column_name='vaccine_id',
+            name_column_expression="CONCAT(name, IFNULL(CONCAT(' (', abbreviation, ')'), ''))", # Nicer display
+            order_by='name',
+            where_clause='is_active = TRUE'
+        )
+        
+        # Fetch patient's existing vaccinations
+        cursor.execute("""
+            SELECT pv.*, v.name as vaccine_name, v.abbreviation as vaccine_abbreviation
+            FROM patient_vaccinations pv
+            JOIN vaccines v ON pv.vaccine_id = v.vaccine_id
+            WHERE pv.patient_id = %s
+            ORDER BY pv.administration_date DESC
+        """, (patient_id,))
+        patient_vaccinations = cursor.fetchall()
+
+    except (mysql.connector.Error, ConnectionError) as db_err: # Catch DB specific errors
+        current_logger.error(f"Database error fetching dynamic lists/vaccinations for patient profile {patient_id}: {db_err}")
+        flash("Error loading some form options or vaccine data due to a database issue.", "warning")
     except Exception as e:
-         logger.error(f"Error fetching dynamic lists for patient profile {patient_id}: {e}")
-         flash("Error loading form options. Some add features might be unavailable.", "warning")
-         diagnosis_types_enum = []
-         diagnosis_severities_enum = []
-         symptom_frequencies_enum = []
-         symptoms_catalog_list = []
+         current_logger.error(f"Error fetching dynamic lists/vaccinations for patient profile {patient_id}: {e}", exc_info=True)
+         flash("Error loading some form options or vaccine data. Some features might be unavailable.", "warning")
+    finally:
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
 
 
     return render_template(
         'Doctor_Portal/Patients/patient_profile.html',
         patient=patient_details,
-        # Pass dynamically fetched lists to the template
         diagnosis_types=diagnosis_types_enum,
         diagnosis_severities=diagnosis_severities_enum,
         symptom_frequencies=symptom_frequencies_enum,
         symptoms_catalog=symptoms_catalog_list,
-        today_date=date.today() # For defaulting date inputs
+        vaccines_catalog=vaccines_list,
+        patient_vaccinations=patient_vaccinations,
+        today_date=date.today()
     )
+
+# ... (rest of the file, including add_diagnosis, add_symptom, add_vaccination, search_conditions_json)
 
 @patients_bp.route('/<int:patient_id>/diagnoses', methods=['POST'])
 @login_required
@@ -600,3 +716,62 @@ def add_symptom(patient_id):
 
     # Redirect back to the profile page, anchoring to the symptoms section
     return redirect(url_for('.view_patient_profile', patient_id=patient_id) + '#headingSymptoms')
+
+# routes/Doctor_Portal/patients_management.py
+
+@patients_bp.route('/<int:patient_id>/vaccinations', methods=['POST'])
+@login_required
+def add_vaccination(patient_id):
+    if not check_doctor_authorization(current_user): abort(403)
+    doctor_id = get_provider_id(current_user)
+    if not is_doctor_authorized_for_patient(doctor_id, patient_id):
+        flash("Not authorized to add vaccination for this patient.", "danger")
+        return redirect(url_for('.patients_list'))
+
+    conn = None; cursor = None; errors = []
+    try:
+        vaccine_id_str = request.form.get('vaccine_id')
+        admin_date_str = request.form.get('administration_date')
+        dose_number = request.form.get('dose_number', '').strip() or None
+        lot_number = request.form.get('lot_number', '').strip() or None
+        notes = request.form.get('vaccination_notes', '').strip() or None # Use unique name
+
+        vaccine_id = None
+        if vaccine_id_str and vaccine_id_str.isdigit():
+            vaccine_id = int(vaccine_id_str)
+        else:
+            errors.append("Please select a vaccine.")
+
+        admin_date = None
+        if not admin_date_str:
+            errors.append("Administration date is required.")
+        else:
+            try:
+                admin_date = date.fromisoformat(admin_date_str)
+            except ValueError:
+                errors.append("Invalid administration date format.")
+        
+        if errors:
+            for error in errors: flash(error, 'danger')
+        else:
+            conn = get_db_connection(); cursor = conn.cursor()
+            sql = """INSERT INTO patient_vaccinations
+                     (patient_id, vaccine_id, administration_date, dose_number, lot_number, notes, administered_by_id)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+            cursor.execute(sql, (patient_id, vaccine_id, admin_date, dose_number, lot_number, notes, doctor_id))
+            conn.commit()
+            flash("Vaccination recorded successfully.", "success")
+    
+    except mysql.connector.Error as err:
+        if conn: conn.rollback()
+        current_app.logger.error(f"DB error recording vaccination for P:{patient_id}: {err}", exc_info=True)
+        flash("Database error recording vaccination.", "danger")
+    except Exception as e:
+        if conn: conn.rollback()
+        current_app.logger.error(f"Unexpected error recording vaccination for P:{patient_id}: {e}", exc_info=True)
+        flash("An unexpected error occurred.", "danger")
+    finally:
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
+    
+    return redirect(url_for('.view_patient_profile', patient_id=patient_id) + '#addentry-tab-pane') # Or specific anchor

@@ -2,11 +2,7 @@
 {% block title %}My Allergies{% endblock %}
 
 {% block head_extra %}
-    {# <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}"> #}
-    <style>
-        .current-allergies-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; border-bottom: 1px dotted var(--border-color); }
-        .current-allergies-list li:last-child { border-bottom: none; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}">
 {% endblock %}
 
 {% block content %}

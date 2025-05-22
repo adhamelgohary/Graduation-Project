@@ -3,67 +3,94 @@
 {% block title %}Configure Scheduling Rules{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment_management.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment_management.css') }}"> {# Ensure this CSS exists #}
 {% endblock %}
 
 {% block content %}
 <h1>Configure Scheduling Rules</h1>
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('admin_main.dashboard') }}">Admin Dashboard</a></li>
     <li class="breadcrumb-item">Configuration</li>
     <li class="breadcrumb-item active" aria-current="page">Scheduling Rules</li>
   </ol>
 </nav>
 <hr>
 
+{% include '_flash_messages.html' %} {# Assuming you have a flash message template #}
+
 <div class="card shadow-sm">
 <div class="card-header"><h5 class="mb-0">System-Wide Scheduling Settings</h5></div>
 <div class="card-body">
-<form method="POST" action="{{ url_for('admin_appointments.configure_scheduling_rules') }}">
+<form method="POST" action="{{ url_for('admin_appointments.configure_scheduling_rules') }}" class="needs-validation" novalidate>
     <div class="row g-3">
-         <div class="col-md-6">
+         <div class="col-md-6 mb-3">
             <label for="allow_double_booking" class="form-label">Allow Double Booking</label>
             <select class="form-select" id="allow_double_booking" name="allow_double_booking">
                 <option value="false" {% if not settings.allow_double_booking %}selected{% endif %}>No (Prevent Conflicts)</option>
                 <option value="true" {% if settings.allow_double_booking %}selected{% endif %}>Yes (Allow Overlap)</option>
             </select>
-            <div class="form-text">Allows multiple appointments for the same doctor at the same time. Requires manual override checkbox in Add/Edit forms otherwise.</div>
+            <div class="form-text">Allows multiple appointments for the same doctor at the same time slot. Admins can typically override this via specific booking interfaces.</div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3">
             <label for="default_appointment_status" class="form-label">Default New Appointment Status</label>
-            <select class="form-select" id="default_appointment_status" name="default_appointment_status">
-                 {% for s in statuses %}
-                    <option value="{{ s }}" {% if settings.default_appointment_status == s %}selected{% endif %}>{{ s | replace('-', ' ') | title }}</option>
+            <select class="form-select" id="default_appointment_status" name="default_appointment_status" required>
+                 {% for s_val in statuses %} {# statuses passed from backend #}
+                    <option value="{{ s_val }}" {% if settings.default_appointment_status == s_val %}selected{% endif %}>
+                        {{ s_val | replace('-', ' ') | title }}
+                    </option>
                  {% endfor %}
              </select>
              <div class="form-text">The status assigned when a new appointment is created.</div>
+             <div class="invalid-feedback">Please select a default status.</div>
         </div>
 
-         <div class="col-md-6">
+         <div class="col-md-6 mb-3">
             <label for="reschedule_limit" class="form-label">Reschedule Limit</label>
             <input type="number" class="form-control" id="reschedule_limit" name="reschedule_limit" value="{{ settings.reschedule_limit }}" min="0" step="1" required>
-            <div class="form-text">Maximum times an appointment can be rescheduled (0 for unlimited). Admins can override this limit.</div>
+            <div class="form-text">Max times a patient can reschedule (0 for unlimited). Admins can override.</div>
+            <div class="invalid-feedback">Please enter a valid non-negative number.</div>
         </div>
 
-         <div class="col-md-6">
+         <div class="col-md-6 mb-3">
             <label for="min_reschedule_notice_hours" class="form-label">Minimum Reschedule Notice (Hours)</label>
             <input type="number" class="form-control" id="min_reschedule_notice_hours" name="min_reschedule_notice_hours" value="{{ settings.min_reschedule_notice_hours }}" min="0" step="1" required>
-             <div class="form-text">Minimum hours *before* an appointment that a patient can reschedule/cancel (0 for no limit). Not yet enforced in backend logic.</div>
+             <div class="form-text">Minimum hours *before* appointment that a patient can reschedule/cancel (0 for no limit). Actual enforcement needs backend logic during reschedule/cancel actions.</div>
+             <div class="invalid-feedback">Please enter a valid non-negative number.</div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-md-6 mb-3">
             <label for="missed_appt_followup_days" class="form-label">Create Follow-up After Missed (Days)</label>
             <input type="number" class="form-control" id="missed_appt_followup_days" name="missed_appt_followup_days" value="{{ settings.missed_appt_followup_days }}" min="0" step="1" required>
-            <div class="form-text">Days after a 'No-Show' status is set to automatically create a follow-up task (0 to disable). Backend task runner needed for automation. Current implementation creates task immediately on status change.</div>
+            <div class="form-text">Days after a 'No-Show' to create a follow-up task (0 to disable). Current system creates follow-up immediately on 'No-Show' status change if this setting is > 0. True automation requires a background task runner.</div>
+            <div class="invalid-feedback">Please enter a valid non-negative number.</div>
         </div>
-
-    </div> {# End row #}
+    </div>
 
     <hr class="my-4">
     <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Rules</button>
 </form>
-</div> {# End card-body #}
-</div> {# End card #}
+</div>
+</div>
+{% endblock %}
 
+{% block scripts_extra %}
+<script>
+// Bootstrap 5 form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
 {% endblock %}

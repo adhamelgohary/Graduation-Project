@@ -1,0 +1,162 @@
+{% extends "Website/base.html" %} {# Use Patient Portal base #}
+{% block title %}My Messages{% endblock %}
+
+{% block head_extra %}
+    {{ super() if super }}
+    {# Link to your Patient Portal's main CSS which should include styles for .button, .card, etc. #}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Website/some_specific_messaging_styles.css') }}"> #}
+    <style>
+        /* Styles similar to doctor's message list, adapted for patient theme */
+        .chat-list-item {
+            display: block;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-color);
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+        .chat-list-item:last-child { border-bottom: none; }
+        .chat-list-item:hover { background-color: rgba(var(--accent-pink-rgb, 255,59,92), 0.05); } /* Subtle hover using accent color */
+
+        .chat-list-item .chat-subject { font-weight: 600; font-size: 1.1em; }
+        .chat-list-item .chat-participant { color: var(--text-secondary); font-size: 0.9em; }
+        .chat-list-item .last-message-snippet {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70%; /* Adjust as needed */
+            display: inline-block;
+        }
+        .chat-list-item .unread-badge {
+            background-color: var(--accent-pink);
+            color: white;
+            font-size: 0.75em;
+            padding: 0.2em 0.5em;
+            border-radius: 10px;
+            margin-left: var(--spacing-sm);
+        }
+        .chat-list-item .chat-meta { text-align: right; font-size: 0.85em; color: var(--text-secondary); }
+        .chat-list-item .chat-status-badge {
+            font-size: 0.8em;
+            padding: .25em .5em;
+            border-radius: var(--border-radius);
+            text-transform: capitalize;
+        }
+        .chat-status-badge.active { background-color: rgba(var(--color-success-rgb, 40,167,69), 0.2); color: var(--color-success, #28a745); }
+        .chat-status-badge.closed { background-color: rgba(var(--color-secondary-rgb, 108,117,125), 0.2); color: var(--color-secondary, #6c757d); }
+        .chat-status-badge.pending { background-color: rgba(var(--color-warning-rgb, 255,193,7), 0.2); color: var(--color-warning-dark, #b8860b); }
+
+        .search-filter-form .form-control,
+        .search-filter-form .form-select {
+            /* Ensure form elements match your Website/base.css styling */
+            font-size: 0.9rem;
+            padding: 0.5rem 0.75rem;
+        }
+         .no-chats-message {
+            padding: var(--spacing-xl);
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <header class="page-title-container mb-4">
+        <h1 class="page-title">My Messages</h1>
+        {# Patient usually doesn't initiate, but if they can, a button would go here #}
+        {# <a href="{{ url_for('.start_patient_chat') }}" class="button button-primary">New Message</a> #}
+    </header>
+
+    {% include '_flash_messages.html' %} {# Assuming a shared flash message template #}
+
+    <form method="GET" action="{{ url_for('.list_my_chats') }}" class="search-filter-form card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label for="search" class="form-label">Search Doctor or Subject</label>
+                    <input type="search" class="form-control" id="search" name="search" placeholder="Dr. Smith, appointment follow-up..." value="{{ search_term | default('') }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Chat Status</label>
+                    <select id="status" name="status" class="form-select">
+                         <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                         <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                         <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                         <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="button button-primary w-100">Filter</button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="card">
+        <div class="card-body p-0">
+            {% if chats %}
+                <div class="list-group list-group-flush">
+                    {% for chat in chats %}
+                    <a href="{{ url_for('.view_patient_chat', chat_id=chat.chat_id) }}" class="chat-list-item">
+                        <div class="d-flex w-100">
+                            <div class="flex-grow-1">
+                                <h5 class="chat-subject mb-1">
+                                    Dr. {{ chat.doctor_first_name }} {{ chat.doctor_last_name }}
+                                    {% if chat.subject %}<span class="text-muted fw-normal"> - {{ chat.subject | truncate(40) }}</span>{% endif %}
+                                </h5>
+                                <small class="last-message-snippet">
+                                    {{ (chat.last_message_snippet | default("", true)) | truncate(70) | default("No messages yet.", true) }}
+                                </small>
+                            </div>
+                            <div class="chat-meta text-nowrap">
+                                <div>
+                                    <span class="chat-status-badge {{ chat.status }}">{{ chat.status | title }}</span>
+                                    {% if chat.unread_count > 0 %}
+                                        <span class="unread-badge ms-1">{{ chat.unread_count }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-1">{{ chat.updated_at.strftime('%b %d, %Y %I:%M %p') if chat.updated_at else ''}}</div>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+            <div class="no-chats-message">
+                {% if search_term or status_filter %}
+                    No conversations found matching your filters. <a href="{{ url_for('.list_my_chats') }}">Clear filters?</a>
+                {% else %}
+                    You have no message conversations yet.
+                {% endif %}
+            </div>
+            {% endif %}
+        </div> {# end card-body #}
+    </div> {# end card #}
+
+
+    {# Pagination Controls #}
+    {% if total_pages > 1 %}
+    <nav aria-label="Chat list navigation" class="mt-4 d-flex justify-content-center">
+        <ul class="pagination"> {# Use Bootstrap pagination classes #}
+            {% set base_args = {'search': search_term, 'status': status_filter} %}
+            <li class="page-item {{ 'disabled' if current_page <= 1 else '' }}">
+                <a class="page-link" href="{{ url_for('.list_my_chats', page=current_page-1, **base_args) }}">« Prev</a>
+            </li>
+            {# Basic page numbers - implement more complex iter_pages if needed #}
+            {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {{ 'active' if p == current_page else '' }}">
+                    <a class="page-link" href="{{ url_for('.list_my_chats', page=p, **base_args) }}">{{ p }}</a>
+                </li>
+            {% endfor %}
+            <li class="page-item {{ 'disabled' if current_page >= total_pages else '' }}">
+                <a class="page-link" href="{{ url_for('.list_my_chats', page=current_page+1, **base_args) }}">Next »</a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

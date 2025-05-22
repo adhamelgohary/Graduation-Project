@@ -2,9 +2,8 @@
 {% block title %}My Vitals{% endblock %}
 
 {% block head_extra %}
-    {# <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}"> #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}">
 {% endblock %}
-
 {% block content %}
 <div class="page-header">
     <h1>Manage Vitals (Weight, etc.)</h1>
@@ -41,6 +40,27 @@
                     <input type="number" step="0.1" min="0" id="weight_kg" name="weight_kg" class="form-control" value="{{ form_data.weight_kg if form_data else '' }}" placeholder="e.g., 70.5" required>
                 </div>
                 {# Add Height input here if you want to log it separately #}
+                {# In manage_vitals.html #}
+<div class="col-md-6 form-group mb-3">
+    <label for="mood" class="form-label">Mood</label>
+    <select id="mood" name="mood" class="form-select">
+        <option value="" {% if not (form_data and form_data.mood) %}selected{% endif %}>-- Optional --</option>
+        {% set current_mood = form_data.mood if form_data else '' %}
+        {% for mood_opt in mood_options %}
+            <option value="{{ mood_opt }}" {% if current_mood == mood_opt %}selected{% endif %}>{{ mood_opt | title }}</option>
+        {% endfor %}
+    </select>
+</div>
+<div class="col-md-6 form-group mb-3">
+    <label for="energy_level" class="form-label">Energy Level</label>
+    <select id="energy_level" name="energy_level" class="form-select">
+        <option value="" {% if not (form_data and form_data.energy_level) %}selected{% endif %}>-- Optional --</option>
+        {% set current_energy = form_data.energy_level if form_data else '' %}
+        {% for energy_opt in energy_options %}
+            <option value="{{ energy_opt }}" {% if current_energy == energy_opt %}selected{% endif %}>{{ energy_opt | title }}</option>
+        {% endfor %}
+    </select>
+</div>
             </div>
              <div class="form-group mb-3">
                  <label for="notes" class="form-label">Notes (Optional)</label>

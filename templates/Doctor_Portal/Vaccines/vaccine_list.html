@@ -1,0 +1,179 @@
+{% extends "Doctor_Portal/base.html" %}
+
+{% block title %}Manage Vaccines{% endblock %}
+
+{% block head_extra %}
+<style>
+    /* Additional specific styles if needed for vaccine list page */
+    .filter-section {
+        background-color: #f9f9f9;
+        padding: var(--spacing-md);
+        border-radius: var(--border-radius);
+        margin-bottom: var(--spacing-lg);
+        border: 1px solid var(--color-border);
+    }
+    .filter-section h3 {
+        margin-top: 0;
+        margin-bottom: var(--spacing-sm);
+        font-size: 1rem;
+        color: var(--color-text-muted);
+    }
+    .filter-group {
+        margin-bottom: var(--spacing-sm);
+    }
+    .filter-group label {
+        font-weight: 500;
+        margin-bottom: var(--spacing-xs);
+        display: block;
+        font-size: 0.9rem;
+    }
+    .table th a {
+        color: inherit;
+        text-decoration: none;
+    }
+    .table th a:hover {
+        color: var(--color-primary);
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-syringe fa-fw"></i> Vaccine Management</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('vaccine_management.add_vaccine') }}" class="button button-success">
+            <i class="fas fa-plus fa-fw"></i> Add New Vaccine
+        </a>
+    </div>
+</div>
+
+<!-- Filter and Search Section -->
+<div class="card filter-section mb-3">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('vaccine_management.list_vaccines') }}">
+            <div class="row">
+                <div class="col-md-5 mb-2">
+                    <label for="search" class="form-label small">Search Vaccines</label>
+                    <input type="text" name="search" id="search" class="form-control form-control-sm" placeholder="Name, Abbreviation, Disease..." value="{{ search_term or '' }}">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filter_category_id" class="form-label small">Category</label>
+                    <select name="filter_category_id" id="filter_category_id" class="form-select form-select-sm">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.category_id }}" {% if filters.get('category_id') == cat.category_id|string %}selected{% endif %}>
+                            {{ cat.category_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="filter_vaccine_type" class="form-label small">Vaccine Type</label>
+                    <select name="filter_vaccine_type" id="filter_vaccine_type" class="form-select form-select-sm">
+                        <option value="">All Types</option>
+                        {% for type_name in vaccine_types %} {# Assuming vaccine_types is a list of strings from ENUM #}
+                        <option value="{{ type_name }}" {% if filters.get('vaccine_type') == type_name %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end mb-2">
+                    <button type="submit" class="button button-small w-100">
+                        <i class="fas fa-filter fa-fw"></i> Filter
+                    </button>
+                </div>
+            </div>
+             <!-- Hidden fields for sort order -->
+            <input type="hidden" name="sort_by" value="{{ sort_by }}">
+            <input type="hidden" name="sort_dir" value="{{ sort_dir }}">
+        </form>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-body p-0"> {# Remove padding for full-width table #}
+        {% if vaccines %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        {% set sort_icon_name = '<i class="fas fa-sort"></i>' if sort_by != 'name' else ('<i class="fas fa-sort-up"></i>' if sort_dir == 'ASC' else '<i class="fas fa-sort-down"></i>') %}
+                        <th><a href="{{ url_for('vaccine_management.list_vaccines', search=search_term, filter_category_id=filters.get('category_id'), filter_vaccine_type=filters.get('vaccine_type'), sort_by='name', sort_dir='ASC' if sort_by != 'name' or sort_dir == 'DESC' else 'DESC') }}">Name {{ sort_icon_name | safe }}</a></th>
+
+                        <th>Abbr.</th>
+
+                        {% set sort_icon_category = '<i class="fas fa-sort"></i>' if sort_by != 'category' else ('<i class="fas fa-sort-up"></i>' if sort_dir == 'ASC' else '<i class="fas fa-sort-down"></i>') %}
+                        <th><a href="{{ url_for('vaccine_management.list_vaccines', search=search_term, filter_category_id=filters.get('category_id'), filter_vaccine_type=filters.get('vaccine_type'), sort_by='category', sort_dir='ASC' if sort_by != 'category' or sort_dir == 'DESC' else 'DESC') }}">Category {{ sort_icon_category | safe }}</a></th>
+
+                        {% set sort_icon_type = '<i class="fas fa-sort"></i>' if sort_by != 'type' else ('<i class="fas fa-sort-up"></i>' if sort_dir == 'ASC' else '<i class="fas fa-sort-down"></i>') %}
+                        <th><a href="{{ url_for('vaccine_management.list_vaccines', search=search_term, filter_category_id=filters.get('category_id'), filter_vaccine_type=filters.get('vaccine_type'), sort_by='type', sort_dir='ASC' if sort_by != 'type' or sort_dir == 'DESC' else 'DESC') }}">Type {{ sort_icon_type | safe }}</a></th>
+
+                        <th>Manufacturer</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vaccine in vaccines %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('vaccine_management.view_vaccine', vaccine_id=vaccine.vaccine_id) }}" class="fw-bold">{{ vaccine.vaccine_name }}</a>
+                        </td>
+                        <td>{{ vaccine.abbreviation or 'N/A' }}</td>
+                        <td>{{ vaccine.category_name or 'N/A' }}</td>
+                        <td>{{ vaccine.vaccine_type or 'N/A' }}</td>
+                        <td>{{ vaccine.manufacturer or 'N/A' }}</td>
+                        <td class="action-buttons text-end">
+                            <a href="{{ url_for('vaccine_management.view_vaccine', vaccine_id=vaccine.vaccine_id) }}" class="button button-small button-info" title="View Details">
+                                <i class="fas fa-eye fa-fw"></i> <span class="d-none d-md-inline">View</span>
+                            </a>
+                            <a href="{{ url_for('vaccine_management.edit_vaccine', vaccine_id=vaccine.vaccine_id) }}" class="button button-small button-warning" title="Edit Vaccine">
+                                <i class="fas fa-edit fa-fw"></i> <span class="d-none d-md-inline">Edit</span>
+                            </a>
+                            <form method="POST" action="{{ url_for('vaccine_management.delete_vaccine', vaccine_id=vaccine.vaccine_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to deactivate this vaccine?');">
+                                <button type="submit" class="button button-small button-danger" title="Deactivate Vaccine">
+                                    <i class="fas fa-trash-alt fa-fw"></i> <span class="d-none d-md-inline">Deactivate</span>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-3 text-center text-muted">
+            <p><i class="fas fa-info-circle fa-2x mb-2"></i></p>
+            <p>No vaccines found matching your criteria. Try adjusting your search or filters, or <a href="{{ url_for('vaccine_management.add_vaccine') }}">add a new vaccine</a>.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <small class="text-muted">Showing {{ vaccines|length }} of {{ total }} results</small>
+        <nav aria-label="Page navigation">
+            <ul class="pagination mb-0">
+                <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('vaccine_management.list_vaccines', page=current_page-1, **request_args) }}" aria-label="Previous">«</a>
+                </li>
+                {% for page_num in range(1, total_pages + 1) %}
+                <li class="page-item {% if page_num == current_page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('vaccine_management.list_vaccines', page=page_num, **request_args) }}">{{ page_num }}</a>
+                </li>
+                {% endfor %}
+                <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('vaccine_management.list_vaccines', page=current_page+1, **request_args) }}" aria-label="Next">»</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% elif vaccines %}
+     <div class="card-footer text-muted">
+        <small>Showing {{ vaccines|length }} of {{ total }} results</small>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

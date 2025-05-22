@@ -1,0 +1,241 @@
+/* static/Website/doctor_profile.css */
+
+/* Inherits from base.css and components.css */
+
+.doctor-profile-page .profile-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xl);
+    align-items: flex-start;
+}
+
+.profile-sidebar {
+    flex: 0 0 300px; /* Adjust width as needed */
+    max-width: 100%; /* Ensure it doesn't overflow on very small screens before wrapping */
+}
+.profile-sidebar .profile-card {
+    position: sticky;
+    top: calc(70px + var(--spacing-lg)); /* Navbar height + desired top margin */
+    padding: var(--spacing-lg);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    /* Consider a min-height if content is very short, or let natural height work */
+    /* Forcing height can be tricky with varying content, flex-grow on info helps */
+    background-color: var(--bg-secondary); /* Ensure card has its own background */
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+.profile-card-image-container {
+    margin-bottom: var(--spacing-md);
+}
+
+.doctor-profile-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto;
+    border: 4px solid var(--neon-blue);
+    box-shadow: 0 0 15px var(--shadow-glow);
+    background-color: var(--bg-primary); /* Fallback if image is transparent */
+}
+
+.profile-card-info {
+    flex-grow: 1; /* Key for pushing action to bottom */
+    margin-bottom: var(--spacing-md); /* Space before button if info is short */
+}
+.profile-sidebar .profile-card-info h2 {
+    font-size: 1.6em;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-color);
+}
+.profile-sidebar .profile-card-info .specialty {
+    font-size: 1.1em;
+    color: var(--accent-pink);
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+}
+.profile-sidebar .profile-card-info .department {
+    font-size: 0.95em;
+    color: var(--text-secondary);
+    margin-bottom: 0; /* No margin if it's the last item in this block */
+}
+
+.profile-card-action {
+    margin-top: auto; /* Pushes this div to the bottom */
+    padding-top: var(--spacing-md);
+    width: 100%;
+}
+
+.profile-sidebar .button-primary.btn-schedule {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-sm);
+    font-size: 1.05em;
+}
+
+
+.profile-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-details-card.card {
+    /* Styles from base.css .card apply */
+}
+.profile-details-card .card-body {
+    padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+.profile-section {
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+.profile-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.profile-section h4 {
+    font-size: 1.4em; /* Slightly larger section titles */
+    color: var(--text-color);
+    margin-bottom: var(--spacing-lg); /* More space after title */
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--accent-pink);
+    display: inline-block;
+}
+.profile-section h4 i.fas {
+    margin-right: var(--spacing-md); /* More space for icon */
+    color: var(--accent-pink);
+    opacity: 0.9;
+    font-size: 0.9em; /* Slightly smaller icon relative to h4 */
+}
+
+.profile-section p,
+.profile-section address,
+.profile-section ul {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: var(--spacing-md); /* Increased margin for paragraphs/lists */
+    font-size: 1rem; /* Standard text size for readability */
+}
+.profile-section p:last-child,
+.profile-section address:last-child,
+.profile-section ul:last-child {
+    margin-bottom: 0; /* No margin for the last element in a section */
+}
+
+.profile-section p strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+.profile-section address {
+    font-style: normal;
+}
+
+.text-muted.small { /* For specialization/department descriptions */
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    opacity: 0.85;
+    display: block;
+    margin-top: var(--spacing-xs);
+    margin-left: calc(var(--spacing-md) + 1.1em); /* Indent under icon+space if h4 has icon */
+}
+.profile-section h4 + .text-muted.small { /* If it's directly after an h4 */
+    margin-left: 0;
+}
+
+
+/* Credentials and Documents Lists */
+.credentials-list,
+.documents-list {
+    list-style: none;
+    padding-left: 0;
+}
+.credentials-list li,
+.documents-list li {
+    margin-bottom: var(--spacing-sm); /* Tighter list items */
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px dotted var(--border-color);
+    display: flex;
+    align-items: flex-start;
+}
+.credentials-list li:last-child,
+.documents-list li:last-child {
+    border-bottom: none;
+}
+
+.credentials-list li i.text-success,
+.documents-list li i.fas {
+    color: var(--neon-blue);
+    margin-right: var(--spacing-md);
+    font-size: 1.1em;
+    margin-top: 0.15em; /* Fine-tune vertical alignment */
+    flex-shrink: 0; /* Prevent icon from shrinking */
+}
+.credentials-list li i.text-success {
+     color: var(--dept-color-pediatrics) !important; /* Your success color */
+}
+
+/* Specific document type icons (optional) */
+.document-icon-license { color: var(--neon-blue); }
+.document-icon-certification { color: var(--dept-color-oncology); } /* Example: orange */
+.document-icon-education { color: var(--dept-color-neurology); } /* Example: indigo */
+.document-icon-identity { color: var(--dept-color-pediatrics); } /* Example: green */
+.document-icon-other { color: var(--text-secondary); }
+
+
+.documents-list li strong { /* Document type */
+    color: var(--text-color);
+    font-weight: 500;
+    margin-right: var(--spacing-xs);
+}
+.documents-list li .text-muted { /* Upload date */
+    font-size: 0.8em;
+    opacity: 0.7;
+    margin-left: auto; /* Push date to the right if space allows */
+    padding-left: var(--spacing-md);
+    white-space: nowrap;
+}
+.documents-list li div { /* Wrapper for text content */
+    display: flex;
+    flex-direction: column; /* Stack strong and small if needed */
+    flex-grow: 1;
+}
+
+
+/* Responsive adjustments for profile page */
+@media (max-width: 992px) {
+    .doctor-profile-page .profile-container {
+        flex-direction: column;
+    }
+    .profile-sidebar {
+        flex: 0 0 auto;
+        width: 100%;
+        margin-bottom: var(--spacing-lg);
+        position: static; /* Remove sticky for smaller screens */
+    }
+    .profile-sidebar .profile-card {
+        height: auto; /* Let content define height */
+        min-height: 0;
+    }
+    .doctor-profile-image {
+        width: 120px; /* Smaller image on mobile */
+        height: 120px;
+    }
+}
+@media (max-width: 768px) {
+    .profile-details-card .card-body {
+        padding: var(--spacing-lg);
+    }
+    .profile-section h4 {
+        font-size: 1.25em;
+    }
+    .profile-section p, .profile-section address, .profile-section ul {
+        font-size: 0.95rem;
+    }
+}

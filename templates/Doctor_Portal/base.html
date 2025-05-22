@@ -5,21 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Medical Portal{% endblock %} - HealthApp</title> {# More generic title #}
 
-    {# Link Base CSS #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/base.css') }}">
+    {# Link Base CSS - Make sure this path is correct #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/base.css') }}"> {# Assuming CSS is in static/css #}
 
     {# Favicon #}
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 
-    {# Font Awesome for Icons - Make sure this is included #}
+    {# Font Awesome for Icons #}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    {# Google Fonts (Keep as is) #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+
+    {# Google Fonts (Keep as is if used) #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    {# Block for extra head elements #}
+    {# Block for extra head elements (e.g., specific page CSS/JS includes) #}
     {% block head_extra %}{% endblock %}
 
 </head>
@@ -27,88 +29,157 @@
     <div class="app-layout">
         <header class="app-header">
             <div class="header-brand">
-                 <a href="{{ url_for('doctor_main.dashboard') }}" style="text-decoration: none; color: inherit;"> {# Link logo to dashboard #}
-                    <span style="font-weight: bold; font-size: 1.2em;">Dr.{{ current_user.last_name or 'User' }}'s Portal</span>
+                 {# Link logo/brand to the main dashboard for the logged-in user #}
+                 <a href="{{ url_for('doctor_main.dashboard') }}" style="text-decoration: none; color: inherit;">
+                    {# Customize the title based on role if desired #}
+                    <span style="font-weight: bold; font-size: 1.2em;">
+                        {% if current_user.is_authenticated and current_user.user_type == 'doctor' %}
+                            Dr.{{ current_user.last_name or 'User' }}'s Portal
+                        {% elif current_user.is_authenticated and current_user.user_type == 'nutritionist' %}
+                            Nutritionist Portal
+                        {% else %}
+                            HealthApp Portal
+                        {% endif %}
+                    </span>
                  </a>
-                 {# Example using image: <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo"> #}
             </div>
             <div class="header-user">
                 {% if current_user and current_user.is_authenticated %}
                     <span class="user-greeting">
                         Welcome,
-                        {# Display title based on user_type - REMOVED Nutritionist specific #}
                         {% if current_user.user_type == 'doctor' %}
-                            Dr.{{ current_user.last_name or 'User' }}
+                            Dr. {{ current_user.first_name or '' }} {{ current_user.last_name or 'User' }}
+                        {% elif current_user.user_type == 'nutritionist' %}
+                            {{ current_user.first_name or '' }} {{ current_user.last_name or 'User' }} (Dietitian)
                         {% else %}
-                             {{ current_user.first_name or current_user.username or 'User' }} {# Fallback for other types #}
+                             {{ current_user.first_name or current_user.username or 'User' }} {# Fallback #}
                         {% endif %}
                     </span>
-                     <a href="{{ url_for('login.logout_route') }}" class="button button-outline button-small"> <i class="fas fa-sign-out-alt fa-fw"></i> Logout</a> {# Added icon #}
+                     {# *** VERIFY Endpoint: 'auth.logout_route' or similar *** #}
+                     <a href="{{ url_for('login.logout_route') }}" class="button button-outline button-small"> <i class="fas fa-sign-out-alt fa-fw"></i> Logout</a>
                 {% else %}
-                     {# Fallback if not logged in #}
-                     <a href="{{ url_for('login.login_route') }}" class="button button-small"><i class="fas fa-sign-in-alt fa-fw"></i> Login</a> {# Added icon #}
+                     {# *** VERIFY Endpoint: 'auth.login_route' or similar *** #}
+                     <a href="{{ url_for('auth.login_route') }}" class="button button-small"><i class="fas fa-sign-in-alt fa-fw"></i> Login</a>
                 {% endif %}
             </div>
         </header>
 
         <aside class="app-sidebar">
+             {# Use nav and ul for semantic structure #}
             <nav>
                 {% if current_user and current_user.is_authenticated %} {# Only show nav if logged in #}
-                <ul>
-                    {# === Links Visible to All Logged-in Users === #}
-                    <li>
+                <ul class="nav-list"> {# Use a class for styling #}
+                    {# === Links Visible to All Logged-in Portal Users (Doctors, Nutritionists) === #}
+                    <li class="nav-item">
+                        {# Assumes doctor_main.dashboard is the correct common dashboard #}
                         <a href="{{ url_for('doctor_main.dashboard') }}"
-                           class="{% if request.endpoint == 'doctor_main.dashboard' %}active{% endif %}">
+                           class="nav-link {% if request.endpoint == 'doctor_main.dashboard' %}active{% endif %}">
                             <i class="fas fa-tachometer-alt fa-fw"></i> Dashboard
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ url_for('appointments.list_appointments') if true else '#' }}" {# UPDATE #}
-                           class="{% if request.endpoint.startswith('appointments.') %}active{% endif %}"> {# UPDATE #}
+                    <li class="nav-item">
+                        {# *** VERIFY Endpoint: 'appointments.list_appointments' or similar *** #}
+                        <a href="{{ url_for('appointments.list_appointments') }}"
+                           class="nav-link {% if request.blueprint == 'appointments' %}active{% endif %}"> {# Check blueprint #}
                             <i class="fas fa-calendar-alt fa-fw"></i> Appointments
                         </a>
                     </li>
-                    <li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('locations.manage_locations_page') }}"
+                           class="nav-link {% if request.blueprint == 'locations' %}active{% endif %}">
+                            <i class="fas fa-map-marker-alt fa-fw"></i> Manage Locations
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ url_for('availability.manage_availability_page') }}"
+                           class="nav-link {% if request.blueprint == 'availability' %}active{% endif %}">
+                            <i class="fas fa-user-clock fa-fw"></i> Manage Availability
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                         {# *** VERIFY Endpoint: 'patients.patients_list' or similar *** #}
                         <a href="{{ url_for('patients.patients_list') }}"
-                           class="{% if request.endpoint.startswith('patients.') %}active{% endif %}">
+                           class="nav-link {% if request.blueprint == 'patients' %}active{% endif %}"> {# Check blueprint #}
                             <i class="fas fa-users fa-fw"></i> Patients
                         </a>
                      </li>
+                    <li class="nav-item"> {# Messages Link (Assuming common access) #}
+                         {# *** VERIFY Endpoint: 'messaging.message_list' or similar *** #}
+                        <a href="{{ url_for('messaging.message_list') }}"
+                           class="nav-link {% if request.blueprint == 'messaging' %}active{% endif %}"> {# Check blueprint #}
+                            <i class="fas fa-comments fa-fw"></i> Messages
+                        </a>
+                    </li>
 
-                    {# === Doctor-Specific Links === #}
+                    {# --- Diet Plan Management Links (Visible to Doctors & Nutritionists) --- #}
+                    <li class="nav-item">
+                         {# Active if viewing list/details, NOT assignments/progress #}
+                        <a class="nav-link {% if request.blueprint == 'diet_plans' and 'assignment' not in request.endpoint and 'progress' not in request.endpoint %}active{% endif %}"
+                           href="{{ url_for('diet_plans.list_diet_plans') }}">
+                            <i class="fas fa-utensils fa-fw"></i> Diet Plans
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.blueprint == 'diet_plans' and 'assignment' in request.endpoint %}active{% endif %}"
+                           href="{{ url_for('diet_plans.list_assignments') }}">
+                            <i class="fas fa-clipboard-list fa-fw"></i> Plan Assignments
+                        </a>
+                    </li>
+                    
+                        <li class="nav-item">
+                            {# *** THIS IS THE NEWLY ADDED LINK *** #}
+                            {# *** VERIFY Endpoint: 'food_items.list_food_items' or similar *** #}
+                            <a class="nav-link {% if request.blueprint == 'food_items' %}active{% endif %}"
+                               href="{{ url_for('food_items.list_food_items') }}">
+                                <i class="fas fa-carrot fa-fw"></i> Food Item Library
+                            </a>
+
+                        </li>
+
+
+                    {# === Doctor-Only Links === #}
                     {% if current_user.user_type == 'doctor' %}
-                        <li>
+                        <li class="nav-item">
+                            {# *** VERIFY Endpoint: 'disease_management.list_diseases' or similar *** #}
                             <a href="{{ url_for('disease_management.list_diseases') }}"
-                               class="{% if request.endpoint.startswith('disease_management.') %}active{% endif %}">
+                               class="nav-link {% if request.blueprint == 'disease_management' %}active{% endif %}"> {# Check blueprint #}
                                 <i class="fas fa-book-medical fa-fw"></i> Disease Catalog
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ url_for('symptom_management.list_symptoms') }}" 
-                               class="{{ 'active' if request.blueprint == 'symptom_management' else '' }}">
-                               Symptom Management
-                            </a>
-                        </li>
-                        <li> {# Messages Link #}
-                            <a href="{{ url_for('messaging.message_list') }}"
-                               class="{% if request.endpoint.startswith('messaging.') %}active{% endif %}">
-                                <i class="fas fa-comments fa-fw"></i> Messages
-                            </a>
-                        </li>
-                        <li> {# Diet Plans Link #}
-                             <a href="{{ url_for('diet_plans.list_diet_plans') }}"
-                                class="{% if request.endpoint.startswith('diet_plans.') %}active{% endif %}">
-                                 <i class="fas fa-utensils fa-fw"></i> Diet Plans
-                             </a>
-                         </li>
-                         {# Add other doctor-only links here if needed #}
-                    {% endif %} {# <<<--- ENDIF for doctor-specific section ---<<< #}
+                        {# Add other doctor-specific links here #}
+                    {% endif %} {# End Doctor-Only Section #}
+                    <li class="nav-item">
+                        <a href="{{ url_for('vaccine_management.list_vaccines') }}"
+                           class="nav-link {% if request.blueprint == 'vaccine_admin' %}active{% endif %}">
+                            <i class="fas fa-syringe fa-fw"></i> Manage Vaccines
+                        </a>
+                    </li>
 
-                    {# === Common Links (Settings should likely be outside the doctor 'if') === #}
-                    <li>
-                        <a href="{{ url_for('settings.view_settings') }}" {# UPDATE #}
-                           class="{% if request.endpoint.startswith('settings.') %}active{% endif %}"> {# UPDATE #}
+                    {# === Nutritionist-Only Links === #}
+                    {% if current_user.user_type == 'nutritionist' %} {# Use the correct role name #}
+                        <li class="nav-item">
+                            {# *** VERIFY Endpoint: 'food_items.list_food_items' or similar *** #}
+                            <a class="nav-link {% if request.blueprint == 'food_items' %}active{% endif %}"
+                               href="{{ url_for('food_items.list_food_items') }}">
+                                <i class="fas fa-carrot fa-fw"></i> Food Item Library
+                            </a>
+                        </li>
+                         {# Add other nutritionist-specific links here #}
+
+                    {% endif %} {# End Nutritionist-Only Section #}
+                    
+
+                    {# === Common Links (e.g., Settings) === #}
+                    <li class="nav-item">
+                        <a href="{{ url_for('settings.profile_settings') }}" 
+                           class="nav-link {% if request.blueprint == 'settings' %}active{% endif %}">
                             <i class="fas fa-user-cog fa-fw"></i> Profile & Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        {# *** VERIFY Endpoint: 'auth.logout_route' or similar *** #}
+                        <a href="{{ url_for('login.logout_route') }}" class="nav-link">
+                            <i class="fas fa-sign-out-alt fa-fw"></i> Logout
                         </a>
                     </li>
                 </ul>
@@ -117,14 +188,16 @@
         </aside>
 
         <main class="app-main-content">
-            {# --- Flash Messages (Keep as is) --- #}
+            {# --- Flash Messages --- #}
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div class="flash-messages">
+                    <div class="flash-messages-container"> {# Wrap messages for better control #}
                         {% for category, message in messages %}
-                            <div class="alert alert-{{ category|replace('danger', 'error')|replace('warning', 'warning')|replace('success', 'success')|default('info') }}" role="alert">
+                            {# Map categories to common alert types (e.g., bootstrap classes or your own) #}
+                            {% set alert_type = category if category in ['success', 'warning', 'info'] else 'danger' %}
+                            <div class="alert alert-{{ alert_type }}" role="alert">
                                 {{ message }}
-                                <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';" aria-label="Close">×</button>
+                                <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';" aria-label="Close">×</button> {# Use times symbol #}
                             </div>
                         {% endfor %}
                     </div>
@@ -139,17 +212,11 @@
                  </div>
                  <div class="card content-section">
                      <div class="card-body">
-                         <p>Welcome to your portal.</p>
+                         <p>Welcome to your portal dashboard.</p>
                      </div>
                  </div>
             {% endblock %}
         </main>
-
-        {# Optional Footer #}
-        {#
-        <footer class="app-footer">
-             <p>© {{ now().year }} HealthApp. All rights reserved.</p> {# Use built-in Jinja date object #}
-        {#</footer> #}
 
     </div> {# End .app-layout #}
 

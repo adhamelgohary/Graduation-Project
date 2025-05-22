@@ -146,9 +146,3 @@ def dashboard():
     # Render the template with the collected data
     # The template helper 'format_timedelta_as_time' should be registered globally for Jinja
     return render_template('Doctor_Portal/Dashboard.html', **dashboard_data)
-
-
-# --- Other Placeholder Routes (Removed - Implement in respective blueprints) ---
-# It's better practice to define these routes within their dedicated blueprints
-# (e.g., patients.py, appointments.py, messaging.py, settings.py)
-# rather than having placeholder redirects here.

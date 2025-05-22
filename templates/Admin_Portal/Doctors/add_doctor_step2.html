@@ -3,7 +3,7 @@
 {% block title %}Add Doctor - Step 2{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_management.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_management.css') }}"> {# Ensure this CSS exists #}
 {% endblock %}
 
 {% block content %}
@@ -11,7 +11,7 @@
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.index') }}">Manage Doctors</a></li>
-    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.add_doctor_step1_form') }}">Add Step 1</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.add_doctor_step1') }}">Add Step 1</a></li>
     <li class="breadcrumb-item active" aria-current="page">Add Step 2</li>
   </ol>
 </nav>
@@ -25,13 +25,43 @@
 
 <div class="card shadow-sm">
 <div class="card-body">
-<form method="POST" action="{{ url_for('Doctors_Management.add_doctor_step2', user_id=user.user_id) }}">
+{# MODIFIED: Action URL for the new POST route #}
+<form method="POST" action="{{ url_for('Doctors_Management.add_doctor_step2_submit', user_id=user.user_id) }}" class="needs-validation" novalidate>
 
-     <div class="row g-3">
-         <div class="col-md-6 mb-3">
-            <label for="specialization" class="form-label">Specialization <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="specialization" name="specialization" value="{{ form_data.get('specialization', '') }}" required>
-         </div>
+    <div class="row g-3">
+        <div class="col-md-6 mb-3">
+            <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
+            <select class="form-select" id="department_id" name="department_id" required>
+                <option value="" disabled {% if not form_data.get('department_id') %}selected{% endif %}>-- Select Department --</option>
+                {% for dept in departments %}
+                <option value="{{ dept.department_id }}" {% if form_data.get('department_id')|string == dept.department_id|string %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+                {% endfor %}
+            </select>
+            <div class="invalid-feedback">Department is required.</div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label for="specialization_id" class="form-label">Specialization <span class="text-danger">*</span></label>
+            <select class="form-select" id="specialization_id" name="specialization_id" required
+                {% if form_data.get('specialization_id') %}data-persisted-value="{{ form_data.get('specialization_id') }}"{% endif %}>
+                <option value="" disabled selected>
+                    {% if form_data.get('department_id') %}-- Select Specialization --{% else %}-- Select Department First --{% endif %}
+                </option>
+                {# Options will be loaded by JS, or pre-filled on error by backend if department was selected #}
+                {% if form_data.get('department_id') and specializations_for_selected_dept_on_error %} {# This var name implies it's for error state #}
+                    {% for spec in specializations_for_selected_dept_on_error %}
+                         <option value="{{ spec.specialization_id }}" {% if form_data.get('specialization_id')|string == spec.specialization_id|string %}selected{% endif %}>
+                            {{ spec.name }}
+                        </option>
+                    {% endfor %}
+                {% endif %}
+            </select>
+            <div class="invalid-feedback">Specialization is required.</div>
+        </div>
+    </div>
+
+    <div class="row g-3">
          <div class="col-md-6 mb-3">
              <label for="npi_number" class="form-label">NPI Number (Optional)</label>
             <input type="text" class="form-control" id="npi_number" name="npi_number" value="{{ form_data.get('npi_number', '') }}">
@@ -43,15 +73,17 @@
         <div class="col-md-4 mb-3">
             <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="license_number" name="license_number" value="{{ form_data.get('license_number', '') }}" required>
+            <div class="invalid-feedback">License number is required.</div>
         </div>
         <div class="col-md-4 mb-3">
             <label for="license_state" class="form-label">License State <span class="text-danger">*</span></label>
             <input type="text" class="form-control" id="license_state" name="license_state" value="{{ form_data.get('license_state', '') }}" required>
-            {# Consider making this a dropdown if you have a predefined list #}
+            <div class="invalid-feedback">License state is required.</div>
         </div>
          <div class="col-md-4 mb-3">
             <label for="license_expiration" class="form-label">License Expiration <span class="text-danger">*</span></label>
             <input type="date" class="form-control" id="license_expiration" name="license_expiration" value="{{ form_data.get('license_expiration', '') }}" required>
+            <div class="invalid-feedback">License expiration date is required.</div>
         </div>
      </div>
 
@@ -83,7 +115,7 @@
         </div>
          <div class="col-md-3 mb-3 align-self-center">
              <div class="form-check form-switch mt-3">
-                <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" {% if form_data.get('accepting_new_patients') == '1' %}checked{% endif %}>
+                <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" {% if form_data.get('accepting_new_patients') == '1' or form_data.get('accepting_new_patients') == 1 %}checked{% endif %}>
                 <label class="form-check-label" for="accepting_new_patients">
                     Accepting New Patients?
                 </label>
@@ -92,14 +124,97 @@
      </div>
 
     <hr class="my-4">
-    <button type="submit" class="btn btn-success"><i class="fas fa-user-check me-1"></i> Complete Doctor Setup</button>
+    <button type="submit" class="btn btn-success"><i class="fas fa-user-check me-1"></i> Save Professional Details</button>
     <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-secondary">Cancel</a>
 </form>
-</div> {# End card-body #}
-</div> {# End card #}
+</div>
+</div>
 
 {% else %}
  <div class="alert alert-danger">Error: User details not found. Cannot proceed.</div>
  <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-primary">Back to Doctor List</a>
 {% endif %}
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+// Bootstrap 5 form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})();
+
+// --- Department and Specialization Cascading Dropdowns Script ---
+async function fetchSpecializationsForAddDoctor(departmentId, specializationSelectElement, persistedSpecializationId) {
+    if (!specializationSelectElement) return;
+
+    specializationSelectElement.innerHTML = '<option value="" selected disabled>Loading specializations...</option>';
+    specializationSelectElement.disabled = true;
+
+    if (!departmentId) {
+        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
+        specializationSelectElement.disabled = false; // Keep enabled
+        return;
+    }
+
+    try {
+        // Assuming your endpoint is correctly defined in register.py or a similar blueprint
+        const response = await fetch(`/get_specializations_for_department/${departmentId}`);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({detail: "Unknown server error"}));
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.detail || response.statusText}`);
+        }
+        const specializations = await response.json();
+
+        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Specialization --</option>';
+        if (specializations && specializations.length > 0) {
+            specializations.forEach(spec => {
+                const option = document.createElement('option');
+                option.value = spec.specialization_id;
+                option.textContent = spec.name;
+                specializationSelectElement.appendChild(option);
+            });
+            if (persistedSpecializationId && specializations.some(s => s.specialization_id.toString() === persistedSpecializationId)) {
+                specializationSelectElement.value = persistedSpecializationId;
+            }
+        } else {
+            specializationSelectElement.innerHTML = '<option value="" selected disabled>-- No specializations found --</option>';
+        }
+    } catch (error) {
+        console.error('Error fetching specializations for add doctor:', error);
+        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Error loading specializations --</option>';
+    } finally {
+        specializationSelectElement.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const departmentSelect = document.getElementById('department_id');
+    const specializationSelect = document.getElementById('specialization_id');
+
+    if (departmentSelect && specializationSelect) {
+        const persistedSpecId = specializationSelect.getAttribute('data-persisted-value');
+        departmentSelect.addEventListener('change', function() {
+            fetchSpecializationsForAddDoctor(this.value, specializationSelect, null); 
+        });
+
+        // Initial fetch if a department is already selected (e.g., on page load after POST error)
+        if (departmentSelect.value) { // Check if a department is selected on load
+             fetchSpecializationsForAddDoctor(departmentSelect.value, specializationSelect, persistedSpecId);
+        } else {
+            specializationSelect.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
+        }
+    }
+});
+</script>
 {% endblock %}

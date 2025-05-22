@@ -1,0 +1,253 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}Food Item Library{% endblock %}
+
+{% block head_extra %}
+    {# Add specific CSS if needed #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
+     <style>
+        /* Styles for filter form */
+        .search-form .form-select-sm { height: calc(1.5em + 0.5rem + 2px); padding-top: .25rem; padding-bottom: .25rem; }
+        .search-form .btn-sm { padding: 0.25rem 0.5rem; font-size: .875rem; }
+        .table th, .table td { vertical-align: middle; }
+        /* Sorting icon styles */
+        .table th a { color: inherit; text-decoration: none; }
+        .table th a:hover { color: var(--color-primary); }
+        .table th .sort-icon { opacity: 0.4; font-size: 0.8em; margin-left: 5px; }
+        .table th .sort-icon.active { opacity: 1; color: var(--color-primary); }
+        .action-buttons form { margin-bottom: 0; }
+        .action-buttons .button-xsmall { padding: 0.15rem 0.4rem; font-size: 0.8em; }
+        /* Ensure footer aligns pagination if using card-footer */
+        .card-footer { background-color: #f8f9fa; border-top: 1px solid #dee2e6;}
+        /* --- Pagination Styles --- */
+.pagination {
+    display: flex; /* Use flexbox to align items in a row */
+    padding-left: 0;
+    list-style: none; /* Remove default list bullets */
+    border-radius: .25rem; /* Optional: rounded corners for the container */
+    margin-top: 1rem; /* Spacing above pagination */
+    margin-bottom: 1rem; /* Spacing below pagination */
+    justify-content: center; /* Center the pagination block */
+}
+
+.pagination .page-item {
+    /* No specific styling needed here if using flex on parent,
+       but you can add margins if desired */
+    margin: 0 2px; /* Small horizontal margin between items */
+}
+
+.pagination .page-item .page-link {
+    position: relative;
+    display: block;
+    padding: .5rem .75rem; /* Adjust padding as needed */
+    margin-left: -1px; /* To make borders overlap nicely */
+    line-height: 1.25;
+    color: var(--color-primary, #007bff); /* Use your primary color variable or a default */
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    text-decoration: none;
+}
+
+.pagination .page-item:first-child .page-link {
+    margin-left: 0;
+    border-top-left-radius: .25rem;
+    border-bottom-left-radius: .25rem;
+}
+
+.pagination .page-item:last-child .page-link {
+    border-top-right-radius: .25rem;
+    border-bottom-right-radius: .25rem;
+}
+
+.pagination .page-item.active .page-link {
+    z-index: 3;
+    color: #fff;
+    background-color: var(--color-primary, #007bff); /* Active background */
+    border-color: var(--color-primary, #007bff);   /* Active border */
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    cursor: auto;
+    background-color: #fff;
+    border-color: #dee2e6;
+}
+
+/* Hover state for links */
+.pagination .page-item:not(.active):not(.disabled) .page-link:hover {
+    z-index: 2;
+    color: var(--color-primary-dark, #0056b3); /* Darker primary color on hover */
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Food Item Library</h1>
+    {# Conditionally show Add button based on dietitian role #}
+    {% if can_manage_food_items %}
+        <a href="{{ url_for('food_items.add_food_item') }}" class="button button-primary">
+            <i class="fas fa-plus fa-fw"></i> Add New Food Item
+        </a>
+    {% endif %}
+</div>
+
+{% include '_flash_messages.html' %}
+
+{# Search Form (similar to diet plan list) #}
+<form method="GET" action="{{ url_for('food_items.list_food_items') }}" class="search-form card card-body mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-lg-5 col-md-12">
+            <label for="search" class="form-label visually-hidden">Search</label>
+            <div class="input-group">
+                 <span class="input-group-text"><i class="fas fa-search fa-fw"></i></span>
+                <input type="search" class="form-control" id="search" name="search" placeholder="Search Name or Notes..." value="{{ search_term | default('') }}">
+            </div>
+        </div>
+        {# Add other filters here if needed (e.g., filter by category if you add one) #}
+        <div class="col-lg-auto col-md-12 ms-md-auto d-flex justify-content-start justify-content-md-end gap-2 flex-wrap">
+            {% if search_term %} {# Show clear only if search is active #}
+                 <a href="{{ url_for('food_items.list_food_items', sort_by=sort_by, sort_dir=sort_dir) }}" class="button button-outline button-secondary button-sm">Clear Search</a> {# Preserve sorting when clearing #}
+            {% endif %}
+             <button type="submit" class="button button-primary button-sm">Search</button>
+        </div>
+    </div>
+     {# Hidden inputs for sorting persistence when submitting search #}
+     <input type="hidden" name="sort_by" value="{{ sort_by | default('name') }}">
+     <input type="hidden" name="sort_dir" value="{{ sort_dir | default('ASC') }}">
+</form>
+
+<div class="card shadow-sm content-section">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm mb-0"> {# table-sm #}
+                <thead>
+                    <tr>
+                        {# Sorting Macro #}
+                        {% macro sort_link(col_key, col_title) %}
+                            {% set next_sort_dir = 'ASC' if sort_by == col_key and sort_dir == 'DESC' else 'DESC' %}
+                            {% if sort_by != col_key %}{% set next_sort_dir = 'ASC' %}{% endif %}
+                            {# Use request_args passed from Python route #}
+                            {% set query_args = request_args.copy() %}
+                            {% set _ = query_args.setlist('sort_by', [col_key]) %}
+                            {% set _ = query_args.setlist('sort_dir', [next_sort_dir]) %}
+                            {% set _ = query_args.setlist('page', ['1']) %} {# Reset page on sort #}
+                            <a href="{{ url_for(request.endpoint, **query_args) }}" title="Sort by {{ col_title }}">
+                                {{ col_title }}
+                                {% if sort_by == col_key %}
+                                    <i class="fas {{ 'fa-sort-up' if sort_dir == 'ASC' else 'fa-sort-down' }} sort-icon active"></i>
+                                {% else %}
+                                    <i class="fas fa-sort sort-icon"></i>
+                                {% endif %}
+                            </a>
+                        {% endmacro %}
+
+                        <th style="width: 35%;">{{ sort_link('name', 'Item Name') }}</th>
+                        <th style="width: 15%;">Serving Size</th>
+                        <th style="width: 8%;">{{ sort_link('calories', 'Cals') }}</th>
+                        <th style="width: 8%;">{{ sort_link('protein', 'Prot') }}</th>
+                        <th style="width: 8%;">{{ sort_link('carbs', 'Carb') }}</th>
+                        <th style="width: 8%;">{{ sort_link('fat', 'Fat') }}</th>
+                         {# Add Fiber/Sodium if desired #}
+                         {# <th style="width: 8%;">{{ sort_link('fiber', 'Fiber') }}</th> #}
+                         {# <th style="width: 8%;">{{ sort_link('sodium', 'Sodium') }}</th> #}
+                        <th class="text-end" style="width: 10%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td><strong>{{ item.item_name }}</strong></td>
+                        <td>{{ item.serving_size }}</td>
+                        <td>{{ item.calories | default('-') }}</td>
+                        <td>{{ '%g'|format(item.protein_grams) if item.protein_grams is not none else '-' }}g</td>
+                        <td>{{ '%g'|format(item.carbs_grams) if item.carbs_grams is not none else '-' }}g</td>
+                        <td>{{ '%g'|format(item.fat_grams) if item.fat_grams is not none else '-' }}g</td>
+                        {# Add Fiber/Sodium if displaying #}
+                        <td class="action-buttons text-end">
+                            {# Edit/Delete only for Dietitians #}
+                             {% if can_manage_food_items %}
+                                <a href="{{ url_for('.edit_food_item', item_id=item.food_item_id) }}" class="button button-outline button-secondary button-xsmall" title="Edit"><i class="fas fa-edit"></i></a>
+                                <form action="{{ url_for('.delete_food_item', item_id=item.food_item_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate item \'{{ item.item_name|e }}\'? It won\'t appear in searches.');">
+                                    <button type="submit" class="button button-outline button-danger button-xsmall" title="Deactivate"><i class="fas fa-times-circle"></i></button> {# Deactivate icon #}
+                                </form>
+                             {% else %}
+                                 {# Show View icon or similar for non-managers? Or just N/A? #}
+                                 <span class="text-muted small">N/A</span>
+                             {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        {# *** UPDATE COLSPAN to match number of <th> columns *** #}
+                        <td colspan="7" class="text-center text-muted py-4 fst-italic">No food items found matching your criteria.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div> {# End table-responsive #}
+    </div> {# End card-body #}
+
+    {# *** PAGINATION CONTROLS *** #}
+    {% if total_pages > 1 %}
+     <div class="card-footer d-flex justify-content-center">
+             <nav aria-label="Food item list navigation">
+                <ul class="pagination pagination-sm mb-0">
+                     {# Base arguments for page links - preserve sorting and search #}
+                     {% set query_args_page = request_args.copy() %}
+
+                     {# Previous Page Link #}
+                     <li class="page-item {{ 'disabled' if current_page <= 1 else '' }}">
+                          {% set _ = query_args_page.setlist('page', [(current_page-1)|string]) %}
+                        <a class="page-link" href="{{ url_for(request.endpoint, **query_args_page) }}">« Prev</a>
+                    </li>
+
+                     {# Page Number Links (Showing a limited window) #}
+                     {% set page_window = 2 %} {# Number of links around the current page #}
+                     {% set start_page = [1, current_page - page_window] | max %}
+                     {% set end_page = [total_pages, current_page + page_window] | min %}
+
+                     {# Ellipsis and First Page Link #}
+                     {% if start_page > 1 %}
+                         {% set _ = query_args_page.setlist('page', ['1']) %}
+                         <li class="page-item"><a class="page-link" href="{{ url_for(request.endpoint, **query_args_page) }}">1</a></li>
+                         {% if start_page > 2 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+                     {% endif %}
+
+                     {# Links within the window #}
+                     {% for page_num in range(start_page, end_page + 1) %}
+                       {% if page_num == current_page %}
+                         <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
+                       {% else %}
+                         <li class="page-item">
+                           {% set _ = query_args_page.setlist('page', [page_num|string]) %}
+                           <a class="page-link" href="{{ url_for(request.endpoint, **query_args_page) }}">{{ page_num }}</a>
+                         </li>
+                       {% endif %}
+                     {% endfor %}
+
+                     {# Ellipsis and Last Page Link #}
+                     {% if end_page < total_pages %}
+                        {% if end_page < total_pages - 1 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}
+                        {% set _ = query_args_page.setlist('page', [total_pages|string]) %}
+                        <li class="page-item"><a class="page-link" href="{{ url_for(request.endpoint, **query_args_page) }}">{{ total_pages }}</a></li>
+                     {% endif %}
+
+                     {# Next Page Link #}
+                    <li class="page-item {{ 'disabled' if current_page >= total_pages else '' }}">
+                         {% set _ = query_args_page.setlist('page', [(current_page+1)|string]) %}
+                        <a class="page-link" href="{{ url_for(request.endpoint, **query_args_page) }}">Next »</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+    {# *** END PAGINATION CONTROLS *** #}
+
+</div> {# End card #}
+{% endblock %}
+
+{# No specific JS needed for basic pagination #}
+{% block scripts %}{% endblock %}

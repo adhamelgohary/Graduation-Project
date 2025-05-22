@@ -1,0 +1,205 @@
+{% extends "Doctor_Portal/base.html" %}
+
+{% block title %}{{ form_title or 'Vaccine Form' }}{% endblock %}
+
+{% block head_extra %}
+<style>
+    .form-section {
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-md);
+        border-bottom: 1px dashed var(--color-border);
+    }
+    .form-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .form-section h3 {
+        font-size: 1.2rem;
+        color: var(--color-secondary);
+        margin-bottom: var(--spacing-md);
+    }
+    .required-field label::after {
+        content: " *";
+        color: var(--color-danger);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-edit fa-fw"></i> {{ form_title }}</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('vaccine_management.list_vaccines') }}" class="button button-outline button-secondary">
+            <i class="fas fa-times fa-fw"></i> Cancel
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ form_action }}">
+            {# --- SECTION: Core Information --- #}
+            <div class="form-section">
+                <h3>Core Vaccine Details</h3>
+                <div class="row">
+                    <div class="col-md-8 form-group required-field">
+                        <label for="vaccine_name" class="form-label">Vaccine Name</label>
+                        <input type="text" class="form-control" id="vaccine_name" name="vaccine_name" value="{{ vaccine.vaccine_name or request.form.vaccine_name or '' }}" required>
+                    </div>
+                    <div class="col-md-4 form-group">
+                        <label for="abbreviation" class="form-label">Abbreviation</label>
+                        <input type="text" class="form-control" id="abbreviation" name="abbreviation" value="{{ vaccine.abbreviation or request.form.abbreviation or '' }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group required-field">
+                        <label for="category_id" class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            <option value="" disabled {% if not (vaccine.category_id or request.form.category_id) %}selected{% endif %}>Select a category...</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.category_id }}" 
+                                    {% if vaccine.category_id == cat.category_id or request.form.category_id == cat.category_id|string %}selected{% endif %}>
+                                {{ cat.category_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="vaccine_type" class="form-label">Vaccine Type</label>
+                        {# If ENUM, use select. If free text, use input. Adjust as needed. #}
+                        {% if vaccine_types_enum %}
+                        <select class="form-select" id="vaccine_type" name="vaccine_type">
+                            <option value="" {% if not (vaccine.vaccine_type or request.form.vaccine_type) %}selected{% endif %}>Select a type (optional)...</option>
+                            {% for type_name in vaccine_types_enum %}
+                            <option value="{{ type_name }}"
+                                    {% if vaccine.vaccine_type == type_name or request.form.vaccine_type == type_name %}selected{% endif %}>
+                                {{ type_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <input type="text" class="form-control" id="vaccine_type" name="vaccine_type" placeholder="e.g., mRNA, Live-attenuated" value="{{ vaccine.vaccine_type or request.form.vaccine_type or '' }}">
+                        {% endif %}
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="manufacturer" class="form-label">Manufacturer</label>
+                    <input type="text" class="form-control" id="manufacturer" name="manufacturer" value="{{ vaccine.manufacturer or request.form.manufacturer or '' }}">
+                </div>
+                <div class="form-group required-field">
+                    <label for="diseases_prevented" class="form-label">Diseases Prevented</label>
+                    <textarea class="form-control" id="diseases_prevented" name="diseases_prevented" rows="3" required>{{ vaccine.diseases_prevented or request.form.diseases_prevented or '' }}</textarea>
+                    <small class="form-text text-muted">List the diseases this vaccine protects against, e.g., "Measles, Mumps, Rubella".</small>
+                </div>
+            </div>
+
+            {# --- SECTION: Usage & Schedule --- #}
+            <div class="form-section">
+                <h3>Usage and Schedule</h3>
+                <div class="form-group">
+                    <label for="recommended_for" class="form-label">Recommended For</label>
+                    <textarea class="form-control" id="recommended_for" name="recommended_for" rows="3">{{ vaccine.recommended_for or request.form.recommended_for or '' }}</textarea>
+                    <small class="form-text text-muted">Describe target groups, e.g., "All children aged 12-15 months".</small>
+                </div>
+                <div class="form-group">
+                    <label for="timing_schedule" class="form-label">Timing / Dosing Schedule</label>
+                    <textarea class="form-control" id="timing_schedule" name="timing_schedule" rows="3">{{ vaccine.timing_schedule or request.form.timing_schedule or '' }}</textarea>
+                     <small class="form-text text-muted">E.g., "Series of 2 doses, 4 weeks apart".</small>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label for="number_of_doses" class="form-label">Number of Doses (Primary Series)</label>
+                        <input type="text" class="form-control" id="number_of_doses" name="number_of_doses" placeholder="e.g., 1, 2, 3-dose series" value="{{ vaccine.number_of_doses or request.form.number_of_doses or '' }}">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="administration_route" class="form-label">Administration Route</label>
+                        <input type="text" class="form-control" id="administration_route" name="administration_route" placeholder="e.g., Intramuscular, Oral" value="{{ vaccine.administration_route or request.form.administration_route or '' }}">
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label for="booster_information" class="form-label">Booster Information</label>
+                    <textarea class="form-control" id="booster_information" name="booster_information" rows="2">{{ vaccine.booster_information or request.form.booster_information or '' }}</textarea>
+                </div>
+            </div>
+
+            {# --- SECTION: Benefits & Effects --- #}
+            <div class="form-section">
+                <h3>Benefits, Side Effects, and Precautions</h3>
+                 <div class="form-group">
+                    <label for="benefits" class="form-label">Key Benefits</label>
+                    <textarea class="form-control" id="benefits" name="benefits" rows="3">{{ vaccine.benefits or request.form.benefits or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="common_side_effects" class="form-label">Common Side Effects</label>
+                    <textarea class="form-control" id="common_side_effects" name="common_side_effects" rows="3">{{ vaccine.common_side_effects or request.form.common_side_effects or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="contraindications_precautions" class="form-label">Contraindications & Precautions</label>
+                    <textarea class="form-control" id="contraindications_precautions" name="contraindications_precautions" rows="3">{{ vaccine.contraindications_precautions or request.form.contraindications_precautions or '' }}</textarea>
+                </div>
+            </div>
+            
+            {# --- SECTION: Additional Information --- #}
+            <div class="form-section">
+                <h3>Additional Information</h3>
+                 <div class="form-group">
+                    <label for="notes" class="form-label">General Notes</label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ vaccine.notes or request.form.notes or '' }}</textarea>
+                    <small class="form-text text-muted">Any other relevant details for internal use.</small>
+                </div>
+                 {# Removed storage_requirements as per discussion it's more for doctors internal/not primary for patient display in this general system #}
+            </div>
+
+
+            {# Display general errors not tied to a specific field #}
+            {% if errors and errors is not mapping %}
+                <div class="alert alert-danger">
+                    Please correct the following errors:
+                    <ul>
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="mt-4 d-flex justify-content-end">
+                <a href="{{ url_for('vaccine_management.list_vaccines') }}" class="button button-outline button-secondary me-2">
+                    Cancel
+                </a>
+                <button type="submit" class="button button-success">
+                    <i class="fas fa-save fa-fw"></i> 
+                    {% if vaccine and vaccine.vaccine_id %}Update Vaccine{% else %}Save Vaccine{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Basic client-side validation enhancement example (optional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                let isValid = true;
+                const requiredInputs = form.querySelectorAll('[required]');
+                requiredInputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        isValid = false;
+                        // You could add visual feedback here, e.g., input.classList.add('is-invalid');
+                        console.error(`Field ${input.name} is required.`);
+                    }
+                });
+                if (!isValid) {
+                    event.preventDefault(); // Stop form submission
+                    alert('Please fill in all required fields marked with an asterisk (*).');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

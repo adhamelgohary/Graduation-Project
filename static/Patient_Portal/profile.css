@@ -1,15 +1,21 @@
 /* static/Patient_Portal/profile.css */
 
-/* --- General Profile Container --- */
-.profile-container {
-    max-width: 900px; /* Or adjust as needed */
-    margin: 2rem auto;
+/*
+   This file contains styles specific to the profile management page layout
+   and refines the appearance of its form elements (inputs, selects, textareas)
+   to match the overall theme provided in Website/base.css.
+*/
+
+/* --- General Profile Container & Card Styling --- */
+/* .profile-container.card uses styles from base.css */
+.profile-container .card-body {
+    padding: var(--spacing-xl);
 }
 
-/* --- Section Styling --- */
+/* --- Section Styling in Profile --- */
 .profile-section {
-    margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-xl);
     border-bottom: 1px solid var(--border-color);
 }
 .profile-section:last-of-type {
@@ -19,112 +25,297 @@
 }
 
 .profile-section h4 {
-    margin-bottom: 1.5rem;
-    color: var(--accent-pink); /* Example: Highlight section titles */
-    font-size: 1.1em;
+    margin-bottom: var(--spacing-lg);
+    color: var(--accent-pink);
+    font-size: 1.3em;
     font-weight: 600;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--accent-pink);
+    display: inline-block;
 }
 
-/* --- Form Layout --- */
-.form-row {
+/* --- Form Layout & Element Styling for Profile Page --- */
+.profile-section .form-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem 1.5rem; /* Row and column gap */
-    margin-bottom: 1rem; /* Space below rows */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-md) var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
 }
 
-.form-group label {
+.profile-section .form-group {
+    margin-bottom: var(--spacing-lg); /* Consistent spacing for groups */
+}
+
+.profile-section .form-label {
     display: block;
-    margin-bottom: 0.4rem;
-    font-size: 0.9em;
-    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm); /* Space between label and input */
     font-weight: 500;
+    color: var(--text-secondary); /* Use themed secondary text color */
+    font-size: 0.9rem;
 }
 
-.form-group input[type="text"],
-.form-group input[type="email"],
-.form-group input[type="tel"],
-.form-group input[type="date"],
-.form-group input[type="number"],
-.form-group select,
-.form-group textarea {
+/* General Input, Select, Textarea Styling for Profile Page */
+.profile-section .form-control,
+.profile-section .form-select,
+.profile-section input[type="text"],
+.profile-section input[type="email"],
+.profile-section input[type="tel"],
+.profile-section input[type="date"],
+.profile-section input[type="number"],
+.profile-section select, /* Targeting select tag directly as well */
+.profile-section textarea {
+    display: block;
     width: 100%;
-    /* Inherit base styles or add specifics */
-    padding: 0.6rem 0.8rem;
-    font-size: 0.95em;
-}
-/* Make readonly fields look different */
-.form-group input[readonly] {
-    background-color: var(--input-bg-disabled, #e9ecef); /* Use a variable or fallback */
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-[data-theme="dark"] .form-group input[readonly] {
-     background-color: var(--input-bg-disabled, rgba(255,255,255,0.05));
-}
-
-.form-group small {
-    font-size: 0.8em;
-    color: var(--text-secondary);
-    opacity: 0.8;
+    padding: var(--spacing-sm) var(--spacing-md); /* Consistent padding: 10px 15px */
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.6; /* Improved line height for readability */
+    color: var(--text-color);
+    background-color: var(--input-bg);
+    background-clip: padding-box;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius); /* Use theme border radius */
+    box-shadow: var(--shadow-inset-sm, inset 0 1px 2px rgba(0,0,0,0.075)); /* Subtle inset */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-actions {
-    text-align: right;
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+.profile-section .form-control:focus,
+.profile-section .form-select:focus,
+.profile-section input[type="text"]:focus,
+.profile-section input[type="email"]:focus,
+.profile-section input[type="tel"]:focus,
+.profile-section input[type="date"]:focus,
+.profile-section input[type="number"]:focus,
+.profile-section select:focus,
+.profile-section textarea:focus {
+    border-color: var(--neon-blue); /* Use neon-blue for focus border */
+    outline: 0;
+    box-shadow: var(--shadow-inset-sm), 0 0 0 0.2rem var(--shadow-glow); /* Combine inset with glow */
 }
 
-/* --- Profile Picture Area --- */
-.profile-picture-area {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    flex-wrap: wrap;
+/* Placeholder styling */
+.profile-section .form-control::placeholder,
+.profile-section input::placeholder, /* Catchall for inputs */
+.profile-section textarea::placeholder {
+    color: var(--placeholder-color);
+    opacity: 1;
 }
 
-.current-profile-pic {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%; /* Make it circular */
-    object-fit: cover;
-    border: 3px solid var(--border-color);
-    box-shadow: 0 2px 5px var(--shadow-color);
+/* Select (Dropdown) Specific Styling */
+.profile-section .form-select,
+.profile-section select {
+    padding-right: 2.8rem; /* More space for custom arrow + padding */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba(255,255,255,0.7)' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); /* Dark theme arrow */
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center; /* Adjust position */
+    background-size: 14px 10px; /* Adjust size */
+    appearance: none;
 }
-
-.upload-form label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+[data-theme="light"] .profile-section .form-select,
+[data-theme="light"] .profile-section select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba(5,21,42,0.7)' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); /* Light theme arrow */
+    border-color: var(--border-color);
+    color: var(--text-color);
+    background-color: var(--input-bg);
 }
-.upload-form input[type="file"] {
-    display: block;
-    margin-bottom: 0.8rem;
-    /* Basic styling, can be enhanced */
+.profile-section .form-select option,
+.profile-section select option {
+    background-color: var(--bg-secondary); /* Match card bg for dropdown panel */
+    color: var(--text-color);
 }
-
-/* --- Notification Preferences --- */
-.notification-options .form-check {
-    margin-bottom: 0.8rem;
-    padding-left: 2.5em; /* Ensure space for switch */
-}
-.notification-options .form-check-label {
-    font-weight: normal; /* Override potential heavier label styles */
+[data-theme="light"] .profile-section .form-select option,
+[data-theme="light"] .profile-section select option {
+    background-color: var(--bg-secondary);
     color: var(--text-color);
 }
 
-/* --- Responsive --- */
+
+/* Date Input Specific Styling */
+.profile-section input[type="date"].form-control,
+.profile-section input[type="date"] {
+    position: relative; /* For custom calendar icon if desired */
+}
+.profile-section input[type="date"].form-control::-webkit-calendar-picker-indicator,
+.profile-section input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) brightness(100%) sepia(0.3) saturate(5) hue-rotate(180deg); /* Attempt to color it (e.g. bluish) */
+    /* Or use filter: invert(1) for simple white on dark */
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+    padding: 0 var(--spacing-xs); /* Add a little padding around the icon */
+}
+.profile-section input[type="date"].form-control::-webkit-calendar-picker-indicator:hover,
+.profile-section input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+[data-theme="light"] .profile-section input[type="date"].form-control::-webkit-calendar-picker-indicator,
+[data-theme="light"] .profile-section input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: none; /* Reset filter for light theme, browser default should be fine */
+}
+
+
+/* Textarea Specific Styling */
+.profile-section textarea.form-control,
+.profile-section textarea {
+    min-height: 100px; /* Example min-height */
+    resize: vertical;
+}
+
+
+/* Readonly and Disabled Fields Styling */
+.profile-section input[readonly],
+.profile-section input:disabled,
+.profile-section select:disabled,
+.profile-section textarea:disabled {
+    background-color: var(--nested-card-bg); /* Distinct background */
+    color: var(--text-secondary);
+    opacity: 0.75; /* Slightly more visible than default disabled */
+    cursor: not-allowed;
+    border-color: var(--border-color) !important; /* Ensure border doesn't highlight */
+    box-shadow: none !important; /* Remove any focus or inset shadows */
+}
+[data-theme="light"] .profile-section input[readonly],
+[data-theme="light"] .profile-section input:disabled,
+[data-theme="light"] .profile-section select:disabled,
+[data-theme="light"] .profile-section textarea:disabled {
+     background-color: var(--nested-card-bg);
+     color: var(--text-secondary);
+}
+.profile-section .form-group input[readonly] + small, /* Style helper text for readonly fields */
+.profile-section .form-group input:disabled + small {
+    opacity: 0.7;
+}
+
+/* Helper text under inputs */
+.profile-section .form-group small {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    opacity: 0.9;
+    display: block;
+    margin-top: var(--spacing-xs);
+}
+
+
+/* --- Profile Picture Area (from previous, generally good) --- */
+.profile-picture-area {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+    padding: var(--spacing-md) 0 var(--spacing-xl);
+    border-bottom: 1px dashed var(--border-color);
+    margin-bottom: var(--spacing-xl);
+}
+.profile-picture-area:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.current-profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--neon-blue);
+    box-shadow: 0 0 20px var(--shadow-glow), 0 2px 5px var(--shadow-color);
+    background-color: var(--bg-secondary);
+    padding: 3px;
+}
+[data-theme="light"] .current-profile-pic {
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px var(--shadow-glow), 0 2px 5px var(--shadow-color);
+}
+
+.upload-form {
+    flex-grow: 1;
+    max-width: 400px;
+}
+.upload-form label {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--spacing-sm);
+}
+.upload-form input[type="file"] {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+    background-color: var(--input-bg);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+}
+.upload-form input[type="file"]::file-selector-button {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.9em;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    border: 1px solid var(--accent-pink);
+    background-color: transparent;
+    color: var(--accent-pink);
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    margin-right: var(--spacing-md);
+}
+.upload-form input[type="file"]::file-selector-button:hover {
+    background-color: var(--accent-pink);
+    color: var(--white-color);
+}
+[data-theme="light"] .upload-form input[type="file"] {
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+[data-theme="light"] .upload-form input[type="file"]::file-selector-button {
+    border-color: var(--accent-pink);
+    color: var(--accent-pink);
+}
+[data-theme="light"] .upload-form input[type="file"]::file-selector-button:hover {
+    background-color: var(--accent-pink);
+    color: var(--white-color);
+}
+/* Upload submit button uses .button .button-small from base.css */
+/* Form Actions uses .form-actions from base.css */
+
+
+/* --- Notification Preferences --- */
+/* .notification-options .form-check styles will be inherited if using Bootstrap structure and base.css covers .form-check */
+.notification-options .form-check-label {
+    color: var(--text-color); /* Ensure label text is readable */
+}
+
+
+/* --- Responsive Adjustments for Profile Page (from previous, good) --- */
 @media (max-width: 768px) {
     .profile-picture-area {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        align-items: center;
+        gap: var(--spacing-lg);
     }
-    .form-row {
-        grid-template-columns: 1fr; /* Stack columns */
-        gap: 1rem 0;
+    .upload-form {
+        width: 100%;
+        max-width: none;
+        text-align: center;
+    }
+    .upload-form input[type="file"] {
+        text-align: left;
+    }
+    .profile-section h4 {
+        text-align: center;
+        display: block;
+        border-bottom-width: 0;
+        padding-bottom: 0;
+    }
+    .profile-section h4::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 2px;
+        background: var(--accent-pink);
+        margin: var(--spacing-sm) auto 0;
+        border-radius: 1px;
+    }
+    .profile-section .form-row { /* Stack form elements in a single column */
+        grid-template-columns: 1fr;
     }
 }

@@ -11,7 +11,7 @@
     --warning-color: #ffc107;          /* Bootstrap Yellow */
     --danger-color: #dc3545;           /* Bootstrap Red */
     --info-color: #0dcaf0;             /* Bootstrap Teal */
-    --dark-color: #212529;           /* Bootstrap Dark (Sidebar BG) */
+    --dark-color: #212529;           /* Bootstrap Dark (Used for sidebar) */
     --secondary-color: #6c757d;        /* Bootstrap Secondary */
     --light-color: #f8f9fa;           /* Very Light Gray (Main BG) */
     --white-color: #ffffff;
@@ -25,15 +25,18 @@
     --transition: all 0.25s ease-in-out;
 
     --sidebar-width: 280px;
-    --sidebar-bg: var(--dark-color);
-    --sidebar-link-color: rgba(255, 255, 255, 0.8);
-    --sidebar-link-hover-color: var(--white-color);
-    --sidebar-link-active-color: var(--white-color);
-    --sidebar-link-hover-bg: rgba(255, 255, 255, 0.1);
-    --sidebar-link-active-bg: var(--primary-color); /* Use primary for active */
-    --sidebar-submenu-bg: rgba(0, 0, 0, 0.2); /* Darker submenu */
-    --sidebar-icon-color: rgba(255, 255, 255, 0.6);
-    --sidebar-icon-active-color: var(--white-color);
+    /* --- UPDATED Sidebar Variables for New Style --- */
+    --sidebar-bg: #007bff; /* Bootstrap primary blue for sidebar background */
+    --sidebar-link-color: #f8f9fa; /* Light text for links */
+    --sidebar-link-hover-color: #ffffff; /* White on hover */
+    --sidebar-link-active-color: #ffffff; /* White for active */
+    --sidebar-link-hover-bg: #0056b3; /* Darker blue for hover/active parent */
+    --sidebar-link-active-bg: #0056b3; /* Darker blue for active parent */
+    --sidebar-submenu-bg: rgba(0, 0, 0, 0.1); /* Slightly darker transparent black for submenu bg */
+    --sidebar-submenu-link-active-bg: #0d6efd; /* Bootstrap primary for active sub-items (can be same as parent active) */
+    --sidebar-icon-color: #f8f9fa; /* Light icons to match link color */
+    --sidebar-icon-active-color: #ffffff; /* White icons on active/hover */
+    --sidebar-title-color: #f8f9fa; /* Lighter color for sidebar title */
 }
 
 /* ==========================================================================
@@ -107,16 +110,16 @@ img {
    ========================================================================== */
 .sidebar {
     width: var(--sidebar-width);
-    background-color: var(--sidebar-bg);
-    color: var(--white-color);
+    background-color: var(--sidebar-bg); /* Updated */
+    color: var(--sidebar-link-color); /* Updated for general text */
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    padding: 20px 0; /* Adjust vertical padding */
+    padding: 0; /* Remove default padding, handle with h2 and ul */
     overflow-y: auto;
-    transition: left 0.3s ease-in-out; /* Only transition left */
-    z-index: 1030; /* High z-index */
+    transition: left 0.3s ease-in-out;
+    z-index: 1030;
     box-shadow: 0.125rem 0 0.5rem rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
     display: flex;
@@ -125,91 +128,74 @@ img {
 
 /* Sidebar Scrollbar */
 .sidebar::-webkit-scrollbar { width: 5px; }
-.sidebar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
-.sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
-.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
+.sidebar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); } /* Adjust track based on new BG */
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 3px; }
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
 
 .sidebar h2 { /* Portal Title */
-    text-align: center;
-    padding: 10px 20px 20px 20px;
-    margin-bottom: 20px;
-    font-size: 1.3rem; /* 21px */
+    padding: 1rem 1.25rem; /* Match Bootstrap ps-3 pt-3 roughly */
+    margin-bottom: 1rem; /* Space below title */
+    font-size: 1.5rem; /* Updated size */
     font-weight: 700;
-    color: var(--white-color);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    flex-shrink: 0; /* Prevent shrinking */
+    color: var(--sidebar-title-color); /* Updated */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Lighter border for contrast */
+    flex-shrink: 0;
 }
 .sidebar h2 i {
-    margin-right: 8px;
-    color: var(--primary-color);
+    margin-right: 10px;
+    color: var(--sidebar-title-color); /* Match title color or slightly different */
     opacity: 0.9;
 }
 
-.sidebar ul {
-    padding: 0 10px; /* Horizontal padding for the list container */
-    flex-grow: 1; /* Allow list to take remaining space */
-    overflow-y: auto; /* Scroll only the list if needed */
+.sidebar ul.components { /* Target the main ul directly if it has this class */
+    padding: 0 10px 20px 10px; /* Horizontal padding and bottom padding */
+    flex-grow: 1;
+    overflow-y: auto;
 }
 
 .sidebar ul li {
-    margin-bottom: 4px; /* Space between items */
-    border-radius: 6px; /* Slightly rounder */
+    margin-bottom: 5px; /* Space between items */
 }
 
 /* All Links in Sidebar */
 .sidebar ul li a {
     color: var(--sidebar-link-color);
-    font-size: 0.95rem; /* 15.2px */
+    font-size: 0.95rem;
     display: flex;
     align-items: center;
-    padding: 12px 15px; /* Adjust padding */
+    padding: 10px 15px; /* Main link padding */
     transition: background-color 0.2s ease, color 0.2s ease;
     position: relative;
-    border-radius: 6px;
+    border-radius: var(--border-radius);
 }
 
 /* Icons */
 .sidebar ul li a i.fa-fw {
     width: 20px;
     text-align: center;
-    font-size: 1.1em; /* Slightly larger icons */
-    color: var(--sidebar-icon-color);
+    font-size: 1.1em;
+    color: var(--sidebar-icon-color); /* Updated */
     transition: color 0.2s ease;
     /* me-2 class provides margin */
 }
 
-/* Link Hover State */
+/* Link Hover State (General) */
 .sidebar ul li a:hover {
     color: var(--sidebar-link-hover-color);
-    background-color: var(--sidebar-link-hover-bg);
+    background-color: var(--sidebar-link-hover-bg); /* Applied to all hovers */
     text-decoration: none;
 }
 .sidebar ul li a:hover i {
-    color: var(--sidebar-icon-active-color); /* Make icon brighter on hover */
+    color: var(--sidebar-icon-active-color); /* Applied to all icon hovers */
 }
 
-/* Active State for Top-Level Links (non-dropdown) */
-.sidebar ul > li.active > a:not(.dropdown-toggle) {
+/* Active State for Top-Level Links & Parent Toggles (when their section is active) */
+.sidebar ul > li.active > a {
     color: var(--sidebar-link-active-color);
-    font-weight: 500; /* Slightly bolder */
+    font-weight: 500;
     background-color: var(--sidebar-link-active-bg);
 }
-.sidebar ul > li.active > a:not(.dropdown-toggle) i {
-    color: var(--sidebar-icon-active-color);
-}
-
-/* --- Collapsible Submenu Styling --- */
-
-/* Parent Toggle Link Styling */
-.sidebar ul a.dropdown-toggle {
-    /* Basic link styles applied above */
-}
-.sidebar ul a.dropdown-toggle.active { /* When parent section is active */
-    background-color: transparent; /* Don't highlight parent toggle itself */
-    color: var(--sidebar-link-hover-color); /* Keep text bright */
-    font-weight: 500;
-}
-.sidebar ul a.dropdown-toggle.active i {
+.sidebar ul > li.active > a i {
     color: var(--sidebar-icon-active-color);
 }
 
@@ -225,83 +211,60 @@ img {
     font-weight: 900;
     font-size: 0.7em;
     transition: transform .2s ease-in-out;
-    opacity: 0.6;
+    color: var(--sidebar-link-color); /* Match link color */
 }
-.sidebar ul a.dropdown-toggle:hover::after { opacity: 1; }
+.sidebar ul li.active > a.dropdown-toggle::after,
+.sidebar ul li a.dropdown-toggle:hover::after {
+    color: var(--sidebar-link-active-color); /* Brighter arrow on active/hover parent */
+}
 .sidebar ul a.dropdown-toggle[aria-expanded="true"]::after {
      transform: translateY(-50%) rotate(180deg);
-     opacity: 1;
 }
 
 /* Submenu UL */
 .sidebar ul ul.collapse {
-    padding-left: 0;
-    margin: 2px 5px 8px 5px; /* Top/bottom margin */
+    padding-left: 0; /* Reset padding */
+    margin: 5px 0 8px 0; /* Vertical margin, no horizontal indent needed for full bg */
     background-color: var(--sidebar-submenu-bg);
-    border-radius: 5px;
-}
-.sidebar ul ul.collapse.show {
-     /* No extra border needed with bg color */
+    border-radius: var(--border-radius);
 }
 
 /* Submenu Links (1st Level Deep) */
 .sidebar ul ul li a {
-    font-size: 0.9rem; /* 14.4px */
-    padding: 9px 15px; /* Adjust padding (ps-3 adds more) */
-    color: rgba(255, 255, 255, 0.75);
-    border-radius: 4px;
-    margin: 2px 5px; /* Inner margin for links */
+    font-size: 0.9rem;
+    padding: 8px 15px 8px 25px; /* Indent text, keep icon aligned with ps-3 */
+    color: var(--sidebar-link-color); /* Submenu links same color initially */
+    border-radius: var(--border-radius);
+    margin: 0; /* No inner margin for links if submenu ul has full bg */
 }
-.sidebar ul ul li a i.fa-fw {
-    font-size: 1em;
-    opacity: 0.7;
-    color: var(--sidebar-icon-color);
-}
-
-/* Submenu Link Hover */
 .sidebar ul ul li a:hover {
      color: var(--sidebar-link-hover-color);
-     background-color: rgba(255, 255, 255, 0.1);
-}
-.sidebar ul ul li a:hover i {
-    color: var(--sidebar-icon-active-color);
+     background-color: rgba(0,0,0,0.15); /* Slightly different hover for submenu items */
 }
 
 /* Active Submenu Link */
-.sidebar ul ul > li.active > a:not(.dropdown-toggle) {
-    color: var(--sidebar-link-active-color);
-    font-weight: 500;
-    background-color: var(--primary-color-darker); /* Use darker primary for active sub-item */
+.sidebar ul ul > li a.active, /* Applied by Bootstrap's JS for active sub-item */
+.sidebar ul ul > li.active > a { /* Manually set active class */
+    color: var(--sidebar-link-active-color); /* Bright text for active sub-item */
+    font-weight: bold; /* Make active sub-item bold */
+    background-color: var(--sidebar-submenu-link-active-bg) !important; /* Ensure it overrides general hover */
 }
-.sidebar ul ul > li.active > a:not(.dropdown-toggle) i {
+.sidebar ul ul > li a.active i,
+.sidebar ul ul > li.active > a i {
     color: var(--sidebar-icon-active-color);
 }
 
+/* Ensure icons in submenus maintain alignment (ps-3 will provide left padding for text) */
+.sidebar ul ul li a i.fa-fw {
+    color: var(--sidebar-icon-color); /* Icons in submenu initially same color */
+    opacity: 0.8; /* Slightly less prominent */
+}
+.sidebar ul ul li a:hover i,
+.sidebar ul ul li.active > a i {
+    color: var(--sidebar-icon-active-color); /* Active/hover icons in submenu */
+    opacity: 1;
+}
 
-/* Styling for 2nd level nested submenus */
-.sidebar ul ul ul.collapse {
-    background-color: rgba(0, 0, 0, 0.25); /* Even darker */
-    margin: 2px 5px 5px 10px; /* Indent further */
-    border-radius: 4px;
-}
-.sidebar ul ul ul li a {
-    font-size: 0.85rem; /* 13.6px */
-    padding: 7px 15px; /* Adjust padding (ps-4 adds more) */
-    color: rgba(255, 255, 255, 0.7);
-}
-.sidebar ul ul ul li a i.fa-fw {
-    font-size: 0.9em;
-    opacity: 0.6;
-}
-.sidebar ul ul ul li a:hover {
-     background-color: rgba(255, 255, 255, 0.15);
-}
-/* Active 2nd Level Submenu Link */
-.sidebar ul ul ul > li.active > a {
-     color: var(--sidebar-link-active-color);
-     background-color: var(--primary-color); /* Can use main primary */
-     font-weight: 500;
-}
 
 /* ==========================================================================
    Main Content & Header Styles
@@ -328,9 +291,9 @@ img {
     gap: 15px;
     flex-shrink: 0;
     border-bottom: 1px solid var(--border-color);
-    position: sticky; /* Make header sticky */
+    position: sticky;
     top: 0;
-    z-index: 1020; /* Below sidebar, above content */
+    z-index: 1020;
 }
 
 .header h1 {
@@ -341,7 +304,7 @@ img {
     margin: 0;
     color: var(--heading-color);
 }
-.header h1 i { /* Icon within header title */
+.header h1 i {
     margin-right: 10px;
     color: var(--primary-color);
     font-size: 1.1em;
@@ -350,7 +313,7 @@ img {
 .user-info {
     display: flex;
     align-items: center;
-    gap: 12px; /* Slightly smaller gap */
+    gap: 12px;
 }
 .user-info span {
     font-weight: 500;
@@ -363,11 +326,10 @@ img {
     height: 38px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--primary-color-lighter); /* Lighter border */
+    border: 2px solid var(--primary-color-lighter);
     background-color: var(--light-color);
 }
 
-/* Main Content Area Wrapper */
 .content-wrapper {
     padding: 1.875rem; /* 30px */
     flex-grow: 1;
@@ -378,25 +340,24 @@ img {
    Flash Messages Container
    ========================================================================== */
 .flash-container {
-    padding: 0 1.875rem; /* Match content-wrapper padding */
-    margin-top: 1rem; /* Space below header */
-    margin-bottom: 0; /* Reset bottom margin */
+    padding: 0 1.875rem;
+    margin-top: 1rem;
+    margin-bottom: 0;
     width: 100%;
-    z-index: 1025; /* Ensure above general content */
+    z-index: 1025;
 }
 .flash-container .alert {
     box-shadow: var(--box-shadow-sm);
     margin-bottom: 1rem;
-    border: none; /* Remove default border */
+    border: none;
     border-left: 5px solid;
     border-radius: var(--border-radius);
     font-size: 0.95rem;
     padding: 0.8rem 1rem;
 }
-/* Bootstrap alert colors are usually sufficient, but add border colors */
 .flash-container .alert-success { border-left-color: var(--success-color); }
 .flash-container .alert-danger { border-left-color: var(--danger-color); }
-.flash-container .alert-warning { border-left-color: var(--warning-color); color: #664d03; background-color: #fff3cd; } /* Improve contrast */
+.flash-container .alert-warning { border-left-color: var(--warning-color); color: #664d03; background-color: #fff3cd; }
 .flash-container .alert-info { border-left-color: var(--info-color); }
 .flash-container .alert-secondary { border-left-color: var(--secondary-color); }
 
@@ -404,14 +365,12 @@ img {
 /* ==========================================================================
    Generic Component Styles (Enhanced)
    ========================================================================== */
-
-/* --- Buttons (Using Bootstrap classes, enhanced) --- */
 .btn {
     border-radius: var(--border-radius);
     font-weight: 500;
     padding: 0.5rem 1rem;
     transition: var(--transition);
-    box-shadow: none; /* Remove default shadow for cleaner look */
+    box-shadow: none;
     border-width: 1px;
     font-size: 0.95rem;
 }
@@ -419,32 +378,26 @@ img {
     transform: translateY(-1px);
     box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08);
 }
-.btn:focus {
-    /* Use Bootstrap's focus */
-}
-.btn i.fa-fw, .btn i:not(.fa-fw) { /* Align icons */
+.btn i.fa-fw, .btn i:not(.fa-fw) {
     margin-right: 0.5em;
-    line-height: 1; /* Prevent icon affecting line height */
+    line-height: 1;
     vertical-align: middle;
 }
-.btn > i:only-child { /* Icon only button */
-    margin-right: 0;
-}
+.btn > i:only-child { margin-right: 0; }
 .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.875rem; }
 .btn-lg { padding: 0.65rem 1.25rem; font-size: 1.1rem; }
 
-/* --- Cards --- */
 .card {
     background-color: var(--white-color);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow-sm);
-    margin-bottom: 1.5rem; /* Default spacing */
+    margin-bottom: 1.5rem;
     overflow: hidden;
 }
 .card-header {
     padding: 1rem 1.25rem;
-    background-color: var(--white-color); /* Cleaner header */
+    background-color: var(--white-color);
     border-bottom: 1px solid var(--border-color);
     font-weight: 600;
     color: var(--heading-color);
@@ -452,13 +405,8 @@ img {
     justify-content: space-between;
     align-items: center;
 }
-.card-header h5, .card-header h6 {
-    margin-bottom: 0;
-    font-size: 1.1rem;
-}
-.card-body {
-    padding: 1.25rem;
-}
+.card-header h5, .card-header h6 { margin-bottom: 0; font-size: 1.1rem; }
+.card-body { padding: 1.25rem; }
 .card-footer {
     padding: 0.75rem 1.25rem;
     background-color: var(--light-color);
@@ -467,27 +415,25 @@ img {
     font-size: 0.9rem;
 }
 
-/* --- Tables --- */
-.table {
-    border: 1px solid var(--border-color);
-    margin-bottom: 1rem; /* Default spacing below table */
-    border-radius: var(--border-radius); /* Apply radius to table wrapper if needed */
-    overflow: hidden; /* Clip content to border-radius */
-    box-shadow: var(--box-shadow-sm);
-}
-/* Make table responsive container have radius */
 .table-responsive {
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     margin-bottom: 1rem;
+    box-shadow: var(--box-shadow-sm); /* Added shadow to responsive wrapper */
 }
 .table-responsive > .table {
-    border: none; /* Remove inner border if wrapped */
+    border: none;
     margin-bottom: 0;
-    border-radius: 0; /* Remove inner radius */
-    box-shadow: none;
+    border-radius: 0;
+    box-shadow: none; /* Removed from inner table if wrapped */
 }
-
+.table { /* If table is not in .table-responsive */
+    border: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--box-shadow-sm);
+}
 .table thead th {
     background-color: var(--light-color);
     border-bottom-width: 1px;
@@ -506,26 +452,15 @@ img {
     border-color: var(--border-color);
     font-size: 0.95rem;
 }
-.table-striped tbody tr:nth-of-type(odd) {
-    background-color: #f8f9fa; /* Use light color for stripe */
-}
+.table-striped tbody tr:nth-of-type(odd) { background-color: #f8f9fa; }
 .table-hover tbody tr:hover {
     background-color: var(--primary-color-lighter);
     cursor: default;
 }
-.table .actions {
-    white-space: nowrap;
-    text-align: right;
-}
-.table .actions .btn, .table .actions form {
-    margin-left: 0.3rem; /* Space between actions */
-}
-.table .badge { /* Adjust badge size in tables */
-    font-size: 0.8em;
-    padding: 0.35em 0.6em;
-}
+.table .actions { white-space: nowrap; text-align: right; }
+.table .actions .btn, .table .actions form { margin-left: 0.3rem; }
+.table .badge { font-size: 0.8em; padding: 0.35em 0.6em; }
 
-/* --- Forms --- */
 .form-label {
     font-weight: 500;
     margin-bottom: 0.3rem;
@@ -541,85 +476,54 @@ img {
 }
 .form-control:focus, .form-select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color), 0.25); /* Use primary color for focus ring */
+    box-shadow: 0 0 0 0.2rem var(--primary-color-lighter); /* Use lighter for focus ring */
     outline: 0;
 }
-.form-control.is-invalid, .form-select.is-invalid {
-    border-color: var(--danger-color);
-}
+.form-control.is-invalid, .form-select.is-invalid { border-color: var(--danger-color); }
 .form-control.is-invalid:focus, .form-select.is-invalid:focus {
      box-shadow: 0 0 0 0.2rem rgba(var(--danger-color), 0.25);
 }
-.invalid-feedback {
-     font-size: 0.85rem;
-}
-.form-text {
-    font-size: 0.85rem;
-    color: var(--secondary-color);
-}
-.form-check-label {
-     font-size: 0.95rem;
-}
+.invalid-feedback { font-size: 0.85rem; }
+.form-text { font-size: 0.85rem; color: var(--secondary-color); }
+.form-check-label { font-size: 0.95rem; }
 .form-check-input:checked {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
 }
-.form-control-sm, .form-select-sm {
-     padding: 0.35rem 0.6rem;
-     font-size: 0.875rem;
-}
+.form-control-sm, .form-select-sm { padding: 0.35rem 0.6rem; font-size: 0.875rem; }
 .input-group-sm > .form-control, .input-group-sm > .form-select, .input-group-sm > .input-group-text, .input-group-sm > .btn {
-    /* Ensure consistent sizing in small input groups */
      padding: 0.35rem 0.6rem;
      font-size: 0.875rem;
 }
 
-
-/* --- Breadcrumbs --- */
 .breadcrumb {
     background-color: transparent;
     padding: 0.5rem 0;
     margin-bottom: 1rem;
     font-size: 0.9em;
 }
-.breadcrumb-item a {
-    text-decoration: none;
-    color: var(--primary-color);
-}
-.breadcrumb-item a:hover {
-    color: var(--primary-color-darker);
-}
-.breadcrumb-item.active {
-    color: var(--secondary-color);
-}
+.breadcrumb-item a { text-decoration: none; color: var(--primary-color); }
+.breadcrumb-item a:hover { color: var(--primary-color-darker); }
+.breadcrumb-item.active { color: var(--secondary-color); }
 
 /* ==========================================================================
    Responsive Adjustments
    ========================================================================== */
 @media (max-width: 992px) {
-    .sidebar {
-        left: calc(-1 * var(--sidebar-width));
-    }
-    .sidebar.sidebar-active {
-        left: 0;
-        box-shadow: 0.25rem 0 1rem rgba(0,0,0,0.15);
-    }
-    /* Optional Overlay */
+    .sidebar { left: calc(-1 * var(--sidebar-width)); }
+    .sidebar.sidebar-active { left: 0; box-shadow: 0.25rem 0 1rem rgba(0,0,0,0.15); }
     body.sidebar-overlay-active::before {
         content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1029; display: block;
     }
     .main-content { margin-left: 0; }
-
-    /* Add styles for a menu toggle button (burger icon) here if you implement one */
-    /* .menu-toggle { display: block; position: fixed; top: 15px; left: 15px; z-index: 1031; ... } */
 }
 
 @media (max-width: 768px) {
-    .content-wrapper { padding: 1.25rem; } /* 20px */
+    .content-wrapper { padding: 1.25rem; }
     .header { padding: 0.8rem 1.25rem; }
-    .header h1 { font-size: 1.25rem; } /* 20px */
+    .header h1 { font-size: 1.25rem; }
     .flash-container { padding: 0 1.25rem; margin-top: 0.75rem; }
-    .table thead { display: none; } /* Hide table header on small screens */
+    .table thead { display: none; }
     .table tbody tr { display: block; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); box-shadow: var(--box-shadow-sm); }
     .table tbody td { display: block; text-align: right; padding-left: 50%; position: relative; border: none; border-bottom: 1px dashed var(--border-color); }
     .table tbody td:last-child { border-bottom: none; }
@@ -629,10 +533,10 @@ img {
 }
 
 @media (max-width: 576px) {
-    .content-wrapper { padding: 1rem; } /* 16px */
+    .content-wrapper { padding: 1rem; }
     .header { padding: 0.75rem 1rem; }
-    .header h1 { font-size: 1.125rem; } /* 18px */
-    .user-info span { display: none; } /* Hide welcome text */
+    .header h1 { font-size: 1.125rem; }
+    .user-info span { display: none; }
     .profile-img { width: 34px; height: 34px; }
     .flash-container { padding: 0 1rem; margin-top: 0.5rem; }
     .table tbody td { padding-left: 45%; }

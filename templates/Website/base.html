@@ -33,23 +33,22 @@
       <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
       <a href="{{ url_for('department.list_departments') }}" class="{{ 'active' if request.endpoint.startswith('department.') else '' }}">Departments</a>
       <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
-      <a href="#">Services</a> {# <-- ADDED Services Link #}
       <a href="#">Contact</a> {# Placeholder #}
 
       {# --- Login/Logout Conditional --- #}
       {% if current_user.is_authenticated %}
          {# Links for logged-in users #}
          <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
+         <a href="{{ url_for('patient_messaging.list_my_chats') }}" class="{{ 'active' if request.blueprint == 'patient_messaging' else '' }}">Messages</a>
          {# Link to appropriate dashboard/settings based on role #}
          {% if current_user.user_type == 'doctor' %}
             <a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.endpoint.startswith('settings.') else '' }}">Settings</a> {# Doctor settings #}
             <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
          {% elif current_user.user_type == 'admin' %}
              <a href="{{ url_for('admin_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.dashboard' else '' }}">Admin Panel</a> {# Admin dashboard #}
-         {% else %} {# Assume patient #}
-            {# Add patient-specific settings/profile link if available #}
-            <a href="{{ url_for('patient_profile.manage_profile') }}">My Account</a> {# Generic patient account link placeholder #}
-         {% endif %}
+             {% else %} {# Assume patient #}
+             <a href="{{ url_for('patient_profile.my_account_dashboard') }}" class="{{ 'active' if request.endpoint.startswith('patient_profile.') or request.endpoint.startswith('patient_medical_info.') else '' }}">My Account</a>
+          {% endif %}
          <a href="{{ url_for('login.logout_route') }}">Logout</a> {# Logout Link #}
       {% else %}
          {# Links for logged-out users #}
@@ -83,6 +82,8 @@
       {% if current_user.is_authenticated %}
           <hr> {# Separator #}
           <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
+
+          <a href="{{ url_for('patient_messaging.list_my_chats') }}" class="{{ 'active' if request.blueprint == 'patient_messaging' else '' }}">Messages</a>
            {# Add dashboard/settings links similar to desktop nav #}
            {% if current_user.user_type == 'doctor' %}
               <a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.endpoint.startswith('settings.') else '' }}">Settings</a>

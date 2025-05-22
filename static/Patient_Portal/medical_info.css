@@ -1,0 +1,335 @@
+/* static/Patient_Portal/medical_info.css */
+
+/* ... (Page Header, Card Styling - keep from previous version) ... */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-color);
+}
+.page-header h1 {
+    margin-bottom: 0;
+    color: var(--text-color);
+    font-size: 1.8em;
+}
+
+.card.content-section {
+    padding: 0;
+    margin-bottom: var(--spacing-xl);
+}
+.card.content-section .card-header {
+    background-color: var(--nested-card-bg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+.card.content-section .card-header h5 {
+    color: var(--text-color);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+.card.content-section .card-body {
+    padding: var(--spacing-lg);
+}
+.card.content-section .card-body.p-0 {
+    padding: 0;
+}
+.card.content-section .card-footer {
+    background-color: var(--nested-card-bg);
+    border-top: 1px solid var(--border-color);
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+
+/* --- Form Element Refinements (Select, Date, Textarea - Notes) --- */
+/* ... (Select and Date input styles from previous - keep them) ... */
+.form-select {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba(255,255,255,0.7)' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    appearance: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+[data-theme="light"] .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='rgba(5,21,42,0.7)' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    border-color: var(--border-color);
+    color: var(--text-color);
+    background-color: var(--input-bg);
+}
+.form-select:focus {
+    border-color: var(--accent-pink);
+    box-shadow: 0 0 0 0.2rem var(--shadow-glow);
+}
+.form-select option {
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+}
+[data-theme="light"] .form-select option {
+    background-color: var(--bg-secondary);
+    color: var(--text-color);
+}
+
+input[type="date"].form-control {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    position: relative;
+}
+input[type="date"].form-control::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(100%);
+    cursor: pointer;
+    opacity: 0.7;
+}
+input[type="date"].form-control::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+[data-theme="light"] input[type="date"].form-control::-webkit-calendar-picker-indicator {
+    filter: none;
+}
+input[type="date"].form-control:focus {
+    border-color: var(--accent-pink);
+    box-shadow: 0 0 0 0.2rem var(--shadow-glow);
+}
+
+/* Notes (Textarea) and Reaction Description (Input) */
+textarea.form-control,
+input[name="reaction_description"].form-control { /* Target specific input if needed */
+    min-height: 80px; /* Default for textarea, input will be single line */
+    resize: vertical;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius); /* From base.css */
+    padding: var(--spacing-sm) var(--spacing-md); /* Use spacing variables */
+    /* Inherits font-size, line-height from .form-control in base.css */
+}
+input[name="reaction_description"].form-control {
+    min-height: auto; /* Override for single line input */
+}
+
+textarea.form-control:focus,
+input[name="reaction_description"].form-control:focus {
+    border-color: var(--accent-pink); /* Or var(--neon-blue) for a different focus */
+    box-shadow: 0 0 0 0.2rem var(--shadow-glow); /* Use theme glow */
+    /* Outline should be handled by base.css .form-control:focus */
+}
+textarea.form-control::placeholder,
+input[name="reaction_description"].form-control::placeholder {
+    color: var(--placeholder-color); /* From base.css */
+    opacity: 1;
+}
+
+/* --- Current Allergies List Styling (Refined) --- */
+.current-allergies-list {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+.current-allergies-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Align items to the start for multi-line content */
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px dotted var(--border-color); /* Softer separator */
+}
+.current-allergies-list li:last-child {
+    border-bottom: none;
+}
+.current-allergies-list li > div { /* Content part */
+    flex-grow: 1;
+    margin-right: var(--spacing-md);
+}
+.current-allergies-list li strong {
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 1.05em; /* Slightly larger for allergy name */
+}
+.current-allergies-list li small {
+    display: block; /* Ensure each piece of small info is on a new line if needed */
+    color: var(--text-secondary);
+    font-size: 0.875em; /* Consistent small text size */
+    line-height: 1.5;
+    margin-top: var(--spacing-xs);
+}
+.current-allergies-list li small:first-of-type {
+    margin-top: var(--spacing-sm); /* More space after the strong tag */
+}
+.current-allergies-list li small em { /* Notes */
+    color: var(--text-secondary);
+    font-style: italic; /* Keep notes italic */
+}
+/* Delete button for allergies */
+.current-allergies-list li form .button.button-danger.button-xsmall {
+    /* Styles are inherited from base.css */
+    /* Ensure it aligns well, flex-shrink might be needed on the form if it wraps */
+    flex-shrink: 0;
+    margin-top: var(--spacing-xs); /* Align with first line of text if content part is short */
+}
+
+
+/* --- Table Styling (for Symptoms, Vitals, History) --- */
+/* .table and .table-responsive are styled in Website/base.css */
+/* This section refines table appearance for medical data */
+
+.table-responsive {
+    /* From base.css: border-radius, border, margin-bottom, box-shadow */
+    /* Ensure no double borders if table itself also has one */
+    overflow: hidden; /* Helps with border-radius on table */
+}
+.table {
+    width: 100%;
+    margin-bottom: 0; /* If inside .table-responsive or card-body.p-0 */
+    background-color: transparent; /* Let card/container provide background */
+    border-collapse: collapse; /* Cleaner look */
+    /* Remove individual table border/shadow if wrapped by .table-responsive */
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.table th,
+.table td {
+    padding: var(--spacing-md) var(--spacing-lg); /* Consistent padding: 15px 25px */
+    text-align: left;
+    vertical-align: middle; /* Good for cells with varying content height */
+    border-bottom: 1px solid var(--border-color); /* Horizontal lines between rows */
+}
+
+.table thead th {
+    color: var(--text-color); /* Use main text color for headers */
+    background-color: var(--nested-card-bg); /* Subtle background for headers */
+    font-weight: 600; /* Bolder header text */
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom-width: 2px; /* Stronger line below header */
+    border-top: none; /* No top border for header cells inside card */
+}
+.table th:first-child, .table td:first-child {
+    padding-left: var(--spacing-lg); /* Ensure card padding is respected if table is p-0 */
+}
+.table th:last-child, .table td:last-child {
+    padding-right: var(--spacing-lg);
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease; /* Smooth hover */
+}
+.table tbody tr:last-child td {
+    border-bottom: none; /* No border for the last row's cells */
+}
+
+.table tbody td {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Striped table effect (if .table-striped is used in HTML) */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--grid-color); /* Very subtle striping using grid color */
+}
+[data-theme="light"] .table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--grid-color); /* Grid color should adapt to theme */
+}
+
+
+/* Hover effect for table rows */
+.table-hover tbody tr:hover {
+    background-color: var(--nested-card-bg); /* Use nested card bg for hover */
+    cursor: default; /* Or 'pointer' if rows are clickable */
+}
+.table-hover tbody tr:hover td {
+    color: var(--text-color); /* Darken text on hover */
+}
+
+
+/* Special cell content */
+.table .text-muted {
+    color: var(--text-secondary) !important;
+    opacity: 0.7;
+    font-style: italic;
+    font-size: 0.9em;
+}
+.table .actions { /* For action buttons in a table cell */
+    white-space: nowrap;
+    text-align: right; /* Align actions to the right */
+}
+.table .actions .button {
+    /* Base button styles apply, use .button-small or .button-xsmall */
+    margin-left: var(--spacing-sm);
+}
+.table .actions .button:first-child {
+    margin-left: 0;
+}
+
+
+/* --- Pagination Controls (from previous, themed - generally good) --- */
+/* ... (keep pagination styles from previous version) ... */
+.pagination {
+    display: flex;
+    padding-left: 0;
+    list-style: none;
+    margin-bottom: 0;
+    justify-content: center;
+}
+.page-item .page-link {
+    position: relative;
+    display: block;
+    padding: 0.5rem 0.75rem;
+    margin-left: var(--spacing-xs);
+    line-height: 1.25;
+    color: var(--neon-blue);
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease-in-out;
+}
+.page-item:first-child .page-link {
+    margin-left: 0;
+}
+.page-item .page-link:hover {
+    z-index: 2;
+    color: var(--text-color);
+    background-color: var(--nested-card-bg);
+    border-color: var(--neon-blue);
+}
+.page-item.active .page-link {
+    z-index: 3;
+    color: var(--white-color);
+    background-color: var(--accent-pink);
+    border-color: var(--accent-pink);
+}
+.page-item.disabled .page-link {
+    color: var(--text-secondary);
+    pointer-events: none;
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+    opacity: 0.5;
+}
+[data-theme="light"] .page-item .page-link {
+    color: var(--neon-blue);
+    background-color: var(--input-bg);
+    border-color: var(--border-color);
+}
+[data-theme="light"] .page-item .page-link:hover {
+    color: var(--text-color);
+    background-color: var(--nested-card-bg);
+    border-color: var(--neon-blue);
+}
+[data-theme="light"] .page-item.active .page-link {
+    color: var(--white-color);
+    background-color: var(--accent-pink);
+    border-color: var(--accent-pink);
+}
+[data-theme="light"] .page-item.disabled .page-link {
+    color: var(--text-secondary);
+}

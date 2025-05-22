@@ -1,6 +1,10 @@
 {% extends "Website/base.html" %}
 {% block title %}Add Medical History Entry{% endblock %}
 
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/medical_info.css') }}">
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <h1>Add Medical History Entry</h1>

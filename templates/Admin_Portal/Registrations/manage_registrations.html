@@ -11,9 +11,7 @@
 
     <form method="GET" action="{{ url_for('registration_approval.index') }}" class="search-add-container">
         <div class="search-container">
-            {# --- Status Filter (Uses updated allowed_statuses from Python) --- #}
             <select name="status" onchange="this.form.submit()" class="form-select form-select-sm me-2" style="width: auto;">
-                {# Use ALLOWED_STATUS_FILTERS passed from backend #}
                 {% for status_key in allowed_statuses %}
                  <option value="{{ status_key }}" {% if current_status == status_key %}selected{% endif %}>
                      {{ status_key | replace('_', ' ') | title }} ({{ stats.get(status_key, 0) }})
@@ -21,7 +19,7 @@
                 {% endfor %}
             </select>
 
-            <input type="text" name="q" placeholder="Search name, email, username, license..." value="{{ search_term or '' }}" class="form-control form-control-sm me-2" style="width: auto;">
+            <input type="text" name="q" placeholder="Search name, email, dept, spec, license..." value="{{ search_term or '' }}" class="form-control form-control-sm me-2" style="width: auto;">
 
             <input type="hidden" name="sort_by" value="{{ sort_by or 'date_submitted' }}">
             <input type="hidden" name="sort_order" value="{{ sort_order or 'desc' }}">
@@ -42,7 +40,6 @@
         <table class="list-table table table-striped table-hover">
             <thead>
                 <tr>
-                    {# --- Sort Macro (no changes needed) --- #}
                     {% macro sort_link(col_key, col_name) %}
                         {% set next_order = 'asc' if sort_by == col_key and sort_order == 'desc' else 'desc' %}
                         <a href="{{ url_for('registration_approval.index', sort_by=col_key, sort_order=next_order, status=current_status, q=search_term, page=page) }}">
@@ -55,14 +52,14 @@
                         </a>
                     {% endmacro %}
 
-                    {# --- Table Headers --- #}
                     <th>{{ sort_link('last_name', 'Name') }}</th>
                     <th>{{ sort_link('email', 'Email') }}</th>
-                    <th>{{ sort_link('specialization', 'Specialization') }}</th>
+                    <th>{{ sort_link('department_id', 'Department') }}</th> {# Changed from specialization to department_id for sort_key #}
+                    <th>{{ sort_link('specialization_id', 'Specialization') }}</th> {# Changed sort_key #}
                     <th>{{ sort_link('date_submitted', 'Submitted') }}</th>
                     <th>{{ sort_link('status', 'Status') }}</th>
                     <th>{{ sort_link('date_processed', 'Processed') }}</th>
-                     <th>{{ sort_link('user_id', 'User ID') }}</th> {# Added User ID sort #}
+                    <th>{{ sort_link('user_id', 'User ID') }}</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -71,30 +68,29 @@
                 <tr>
                     <td data-label="Name">{{ reg.first_name }} {{ reg.last_name }}<br><small class="text-muted">{{ reg.username }}</small></td>
                     <td data-label="Email">{{ reg.email }}</td>
-                    <td data-label="Specialization">{{ reg.specialization | default('N/A', true) }}</td>
+                    <td data-label="Department">{{ reg.department_name | default('N/A', true) }}</td> {# Display department_name #}
+                    <td data-label="Specialization">{{ reg.specialization_name | default('N/A', true) }}</td> {# Display specialization_name #}
                     <td data-label="Submitted">{{ reg.date_submitted.strftime('%Y-%m-%d %H:%M') if reg.date_submitted else 'N/A' }}</td>
                     <td data-label="Status">
-                         {# --- Status Badge Logic (REMOVED info_requested) --- #}
-                         <span class="status-badge status-{{ reg.status }}">
+                         <span class="status-badge status-{{ reg.status.replace('_user_created', '') }}"> {# Normalize status for CSS class #}
                             {% if reg.status == 'pending' %}
                                 <i class="fas fa-hourglass-half"></i> Pending
-                            {% elif reg.status == 'approved' or reg.status == 'approved_user_created' %} {# Show final state #}
+                            {% elif reg.status == 'approved' or reg.status == 'approved_user_created' %}
                                 <i class="fas fa-check-circle"></i> Approved
                             {% elif reg.status == 'rejected' %}
                                 <i class="fas fa-times-circle"></i> Rejected
                             {% else %}
-                                {{ reg.status | replace('_', ' ') | title }} {# Fallback #}
+                                {{ reg.status | replace('_', ' ') | title }}
                             {% endif %}
                         </span>
                     </td>
                     <td data-label="Processed">{{ reg.date_processed.strftime('%Y-%m-%d %H:%M') if reg.date_processed else '-' }}</td>
-                    <td data-label="User ID">{{ reg.user_id | default('-', true) }}</td> {# Display User ID #}
+                    <td data-label="User ID">{{ reg.user_id | default('-', true) }}</td>
                     <td class="action-buttons" data-label="Actions">
                         <a href="{{ url_for('registration_approval.view_registration', reg_id=reg.id, status=current_status, q=search_term, sort_by=sort_by, sort_order=sort_order, page=page) }}" class="btn btn-sm btn-outline-primary" title="View Details">
                             <i class="fas fa-eye"></i> View
                         </a>
-                        {# Link to doctor profile if user ID exists #}
-                        {% if reg.user_id %}
+                        {% if reg.user_id and (reg.status == 'approved' or reg.status == 'approved_user_created') %}
                          <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=reg.user_id) }}" class="btn btn-sm btn-outline-info" title="View Doctor Profile">
                             <i class="fas fa-user-md"></i> Profile
                         </a>
@@ -117,7 +113,7 @@
         </div>
     {% endif %}
 
-    {# --- Pagination (No changes needed) --- #}
+    {# Pagination (No changes needed if total_pages, page etc. are passed correctly) #}
     {% if total_pages > 1 %}
     <nav aria-label="Page navigation" class="mt-4 d-flex justify-content-center">
         <ul class="pagination">
@@ -155,9 +151,7 @@
     </nav>
      <p class="text-center text-muted small mt-2">Showing page {{ page }} of {{ total_pages }} ({{ total_items }} total registrations)</p>
     {% endif %}
-
 </div>
-
 {% endblock %}
 
 {% block scripts_extra %}

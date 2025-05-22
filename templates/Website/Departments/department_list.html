@@ -1,100 +1,174 @@
-{# --- START OF FILE templates/Website/department_list.html --- #}
+{# templates/Website/Departments/department_list.html #}
 
-{% extends "Website/base.html" %} {# Make sure the path to your base.html is correct #}
+{% extends "Website/base.html" %}
 
 {% block title %}All Departments - Pro Health Center{% endblock %}
 
 {% block head_extra %}
   {# Reuse home.css for card styling, or create a specific department_list.css #}
   <link rel="stylesheet" href="{{ url_for('static', filename='Website/home.css') }}">
+  {# Link to your main base.css for variables if home.css doesn't import it or define them #}
+  {# <link rel="stylesheet" href="{{ url_for('static', filename='Website/base.css') }}"> #}
   <style>
-    /* Optional: Add some specific styles for the list page layout */
+    /* Specific styles for the department list page layout */
     .department-list-container {
-      padding: 40px 0; /* Add vertical padding */
+      padding: var(--spacing-xl, 40px) 0; /* Add vertical padding, use theme var with fallback */
+      /* max-width controlled by .main-container in base.html */
     }
-    .page-title {
+    /* .page-title styles should come from Website/base.css */
+    /* If not, define it here or in home.css */
+    .page-title { /* Ensure this matches your base.css .page-title */
        text-align: center;
-       margin-bottom: 40px;
-       font-size: 2.5em;
+       margin-bottom: var(--spacing-xl, 40px);
+       font-size: 2.5em; /* Or var(--font-size-xxl, 2.5em) */
        color: var(--text-color);
        font-weight: 600;
        position: relative;
-       padding-bottom: 15px;
+       padding-bottom: var(--spacing-md, 15px);
     }
-     .page-title::after { /* Style similar to section titles */
+     .page-title::after {
         content: '';
         display: block;
         width: 70px;
         height: 3px;
-        background: linear-gradient(90deg, var(--neon-blue, #00f0ff), var(--accent-color, #ff3b5c));
-        margin: 15px auto 0;
+        /* Use section-title-gradient if defined, otherwise fallback */
+        background: var(--section-title-gradient, linear-gradient(90deg, var(--neon-blue, #00f0ff), var(--accent-pink, #ff3b5c)));
+        margin: var(--spacing-md, 15px) auto 0;
         border-radius: 2px;
     }
+
     .department-list-grid {
       display: grid;
-      /* Adjust columns based on screen size */
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 30px; /* Gap between cards */
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive columns */
+      gap: var(--spacing-lg, 30px); /* Gap between cards */
     }
-    /* Ensure cards have consistent height if needed */
+
+    /* Assuming .container-card styles are in home.css as per your link */
+    /* If you need to ensure consistent height and button alignment: */
     .department-list-grid .container-card {
         display: flex;
         flex-direction: column;
-        height: 100%; /* Make cards fill grid cell height */
+        height: 100%; /* Make cards in a row take same height if grid row auto-sizes */
+        background-color: var(--bg-secondary); /* Card background */
+        border-radius: var(--border-radius);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+        overflow: hidden; /* For image and content */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-     .department-list-grid .container-card .card-content {
-        flex-grow: 1; /* Allow content to push button down */
-        display: flex;
-        flex-direction: column;
+    .department-list-grid .container-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px var(--shadow-glow);
+        border-color: var(--card-hover-border);
     }
-     .department-list-grid .container-card .learn-more {
-        margin-top: auto; /* Push button to bottom */
-        align-self: center; /* Center button horizontally */
-        width: 85%; /* Match button width from other pages */
+    [data-theme="light"] .department-list-grid .container-card:hover {
+        box-shadow: 0 10px 25px rgba(var(--neon-blue-rgb, 49, 130, 206), 0.15);
     }
+
+
      .department-list-grid .container-card img {
-         height: 200px; /* Fixed height for list view images */
-         object-fit: cover; /* Ensure image covers the area */
+         width: 100%; /* Make image take full width of card */
+         height: 200px; /* Fixed height for consistency */
+         object-fit: cover; /* Cover the area without distorting aspect ratio */
+         border-bottom: 1px solid var(--border-color); /* Separator if needed */
+    }
+    .department-list-grid .container-card .card-content {
+        padding: var(--spacing-lg); /* Use theme variable */
+        flex-grow: 1; /* Allow content to take available space */
+        display: flex;
+        flex-direction: column; /* Stack h3, p, a vertically */
+    }
+    .department-list-grid .container-card .card-content h3 {
+        font-size: 1.5em; /* Or var(--font-size-lg) */
+        color: var(--text-color);
+        margin-bottom: var(--spacing-sm);
+    }
+    .department-list-grid .container-card .card-content p {
+        font-size: 0.95em; /* Or var(--font-size-sm) */
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-md);
+        flex-grow: 1; /* Allow paragraph to push button down if content varies */
+        line-height: 1.6;
+    }
+    .department-list-grid .container-card .learn-more { /* This is your .button */
+        margin-top: auto; /* Push button to bottom of card-content */
+        align-self: stretch; /* Make button take full width of its container if desired */
+        text-align: center; /* Center text in button */
+        /* Styles for .learn-more (which is a .button) should come from base.css */
+        /* Example of ensuring it uses button variables if not already: */
+        /* padding: var(--spacing-sm) var(--spacing-lg);
+        border-radius: 5px;
+        font-weight: 500;
+        border: 1px solid var(--button-border-color);
+        background-color: var(--button-bg);
+        color: var(--button-text-color); */
+    }
+    .department-list-grid .container-card .learn-more.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: var(--text-secondary);
+        border-color: var(--text-secondary);
+        color: var(--bg-secondary);
+    }
+    [data-theme="light"] .department-list-grid .container-card .learn-more.disabled {
+        background-color: var(--text-secondary);
+        border-color: var(--text-secondary);
+        color: var(--bg-secondary);
     }
   </style>
 {% endblock %}
 
 {% block content %}
-<div class="department-list-container">
+<div class="main-container department-list-container"> {# Added main-container for width control #}
   <h1 class="page-title">Our Departments</h1>
 
-  {% if departments %}
-    <div class="department-list-grid">
-      {# Loop through the 'departments' list passed from the Flask route #}
-      {% for dept in departments %}
-        {# Reuse the card structure from home.html #}
-        <div class="container-card">
-          {# Use the image_url generated in the backend #}
-          <img src="{{ url_for('static', filename=(dept.image_url | default('images/placeholder.jpg'))) }}" alt="{{ dept.name | default('Department Image') }}">
-          <div class="card-content">
-            <h3>{{ dept.name | title | default('Department') }}</h3>
-            <p>{{ dept.description | default('View details about this department.') | truncate(100) }}</p> {# Truncate description #}
+  {% include '_flash_messages.html' %} {# Good practice to include flash messages #}
 
-            {# Link to the specific department landing page #}
+  {% if departments and departments|length > 0 %}
+    <div class="department-list-grid">
+      {% for dept in departments %}
+        <div class="container-card"> {# Assuming this class is styled in home.css or your base styles #}
+          
+          {# --- IMAGE --- #}
+          {# Ensure dept.image_url is the path relative to the static folder #}
+          {# e.g., 'images/departments/cardiology.jpg' #}
+          <img src="{{ url_for('static', filename=(dept.image_url if dept.image_url else 'images/departments/placeholder.jpg')) }}" 
+               alt="Image for {{ dept.name | default('Department') }}">
+          
+          <div class="card-content">
+            <h3>{{ dept.name | title | default('Unnamed Department') }}</h3>
+            
+            {# --- DESCRIPTION with fix for NoneType --- #}
+            {# Using default(..., true) makes it also replace empty strings with the default #}
+            {# If you only want to replace None, just dept.description | default('fallback') is fine #}
+            <p>{{ (dept.description | default('Discover more about our specialized services in this department.', true)) | truncate(120, true, '...') }}</p>
+            {# truncate(length, killwords, end) #}
+            {# killwords=true allows truncation mid-word if necessary #}
+            {# end='...' is the default ellipsis #}
+
+            {# --- LINK --- #}
             {% if dept.department_id %}
-              <a href="{{ url_for('department.department_landing', dept_id=dept.department_id) }}" class="learn-more">View Details</a>
+              <a href="{{ url_for('department.department_landing', dept_id=dept.department_id) }}" class="button learn-more">View Details</a>
             {% else %}
-              <a href="#" class="learn-more disabled">View Details</a> {# Fallback if ID is missing #}
+              {# Fallback for safety, though department_id should always exist #}
+              <a href="#" class="button learn-more disabled" aria-disabled="true">Details Unavailable</a>
             {% endif %}
           </div>
         </div>
       {% endfor %}
     </div>
   {% else %}
-    {# Message shown if the 'departments' list is empty or None #}
-    <p style="text-align: center; color: var(--text-secondary); padding: 30px;">
-        Currently, no departments are available to display.
-    </p>
+    <div class="no-results-message" style="text-align: center; padding: var(--spacing-xl) 0; color: var(--text-secondary);">
+        <i class="fas fa-info-circle fa-2x" style="margin-bottom: var(--spacing-md); opacity: 0.7;"></i>
+        <p>Currently, there are no departments available to display.</p>
+        <p>Please check back later or contact support if you believe this is an error.</p>
+    </div>
   {% endif %}
 
 </div>
 {% endblock %}
 
 {% block scripts %}
-  {# No page-specific JavaScript needed for this simple list view #}
+  {# No page-specific JavaScript typically needed for a simple list view like this #}
+  {# unless you add client-side filtering or sorting in the future #}
 {% endblock %}

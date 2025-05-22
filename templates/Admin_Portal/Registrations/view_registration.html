@@ -8,7 +8,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('admin_main.dashboard') }}">Admin Dashboard</a></li>
-            <li class="breadcrumb-item"><a href="{{ url_for('registration_approval.index') }}">{{ registration_type }} Registrations</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('registration_approval.index', status=request.args.get('status', 'pending')) }}">{{ registration_type }} Registrations</a></li>
             <li class="breadcrumb-item active" aria-current="page">View Registration #{{ registration.id }}</li>
         </ol>
     </nav>
@@ -16,11 +16,12 @@
     <h2>View {{ registration_type }} Registration Details</h2>
     <hr>
 
-    {% include '_flash_messages.html' %}
+    {% include '_flash_messages.html' %} {# Assuming you have a template for flash messages #}
 
     <div class="card mb-4">
         <div class="card-header">
-            Registration Information (ID: {{ registration.id }}) - Status: <span class="badge bg-{{ registration.status|status_badge }}">{{ registration.status|title }}</span>
+            Registration Information (ID: {{ registration.id }}) - Status: 
+            <span class="badge bg-{{ registration.status.replace('_user_created', '')|status_badge }}">{{ registration.status|replace('_user_created', '')|title }}</span>
         </div>
         <div class="card-body">
             <div class="row">
@@ -33,7 +34,8 @@
                     <p><strong>Date Submitted:</strong> {{ registration.date_submitted.strftime('%Y-%m-%d %H:%M:%S') if registration.date_submitted else 'N/A' }}</p>
                 </div>
                 <div class="col-md-6">
-                    <p><strong>Specialization:</strong> {{ registration.specialization or 'N/A' }}</p>
+                    <p><strong>Department:</strong> {{ registration.department_name or 'N/A' }}</p> {# Display department_name #}
+                    <p><strong>Specialization:</strong> {{ registration.specialization_name or 'N/A' }}</p> {# Display specialization_name #}
                     <p><strong>License Number:</strong> {{ registration.license_number or 'N/A' }}</p>
                     <p><strong>License State:</strong> {{ registration.license_state or 'N/A' }}</p>
                     <p><strong>License Expiration:</strong> {{ registration.license_expiration.strftime('%Y-%m-%d') if registration.license_expiration else 'N/A' }}</p>
@@ -50,14 +52,13 @@
             </div>
             {% if registration.notes %}
             <div class="mt-3">
-                <strong>Processing Notes:</strong>
+                <strong>Processing Notes/Rejection Reason:</strong>
                 <pre class="bg-light p-2 rounded">{{ registration.notes }}</pre>
             </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Section for Viewing Documents -->
     <div class="card mb-4">
         <div class="card-header">
             Uploaded Documents
@@ -66,12 +67,9 @@
             <ul class="list-group list-group-flush">
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     ID Document:
-                    {% if registration.id_doc_path %}
-                        {# *** IMPORTANT: Use the correct column name from your DB query *** #}
-                        {# Construct the URL using url_for('static', filename=...) assumes files are in static folder #}
-                        {# Adjust path if stored elsewhere and served differently #}
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.id_doc_path) }}" data-doc-title="ID Document">
-                            <i class="bi bi-eye-fill me-1"></i> View Document
+                    {% if registration.id_document_path %}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.id_document_path) }}" data-doc-title="ID Document - {{ registration.username }}">
+                            <i class="fas fa-eye me-1"></i> View Document
                         </button>
                     {% else %}
                         <span class="text-muted">Not Provided</span>
@@ -79,10 +77,9 @@
                 </li>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     Medical License:
-                    {% if registration.license_doc_path %}
-                        {# *** IMPORTANT: Use the correct column name from your DB query *** #}
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.license_doc_path) }}" data-doc-title="Medical License">
-                           <i class="bi bi-eye-fill me-1"></i> View Document
+                    {% if registration.license_document_path %}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.license_document_path) }}" data-doc-title="Medical License - {{ registration.username }}">
+                           <i class="fas fa-eye me-1"></i> View Document
                         </button>
                     {% else %}
                         <span class="text-muted">Not Provided</span>
@@ -90,21 +87,19 @@
                 </li>
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     Proof of Specialization:
-                    {% if registration.specialization_doc_path %}
-                        {# *** IMPORTANT: Use the correct column name from your DB query *** #}
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.specialization_doc_path) }}" data-doc-title="Proof of Specialization">
-                           <i class="bi bi-eye-fill me-1"></i> View Document
+                    {% if registration.specialization_document_path %}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.specialization_document_path) }}" data-doc-title="Proof of Specialization - {{ registration.username }}">
+                           <i class="fas fa-eye me-1"></i> View Document
                         </button>
                     {% else %}
                         <span class="text-muted">Not Provided</span>
                     {% endif %}
                 </li>
-                 {# Add more document types as needed (e.g., other_doc_path) #}
                  <li class="list-group-item d-flex justify-content-between align-items-center">
                     Other Document:
-                    {% if registration.other_doc_path %} {# Example #}
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.other_doc_path) }}" data-doc-title="Other Document">
-                           <i class="bi bi-eye-fill me-1"></i> View Document
+                    {% if registration.other_document_path %}
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.other_document_path) }}" data-doc-title="Other Document - {{ registration.username }}">
+                           <i class="fas fa-eye me-1"></i> View Document
                         </button>
                     {% else %}
                         <span class="text-muted">Not Provided</span>
@@ -114,38 +109,31 @@
         </div>
     </div>
 
-
-    <!-- Action Buttons -->
     <div class="mt-4">
         {% if registration.status == 'pending' %}
             <div class="row g-2">
                 <div class="col-auto">
-                    <form action="{{ url_for('registration_approval.approve_registration', reg_id=registration.id) }}" method="POST" class="d-inline needs-validation" novalidate onsubmit="return confirm('Are you sure you want to APPROVE this registration and create the user account?');">
+                    <form action="{{ url_for('registration_approval.approve_registration', reg_id=registration.id) }}" method="POST" class="d-inline needs-validation" novalidate onsubmit="return confirm('Are you sure you want to APPROVE this registration and create the user account? The doctor will use the password they created during registration.');">
                         <button type="submit" class="btn btn-success">
-                            <i class="bi bi-check-circle-fill me-1"></i> Approve Registration
+                            <i class="fas fa-check-circle me-1"></i> Approve Registration
                         </button>
                     </form>
                 </div>
                 <div class="col-auto">
-                     <!-- Button trigger reject modal -->
                     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
-                        <i class="bi bi-x-circle-fill me-1"></i> Reject Registration
+                        <i class="fas fa-times-circle me-1"></i> Reject Registration
                     </button>
                 </div>
             </div>
-
         {% elif registration.status == 'rejected' %}
              <p class="text-danger">This registration has been rejected.</p>
-             <!-- Optionally add a button to re-review or delete -->
-
         {% elif registration.status == 'approved' or registration.status == 'approved_user_created' %}
              <p class="text-success">This registration has been approved.</p>
              {% if registration.user_id %}
-              <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=registration.user_id) }}" class="btn btn-primary">View Doctor Profile</a>
+              <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=registration.user_id) }}" class="btn btn-primary"><i class="fas fa-user-md me-1"></i> View Doctor Profile</a>
              {% endif %}
         {% endif %}
-
-        <a href="{{ url_for('registration_approval.index', status=request.args.get('status', 'pending')) }}" class="btn btn-secondary mt-3">Back to List</a>
+        <a href="{{ url_for('registration_approval.index', status=request.args.get('status', 'pending'), q=request.args.get('q', ''), sort_by=request.args.get('sort_by', 'date_submitted'), sort_order=request.args.get('sort_order', 'desc'), page=request.args.get('page', 1)) }}" class="btn btn-secondary mt-3"><i class="fas fa-arrow-left me-1"></i> Back to List</a>
     </div>
 
     <!-- Reject Modal -->
@@ -161,9 +149,7 @@
                     <div class="mb-3">
                         <label for="rejection_reason" class="form-label">Reason for Rejection <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="3" required></textarea>
-                        <div class="invalid-feedback">
-                            Please provide a reason for rejection.
-                        </div>
+                        <div class="invalid-feedback">Please provide a reason for rejection.</div>
                     </div>
               </div>
               <div class="modal-footer">
@@ -175,112 +161,61 @@
       </div>
     </div>
 
-
     <!-- Document View Modal -->
     <div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-xl modal-dialog-centered"> {# Use modal-xl for larger view #}
+      <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="documentModalLabel">View Document</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body" style="height: 80vh;"> {# Set height for scroll #}
-            {# Use an iframe to display PDFs or other embeddable docs #}
-            {# For images, you might conditionally use an <img> tag or let iframe handle it #}
-            <iframe id="docViewerFrame" src="about:blank" style="width:100%; height: 100%;" frameborder="0">
-                Your browser does not support iframes.
-            </iframe>
-            {# Fallback or alternative for images:
-               <img id="docViewerImage" src="" style="max-width: 100%; height: auto;" alt="Document Preview">
-             #}
+          <div class="modal-body" style="height: 80vh;">
+            <iframe id="docViewerFrame" src="about:blank" style="width:100%; height: 100%;" frameborder="0"></iframe>
           </div>
         </div>
       </div>
     </div>
-
 </div>
+{% endblock %}
 
-{# Add Bootstrap validation script if not already in base template #}
+{% block scripts_extra %}
 <script>
-    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    // Bootstrap 5 form validation
     (function () {
-    'use strict'
-
-    // Fetch all the forms we want to apply custom Bootstrap validation styles to
-    var forms = document.querySelectorAll('.needs-validation')
-
-    // Loop over them and prevent submission
-    Array.prototype.slice.call(forms)
+      'use strict'
+      var forms = document.querySelectorAll('.needs-validation')
+      Array.prototype.slice.call(forms)
         .forEach(function (form) {
-        form.addEventListener('submit', function (event) {
+          form.addEventListener('submit', function (event) {
             if (!form.checkValidity()) {
-            event.preventDefault()
-            event.stopPropagation()
+              event.preventDefault()
+              event.stopPropagation()
             }
-
             form.classList.add('was-validated')
-        }, false)
+          }, false)
         })
-    })()
-</script>
+    })();
 
-{# JavaScript for Document Modal #}
-<script>
+    // Document Modal JS
     var documentModal = document.getElementById('documentModal');
     if (documentModal) {
         documentModal.addEventListener('show.bs.modal', function (event) {
-            var button = event.relatedTarget; // Button that triggered the modal
+            var button = event.relatedTarget; 
             var docUrl = button.getAttribute('data-doc-url');
             var docTitle = button.getAttribute('data-doc-title');
-
             var modalTitle = documentModal.querySelector('.modal-title');
             var iframe = documentModal.querySelector('#docViewerFrame');
-            // var img = documentModal.querySelector('#docViewerImage'); // If using separate img tag
-
             modalTitle.textContent = 'View: ' + docTitle;
-
-            // Simple approach: Set iframe src. Browser will handle PDF/Image display.
             if (iframe && docUrl) {
                 iframe.src = docUrl;
             }
-            /*
-            // More complex: Detect file type if needed
-            if (docUrl) {
-                if (docUrl.toLowerCase().endsWith('.pdf')) {
-                     iframe.src = docUrl;
-                     iframe.style.display = 'block';
-                     // img.style.display = 'none'; // Hide image tag if using both
-                } else if (['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp'].some(ext => docUrl.toLowerCase().endsWith(ext))) {
-                     iframe.src = docUrl; // Modern browsers often render images in iframes too
-                     iframe.style.display = 'block';
-                     // Or use the img tag:
-                     // img.src = docUrl;
-                     // img.style.display = 'block';
-                     // iframe.style.display = 'none'; // Hide iframe
-                } else {
-                    // Handle unsupported types or provide a download link
-                    iframe.src = 'about:blank'; // Clear iframe
-                    iframe.style.display = 'none';
-                    // Optionally display a message or download link here
-                    console.warn("Unsupported document type for preview:", docUrl);
-                }
-            }
-            */
         });
-
-        // Clear iframe/img src when modal is hidden to stop loading/potential audio/video
         documentModal.addEventListener('hidden.bs.modal', function (event) {
              var iframe = documentModal.querySelector('#docViewerFrame');
-             // var img = documentModal.querySelector('#docViewerImage');
              if (iframe) {
-                 iframe.src = 'about:blank'; // Use about:blank to clear
+                 iframe.src = 'about:blank'; 
              }
-             // if (img) {
-             //     img.src = '';
-             // }
         });
     }
-
 </script>
-
 {% endblock %}

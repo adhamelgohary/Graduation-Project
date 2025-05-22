@@ -1,0 +1,127 @@
+{% extends "Doctor_Portal/base.html" %}
+{% block title %}{{ form_title }}{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
+    {# Add specific form styles if needed #}
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ form_title }}</h1>
+    <a href="{{ url_for('.list_food_items') }}" class="button button-outline button-secondary">
+        <i class="fas fa-arrow-left fa-fw"></i> Back to Food Library
+    </a>
+</div>
+
+{% include '_flash_messages.html' %} {# Display flash messages #}
+
+{# Display validation errors if any #}
+{% if errors %}
+<div class="alert alert-danger" role="alert">
+    <h5 class="alert-heading">Validation Errors Found:</h5>
+    <ul>
+        {% for error in errors %}
+        <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+
+<div class="card shadow-sm content-section">
+     <div class="card-header">
+        <h5 class="mb-0">Food Item Details</h5>
+    </div>
+    <div class="card-body">
+        {# The form action is set dynamically from the route #}
+        <form action="{{ form_action }}" method="POST" class="data-form">
+            {# Add CSRF token here if using Flask-WTF #}
+            {# {{ form.csrf_token }} #}
+
+            <div class="row g-3">
+                <div class="col-md-8 form-group">
+                    <label for="item_name" class="form-label">Item Name <span class="text-danger">*</span></label>
+                    {# *** FIX: Check if item exists *** #}
+                    <input type="text" id="item_name" name="item_name" class="form-control"
+                           value="{{ item.item_name if item else '' }}" required>
+                    <small class="form-text text-muted">Unique name for the food item (e.g., "Apple, Fuji, Medium", "Chicken Breast, Grilled").</small>
+                </div>
+                <div class="col-md-4 form-group">
+                    <label for="serving_size" class="form-label">Serving Size <span class="text-danger">*</span></label>
+                     {# *** FIX: Check if item exists *** #}
+                    <input type="text" id="serving_size" name="serving_size" class="form-control"
+                           value="{{ item.serving_size if item else '' }}" required>
+                     <small class="form-text text-muted">Standard unit (e.g., "1 cup", "100g", "3 oz").</small>
+                </div>
+            </div>
+
+            <hr>
+            <h5>Nutritional Information (Per Serving - Optional)</h5>
+            <div class="row g-3">
+                 <div class="col-md-3 col-6 form-group">
+                     <label for="calories" class="form-label">Calories (kcal)</label>
+                      {# *** FIX: Check if item exists *** #}
+                     <input type="number" min="0" id="calories" name="calories" class="form-control"
+                            value="{{ item.calories if item else '' }}">
+                 </div>
+                 <div class="col-md-3 col-6 form-group">
+                     <label for="protein_grams" class="form-label">Protein (g)</label>
+                      {# *** FIX: Check if item exists AND attribute exists *** #}
+                     <input type="number" step="0.1" min="0" id="protein_grams" name="protein_grams" class="form-control"
+                            value="{{ '%g'|format(item.protein_grams) if item and item.protein_grams is not none else '' }}">
+                 </div>
+                 <div class="col-md-3 col-6 form-group">
+                     <label for="carbs_grams" class="form-label">Carbs (g)</label>
+                      {# *** FIX: Check if item exists AND attribute exists *** #}
+                     <input type="number" step="0.1" min="0" id="carbs_grams" name="carbs_grams" class="form-control"
+                           value="{{ '%g'|format(item.carbs_grams) if item and item.carbs_grams is not none else '' }}">
+                 </div>
+                 <div class="col-md-3 col-6 form-group">
+                     <label for="fat_grams" class="form-label">Fat (g)</label>
+                      {# *** FIX: Check if item exists AND attribute exists *** #}
+                     <input type="number" step="0.1" min="0" id="fat_grams" name="fat_grams" class="form-control"
+                            value="{{ '%g'|format(item.fat_grams) if item and item.fat_grams is not none else '' }}">
+                 </div>
+                 <div class="col-md-3 col-6 form-group">
+                     <label for="fiber_grams" class="form-label">Fiber (g)</label>
+                      {# *** FIX: Check if item exists AND attribute exists *** #}
+                     <input type="number" step="0.1" min="0" id="fiber_grams" name="fiber_grams" class="form-control"
+                            value="{{ '%g'|format(item.fiber_grams) if item and item.fiber_grams is not none else '' }}">
+                 </div>
+                  <div class="col-md-3 col-6 form-group">
+                     <label for="sodium_mg" class="form-label">Sodium (mg)</label>
+                       {# *** FIX: Check if item exists *** #}
+                     <input type="number" min="0" id="sodium_mg" name="sodium_mg" class="form-control"
+                            value="{{ item.sodium_mg if item else '' }}">
+                 </div>
+            </div>
+
+            <div class="form-group mt-3 mb-3">
+                <label for="notes" class="form-label">General Notes (Optional)</label>
+                 {# *** FIX: Check if item exists *** #}
+                <textarea id="notes" name="notes" class="form-control" rows="3"
+                          placeholder="e.g., Preparation tips, brand information, common allergens...">{{ item.notes if item else '' }}</textarea>
+            </div>
+
+             {# Optionally add an 'is_active' checkbox for the edit form #}
+             {# *** FIX: Check if item exists AND has food_item_id (means it's an existing item) *** #}
+             {% if item and item.food_item_id %} {# Only show on edit form #}
+             <div class="form-check form-switch mb-3">
+                  {# Default checked if item.is_active is true #}
+                 <input class="form-check-input" type="checkbox" role="switch" id="is_active" name="is_active" {% if item.is_active %}checked{% endif %}>
+                 <label class="form-check-label" for="is_active">Item is Active (Appears in searches)</label>
+            </div>
+            {% endif %}
+
+
+            <div class="form-actions text-end mt-4 pt-3 border-top">
+                 <a href="{{ url_for('.list_food_items') }}" class="button button-outline button-secondary">Cancel</a>
+                <button type="submit" class="button button-primary">
+                    <i class="fas fa-save fa-fw"></i> {{ 'Update Food Item' if item else 'Add Food Item' }} {# Button text changes based on if item exists #}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -277,6 +277,26 @@ body {
     top: 0; /* Adjust if needed based on line-height */
 }
 
+.card ul,
+.content-container ul { /* Target lists within cards and content containers */
+    list-style: disc; /* Or use circle, square, or none if you prefer custom bullets */
+    padding-left: 25px; /* Indentation for standard bullets */
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.card ul li,
+.content-container ul li {
+    margin-bottom: 0.5rem; /* Spacing between items */
+    line-height: 1.6; /* Improve readability */
+    color: var(--text-secondary); /* Use secondary text color for list items */
+}
+
+.pre-wrap {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+ }
+
 /* Read More Styling (from inline styles) */
 .content-container { position: relative; }
 .content-container .content-snippet { margin-bottom: 0.5rem; line-height: 1.6; }
@@ -293,6 +313,12 @@ body {
 .emergency-signs h4::after { display: none; } /* Remove underline from emergency H4 */
 .emergency-signs h4 i { margin-right: 0.5rem; }
 .emergency-signs ul, .emergency-signs p { margin-bottom: 0; color: var(--emergency-text); } /* Ensure text inside inherits color */
+
+/* Ensure emergency list items inherit emergency text color */
+.emergency-signs ul li {
+    color: var(--emergency-text);
+}
+
 .emergency-signs ul li::before { color: var(--emergency-text); } /* Match bullet color */
 
 /* Quick Facts Card Styling (Simplified now that base .card h3 is fixed) */
@@ -311,6 +337,51 @@ body {
 .demographic-list { padding-left: 20px; list-style: disc; margin-top: 10px; font-size: 0.95rem;}
 .demographic-list li { margin-bottom: var(--spacing-xs); }
 
+
+/* === ADD THIS TO cardisease.css, orthodisease.css, AND neurodisease.css === */
+
+/* Styling for the revealed Emergency Symptoms section WITHIN the main Symptoms card */
+.emergency-symptoms-details {
+    margin-top: var(--spacing-md, 1rem); /* Space above the emergency section when revealed */
+    padding-top: var(--spacing-md, 1rem);
+    border-top: 1px dashed var(--border-color); /* Separator line */
+}
+
+/* Apply the existing emergency-signs styling to the inner container */
+.emergency-symptoms-details .emergency-signs {
+    margin-top: 0; /* Remove extra top margin if nested */
+    /* Inherit styles defined earlier for .emergency-signs: */
+    /* padding: 1rem 1.25rem; */
+    /* border: 1px solid var(--emergency-border); */
+    /* background-color: var(--emergency-bg); */
+    /* border-radius: var(--border-radius); */
+    /* color: var(--emergency-text); */
+    /* font-size: 0.95rem; */
+}
+
+.emergency-symptoms-details .emergency-signs h4 {
+    /* Inherit styles defined earlier for .emergency-signs h4: */
+    /* color: var(--emergency-text); */
+    /* margin-top: 0; */
+    /* margin-bottom: 0.75rem; */
+    /* font-size: 1.1em; */
+    /* font-weight: 700; */
+    /* display: flex; */
+    /* align-items: center; */
+    /* border-bottom: none; */
+    /* padding-bottom: 0; */
+}
+.emergency-symptoms-details .emergency-signs h4::after { display: none; } /* Ensure no underline */
+.emergency-symptoms-details .emergency-signs h4 .sos-emoji { font-size: 1.2em; margin-right: 0.5em; } /* Explicitly style SOS emoji */
+
+.emergency-symptoms-details .emergency-signs p {
+     /* Inherit styles defined earlier for .emergency-signs p: */
+     /* margin-bottom: 0; */
+     /* color: var(--emergency-text); */
+     /* pre-wrap is applied in the HTML template */
+}
+
+/* --- End of Added CSS --- */
 /* Doctors Section Styling (from cardisease.css, slightly modified for grid) */
 .doctors-section {
     margin-top: var(--spacing-xl);

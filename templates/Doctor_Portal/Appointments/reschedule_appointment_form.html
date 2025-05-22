@@ -1,4 +1,4 @@
-{% extends "Doctor_Portal/base.html" %} {# **Make sure this points to your actual base file** #}
+{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS and base.css #}
 
 {% block title %}Reschedule Appointment{% endblock %}
 
@@ -7,32 +7,61 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 <style>
-    /* Using styles consistent with other templates */
-    body { background-color: #f8f9fa; }
-    .container-portal { background-color: #ffffff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07); margin-top: 20px; max-width: 750px; margin-left: auto; margin-right: auto; }
-    .form-label { font-weight: 500; color: #5a5c69; font-size: 0.85rem; margin-bottom: 0.3rem; }
-    .form-control, .form-select { border-radius: 0.3rem; font-size: 0.9rem; }
-    .form-control:disabled, .form-control[readonly] { background-color: #e9ecef; opacity: 0.7; }
-    .btn-primary-medical { background-color: #0d6efd; border-color: #0d6efd; font-weight: 500;}
-    .btn-primary-medical:hover { background-color: #0b5ed7; border-color: #0a58ca; }
-    .btn-outline-secondary-medical { color: #6c757d; border-color: #6c757d; font-weight: 500;}
-    .btn-outline-secondary-medical:hover { color: #fff; background-color: #6c757d; border-color: #6c757d; }
-    .select2-container--bootstrap-5 .select2-selection { font-size: 0.9rem; min-height: calc(1.5em + .75rem + 2px); padding-top: 0.275rem; }
-    .select2-container--bootstrap-5 .select2-dropdown { border-color: #ced4da; font-size: 0.9rem; }
-    .reschedule-info-box { background-color: #eef2f7; border: 1px solid #d6dbdf; border-radius: 0.3rem; font-size: 0.85rem; padding: 1rem; }
-    .reschedule-info-box strong { color: #495057; }
-    .text-danger { font-size: 0.8rem; color: var(--bs-danger); }
-    .alert-danger ul { margin-bottom: 0; padding-left: 1.2rem; }
-    .form-text { font-size: 0.75rem; }
+    .container-portal {
+        background-color: var(--color-surface, #ffffff);
+        padding: var(--spacing-lg, 1.5rem) var(--spacing-xl, 2rem);
+        border-radius: var(--border-radius, 0.3rem);
+        box-shadow: var(--box-shadow-lg, 0 4px 12px rgba(0,0,0,0.1));
+        margin-top: var(--spacing-lg, 1.5rem);
+        max-width: 750px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .select2-container--bootstrap-5 .select2-selection {
+        font-size: 0.9rem;
+        min-height: calc(1.5em + .75rem + 2px);
+        padding-top: 0.375rem;
+        border-color: var(--color-border, #ced4da);
+    }
+    .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+    .select2-container--bootstrap-5.select2-container--open .select2-selection {
+        border-color: var(--color-primary, #007bff);
+        box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb, 0,123,255), .25);
+    }
+    .select2-container--bootstrap-5 .select2-dropdown {
+        border-color: var(--color-border, #ced4da);
+        font-size: 0.9rem;
+    }
+    .reschedule-info-box {
+        background-color: #eef2f7;
+        border: 1px solid #d6dbdf;
+        border-radius: var(--border-radius, 0.3rem);
+        font-size: 0.85rem;
+        padding: var(--spacing-md, 1rem);
+        color: var(--color-text, #333);
+        margin-bottom: var(--spacing-lg, 1.5rem);
+    }
+    .reschedule-info-box strong {
+        color: var(--color-primary-dark, #0056b3);
+    }
+    .form-text {
+        font-size: 0.8rem;
+        color: var(--color-text-muted, #6c757d);
+    }
+    .alert-danger ul { margin-bottom: 0; padding-left: 1.2rem; font-size: 0.85rem;}
+    .form-actions-bar {
+        border-top: 1px solid var(--color-border, #e3e6f0);
+        padding-top: var(--spacing-md, 1rem);
+        margin-top: var(--spacing-lg, 1.5rem);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid container-portal">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 1px solid #e3e6f0;">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 1px solid var(--color-border, #e3e6f0);">
         <h1 class="h3 mb-0 text-dark">Reschedule Appointment</h1>
-         {# Link back to the specific appointment being rescheduled #}
-        <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="btn btn-sm btn-outline-secondary-medical">
+        <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="button button-small button-outline button-secondary">
             <i class="fas fa-times fa-fw me-1"></i> Cancel Reschedule
         </a>
     </div>
@@ -44,12 +73,11 @@
         <p class="mb-1">Original: <strong>{{ appointment.appointment_date_str }} at {{ appointment.start_time_str }}</strong></p>
         <p class="mb-1">Type: <strong>{{ appointment.type_name }} ({{ appointment.default_duration_minutes }} min)</strong></p>
         <p class="mb-0">Location: <strong>{{ appointment.location_name or 'N/A' }}</strong></p>
-        {# Hidden fields needed by JS and potentially backend #}
         <input type="hidden" id="original_duration" value="{{ appointment.default_duration_minutes }}">
     </div>
 
     {% if errors %}
-        <div class="alert alert-danger py-2" role="alert" style="font-size: 0.85rem;">
+        <div class="alert alert-danger py-2" role="alert">
             <strong class="d-block mb-1">Please correct the following errors:</strong>
             <ul>
                 {% for error in errors %}
@@ -60,9 +88,8 @@
     {% endif %}
 
     <form action="{{ url_for('.reschedule_appointment', appointment_id=appointment.appointment_id) }}" method="post" id="rescheduleForm">
-        {# Removed CSRF token here as per backend code #}
+        {# CSRF token handled by Flask-WTF if used, or manually add if needed #}
 
-        {# Display Patient and Type as readonly #}
          <div class="mb-3">
              <label class="form-label">Patient</label>
              <input type="text" class="form-control" value="{{ appointment.p_fname }} {{ appointment.p_lname }}" disabled readonly>
@@ -75,28 +102,25 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="appointment_date" class="form-label">New Date <span class="text-danger">*</span></label>
-                {# Use form_data from POST if available (on error), else original date #}
                 <input type="date" class="form-control" id="appointment_date" name="appointment_date"
-                       value="{{ form_data.appointment_date or appointment.appointment_date_str }}" required min="{{ today_iso }}">
+                       value="{{ form_data.get('appointment_date', appointment.appointment_date_str) }}" required min="{{ today_iso }}">
             </div>
             <div class="col-md-6 mb-3">
                 <label for="start_time" class="form-label">New Start Time <span class="text-danger">*</span></label>
-                 {# Use form_data from POST if available (on error), else original time #}
                 <input type="time" class="form-control" id="start_time" name="start_time"
-                       value="{{ form_data.start_time or appointment.start_time_str }}" required step="900"> {# 15 min step #}
+                       value="{{ form_data.get('start_time', appointment.start_time_str) }}" required step="900">
             </div>
         </div>
 
         <div class="mb-3">
             <label for="end_time_display" class="form-label">Estimated End Time</label>
             <input type="text" class="form-control" id="end_time_display" readonly placeholder="Calculated automatically">
-             <small class="form-text text-muted">Based on original appointment type and new start time.</small>
+             <small class="form-text">Based on original appointment type and new start time.</small>
         </div>
 
         <div class="mb-3">
              <label for="doctor_location_id" class="form-label">New Location <span class="text-danger">*</span></label>
-             {# Use form_data location if available (on error), else original location #}
-             {% set current_location_id = form_data.doctor_location_id|int if form_data.doctor_location_id else appointment.doctor_location_id %}
+             {% set current_location_id = form_data.get('doctor_location_id')|int if form_data.get('doctor_location_id') else appointment.doctor_location_id %}
              <select class="form-select" id="doctor_location_id" name="doctor_location_id" required {% if not locations %}disabled{% endif %}>
                  <option value="" disabled {% if not current_location_id %}selected{% endif %}>Select New Location...</option>
                  {% for loc in locations %}
@@ -114,17 +138,17 @@
 
         <div class="mb-3">
             <label for="reason" class="form-label">Reason for Visit (Optional)</label>
-            <textarea class="form-control" id="reason" name="reason" rows="2">{{ form_data.reason or appointment.reason or '' }}</textarea>
+            <textarea class="form-control" id="reason" name="reason" rows="2">{{ form_data.get('reason', appointment.reason or '') }}</textarea>
         </div>
 
         <div class="mb-3">
             <label for="notes" class="form-label">Provider Notes (Optional)</label>
-            <textarea class="form-control" id="notes" name="notes" rows="3">{{ form_data.notes or appointment.notes or '' }}</textarea>
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ form_data.get('notes', appointment.notes or '') }}</textarea>
         </div>
 
-        <div class="d-flex justify-content-end mt-4 pt-3" style="border-top: 1px solid #e3e6f0;">
-            <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="btn btn-outline-secondary-medical me-2">Cancel</a>
-            <button type="submit" class="btn btn-primary-medical"><i class="fas fa-check fa-fw me-1"></i> Confirm Reschedule</button>
+        <div class="d-flex justify-content-end form-actions-bar">
+            <a href="{{ url_for('.view_appointment', appointment_id=appointment.appointment_id) }}" class="button button-outline button-secondary me-2">Cancel</a>
+            <button type="submit" class="button button-success"><i class="fas fa-check fa-fw me-1"></i> Confirm Reschedule</button> {# Success for confirm/save #}
         </div>
     </form>
     </div>
@@ -139,7 +163,6 @@
 function calculateEndTimeReschedule() {
     const dateStr = $('#appointment_date').val();
     const startTimeStr = $('#start_time').val();
-    // For reschedule, duration is fixed based on the original appointment's type.
     const durationMinutes = parseInt($('#original_duration').val());
 
     if (dateStr && startTimeStr && !isNaN(durationMinutes) && durationMinutes > 0) {
@@ -149,12 +172,11 @@ function calculateEndTimeReschedule() {
             return;
         }
         try {
-            let startDate = new Date(dateStr + 'T' + startTimeStr); // Try ISO format
-
-            if (isNaN(startDate.getTime())) { // Fallback
-                 console.warn("Direct ISO date parsing failed, using fallback.");
-                 startDate = new Date();
-                 startDate.setFullYear(parseInt(dateStr.substring(0,4)), parseInt(dateStr.substring(5,7)) - 1, parseInt(dateStr.substring(8,10)));
+            let startDate = new Date(dateStr + 'T' + startTimeStr);
+            if (isNaN(startDate.getTime())) {
+                 startDate = new Date(); // Fallback
+                 const dateParts = dateStr.split('-');
+                 startDate.setFullYear(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
                  startDate.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), timeParts[2] ? parseInt(timeParts[2]) : 0, 0);
             }
 
@@ -177,18 +199,14 @@ function calculateEndTimeReschedule() {
 }
 
 $(document).ready(function() {
-    // Initialize Select2 for location dropdown
      $('#doctor_location_id').select2({
         theme: "bootstrap-5",
         minimumResultsForSearch: Infinity,
         width: '100%',
-        dropdownParent: $('#rescheduleForm') // Attach to form
+        dropdownParent: $('#rescheduleForm')
     });
 
-    // Calculate end time on change
     $('#appointment_date, #start_time').on('change input', calculateEndTimeReschedule);
-
-    // Initial calculation
     calculateEndTimeReschedule();
 });
 </script>

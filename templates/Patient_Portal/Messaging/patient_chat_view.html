@@ -1,0 +1,351 @@
+{% extends "Website/base.html" %} {# Use Patient Portal base #}
+{% block title %}Chat with Dr. {{ chat.doctor_first_name }} {{ chat.doctor_last_name }}{% endblock %}
+
+{% block head_extra %}
+    {{ super() if super }}
+    {# Link to your main Patient Portal CSS file (e.g., Website/base.css or a specific messaging.css) #}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Website/your_main_patient_styles.css') }}"> #}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Website/messaging_patient.css') }}"> #}
+    <style>
+        /* Styles for Chat View - Consider moving to an external CSS file */
+        .chat-header {
+            padding-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .chat-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0;
+            color: var(--text-color); /* Use theme text color */
+        }
+        .chat-status-label {
+            font-size: 0.85em; /* Adjusted from 0.9em */
+            padding: .3em .7em;
+            border-radius: var(--border-radius);
+            vertical-align: middle;
+            font-weight: 500;
+        }
+        /* Using theme variables for status colors, assuming they exist or define them */
+        .chat-status-label.active { background-color: rgba(var(--color-success-rgb, 40,167,69), 0.15); color: var(--color-success-dark, #146c43); border: 1px solid rgba(var(--color-success-rgb, 40,167,69), 0.3); }
+        .chat-status-label.closed { background-color: rgba(var(--color-secondary-rgb, 108,117,125), 0.15); color: var(--color-secondary-dark, #41464b); border: 1px solid rgba(var(--color-secondary-rgb, 108,117,125), 0.3); }
+        .chat-status-label.pending { background-color: rgba(var(--color-warning-rgb, 255,193,7), 0.15); color: var(--color-warning-dark, #997404); border: 1px solid rgba(var(--color-warning-rgb, 255,193,7), 0.3); }
+
+
+        .chat-messages-container {
+            height: 60vh;
+            max-height: 500px; /* Or adjust as per your layout */
+            overflow-y: auto;
+            padding: var(--spacing-md);
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .message-bubble {
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            max-width: 80%; /* Bubbles don't take full width */
+        }
+        .message-bubble.sender-patient {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+        .message-bubble.sender-doctor {
+            margin-right: auto;
+        }
+
+        .message-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9em;
+            flex-shrink: 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .message-bubble.sender-patient .message-avatar { margin-left: var(--spacing-sm); background-color: var(--neon-blue); }
+        .message-bubble.sender-doctor .message-avatar { margin-right: var(--spacing-sm); background-color: var(--accent-pink); }
+
+        .message-content-wrapper {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: 18px;
+            position: relative;
+            box-shadow: var(--card-shadow); /* Use card shadow for depth */
+        }
+        .message-bubble.sender-patient .message-content-wrapper {
+            background-color: var(--neon-blue);
+            color: var(--bg-primary); /* Assuming neon-blue is light, so dark text */
+            border-bottom-right-radius: 5px;
+        }
+        [data-theme="dark"] .message-bubble.sender-patient .message-content-wrapper {
+             background-color: color-mix(in srgb, var(--neon-blue) 70%, var(--bg-primary) 30%); /* Ensure contrast */
+             color: var(--text-color); /* Dark theme text color */
+        }
+
+        .message-bubble.sender-doctor .message-content-wrapper {
+            background-color: var(--bg-surface); /* Use surface for doctor for contrast */
+            color: var(--text-color); /* Standard text color */
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 5px;
+        }
+        /* No specific dark theme override needed if --bg-surface and --text-color adapt */
+
+        .message-sender-name {
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-bottom: var(--spacing-xs);
+            color: var(--text-secondary);
+        }
+        .message-bubble.sender-patient .message-sender-name { text-align: right; }
+
+        .message-text {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        .message-attachment a {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            margin-top: var(--spacing-xs);
+            font-size: 0.9em;
+            color: inherit;
+            text-decoration: none; /* No underline by default */
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background-color: rgba(0,0,0,0.05);
+            border-radius: var(--border-radius);
+        }
+        .message-attachment a:hover { color: var(--accent-pink); background-color: rgba(0,0,0,0.1); }
+        .message-attachment i.fa-fw { color: var(--text-secondary); }
+
+
+        .message-timestamp {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            margin-top: var(--spacing-xs);
+            display: block;
+        }
+        .message-bubble.sender-patient .message-timestamp { text-align: right; }
+        .message-bubble.sender-doctor .message-timestamp { text-align: left; }
+
+        .message-read-status i { font-size: 0.8em; }
+        .message-read-status .text-primary { color: var(--accent-pink) !important; } /* Or a specific read color */
+
+
+        .chat-input-area {
+            padding: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+            background-color: var(--bg-surface);
+            border-bottom-left-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+        }
+        .chat-input-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        .chat-input-area textarea {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: calc(var(--border-radius) * 0.75);
+            padding: var(--spacing-sm) var(--spacing-md);
+            font-size: 1rem;
+            line-height: 1.5;
+            min-height: 44px; /* Approx 2 lines start */
+            max-height: 150px;
+            resize: vertical;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .chat-input-area textarea:focus {
+            border-color: var(--accent-pink);
+            box-shadow: 0 0 0 0.2rem rgba(var(--accent-pink-rgb, 255, 59, 92), 0.25);
+            outline: none;
+        }
+        .chat-input-area textarea::placeholder { color: var(--placeholder-color); }
+
+        .chat-input-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        .chat-input-attachment {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: var(--spacing-xs);
+        }
+        .chat-input-attachment .form-control-file-sm {
+            font-size: 0.85rem;
+            padding: 0.3rem 0.6rem;
+            max-width: 250px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: calc(var(--border-radius) * 0.75);
+        }
+        .chat-input-attachment .form-control-file-sm::file-selector-button {
+            padding: 0.3rem 0.6rem;
+            margin-right: 0.6rem;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: calc(var(--border-radius) * 0.5);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .chat-input-attachment .form-control-file-sm::file-selector-button:hover {
+            background-color: color-mix(in srgb, var(--bg-secondary) 90%, black 5%);
+        }
+        .chat-input-attachment small.text-muted { font-size: 0.8em; }
+        .chat-send-button { min-width: 100px; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container"> {# Using your main container class from Website/base.css #}
+    <div class="chat-header d-flex justify-content-between align-items-center">
+        <div>
+            <h1>
+                Dr. {{ chat.doctor_first_name }} {{ chat.doctor_last_name }}
+            </h1>
+            {% if chat.subject %}<p class="text-muted mb-0">Subject: {{ chat.subject }}</p>{% endif %}
+        </div>
+        <div>
+            <span class="chat-status-label {{ chat.status | lower }}">{{ chat.status | title }}</span>
+            <a href="{{ url_for('patient_messaging.list_my_chats') }}" class="button button-outline button-secondary button-small ms-2">
+                <i class="fas fa-arrow-left fa-fw"></i> Back to Messages
+            </a>
+        </div>
+    </div>
+
+    {% include '_flash_messages.html' %} {# Make sure this partial exists and is styled #}
+
+    <div class="chat-messages-container mb-3" id="chatMessagesContainer">
+        {# Optional: "Load Older Messages" button if paginating messages #}
+        {% if total_message_pages > 1 and current_message_page < total_message_pages %}
+            <div class="text-center mb-3">
+                <a href="{{ url_for('.view_patient_chat', chat_id=chat.chat_id, page=current_message_page + 1) }}" class="button button-outline button-small">
+                    Load Older Messages
+                </a>
+            </div>
+        {% endif %}
+
+        {% if messages %}
+            {% for message in messages %}
+                {% set is_sender_patient = message.sender_type == 'patient' %}
+                <div class="message-bubble sender-{{ message.sender_type }}">
+                    {# Avatar #}
+                    {% if is_sender_patient %}
+                        <div class="message-avatar" title="You">
+                            {{ current_user.first_name[0] | upper if current_user.first_name else 'Me' }}
+                        </div>
+                    {% else %}
+                         <div class="message-avatar" title="Dr. {{ chat.doctor_last_name }}">
+                            Dr
+                        </div>
+                    {% endif %}
+
+                    <div class="message-content-wrapper">
+                        <div class="message-sender-name">
+                            {% if is_sender_patient %}
+                                You
+                            {% else %}
+                                Dr. {{ chat.doctor_first_name }} {{ chat.doctor_last_name }}
+                            {% endif %}
+                        </div>
+                        <p class="message-text mb-0">{{ message.message_text }}</p>
+                        {% if message.has_attachment and message.attachment_id %}
+                            <div class="message-attachment">
+                                <a href="{{ url_for('patient_messaging.download_patient_attachment', attachment_id=message.attachment_id) }}" title="Download {{ message.attachment_filename }}">
+                                    <i class="fas fa-paperclip fa-fw"></i> {{ message.attachment_filename | truncate(30) }}
+                                </a>
+                            </div>
+                        {% endif %}
+                        <div class="message-timestamp">
+                            {{ message.sent_at.strftime('%b %d, %H:%M') if message.sent_at else 'Sending...'}}
+                            {# Read status for messages sent by the patient #}
+                            {% if is_sender_patient and message.read_at %}
+                                <i class="fas fa-check-double text-primary ms-1 message-read-status" title="Seen by Doctor {{ message.read_at.strftime('%b %d, %H:%M') if message.read_at else '' }}"></i>
+                            {% elif is_sender_patient %}
+                                <i class="fas fa-check text-muted ms-1 message-read-status" title="Sent"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-center text-muted fst-italic mt-5 pt-5">No messages in this conversation yet. {% if chat.status == 'active' %}Start by typing below!{% endif %}</p>
+        {% endif %}
+    </div>
+
+    {# Message Input Form (Only if chat is active) #}
+    {% if chat.status == 'active' %}
+        <div class="chat-input-area">
+            <form action="{{ url_for('patient_messaging.send_patient_message', chat_id=chat.chat_id) }}" method="POST" enctype="multipart/form-data" class="chat-input-form">
+                <textarea name="message_text" class="form-control" rows="2" placeholder="Type your message to Dr. {{ chat.doctor_last_name }}..." required aria-label="Message input"></textarea>
+                <div class="chat-input-controls">
+                    <div class="chat-input-attachment">
+                        <label for="attachmentFile" class="form-label visually-hidden">Attach file (optional)</label>
+                        <input type="file" name="attachment" id="attachmentFile" class="form-control-file-sm">
+                        <small class="text-muted">Max {{ max_attachment_mb | default(5) }}MB.</small>
+                    </div>
+                    <button type="submit" class="button button-primary chat-send-button">
+                        <i class="fas fa-paper-plane fa-fw"></i> Send
+                    </button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert"> {# Using alert-info for closed chat #}
+            This conversation is closed. You cannot send new messages.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() if super }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chatMessagesContainer');
+            if (chatContainer) {
+                // Scroll to the bottom of the chat messages on page load
+                // Only scroll to bottom if it's the first page of messages,
+                // or if a new message was just sent (indicated by a URL param or session flash maybe)
+                const urlParams = new URLSearchParams(window.location.search);
+                const page = parseInt(urlParams.get('page')) || 1;
+                if (page === 1) { // Or some other logic to detect if user scrolled up
+                     chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+
+
+                // Auto-resize textarea
+                const messageTextarea = document.querySelector('.chat-input-area textarea[name="message_text"]');
+                if (messageTextarea) {
+                    function autoResizeTextarea() {
+                        messageTextarea.style.height = 'auto'; // Reset height to shrink if text is deleted
+                        const maxHeight = 150; // Max height in pixels from CSS
+                        let newHeight = messageTextarea.scrollHeight;
+                        if (newHeight > maxHeight) {
+                            newHeight = maxHeight;
+                            messageTextarea.style.overflowY = 'auto'; // Show scrollbar if maxed out
+                        } else {
+                            messageTextarea.style.overflowY = 'hidden'; // Hide scrollbar if not needed
+                        }
+                        messageTextarea.style.height = newHeight + 'px';
+                    }
+                    messageTextarea.addEventListener('input', autoResizeTextarea);
+                    autoResizeTextarea(); // Call once on load to set initial size correctly if there's pre-filled text
+                }
+            }
+        });
+    </script>
+{% endblock %}

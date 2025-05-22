@@ -32,7 +32,7 @@ from routes.Admin_Portal.structure_management import structure_bp
 # Import Patient Portal Blueprints
 from routes.Patient_Portal.profile import patient_profile_bp
 from routes.Patient_Portal.medical_info import patient_medical_info_bp
-from routes.Patient_Portal.symptom_checker import symptom_checker_bp
+from routes.Patient_Portal.patient_messaging import patient_messaging_bp
 # routes of doctor portal
 from routes.Doctor_Portal.Dashboard import doctor_main
 from routes.Doctor_Portal.availability_management import availability_bp
@@ -43,7 +43,8 @@ from routes.Doctor_Portal.diet_plan_management import diet_plans_bp
 from routes.Doctor_Portal.appointment_management import appointments_bp
 from routes.Doctor_Portal.messaging import messaging_bp
 from routes.Doctor_Portal.location_management import locations_bp
-from routes.Doctor_Portal.symptom_management import symptom_management_bp
+from routes.Doctor_Portal.food_item_management import food_items_bp
+from routes.Doctor_Portal.vaccine_management import vaccine_management_bp
 
 # --- Create Flask App ---
 app = Flask(__name__)
@@ -91,26 +92,13 @@ app.register_blueprint(messaging_bp)
 app.register_blueprint(locations_bp)
 app.register_blueprint(structure_bp)
 app.register_blueprint(disease_info_bp)
-app.register_blueprint(symptom_management_bp)
+app.register_blueprint(food_items_bp)
+app.register_blueprint(vaccine_management_bp)
 # Patient Portal
 app.register_blueprint(patient_profile_bp)
 app.register_blueprint(patient_medical_info_bp)
-app.register_blueprint(symptom_checker_bp)
+app.register_blueprint(patient_messaging_bp)
 # --- Basic Routes ---
-#@app.route('/')
-#def home():
-    # Redirect based on login status or show a landing page
-#    if current_user.is_authenticated:
-        # Redirect to appropriate dashboard based on user type
-#        if getattr(current_user, 'user_type', None) == 'admin':
-#            return redirect(url_for('admin_main.admin_dashboard'))
-#        elif getattr(current_user, 'user_type', None) == 'doctor':
-#             return redirect(url_for('doctor_main.dashboard'))
-        # Add other user types (patient, etc.) if they have dashboards
-#        else:
-#             return redirect(url_for('login.login_route')) # Fallback to login
-#    return redirect(url_for('login.login_route')) # Redirect unauthenticated users to login
-
 
 # Add a simple health check endpoint (optional but good practice)
 @app.route('/health')

@@ -4,19 +4,22 @@
 
 {% block head_extra %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/appointment_management.css') }}">
-    {# Optional: Add Chart.js CSS/JS if needed #}
+    {# Optional: Add Chart.js CSS/JS if needed, e.g. from cdn #}
+    {# <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> #}
 {% endblock %}
 
 {% block content %}
 <h1>Appointment Reports</h1>
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
+     <li class="breadcrumb-item"><a href="{{ url_for('admin_main.dashboard') }}">Admin Dashboard</a></li>
     <li class="breadcrumb-item active" aria-current="page">Reports</li>
   </ol>
 </nav>
 <hr>
 
-{# Report Type Navigation #}
+{% include '_flash_messages.html' %}
+
 <div class="mb-3 report-nav">
     <a href="{{ url_for('admin_appointments.view_reports', type='summary', report_date_from=report_date_from, report_date_to=report_date_to) }}" class="btn btn-sm {% if report_type == 'summary' %}btn-primary{% else %}btn-outline-primary{% endif %}">Summary</a>
     <a href="{{ url_for('admin_appointments.view_reports', type='utilization', report_date_from=report_date_from, report_date_to=report_date_to) }}" class="btn btn-sm {% if report_type == 'utilization' %}btn-primary{% else %}btn-outline-primary{% endif %}">Utilization</a>
@@ -25,17 +28,18 @@
     <a href="{{ url_for('admin_appointments.view_reports', type='wait_time', report_date_from=report_date_from, report_date_to=report_date_to) }}" class="btn btn-sm {% if report_type == 'wait_time' %}btn-primary{% else %}btn-outline-primary{% endif %}">Wait Times</a>
 </div>
 
-{# Date Range Filter Form #}
-<form method="GET" action="{{ url_for('admin_appointments.view_reports') }}" class="mb-4 p-3 border rounded bg-light filter-form">
-    <input type="hidden" name="type" value="{{ report_type }}"> {# Preserve current report type #}
+<form method="GET" action="{{ url_for('admin_appointments.view_reports') }}" class="mb-4 p-3 border rounded bg-light filter-form needs-validation" novalidate>
+    <input type="hidden" name="type" value="{{ report_type }}">
     <div class="row g-3 align-items-end">
         <div class="col-md-4">
             <label for="report_date_from" class="form-label">Report Date From</label>
-            <input type="date" class="form-control form-control-sm" id="report_date_from" name="report_date_from" value="{{ report_date_from }}">
+            <input type="date" class="form-control form-control-sm" id="report_date_from" name="report_date_from" value="{{ report_date_from }}" required>
+            <div class="invalid-feedback">Please select a start date.</div>
         </div>
          <div class="col-md-4">
             <label for="report_date_to" class="form-label">Report Date To</label>
-            <input type="date" class="form-control form-control-sm" id="report_date_to" name="report_date_to" value="{{ report_date_to }}">
+            <input type="date" class="form-control form-control-sm" id="report_date_to" name="report_date_to" value="{{ report_date_to }}" required>
+            <div class="invalid-feedback">Please select an end date.</div>
         </div>
         <div class="col-md-4">
             <button type="submit" class="btn btn-sm btn-secondary w-100"><i class="fas fa-sync-alt me-1"></i> Update Report Range</button>
@@ -53,7 +57,6 @@
     </div>
     <div class="card-body">
 
-    {# Display data based on report type #}
     <div class="report-section">
         {% if report_type == 'summary' %}
             <div class="row">
@@ -78,7 +81,8 @@
                         <ul class="list-group list-group-flush">
                         {% for item in report_data.type_summary %}
                             <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                {{ item.appointment_type | replace('-', ' ') | title }}
+                                {# UPDATED: Use item.type_name directly #}
+                                {{ item.type_name | default('Uncategorized', true) | replace('-', ' ') | title }}
                                 <span class="badge bg-secondary rounded-pill">{{ item.count }}</span>
                             </li>
                          {% else %}
@@ -90,23 +94,24 @@
             </div>
 
         {% elif report_type == 'utilization' %}
-            <h6>Utilization by Doctor/Month</h6>
-            {% if report_data.get('utilization_by_doctor_month') %}
+            <h6>Utilization by Doctor/Month/Type</h6>
+            {% if report_data.get('utilization_by_doctor_month_type') %}
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered table-hover">
                         <thead class="table-light">
-                            <tr><th>Doctor</th><th>Month</th><th>Status</th><th>Count</th></tr>
+                            <tr><th>Doctor</th><th>Month</th><th>Appt. Type</th><th>Status</th><th>Count</th></tr>
                         </thead>
                         <tbody>
-                        {% for item in report_data.utilization_by_doctor_month %}
+                        {% for item in report_data.utilization_by_doctor_month_type %}
                             <tr>
                                 <td>{{ item.doctor_name }}</td>
                                 <td>{{ item.month }}</td>
+                                <td>{{ item.appointment_type_name | default('N/A', true) }}</td> {# Display type name #}
                                 <td>{{ item.status | title }}</td>
                                 <td class="text-end">{{ item.appointment_count }}</td>
                             </tr>
                         {% else %}
-                             <tr><td colspan="4" class="text-center text-muted">No utilization data found for this period.</td></tr>
+                             <tr><td colspan="5" class="text-center text-muted">No utilization data found for this period.</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -119,7 +124,7 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered table-hover">
                         <thead class="table-light">
-                            <tr><th>Doctor</th><th>Considered Appts</th><th>No-Shows</th><th>Rate</th></tr>
+                            <tr><th>Doctor</th><th>Relevant Appts</th><th>No-Shows</th><th>Rate</th></tr>
                         </thead>
                         <tbody>
                         {% for item in report_data.no_show_rate_by_doctor %}
@@ -127,14 +132,14 @@
                                 <td>{{ item.doctor_name }}</td>
                                 <td class="text-end">{{ item.total_appointments }}</td>
                                 <td class="text-end">{{ item.no_show_count }}</td>
-                                <td class="text-end fw-bold">{{ "%.1f%%"|format(item.no_show_rate) }}</td>
+                                <td class="text-end fw-bold">{{ "%.1f%%"|format(item.no_show_rate if item.no_show_rate is not none else 0) }}</td>
                             </tr>
                         {% else %}
                              <tr><td colspan="4" class="text-center text-muted">No no-show data found for this period.</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
-                     <small class="text-muted d-block mt-1">*Rate based on 'Completed' and 'No-Show' appointments in the selected period.</small>
+                     <small class="text-muted d-block mt-1">*Rate based on 'Scheduled', 'Confirmed', 'Completed', and 'No-Show' appointments.</small>
                 </div>
             {% else %} <p class="text-muted">No no-show data available.</p> {% endif %}
 
@@ -147,7 +152,8 @@
                            <ul class="list-group list-group-flush">
                            {% for item in report_data.cancellation_by_type %}
                                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                   {{ item.appointment_type | replace('-', ' ') | title }}
+                                   {# UPDATED: Use item.type_name directly #}
+                                   {{ item.type_name | default('Uncategorized', true) | replace('-', ' ') | title }}
                                    <span class="badge bg-danger rounded-pill">{{ item.count }}</span>
                                </li>
                            {% else %}
@@ -189,11 +195,11 @@
                                 <td class="text-end fw-bold">{{ "%.1f"|format(item.avg_wait_minutes if item.avg_wait_minutes is not none else 0) }}</td>
                             </tr>
                          {% else %}
-                             <tr><td colspan="3" class="text-center text-muted">No wait time data found for this period (requires check-in & treatment start times).</td></tr>
+                             <tr><td colspan="3" class="text-center text-muted">No wait time data found (requires check-in & treatment start times).</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
-                     <small class="text-muted d-block mt-1">*Average wait time calculated from Check-In time to Start Treatment time for 'Completed' appointments.</small>
+                     <small class="text-muted d-block mt-1">*Avg. wait: Check-In to Start Treatment for 'Completed' appointments.</small>
                 </div>
              {% else %} <p class="text-muted">No wait time data available.</p> {% endif %}
 
@@ -205,5 +211,24 @@
     </div> {# End card-body #}
 </div> {# End card #}
 {% endif %} {# End error check #}
+{% endblock %}
 
+{% block scripts_extra %}
+<script>
+// Bootstrap 5 form validation for date range
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
 {% endblock %}

@@ -391,3 +391,22 @@ def get_doctor_details(doctor_user_id):
             try: conn.close()
             except Exception as conn_err: current_logger.error(f"Error closing connection in get_doctor_details: {conn_err}", exc_info=False)
     return doctor_info
+
+def timedelta_to_time_filter(delta, format='%H:%M'):
+    """Jinja filter to convert timedelta (from TIME column) or time object to HH:MM string."""
+    if isinstance(delta, datetime.timedelta):
+        # Convert timedelta to seconds, then to HH:MM
+        total_seconds = int(delta.total_seconds())
+        hours, remainder = divmod(total_seconds, 3600)
+        minutes, _ = divmod(remainder, 60)
+        # Format ensuring leading zeros
+        return f"{hours:02}:{minutes:02}"
+    elif isinstance(delta, datetime.time):
+        # If it's already a time object, just format it
+        return delta.strftime(format)
+    elif isinstance(delta, str):
+        # If it's already a string in HH:MM or similar, return as is (basic check)
+        if ':' in delta and len(delta) >= 4:
+             return delta
+        return '' # Or handle appropriately
+    return '' # Return empty string for None or unexpected types

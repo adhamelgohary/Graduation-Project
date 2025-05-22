@@ -10,140 +10,170 @@
 </h1>
 {% endblock %}
 
+{% block head_extra %}
+{# Styles removed, assuming they are handled by an external CSS file linked in base_admin.html #}
+{% endblock %}
+
 {% block content %}
-<div class="form-container card"> {# Use form-container and card #}
-    <div class="form-header">
-        <h2>Patient Information</h2>
+<div class="form-container card">
+    <div class="card-header form-header"> {# Using card-header for consistency #}
+        <h2 class="card-title mb-0">Patient Information</h2> {# Using card-title #}
     </div>
 
-    <form action="{{ url_for('patient_management.add_patient') }}" method="POST">
-        {# Optional: CSRF token #}
+    <div class="card-body"> {# Wrapping form content in card-body #}
+        {% include '_flash_messages.html' ignore missing %}
 
-        {# --- User Account Info --- #}
-        <h3 class="mb-3 fs-5 text-secondary">Account Details</h3>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="username">Username <span class="text-danger">*</span></label>
-                <input type="text" id="username" name="username" class="form-control" required>
+        <form action="{{ url_for('patient_management.add_patient') }}" method="POST" class="needs-validation" novalidate>
+            <h3 class="mb-3 fs-5 text-secondary">Account Details</h3>
+            <div class="row mb-3"> {# Using Bootstrap row for form-row #}
+                <div class="col-md-6 form-group"> {# Using Bootstrap col for responsiveness #}
+                    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" id="username" name="username" class="form-control" value="{{ request.form.username }}" required>
+                    <div class="invalid-feedback">Please provide a username.</div>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ request.form.email }}" required>
+                    <div class="invalid-feedback">Please provide a valid email.</div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="email">Email <span class="text-danger">*</span></label>
-                <input type="email" id="email" name="email" class="form-control" required>
+            <div class="form-group mb-3">
+                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="password" id="password" name="password" class="form-control" required minlength="8">
+                 <small class="form-text text-muted">Min. 8 characters. Set an initial password for the patient.</small>
+                 <div class="invalid-feedback">Password must be at least 8 characters.</div>
             </div>
-        </div>
-        <div class="form-group">
-            <label for="password">Password <span class="text-danger">*</span></label>
-            <input type="password" id="password" name="password" class="form-control" required>
-             <small class="form-text text-muted">Set an initial password for the patient.</small>
-        </div>
 
-        {# --- Personal Info --- #}
-        <hr class="my-4">
-        <h3 class="mb-3 fs-5 text-secondary">Personal Information</h3>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="first_name">First Name <span class="text-danger">*</span></label>
-                <input type="text" id="first_name" name="first_name" class="form-control" required>
+            <hr class="my-4">
+            <h3 class="mb-3 fs-5 text-secondary">Personal Information</h3>
+            <div class="row mb-3">
+                <div class="col-md-6 form-group">
+                    <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                    <input type="text" id="first_name" name="first_name" class="form-control" value="{{ request.form.first_name }}" required>
+                     <div class="invalid-feedback">First name is required.</div>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" value="{{ request.form.last_name }}" required>
+                    <div class="invalid-feedback">Last name is required.</div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="last_name">Last Name <span class="text-danger">*</span></label>
-                <input type="text" id="last_name" name="last_name" class="form-control" required>
+            <div class="row mb-3">
+                <div class="col-md-6 form-group">
+                    <label for="date_of_birth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                    <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="{{ request.form.date_of_birth }}" required>
+                    <div class="invalid-feedback">Date of birth is required.</div>
+                </div>
+                 <div class="col-md-6 form-group">
+                    <label for="phone" class="form-label">Phone</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" value="{{ request.form.phone }}" placeholder="e.g., 123-456-7890">
+                </div>
             </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="date_of_birth">Date of Birth</label>
-                <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
+             <div class="row mb-3">
+                <div class="col-md-4 form-group"> {# Adjusted col size #}
+                    <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                    <select id="gender" name="gender" class="form-select" required>
+                        {# For add_patient.html, patient will not exist, so patient.gender check is for edit_patient.html #}
+                        <option value="" disabled {% if not request.form.gender and (not patient or not patient.gender) %}selected{% endif %}>-- Select --</option>
+                        {% for g_option in gender_options %}
+                            <option value="{{ g_option }}" 
+                                    {% if request.form.gender == g_option or (patient and patient.gender == g_option) %}selected{% endif %}>
+                                {{ g_option }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                     <div class="invalid-feedback">Please select a gender.</div>
+                </div>
+                <div class="col-md-4 form-group">
+                    <label for="marital_status" class="form-label">Marital Status</label>
+                    <select id="marital_status" name="marital_status" class="form-select">
+                        <option value="" selected>-- Select --</option>
+                        {% for status in marital_statuses %}
+                            <option value="{{ status }}" {% if request.form.marital_status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                 <div class="col-md-4 form-group">
+                     <label for="occupation" class="form-label">Occupation</label>
+                    <input type="text" id="occupation" name="occupation" class="form-control" value="{{ request.form.occupation }}">
+                </div>
             </div>
-             <div class="form-group">
-                <label for="phone">Phone</label>
-                <input type="tel" id="phone" name="phone" class="form-control" placeholder="e.g., 123-456-7890">
-            </div>
-        </div>
-         <div class="form-row">
-            <div class="form-group">
-                <label for="gender">Gender</label>
-                <select id="gender" name="gender" class="form-select">
-                    <option value="" selected>-- Select --</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                    <option value="Prefer not to say">Prefer not to say</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="marital_status">Marital Status</label>
-                <select id="marital_status" name="marital_status" class="form-select">
-                    <option value="" selected>-- Select --</option>
-                    {% for status in marital_statuses %}
-                        <option value="{{ status }}">{{ status }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-             <div class="form-group">
-                 <label for="occupation">Occupation</label>
-                <input type="text" id="occupation" name="occupation" class="form-control">
-            </div>
-        </div>
 
-         {# --- Medical Info --- #}
-         <hr class="my-4">
-         <h3 class="mb-3 fs-5 text-secondary">Medical Information</h3>
-          <div class="form-row">
-            <div class="form-group">
-                <label for="blood_type">Blood Type</label>
-                <select id="blood_type" name="blood_type" class="form-select">
-                     <option value="" selected>-- Select --</option>
-                     {% for bt in blood_types %}
-                         <option value="{{ bt }}">{{ bt }}</option>
-                     {% endfor %}
-                </select>
+             <hr class="my-4">
+             <h3 class="mb-3 fs-5 text-secondary">Medical Information</h3>
+              <div class="row mb-3">
+                <div class="col-md-4 form-group">
+                    <label for="blood_type" class="form-label">Blood Type</label>
+                    <select id="blood_type" name="blood_type" class="form-select">
+                         <option value="" selected>-- Select --</option>
+                         {% for bt in blood_types %}
+                             <option value="{{ bt }}" {% if request.form.blood_type == bt %}selected{% endif %}>{{ bt }}</option>
+                         {% endfor %}
+                    </select>
+                </div>
+                 <div class="col-md-4 form-group">
+                    <label for="height_cm" class="form-label">Height (cm)</label>
+                    <input type="number" id="height_cm" name="height_cm" class="form-control" step="0.1" value="{{ request.form.height_cm }}">
+                </div>
+                 <div class="col-md-4 form-group">
+                    <label for="weight_kg" class="form-label">Weight (kg)</label>
+                    <input type="number" id="weight_kg" name="weight_kg" class="form-control" step="0.1" value="{{ request.form.weight_kg }}">
+                </div>
             </div>
-             <div class="form-group">
-                <label for="height_cm">Height (cm)</label>
-                <input type="number" id="height_cm" name="height_cm" class="form-control" step="0.1">
-            </div>
-             <div class="form-group">
-                <label for="weight_kg">Weight (kg)</label>
-                <input type="number" id="weight_kg" name="weight_kg" class="form-control" step="0.1">
-            </div>
-        </div>
 
-         {# --- Insurance Info --- #}
-         <hr class="my-4">
-         <h3 class="mb-3 fs-5 text-secondary">Insurance Information</h3>
-         <div class="form-row">
-             <div class="form-group">
-                <label for="insurance_provider_id">Insurance Provider</label>
-                <select id="insurance_provider_id" name="insurance_provider_id" class="form-select">
-                     <option value="" selected>-- Select Provider (Optional) --</option>
-                     {% for provider in insurance_providers %}
-                        <option value="{{ provider.provider_id }}">{{ provider.provider_name }}</option>
-                     {% endfor %}
-                </select>
+             <hr class="my-4">
+             <h3 class="mb-3 fs-5 text-secondary">Insurance Information</h3>
+             <div class="row mb-3">
+                 <div class="col-md-6 form-group">
+                    <label for="insurance_provider_id" class="form-label">Insurance Provider</label>
+                    <select id="insurance_provider_id" name="insurance_provider_id" class="form-select">
+                         <option value="" selected>-- Select Provider (Optional) --</option>
+                         {% for provider in insurance_providers %}
+                            <option value="{{ provider.id }}" {% if request.form.insurance_provider_id|string == provider.id|string %}selected{% endif %}>{{ provider.provider_name }}</option>
+                         {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="insurance_policy_number" class="form-label">Policy Number</label>
+                    <input type="text" id="insurance_policy_number" name="insurance_policy_number" class="form-control" value="{{ request.form.insurance_policy_number }}">
+                </div>
             </div>
-            <div class="form-group">
-                <label for="insurance_policy_number">Policy Number</label>
-                <input type="text" id="insurance_policy_number" name="insurance_policy_number" class="form-control">
+            <div class="row mb-3">
+                <div class="col-md-6 form-group">
+                    <label for="insurance_group_number" class="form-label">Group Number</label>
+                    <input type="text" id="insurance_group_number" name="insurance_group_number" class="form-control" value="{{ request.form.insurance_group_number }}">
+                </div>
+                <div class="col-md-6 form-group">
+                    <label for="insurance_expiration" class="form-label">Expiration Date</label>
+                    <input type="date" id="insurance_expiration" name="insurance_expiration" class="form-control" value="{{ request.form.insurance_expiration }}">
+                </div>
             </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="insurance_group_number">Group Number</label>
-                <input type="text" id="insurance_group_number" name="insurance_group_number" class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="insurance_expiration">Expiration Date</label>
-                <input type="date" id="insurance_expiration" name="insurance_expiration" class="form-control">
-            </div>
-        </div>
 
-
-        {# --- Form Actions --- #}
-        <div class="form-actions">
-            <a href="{{ url_for('patient_management.index') }}" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus"></i> Add Patient</button>
-        </div>
-    </form>
+            <div class="form-actions mt-4 text-end"> {# Using text-end for button alignment #}
+                <a href="{{ url_for('patient_management.index') }}" class="btn btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Add Patient</button>
+            </div>
+        </form>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+// Bootstrap 5 form validation
+(function () {
+  'use strict'
+  var forms = document.querySelectorAll('.needs-validation')
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+</script>
 {% endblock %}

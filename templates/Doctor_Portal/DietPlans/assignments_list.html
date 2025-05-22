@@ -3,7 +3,13 @@
 
 {% block head_extra %}
  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
- <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/disease_catalog.css') }}"> {# Shared styles #}
+ {# Link to your shared CSS or specific styles #}
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
+ <style>
+    .action-buttons form { margin-bottom: 0; }
+    .action-buttons .button-xsmall { padding: 0.15rem 0.4rem; font-size: 0.8em; } /* Smaller buttons */
+    .table th, .table td { vertical-align: middle; }
+ </style>
 {% endblock %}
 
 {% block content %}
@@ -17,12 +23,15 @@
     {% endif %}
 </div>
 
-{# Display Flash Messages #}
 {% include '_flash_messages.html' %}
 
-{# Add Filters/Search Form Here (Optional) #}
+{# TODO: Add Filters/Search Form Here (Optional) #}
+{# Consider filtering by Patient, Plan, Status (Active/Inactive), Date Range #}
 
 <div class="card shadow-sm content-section">
+    <div class="card-header">
+        <h5 class="mb-0">Current & Past Assignments</h5>
+    </div>
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-striped table-hover mb-0">
@@ -41,10 +50,11 @@
                     {% for assignment in assignments %}
                     <tr>
                         <td>
-                            {# Link to patient profile/progress if route exists #}
-                            <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" title="View Progress">
+                            {# Link to patient nutrition progress page #}
+                            <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" title="View Progress for {{ assignment.patient_first_name }}">
                                 {{ assignment.patient_first_name }} {{ assignment.patient_last_name }}
                             </a>
+                             <span class="text-muted small">(ID: {{ assignment.patient_user_id }})</span>
                         </td>
                         <td>
                             <a href="{{ url_for('diet_plans.view_diet_plan', plan_id=assignment.plan_id) }}" title="View Plan Details">
@@ -53,9 +63,9 @@
                         </td>
                         <td>
                             {% if assignment.assigner_first_name %}
-                                {{ assignment.assigner_first_name }} {{ assignment.assigner_last_name }}
+                                {{ assignment.assigner_first_name }} {{ assignment.assigner_last_name | first }}.
                             {% else %}
-                                <span class="text-muted">N/A</span>
+                                <span class="text-muted">N/A</span> {# e.g., if assigner user deleted #}
                             {% endif %}
                         </td>
                         <td>{{ assignment.start_date.strftime('%Y-%m-%d') if assignment.start_date else 'N/A' }}</td>
@@ -68,27 +78,38 @@
                             {% endif %}
                         </td>
                         <td class="action-buttons text-end">
-                             <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" class="button button-outline button-small" title="View Progress"><i class="fas fa-chart-line"></i></a>
-                             {# Conditionally show Deactivate button based on dietitian role #}
+                             <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" class="button button-outline button-info button-xsmall" title="View Progress"><i class="fas fa-chart-line"></i></a>
+                             {# Conditionally show Deactivate button based on dietitian role and if assignment is active #}
                              {% if assignment.active and can_manage_assignments %}
-                                <form action="{{ url_for('diet_plans.deactivate_assignment', assignment_id=assignment.user_diet_plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate this assignment?');">
-                                    <button type="submit" class="button button-outline button-warning button-small" title="Deactivate Assignment">
+                                <form action="{{ url_for('diet_plans.deactivate_assignment', assignment_id=assignment.user_diet_plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate this assignment? The patient will no longer see it as active.');">
+                                    <button type="submit" class="button button-outline button-warning button-xsmall" title="Deactivate Assignment">
                                         <i class="fas fa-times-circle"></i>
                                     </button>
                                 </form>
+                             {% elif not assignment.active and can_manage_assignments %}
+                                 {# Optional: Add a way to REACTIVATE if needed? Requires backend logic #}
+                                 {# <form action="{{ url_for('diet_plans.reactivate_assignment', assignment_id=assignment.user_diet_plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Reactivate this assignment?');">
+                                    <button type="submit" class="button button-outline button-success button-xsmall" title="Reactivate Assignment">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                </form> #}
                              {% endif %}
-                              {# Add Edit/Delete Assignment buttons if needed and authorized #}
+                              {# TODO: Add Edit/Delete Assignment buttons if feature is needed (Requires backend routes) #}
+                              {# Example Edit Button (if allowed) #}
+                              {# {% if can_manage_assignments %}
+                                <a href="{{ url_for('diet_plans.edit_assignment', assignment_id=assignment.user_diet_plan_id) }}" class="button button-outline button-secondary button-xsmall" title="Edit Assignment"><i class="fas fa-edit"></i></a>
+                              {% endif %} #}
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">No diet plan assignments found.</td>
+                        <td colspan="7" class="text-center text-muted py-4 fst-italic">No diet plan assignments found. {% if can_manage_assignments %}Use the button above to assign one.{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
-    {# Add Pagination Controls Here #}
+    {# TODO: Add Pagination Controls Here if implementing backend pagination #}
 </div>
 {% endblock %}

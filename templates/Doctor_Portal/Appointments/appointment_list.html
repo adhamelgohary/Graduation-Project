@@ -1,39 +1,76 @@
-{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS #}
+{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS and base.css #}
 
 {% block title %}Appointments - Doctor Portal{% endblock %}
 
 {% block head_extra %}
 {{ super() if super }} {# Include base head extras #}
 <style>
-    /* Styles remain the same as previously provided - aligned with Bootstrap */
-    body { background-color: #f8f9fa; }
-    .container-portal { background-color: #ffffff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07); margin-top: 20px; }
-    .table th, .table td { vertical-align: middle; font-size: 0.9rem; }
-    .table thead th { background-color: #eef2f7; border-bottom: 2px solid #dee2e6; font-weight: 600; color: #495057; }
-    .table-hover tbody tr:hover { background-color: #f1f5f9; }
-    .btn-primary-medical { background-color: #0d6efd; border-color: #0d6efd; font-weight: 500; }
-    .btn-primary-medical:hover { background-color: #0b5ed7; border-color: #0a58ca; }
-    .btn-outline-primary-medical { color: #0d6efd; border-color: #0d6efd; font-weight: 500; }
-    .btn-outline-primary-medical:hover { color: #fff; background-color: #0d6efd; border-color: #0d6efd; }
-    .btn-outline-secondary-medical { color: #6c757d; border-color: #6c757d; font-weight: 500; }
-    .btn-outline-secondary-medical:hover { color: #fff; background-color: #6c757d; border-color: #6c757d; }
-    .filter-section { background-color: #f8f9fc; padding: 20px; border: 1px solid #e3e6f0; border-radius: 6px; margin-bottom: 25px; }
-    .form-control, .form-select { border-radius: 0.3rem; font-size: 0.9rem; }
-    .form-label { font-size: 0.85rem; font-weight: 500; color: #5a5c69; margin-bottom: 0.3rem; }
-    .status-badge { padding: 0.35em 0.65em; font-size: 0.8em; font-weight: 600; border-radius: 0.25rem; text-transform: capitalize; }
-    .status-scheduled    { background-color: #cfe2ff; color: #084298; border: 1px solid #b6d4fe;}
-    .status-confirmed    { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;}
-    .status-completed    { background-color: #e2e3e5; color: #41464b; border: 1px solid #d3d6d8;}
-    .status-canceled     { background-color: #f8d7da; color: #58151c; border: 1px solid #f1c6cb;}
-    .status-no-show      { background-color: #fff3cd; color: #664d03; border: 1px solid #ffe69c;}
-    .status-rescheduled  { background-color: #ffe5d0; color: #803A00; border: 1px solid #fedec6;}
-    .pagination .page-link { color: #0d6efd; border-radius: 0.25rem; margin: 0 2px; font-size: 0.9rem; }
-    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: white; }
-    .pagination .page-item.disabled .page-link { color: #868e96; }
+    /* Styles leveraging base.css variables and Bootstrap compatibility */
+    .container-portal {
+        background-color: var(--color-surface, #ffffff);
+        padding: var(--spacing-lg, 1.5rem) var(--spacing-xl, 2rem);
+        border-radius: var(--border-radius, 0.3rem);
+        box-shadow: var(--box-shadow-lg, 0 4px 12px rgba(0,0,0,0.1));
+        margin-top: var(--spacing-lg, 1.5rem);
+    }
+    .filter-section {
+        background-color: #f8f9fc; /* Keep slightly different for visual separation */
+        padding: var(--spacing-lg, 1.5rem);
+        border: 1px solid var(--color-border, #dee2e6);
+        border-radius: var(--border-radius, 0.3rem);
+        margin-bottom: var(--spacing-xl, 2rem);
+    }
+    .table thead th { /* base.css styles .table thead th, this can be for minor overrides if needed */
+        font-weight: 600; /* Ensure header weight */
+    }
+    .table td, .table th {
+        vertical-align: middle;
+        font-size: 0.9rem; /* Standard table font size */
+    }
     .table th a { text-decoration: none; color: inherit; }
-    .table th a:hover { color: #0d6efd; }
-    .form-check-inline { margin-right: 0.8rem; } /* Space out status checkboxes */
+    .table th a:hover { color: var(--color-primary, #007bff); }
+
+    /* Status Badges - Retaining specific medical status colors */
+    .status-badge {
+        padding: 0.35em 0.65em;
+        font-size: 0.8em; /* Slightly smaller for fitting in table */
+        font-weight: 600;
+        border-radius: var(--border-radius, 0.25rem);
+        text-transform: capitalize;
+        border-width: 1px;
+        border-style: solid;
+        line-height: 1; /* Ensure consistent height */
+        display: inline-block; /* Ensure proper rendering */
+    }
+    .status-scheduled    { background-color: #cfe2ff; color: #084298; border-color: #b6d4fe;}
+    .status-confirmed    { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc;}
+    .status-completed    { background-color: #e2e3e5; color: #41464b; border-color: #d3d6d8;}
+    .status-canceled     { background-color: #f8d7da; color: #58151c; border-color: #f1c6cb;}
+    .status-no-show      { background-color: #fff3cd; color: #664d03; border-color: #ffe69c;}
+    .status-rescheduled  { background-color: #ffe5d0; color: #803A00; border-color: #fedec6;}
+
+    /* Pagination - Using Bootstrap defaults, ensure they align with base.css if overrides exist */
+    .pagination .page-link {
+        color: var(--color-primary, #007bff);
+        border-radius: var(--border-radius, 0.25rem);
+        margin: 0 2px;
+        font-size: 0.9rem;
+    }
+    .pagination .page-item.active .page-link {
+        background-color: var(--color-primary, #007bff);
+        border-color: var(--color-primary, #007bff);
+        color: white;
+    }
+    .pagination .page-item.disabled .page-link { color: var(--color-text-muted, #6c757d); }
+
+    .form-check-inline { margin-right: 0.8rem; }
     .form-check-label { font-size: 0.85rem; }
+    .form-label { /* Ensure alignment with base.css .form-label if used outside Bootstrap context */
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--color-text-muted, #5a5c69);
+        margin-bottom: 0.3rem;
+    }
 </style>
 {% endblock %}
 
@@ -41,7 +78,7 @@
 <div class="container-fluid container-portal">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-dark">Appointments</h1>
-        <a href="{{ url_for('appointments.create_appointment') }}" class="btn btn-sm btn-primary-medical">
+        <a href="{{ url_for('appointments.create_appointment') }}" class="button button-small button-success"> {# Changed to button-success for "New" #}
             <i class="fas fa-plus fa-sm me-1"></i> New Appointment
         </a>
     </div>
@@ -108,8 +145,8 @@
                     {% endfor %}
                 </div>
                 <div class="col-md-3 d-flex align-items-end justify-content-end">
-                    <button type="submit" class="btn btn-sm btn-primary-medical me-2">Apply Filters</button>
-                    <a href="{{ url_for('appointments.list_appointments') }}" class="btn btn-sm btn-outline-secondary-medical">Reset</a>
+                    <button type="submit" class="button button-small button-primary me-2">Apply Filters</button>
+                    <a href="{{ url_for('appointments.list_appointments') }}" class="button button-small button-outline button-secondary">Reset</a>
                 </div>
             </div>
         </form>
@@ -117,7 +154,7 @@
 
     {% if appointments %}
     <div class="table-responsive">
-        <table class="table table-hover align-middle"> {# Added align-middle #}
+        <table class="table table-hover align-middle">
             <thead>
                 <tr>
                     <th>
@@ -156,10 +193,10 @@
                     <td>{{ appt.type_name }}</td>
                     <td>{{ appt.location_name or 'N/A' }}</td>
                     <td><span class="status-badge status-{{ appt.status|lower|replace(' ', '-') }}">{{ appt.status }}</span></td>
-                    <td class="text-end">
-                        <a href="{{ url_for('appointments.view_appointment', appointment_id=appt.appointment_id) }}" class="btn btn-sm btn-outline-primary-medical me-1" title="View Details"><i class="fas fa-eye fa-fw"></i></a>
-                        {% if appt.status not in TERMINAL_APPT_STATUSES %} {# Use constant from Python if possible, or list #}
-                        <a href="{{ url_for('appointments.reschedule_appointment', appointment_id=appt.appointment_id) }}" class="btn btn-sm btn-outline-secondary-medical" title="Reschedule"><i class="fas fa-calendar-alt fa-fw"></i></a>
+                    <td class="text-end action-buttons">
+                        <a href="{{ url_for('appointments.view_appointment', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-info me-1" title="View Details"><i class="fas fa-eye fa-fw"></i></a>
+                        {% if appt.status not in TERMINAL_APPT_STATUSES %}
+                        <a href="{{ url_for('appointments.reschedule_appointment', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-secondary" title="Reschedule"><i class="fas fa-calendar-alt fa-fw"></i></a>
                         {% endif %}
                     </td>
                 </tr>
@@ -175,7 +212,6 @@
                 <a class="page-link" href="{{ url_for('appointments.list_appointments', page=current_page-1, search=search_term, sort_by=sort_by, sort_dir=sort_dir, view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">«</a>
             </li>
             {% for page_num in range(1, total_pages + 1) %}
-             {# Consider adding logic here to show only a few page numbers if total_pages is very large #}
             <li class="page-item {% if page_num == current_page %}active{% endif %}">
                 <a class="page-link" href="{{ url_for('appointments.list_appointments', page=page_num, search=search_term, sort_by=sort_by, sort_dir=sort_dir, view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">{{ page_num }}</a>
             </li>
@@ -188,7 +224,7 @@
     {% endif %}
 
     {% else %}
-    <div class="alert alert-light text-center mt-4" role="alert" style="border: 1px dashed #ccc;">
+    <div class="alert alert-light text-center mt-4" role="alert" style="border: 1px dashed var(--color-border, #ccc);">
         No appointments found matching your criteria.
     </div>
     {% endif %}
@@ -211,14 +247,11 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             startDateCol.style.display = 'none';
             endDateCol.style.display = 'none';
-            // Optional: Clear date fields when switching away from custom
-            // document.getElementById('start_date').value = '';
-            // document.getElementById('end_date').value = '';
         }
     }
-    if(viewModeSelect) { // Add check if element exists
+    if(viewModeSelect) {
         viewModeSelect.addEventListener('change', toggleDateFields);
-        toggleDateFields(); // Initial setup
+        toggleDateFields();
     }
 });
 </script>

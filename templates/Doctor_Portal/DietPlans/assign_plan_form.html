@@ -1,9 +1,18 @@
-{% extends "Doctor_Portal/base.html" %} {# Or your common portal base template #}
+{% extends "Doctor_Portal/base.html" %}
 {% block title %}Assign Diet Plan{% endblock %}
 
 {% block head_extra %}
-    {# Add CSS for Select2 or other form enhancements if used #}
-    {# <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> #}
+    {# Add CSS for Select2 #}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    {# Link to your shared CSS or specific styles #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
+    <style>
+        /* Adjust Select2 height to match Bootstrap */
+        .select2-container .select2-selection--single { height: calc(1.5em + .75rem + 2px)!important; padding: .375rem .75rem; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered{ line-height: 1.5; padding-left: 0;}
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: calc(1.5em + .75rem)!important;}
+        .select2-container { width: 100% !important; } /* Ensure Select2 takes full width */
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -14,10 +23,12 @@
     </a>
 </div>
 
-{# Display Flash Messages #}
-{% include '_flash_messages.html' %} {# Assuming a partial template for flash messages #}
+{% include '_flash_messages.html' %}
 
 <div class="card shadow-sm content-section">
+    <div class="card-header">
+        <h5 class="mb-0">Assignment Details</h5>
+    </div>
     <div class="card-body">
         <form action="{{ url_for('diet_plans.assign_diet_plan') }}" method="POST" class="data-form">
             {# CSRF Token if using Flask-WTF #}
@@ -26,29 +37,29 @@
             <div class="row">
                 <div class="col-md-6 form-group mb-3">
                     <label for="patient_user_id" class="form-label">Select Patient <span class="text-danger">*</span></label>
-                    <select id="patient_user_id" name="patient_user_id" class="form-select" required>
-                        <option value="" selected disabled>-- Choose Patient --</option>
+                    {# Use form_data for repopulation on error #}
+                    <select id="patient_user_id" name="patient_user_id" class="form-select select2-basic" required data-placeholder="-- Choose Patient --">
+                        <option value=""></option> {# Required empty option for Select2 placeholder #}
+                        {% set selected_patient_id = form_data.patient_user_id | int if form_data else None %}
                         {% for patient in patients %}
-                            {# Check form_data first for repopulation on error #}
-                            <option value="{{ patient.user_id }}" {% if form_data and form_data.patient_user_id|int == patient.user_id %}selected{% endif %}>
+                            <option value="{{ patient.user_id }}" {% if selected_patient_id == patient.user_id %}selected{% endif %}>
                                 {{ patient['CONCAT(first_name, \' \', last_name)'] }} (ID: {{ patient.user_id }})
                             </option>
                         {% endfor %}
                     </select>
-                    {# Add Select2 class here if using it #}
                 </div>
 
                 <div class="col-md-6 form-group mb-3">
                     <label for="plan_id" class="form-label">Select Diet Plan <span class="text-danger">*</span></label>
-                    <select id="plan_id" name="plan_id" class="form-select" required>
-                        <option value="" selected disabled>-- Choose Diet Plan --</option>
-                        {% for plan in diet_plans %}
-                             <option value="{{ plan.plan_id }}" {% if form_data and form_data.plan_id|int == plan.plan_id %}selected{% endif %}>
+                    <select id="plan_id" name="plan_id" class="form-select select2-basic" required data-placeholder="-- Choose Diet Plan --">
+                         <option value=""></option> {# Required empty option for Select2 placeholder #}
+                         {% set selected_plan_id = form_data.plan_id | int if form_data else None %}
+                         {% for plan in diet_plans %}
+                             <option value="{{ plan.plan_id }}" {% if selected_plan_id == plan.plan_id %}selected{% endif %}>
                                 {{ plan.plan_name }} (ID: {{ plan.plan_id }})
                              </option>
                         {% endfor %}
                     </select>
-                     {# Add Select2 class here if using it #}
                 </div>
             </div>
 
@@ -60,12 +71,13 @@
                  <div class="col-md-6 form-group mb-3">
                     <label for="end_date" class="form-label">End Date (Optional)</label>
                     <input type="date" id="end_date" name="end_date" class="form-control" value="{{ form_data.end_date if form_data else '' }}">
+                     <small class="form-text text-muted">Leave blank if the plan doesn't have a fixed end date.</small>
                 </div>
             </div>
 
             <div class="form-group mb-3">
                 <label for="notes" class="form-label">Notes for Patient (Optional)</label>
-                <textarea id="notes" name="notes" class="form-control" rows="3">{{ form_data.notes if form_data else '' }}</textarea>
+                <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="e.g., Focus on hydration, any specific instructions...">{{ form_data.notes if form_data else '' }}</textarea>
             </div>
 
             <div class="form-actions text-end mt-4 pt-3 border-top">
@@ -80,15 +92,19 @@
 {% endblock %}
 
 {% block scripts %}
-    {# Add JS for Select2 if used #}
-    {#
+    {# Add JS for Select2 #}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#patient_user_id').select2({ placeholder: "-- Choose Patient --", allowClear: true });
-            $('#plan_id').select2({ placeholder: "-- Choose Diet Plan --", allowClear: true });
+            // Initialize basic Select2 on elements with the class
+             $('.select2-basic').each(function() {
+                $(this).select2({
+                    placeholder: $(this).data('placeholder') || "-- Select --", // Use data-placeholder or default
+                    allowClear: true,
+                    width: '100%' // Ensure it takes full width
+                });
+             });
         });
     </script>
-    #}
 {% endblock %}

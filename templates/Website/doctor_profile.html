@@ -1,11 +1,13 @@
 {# templates/Website/doctor_profile.html #}
 {% extends "Website/base.html" %}
 
-{% block title %}Dr. {{ doctor.first_name }} {{ doctor.last_name }} - Profile{% endblock %}
+{% block title %}
+    Dr. {{ doctor.first_name }} {{ doctor.last_name }} - 
+    {{ doctor.specialization_name | default('Specialist') }} Profile
+{% endblock %}
 
 {% block head_extra %}
     <link rel="stylesheet" href="{{ url_for('static', filename='Website/doctor_profile.css') }}">
-    {# --- Link the new component CSS --- #}
     <link rel="stylesheet" href="{{ url_for('static', filename='Website/components.css') }}">
 {% endblock %}
 
@@ -14,81 +16,155 @@
   const USER_IS_LOGGED_IN = {{ is_logged_in | tojson }};
 </script>
 
-<div class="container profile-container">
+<div class="container profile-container doctor-profile-page">
 
     <aside class="profile-sidebar">
-        <div class="profile-card"> {# Styled in components.css or doctor_profile.css #}
-            <img src="{{ url_for('static', filename=doctor.profile_picture_processed_url) }}" alt="Photo of Dr. {{ doctor.first_name }} {{ doctor.last_name }}">
-            <h2>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h2>
-            <p class="specialty">{{ doctor.specialization_name | default('Specialist') }}</p>
-            <p class="department">{{ doctor.department_name | default('') }}</p>
-
-            <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}"
-               class="btn-schedule schedule-prompt-btn" {# Styled in components.css #}
-               data-schedule-url="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}">
-                Schedule Appointment
-            </a>
+        <div class="profile-card">
+            <div class="profile-card-image-container">
+                <img src="{{ url_for('static', filename=doctor.profile_picture_processed_url) }}" 
+                     alt="Photo of Dr. {{ doctor.first_name }} {{ doctor.last_name }}" 
+                     class="doctor-profile-image">
+            </div>
+            <div class="profile-card-info">
+                <h2>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h2>
+                <p class="specialty">{{ doctor.specialization_name | default('Specialist') }}</p>
+                <p class="department">{{ doctor.department_name | default('') }}</p>
+            </div>
         </div>
     </aside>
 
     <section class="profile-main">
-        <div class="profile-details-card"> {# Styled in components.css or doctor_profile.css #}
-            <h3>About Dr. {{ doctor.last_name }}</h3>
-            {% if doctor.biography %}
-                <p>{{ doctor.biography | safe }}</p>
-            {% else %}
-                <p><i>Detailed biography coming soon.</i></p>
-            {% endif %}
+        <div class="profile-details-card card">
+            <div class="card-body">
+                <div class="profile-section">
+                    <h4><i class="fas fa-info-circle fa-fw"></i> About Dr. {{ doctor.last_name }}</h4>
+                    {% if doctor.biography %}
+                        <p>{{ doctor.biography | safe }}</p>
+                    {% else %}
+                        <p><i>A detailed biography for Dr. {{ doctor.last_name }} is not yet available.</i></p>
+                    {% endif %}
+                </div>
 
-             <p>
-                <strong>Accepting New Patients:</strong>
-                {% if doctor.accepting_new_patients %}
-                    <span class="status-badge accepting">Yes</span> {# Styled in components.css #}
-                {% else %}
-                     <span class="status-badge not-accepting">No</span> {# Styled in components.css #}
+                <div class="profile-section">
+                    <h4><i class="fas fa-hospital-user fa-fw"></i> Patient Information</h4>
+                    <p>
+                        <strong>Accepting New Patients:</strong>
+                        {% if doctor.accepting_new_patients %}
+                            <span class="status-badge status-success">Yes</span>
+                        {% else %}
+                            <span class="status-badge status-danger">No</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                {% if doctor.specialization_name or doctor.medical_school %}
+                <div class="profile-section">
+                    <h4><i class="fas fa-user-graduate fa-fw"></i> Education & Specialization</h4>
+                    {% if doctor.specialization_name %}
+                        <p><strong>Specialty:</strong> {{ doctor.specialization_name }}</p>
+                        {% if doctor.specialization_description %}
+                            <p class="text-muted small">{{ doctor.specialization_description }}</p>
+                        {% endif %}
+                    {% endif %}
+                    {% if doctor.department_name %}
+                        <p><strong>Department:</strong> {{ doctor.department_name }}</p>
+                        {% if doctor.department_description %}
+                             <p class="text-muted small">{{ doctor.department_description }}</p>
+                        {% endif %}
+                    {% endif %}
+                    {% if doctor.medical_school %}
+                        <p><strong>Medical School:</strong> {{ doctor.medical_school }}</p>
+                    {% endif %}
+                    {% if doctor.graduation_year %}
+                        <p><strong>Graduation Year:</strong> {{ doctor.graduation_year }}</p>
+                    {% endif %}
+                </div>
                 {% endif %}
-             </p>
 
-             {% if doctor.clinic_address %}
-             <h3>Clinic Address</h3>
-             <p>{{ doctor.clinic_address | replace('\n', '<br>') | safe }}</p>
-             {% endif %}
 
-             <h3>Contact Information</h3>
-             <p><strong>Email:</strong> {{ doctor.email | default('Not Publicly Available') }}</p>
-             <p><strong>Phone:</strong> {{ doctor.phone | default('Not Publicly Available') }}</p>
+                {% if doctor.clinic_address %}
+                <div class="profile-section">
+                    <h4><i class="fas fa-map-marker-alt fa-fw"></i> Primary Clinic Location</h4>
+                    <address>
+                        {{ doctor.clinic_address | replace('\n', '<br>') | safe }}<br>
+                        {% if doctor.clinic_city %}{{ doctor.clinic_city }}{% endif %}{% if doctor.clinic_city and doctor.clinic_state %}, {% endif %}{% if doctor.clinic_state %}{{ doctor.clinic_state }}{% endif %} {{ doctor.clinic_zip_code | default('') }}
+                    </address>
+                    {% if doctor.clinic_phone %}
+                        <p><strong>Location Phone:</strong> {{ doctor.clinic_phone }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
 
-             {% if doctor.certifications %}
-                 <h3>Certifications & Credentials</h3>
-                 <ul>
-                     {% for cert in doctor.certifications.split('\n') %}
-                        {% set cert_trimmed = cert.strip() %}
-                        {% if cert_trimmed %}<li>{{ cert_trimmed }}</li>{% endif %}
-                     {% endfor %}
-                 </ul>
-             {% endif %}
+                <div class="profile-section">
+                    <h4><i class="fas fa-address-book fa-fw"></i> Contact Dr. {{ doctor.last_name }}</h4>
+                    <p><strong>Email:</strong> {{ doctor.email | default('Contact clinic for email') }}</p>
+                    <p><strong>Phone:</strong> {{ doctor.phone | default('Contact clinic for phone') }}</p>
+                    <p class="text-muted small">For appointments, please use the "Schedule Appointment" button or contact our main clinic line.</p>
+                </div>
 
+                {% if doctor.certifications %}
+                <div class="profile-section">
+                    <h4><i class="fas fa-certificate fa-fw"></i> Certifications & Credentials</h4>
+                    <ul class="credentials-list">
+                        {% for cert_line in doctor.certifications.split('\n') %}
+                            {% set cert_trimmed = cert_line.strip() %}
+                            {% if cert_trimmed %}
+                                <li><i class="fas fa-check-circle text-success me-2"></i>{{ cert_trimmed }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if doctor.documents %}
+                <div class="profile-section">
+                    <h4><i class="fas fa-folder-open fa-fw"></i> Associated Documents</h4>
+                    <ul class="documents-list">
+                        {% for doc in doctor.documents %}
+                            <li>
+                                <i class="fas fa-file-alt fa-fw me-2 document-icon-{{ doc.document_type | lower }}"></i>
+                                <div> {# Wrap text content for better alignment with icon #}
+                                    <strong>{{ doc.document_type | title }}:</strong> {{ doc.file_name }}
+                                    <small class="text-muted d-block">Uploaded: {{ doc.upload_date.strftime('%Y-%m-%d') }}</small>
+                                    {# Example Download Link (requires backend route) #}
+                                    {# <a href="{{ url_for('doctor.download_document', document_id=doc.document_id) if doc.downloadable_url == '#' else doc.downloadable_url }}" 
+                                       class="button button-outline button-xsmall mt-1" 
+                                       target="_blank" rel="noopener noreferrer">View/Download</a> #}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                <div class="profile-card-action">
+                  <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}"
+                     class="button button-primary btn-schedule schedule-prompt-btn"
+                     data-schedule-url="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}">
+                      <i class="fas fa-calendar-plus"></i> Schedule Appointment
+                  </a>
+              </div>
+                
+            </div>
         </div>
     </section>
-
 </div>
 
-{# Login/Register Modal (Structure remains) #}
+{# Login/Register Modal #}
 <div class="modal-overlay" id="login-register-modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeModal('login-register-modal')">×</button>
         <h2>Action Required</h2>
         <p>Please log in or create an account to schedule an appointment.</p>
         <div class="modal-actions">
-            <a href="{{ url_for('login.login_route', next=request.path) }}" class="btn-modal btn-login">Login</a>
-            <a href="{{ url_for('register.register_route') }}" class="btn-modal btn-register">Register</a>
+            <a href="{{ url_for('login.login_route', next=request.path) }}" class="button btn-modal btn-login">Login</a>
+            <a href="{{ url_for('register.register_route') }}" class="button btn-modal btn-register">Register</a>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-  {# Modal JavaScript Logic (Keep as is) #}
+  {# Modal JavaScript Logic #}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const scheduleButtons = document.querySelectorAll('.schedule-prompt-btn');
@@ -97,27 +173,27 @@
       const isLoggedIn = (typeof USER_IS_LOGGED_IN !== 'undefined' && USER_IS_LOGGED_IN);
 
       if (!modal || !modalOverlay) {
-          console.error("Modal elements not found on profile page!");
+          console.warn("Login/Register modal elements not found on profile page.");
           return;
       }
-
       scheduleButtons.forEach(button => {
         button.addEventListener('click', function(event) {
           if (isLoggedIn) {
-            console.log("User logged in, proceeding to schedule from profile.");
             window.location.href = this.getAttribute('data-schedule-url');
-            event.preventDefault();
           } else {
-            event.preventDefault();
-            console.log("User not logged in, showing modal from profile.");
+            event.preventDefault(); 
             openModal('login-register-modal');
           }
         });
       });
-
       window.openModal = function(modalId) { const m=document.getElementById(modalId); if(m) m.classList.add('active'); }
       window.closeModal = function(modalId) { const m=document.getElementById(modalId); if(m) m.classList.remove('active'); }
       modalOverlay.addEventListener('click', function(event) { if (event.target === modalOverlay) { closeModal('login-register-modal'); } });
+      document.addEventListener('keydown', function(event) {
+        if (event.key === "Escape" && modal.classList.contains('active')) {
+            closeModal('login-register-modal');
+        }
+      });
     });
   </script>
 {% endblock %}

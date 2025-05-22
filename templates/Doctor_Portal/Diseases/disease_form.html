@@ -4,24 +4,19 @@
 {% block title %}{{ form_title | default('Manage Disease/Condition') }}{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    {# Link your specific CSS for this page #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/disease_catalog.css') }}">
-    {# Add Select2 CSS if using #}
-    {# <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> #}
     <style>
-        .form-section h4 { margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color, #eee); color: var(--primary-color); font-size: 1.2em; }
+        .form-section h4 { margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color, #eee); color: var(--color-primary, #007bff); font-size: 1.2em; display: flex; align-items: center; }
+        .form-section h4 .fa-fw { margin-right: 0.5em; }
         .form-section { margin-bottom: 1.5rem; padding-bottom: 1rem; }
         .form-actions { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color, #eee); text-align: right; }
         .current-image-display img { border: 1px solid var(--border-color, #ddd); padding: 3px; margin: 5px 0; max-width: 250px; max-height: 180px; object-fit: contain; display: block; border-radius: 4px;}
-        .multi-select-label { font-weight: 500; margin-bottom: 0.3rem; display: block; }
-        select[multiple].form-control { height: 150px; background-color: var(--input-bg); color: var(--text-color); border-color: var(--border-color); }
-
-        select[multiple] option { padding: 3px 6px; } /* Basic padding for options */
-        [data-theme="dark"] select[multiple] option { color: var(--text-color, #e0e0e0); background-color: var(--input-bg, #2d3748); }
-        [data-theme="dark"] select[multiple] option:checked { background: var(--primary-color, #3B82F6); color: #fff; } /* Use primary color for selection */
-        [data-theme="light"] select[multiple] option { color: #212529; background-color: #fff; }
-        [data-theme="light"] select[multiple] option:checked { background: var(--primary-color, #3B82F6); color: #fff; }
+        textarea.form-control { min-height: 90px; }
+        textarea.emergency-symptoms-textarea { border: 2px solid var(--color-danger, #dc3545); background-color: #fef3f2; min-height: 100px; }
+        label[for="emergency_symptoms_text"] { color: var(--color-danger, #dc3545); font-weight: bold; }
+        label[for="emergency_symptoms_text"] .sos-emoji { font-size: 1.1em; margin-right: 0.3em; }
+        .form-text.text-muted { font-size: 0.8rem; }
     </style>
 {% endblock %}
 
@@ -33,284 +28,124 @@
     </a>
 </div>
 
-{# --- Flash Messages & Validation Errors --- #}
-{% if errors %} {# Display errors passed from backend validation on POST #}
+{% include '_flash_messages.html' %}
+{% if errors %}
 <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
     <strong>Please correct the following errors:</strong>
     <ul class="mb-0"> {% for error in errors %} <li>{{ error }}</li> {% endfor %} </ul>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endif %}
-{# --- End Errors --- #}
-
 
 <div class="card shadow-sm disease-form content-section">
     <div class="card-body">
         <form action="{{ form_action }}" method="POST" class="data-form" enctype="multipart/form-data">
-            {# --- Basic Info --- #}
             <div class="form-section">
                 <h4><i class="fas fa-notes-medical fa-fw"></i> Basic Information</h4>
                 <div class="row g-3">
-                    <div class="col-md-8 form-group">
-                        <label for="condition_name" class="form-label">Condition Name <span class="text-danger">*</span></label>
-                        <input type="text" id="condition_name" name="condition_name" class="form-control" value="{{ disease.condition_name if disease else request.form.get('condition_name', '') }}" required>
-                    </div>
-                    <div class="col-md-4 form-group">
-                        <label for="icd_code" class="form-label">ICD Code</label>
-                        <input type="text" id="icd_code" name="icd_code" class="form-control" value="{{ disease.icd_code if disease else request.form.get('icd_code', '') }}" placeholder="e.g., I10">
-                    </div>
-                    <div class="col-12 form-group">
-                        <label for="description" class="form-label">Brief Description</label>
-                        <textarea id="description" name="description" class="form-control" rows="3">{{ disease.description if disease else request.form.get('description', '') }}</textarea>
-                    </div>
+                    <div class="col-md-8 form-group"><label for="condition_name" class="form-label">Condition Name <span class="text-danger">*</span></label><input type="text" id="condition_name" name="condition_name" class="form-control" value="{{ disease.condition_name if disease else request.form.get('condition_name', '') }}" required></div>
+                    <div class="col-md-4 form-group"><label for="icd_code" class="form-label">ICD Code</label><input type="text" id="icd_code" name="icd_code" class="form-control" value="{{ disease.icd_code if disease else request.form.get('icd_code', '') }}" placeholder="e.g., I10"></div>
+                    <div class="col-12 form-group"><label for="description" class="form-label">Brief Description</label><textarea id="description" name="description" class="form-control" rows="3">{{ disease.description if disease else request.form.get('description', '') }}</textarea></div>
                 </div>
             </div>
 
-            {# --- Classification & Relevance --- #}
-             <div class="form-section">
+            <div class="form-section">
                 <h4><i class="fas fa-tags fa-fw"></i> Classification & Relevance</h4>
                 <div class="row g-3">
-                    <div class="col-md-3 form-group">
-                        <label for="urgency_level" class="form-label">Urgency Level <span class="text-danger">*</span></label>
-                        <select id="urgency_level" name="urgency_level" class="form-select" required>
-                            <option value="" disabled {% if not (disease.urgency_level if disease else request.form.get('urgency_level')) %}selected{% endif %}>-- Select --</option>
-                            {% set selected_urgency = (disease.urgency_level if disease else request.form.get('urgency_level', '')) | string %}
-                            {% for level in urgency_levels or [] %} {# Add default empty list #}
-                                <option value="{{ level }}" {% if selected_urgency == level %}selected{% endif %}>{{ level | title }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                     <div class="col-md-3 form-group">
-                        <label for="condition_type" class="form-label">Condition Type</label>
-                        <select id="condition_type" name="condition_type" class="form-select">
-                             <option value="" {% if not (disease.condition_type if disease else request.form.get('condition_type')) %}selected{% endif %}>-- Optional --</option>
-                              {% set selected_type = (disease.condition_type if disease else request.form.get('condition_type', '')) | string %}
-                             {% for type_val in condition_types or [] %}
-                                 <option value="{{ type_val }}" {% if selected_type == type_val %}selected{% endif %}>{{ type_val | title }}</option>
-                             {% endfor %}
-                        </select>
-                    </div>
-                     <div class="col-md-3 form-group">
-                         <label for="gender_relevance" class="form-label">Gender Relevance <span class="text-danger">*</span></label>
-                        <select id="gender_relevance" name="gender_relevance" class="form-select" required>
-                            {% set selected_gender = (disease.gender_relevance if disease else request.form.get('gender_relevance', 'all')) | string %}
-                            {% for relevance in gender_relevance_opts or [] %}
-                                <option value="{{ relevance }}" {% if selected_gender == relevance %}selected{% endif %}>{{ relevance | title }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                     <div class="col-md-3 form-group">
-                        <label for="department_id" class="form-label">Department</label>
-                        <select id="department_id" name="department_id" class="form-select">
-                             <option value="" {% if not (disease.department_id if disease else request.form.get('department_id')) %}selected{% endif %}>-- Optional --</option>
-                              {% set selected_dept_id = (disease.department_id if disease else request.form.get('department_id', '')) | string %}
-                             {% for dept in departments or [] %}
-                                 <option value="{{ dept.department_id }}" {% if selected_dept_id == dept.department_id|string %}selected{% endif %}>{{ dept.name }}</option>
-                             {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label for="age_relevance" class="form-label">Age Relevance</label>
-                        <input type="text" id="age_relevance" name="age_relevance" class="form-control" value="{{ disease.age_relevance if disease else request.form.get('age_relevance', '') }}" placeholder="e.g., adults, children">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label for="specialist_type" class="form-label">Relevant Specialist</label>
-                        <input type="text" id="specialist_type" name="specialist_type" class="form-control" value="{{ disease.specialist_type if disease else request.form.get('specialist_type', '') }}" placeholder="e.g., Cardiologist">
-                    </div>
-                 </div>
+                    <div class="col-md-3 form-group"><label for="urgency_level" class="form-label">Urgency Level <span class="text-danger">*</span></label><select id="urgency_level" name="urgency_level" class="form-select" required><option value="" disabled {% if not (disease.urgency_level if disease else request.form.get('urgency_level')) %}selected{% endif %}>-- Select --</option>{% set s_urg = (disease.urgency_level if disease else request.form.get('urgency_level', ''))|string %}{% for l in urgency_levels or [] %}<option value="{{ l }}" {% if s_urg == l %}selected{% endif %}>{{ l|title }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 form-group"><label for="condition_type" class="form-label">Condition Type</label><select id="condition_type" name="condition_type" class="form-select"><option value="" {% if not (disease.condition_type if disease else request.form.get('condition_type')) %}selected{% endif %}>-- Optional --</option>{% set s_type = (disease.condition_type if disease else request.form.get('condition_type', ''))|string %}{% for t in condition_types or [] %}<option value="{{ t }}" {% if s_type == t %}selected{% endif %}>{{ t|title }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 form-group"><label for="gender_relevance" class="form-label">Gender Relevance <span class="text-danger">*</span></label><select id="gender_relevance" name="gender_relevance" class="form-select" required>{% set s_gen = (disease.gender_relevance if disease else request.form.get('gender_relevance', 'all'))|string %}{% for r in gender_relevance_opts or [] %}<option value="{{ r }}" {% if s_gen == r %}selected{% endif %}>{{ r|title }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3 form-group"><label for="department_id" class="form-label">Department</label><select id="department_id" name="department_id" class="form-select"><option value="" {% if not (disease.department_id if disease else request.form.get('department_id')) %}selected{% endif %}>-- Optional --</option>{% set s_dept = (disease.department_id if disease else request.form.get('department_id', ''))|string %}{% for d in departments or [] %}<option value="{{ d.department_id }}" {% if s_dept == d.department_id|string %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6 form-group"><label for="age_relevance" class="form-label">Age Relevance</label><input type="text" id="age_relevance" name="age_relevance" class="form-control" value="{{ disease.age_relevance if disease else request.form.get('age_relevance', '') }}" placeholder="e.g., Adults, Children"></div>
+                    <div class="col-md-6 form-group"><label for="specialist_type" class="form-label">Relevant Specialist</label><input type="text" id="specialist_type" name="specialist_type" class="form-control" value="{{ disease.specialist_type if disease else request.form.get('specialist_type', '') }}" placeholder="e.g., Cardiologist"></div>
+                </div>
             </div>
 
-            {# --- Detailed Information --- #}
             <div class="form-section">
-                <h4><i class="fas fa-file-medical-alt fa-fw"></i> Detailed Information</h4>
-                 <div class="form-group mb-3">
-                    <label for="overview" class="form-label">Overview</label>
-                    <textarea id="overview" name="overview" class="form-control" rows="4">{{ disease.overview if disease else request.form.get('overview', '') }}</textarea>
-                </div>
-                 <div class="form-group mb-3">
-                    <label for="symptoms_text" class="form-label">Common Symptoms (Text)</label>
-                    <textarea id="symptoms_text" name="symptoms_text" class="form-control" rows="4">{{ disease.symptoms_text if disease else request.form.get('symptoms_text', '') }}</textarea>
-                </div>
-                 <div class="form-group mb-3">
-                    <label for="causes_text" class="form-label">Potential Causes (Text)</label>
-                    <textarea id="causes_text" name="causes_text" class="form-control" rows="4">{{ disease.causes_text if disease else request.form.get('causes_text', '') }}</textarea>
-                </div>
+                <h4><i class="fas fa-file-medical-alt fa-fw"></i> Symptoms, Causes & Complications</h4>
+                <div class="form-group mb-3"><label for="overview" class="form-label">Overview</label><textarea id="overview" name="overview" class="form-control" rows="3">{{ disease.overview if disease else request.form.get('overview', '') }}</textarea></div>
+                <div class="form-group mb-3"><label for="emergency_symptoms_text" class="form-label"><span class="sos-emoji">🆘</span> Emergency Symptoms (Text)</label><textarea id="emergency_symptoms_text" name="emergency_symptoms_text" class="form-control emergency-symptoms-textarea" rows="4" placeholder="List critical symptoms, one per line or comma-separated.">{{ disease.emergency_symptoms_text if disease else request.form.get('emergency_symptoms_text', '') }}</textarea><small class="form-text text-muted">Indicate symptoms requiring immediate medical attention.</small></div>
+                <div class="form-group mb-3"><label for="regular_symptoms_text" class="form-label">Regular Symptoms (Text)</label><textarea id="regular_symptoms_text" name="regular_symptoms_text" class="form-control" rows="4" placeholder="List common symptoms, one per line or comma-separated.">{{ disease.regular_symptoms_text if disease else request.form.get('regular_symptoms_text', '') }}</textarea></div>
+                <div class="form-group mb-3"><label for="causes_text" class="form-label">Potential Causes (Text)</label><textarea id="causes_text" name="causes_text" class="form-control" rows="3">{{ disease.causes_text if disease else request.form.get('causes_text', '') }}</textarea></div>
+                <div class="form-group mb-3"><label for="complications_text" class="form-label">Potential Complications (Text)</label><textarea id="complications_text" name="complications_text" class="form-control" rows="3" placeholder="List potential complications.">{{ disease.complications_text if disease else request.form.get('complications_text', '') }}</textarea></div>
             </div>
 
-            {# --- Testing & Diagnosis --- #}
+            <div class="form-section">
+                <h4><i class="fas fa-microscope fa-fw"></i> Risk Factors & Protocols</h4>
+                <div class="form-group mb-3"><label for="risk_factors_text" class="form-label">Risk Factors (Text)</label><textarea id="risk_factors_text" name="risk_factors_text" class="form-control" rows="3" placeholder="List relevant risk factors.">{{ disease.risk_factors_text if disease else request.form.get('risk_factors_text', '') }}</textarea></div>
+                <div class="form-group mb-3"><label for="treatment_protocols_text" class="form-label">Treatment Protocols (Text)</label><textarea id="treatment_protocols_text" name="treatment_protocols_text" class="form-control" rows="3" placeholder="Outline common treatment approaches.">{{ disease.treatment_protocols_text if disease else request.form.get('treatment_protocols_text', '') }}</textarea></div>
+            </div>
+
             <div class="form-section">
                 <h4><i class="fas fa-vials fa-fw"></i> Testing & Diagnosis</h4>
                 <div class="row g-3">
-                     <div class="col-md-6 form-group">
-                        <label for="testing_type_id" class="form-label">Primary Testing Type</label>
-                        <select id="testing_type_id" name="testing_type_id" class="form-select">
-                             <option value="" {% if not (disease.testing_type_id if disease else request.form.get('testing_type_id')) %}selected{% endif %}>-- Optional --</option>
-                              {% set selected_test_id = (disease.testing_type_id if disease else request.form.get('testing_type_id', '')) | string %}
-                             {% for ttype in testing_types or [] %}
-                                 <option value="{{ ttype.testing_type_id }}" {% if selected_test_id == ttype.testing_type_id|string %}selected{% endif %}>{{ ttype.name }}</option>
-                             {% endfor %}
-                        </select>
-                    </div>
-                     <div class="col-md-6 form-group">
-                        <label for="diagnosis_type_id" class="form-label">Primary Diagnosis Method</label>
-                        <select id="diagnosis_type_id" name="diagnosis_type_id" class="form-select">
-                             <option value="" {% if not (disease.diagnosis_type_id if disease else request.form.get('diagnosis_type_id')) %}selected{% endif %}>-- Optional --</option>
-                              {% set selected_diag_id = (disease.diagnosis_type_id if disease else request.form.get('diagnosis_type_id', '')) | string %}
-                             {% for dtype in diagnosis_types or [] %}
-                                 <option value="{{ dtype.diagnosis_type_id }}" {% if selected_diag_id == dtype.diagnosis_type_id|string %}selected{% endif %}>{{ dtype.name }}</option>
-                             {% endfor %}
-                        </select>
-                    </div>
-                     <div class="col-12 form-group">
-                        <label for="testing_details" class="form-label">Testing Details</label>
-                        <textarea id="testing_details" name="testing_details" class="form-control" rows="3">{{ disease.testing_details if disease else request.form.get('testing_details', '') }}</textarea>
-                    </div>
-                     <div class="col-12 form-group">
-                        <label for="diagnosis_details" class="form-label">Diagnosis Details</label>
-                        <textarea id="diagnosis_details" name="diagnosis_details" class="form-control" rows="3">{{ disease.diagnosis_details if disease else request.form.get('diagnosis_details', '') }}</textarea>
-                    </div>
+                    <div class="col-md-6 form-group"><label for="testing_type_id" class="form-label">Primary Testing Type</label><select id="testing_type_id" name="testing_type_id" class="form-select"><option value="" {% if not (disease.testing_type_id if disease else request.form.get('testing_type_id')) %}selected{% endif %}>-- Optional --</option>{% set s_test_id = (disease.testing_type_id if disease else request.form.get('testing_type_id', ''))|string %}{% for tt in testing_types or [] %}<option value="{{ tt.testing_type_id }}" {% if s_test_id == tt.testing_type_id|string %}selected{% endif %}>{{ tt.name }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6 form-group"><label for="diagnosis_type_id" class="form-label">Primary Diagnosis Method</label><select id="diagnosis_type_id" name="diagnosis_type_id" class="form-select"><option value="" {% if not (disease.diagnosis_type_id if disease else request.form.get('diagnosis_type_id')) %}selected{% endif %}>-- Optional --</option>{% set s_diag_id = (disease.diagnosis_type_id if disease else request.form.get('diagnosis_type_id', ''))|string %}{% for dt in diagnosis_types or [] %}<option value="{{ dt.diagnosis_type_id }}" {% if s_diag_id == dt.diagnosis_type_id|string %}selected{% endif %}>{{ dt.name }}</option>{% endfor %}</select></div>
+                    <div class="col-12 form-group"><label for="testing_details" class="form-label">Testing Details</label><textarea id="testing_details" name="testing_details" class="form-control" rows="2">{{ disease.testing_details if disease else request.form.get('testing_details', '') }}</textarea></div>
+                    <div class="col-12 form-group"><label for="diagnosis_details" class="form-label">Diagnosis Details</label><textarea id="diagnosis_details" name="diagnosis_details" class="form-control" rows="2">{{ disease.diagnosis_details if disease else request.form.get('diagnosis_details', '') }}</textarea></div>
                 </div>
             </div>
 
-            {# --- Management & Education --- #}
-             <div class="form-section">
-                <h4><i class="fas fa-tasks fa-fw"></i> Management & Education</h4>
-                 <div class="row g-3">
-                     <div class="col-md-6 form-group">
-                        <label for="typical_duration" class="form-label">Typical Duration</label>
-                        <input type="text" id="typical_duration" name="typical_duration" class="form-control" value="{{ disease.typical_duration if disease else request.form.get('typical_duration', '') }}">
-                     </div>
-                     <div class="col-md-6 form-group d-flex align-items-center pt-3">
-                        <div class="form-check form-switch">
-                            {# Handle potential None from request.form or 0/1 from disease dict #}
-                            {% set is_treatable_bool = (disease.self_treatable == 1 if disease is defined and disease is not none and disease.self_treatable is not none else False) or request.form.get('self_treatable') == 'on' %}
-                            <input class="form-check-input" type="checkbox" role="switch" id="self_treatable" name="self_treatable" value="on" {% if is_treatable_bool %}checked{% endif %}>
-                            <label class="form-check-label" for="self_treatable">Potentially Self-Treatable</label>
-                        </div>
-                    </div>
-                     <div class="col-12 form-group">
-                        <label for="educational_content" class="form-label">Patient Education Content / Links</label>
-                        <textarea id="educational_content" name="educational_content" class="form-control" rows="4">{{ disease.educational_content if disease else request.form.get('educational_content', '') }}</textarea>
-                    </div>
-                </div>
-            </div>
-
-            {# --- Image Section --- #}
             <div class="form-section">
-                <h4><i class="fas fa-image fa-fw"></i> Image</h4>
-                {# Check if disease exists (editing) AND has an image filename #}
-                {% if disease and disease.condition_image_filename %}
-                <div class="mb-3 current-image-display">
-                        <label>Current Image:</label><br>
-                        <img src="{{ url_for('static', filename=disease.condition_image_filename) }}"
-                             alt="Current Image for {{ disease.condition_name or 'Condition' }}"
-                             style="max-width: 200px; max-height: 150px; object-fit: contain;">
-                        <div class="form-check mt-2">
-                           <input class="form-check-input" type="checkbox" name="delete_image" id="delete_image" value="on">
-                           <label class="form-check-label" for="delete_image">Delete current image when saving</label>
-                        </div>
-                        {# This hidden field is essential for the edit logic #}
-                        <input type="hidden" name="current_disease_image_filename" value="{{ disease.condition_image_filename }}">
-                </div>
-                {% endif %}
-                <div class="form-group mb-3">
-                    <label for="disease_image" class="form-label">{% if disease and disease.condition_image_filename %}Replace Image{% else %}Upload Image{% endif %} (Optional)</label>
-                    <input class="form-control" type="file" id="disease_image" name="disease_image" accept="image/png, image/jpeg, image/gif, image/webp">
-                    <small class="text-muted">Allowed: PNG, JPG, GIF, WEBP. Max: {{ config.MAX_CONTENT_LENGTH | filesizeformat if config.MAX_CONTENT_LENGTH else 'Default' }}.</small>
-                </div>
-            </div>
-
-            {# --- Association Linking Section --- #}
-            <div class="form-section">
-                <h4><i class="fas fa-link fa-fw"></i> Associated Items</h4>
+                <h4><i class="fas fa-book-medical fa-fw"></i> Management & Education</h4>
                 <div class="row g-3">
-                    {# Symptoms #}
-                    <div class="col-md-4 form-group">
-                        <label for="symptom_ids" class="form-label multi-select-label">Symptoms</label>
-                        {% if all_symptoms %}
-                            <select name="symptom_ids" id="symptom_ids" class="form-control" multiple>
-                                {% for sym in all_symptoms %}
-                                    <option value="{{ sym.symptom_id }}"
-                                            {% if associated_symptom_ids and sym.symptom_id in associated_symptom_ids %}selected{% endif %}>
-                                        {# *** Access the name using the key returned by get_all_simple *** #}
-                                        {{ sym.symptom_name | default('(Symptom name missing)') }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        {% else %}
-                            <p class="text-muted">No symptoms available.</p>
-                        {% endif %}
-                        <small class="text-muted">Hold Ctrl/Cmd to select multiple.</small>
-                    </div>
-
-                    {# Risk Factors #}
-                     <div class="col-md-4 form-group">
-                        <label for="factor_ids" class="form-label multi-select-label">Risk Factors</label>
-                        {% if all_risk_factors %}
-                            <select name="factor_ids" id="factor_ids" class="form-control" multiple>
-                                {% for rf in all_risk_factors %}
-                                    <option value="{{ rf.factor_id }}"
-                                            {% if associated_factor_ids and rf.factor_id in associated_factor_ids %}selected{% endif %}>
-                                        {# *** Access the name using the key returned by get_all_simple *** #}
-                                        {{ rf.factor_name | default('(Factor name missing)') }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        {% else %}
-                             <p class="text-muted">No risk factors available.</p>
-                        {% endif %}
-                         <small class="text-muted">Hold Ctrl/Cmd to select multiple.</small>
-                    </div>
-
-                     {# Protocols #}
-                     <div class="col-md-4 form-group">
-                        <label for="protocol_ids" class="form-label multi-select-label">Treatment Protocols</label>
-                        {% if all_protocols %}
-                            <select name="protocol_ids" id="protocol_ids" class="form-control" multiple>
-                                {% for pro in all_protocols %}
-                                    <option value="{{ pro.protocol_id }}"
-                                            {% if associated_protocol_ids and pro.protocol_id in associated_protocol_ids %}selected{% endif %}>
-                                        {# *** Access the name using the key returned by get_all_simple *** #}
-                                        {{ pro.protocol_name | default('(Protocol name missing)') }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                         {% else %}
-                             <p class="text-muted">No protocols available.</p>
-                         {% endif %}
-                         <small class="text-muted">Hold Ctrl/Cmd to select multiple.</small>
-                    </div>
+                    <div class="col-md-6 form-group"><label for="typical_duration" class="form-label">Typical Duration</label><input type="text" id="typical_duration" name="typical_duration" class="form-control" value="{{ disease.typical_duration if disease else request.form.get('typical_duration', '') }}"></div>
+                    <div class="col-md-6 form-group d-flex align-items-center pt-3"><div class="form-check form-switch">{% set is_treatable = (disease.self_treatable == 1 if disease is defined and disease.self_treatable is not none else False) or request.form.get('self_treatable') == 'on' %}<input class="form-check-input" type="checkbox" role="switch" id="self_treatable" name="self_treatable" value="on" {% if is_treatable %}checked{% endif %}><label class="form-check-label" for="self_treatable">Potentially Self-Treatable</label></div></div>
+                    <div class="col-12 form-group"><label for="educational_content" class="form-label">Patient Education Content / Links</label><textarea id="educational_content" name="educational_content" class="form-control" rows="3" placeholder="Provide links or text.">{{ disease.educational_content if disease else request.form.get('educational_content', '') }}</textarea></div>
                 </div>
-                 <small class="text-warning mt-2 d-block">Note: Weights and relevance use default values.</small>
             </div>
 
-            {# --- Form Actions --- #}
+            {# ... other form fields ... #}
+
+{# Existing Image Upload Section #}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <label for="disease_image" class="form-label">Condition Image (Optional)</label>
+        <input type="file" class="form-control form-control-sm" id="disease_image" name="disease_image" accept="image/*">
+        {% if disease and disease.condition_image_filename %}
+            <input type="hidden" name="current_condition_image_filename" value="{{ disease.condition_image_filename }}">
+            <div class="mt-2">
+                Current: <a href="{{ url_for('.serve_condition_image', image_filename_in_db=disease.condition_image_filename) }}" target="_blank">{{ disease.condition_image_filename |  truncate(30)}}</a>
+                <div class="form-check form-check-inline ms-2">
+                    <input class="form-check-input" type="checkbox" id="delete_image" name="delete_image">
+                    <label class="form-check-label" for="delete_image">Delete current image</label>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {# --- NEW Video Upload Section --- #}
+    <div class="col-md-6">
+        <label for="condition_video" class="form-label">Condition Video (Optional)</label>
+        <input type="file" class="form-control form-control-sm" id="condition_video" name="condition_video" accept="video/*">
+        {% if disease and disease.condition_video_filename %}
+            <input type="hidden" name="current_condition_video_filename" value="{{ disease.condition_video_filename }}">
+            <div class="mt-2">
+                Current: <a href="{{ url_for('.serve_condition_video', video_filename_in_db=disease.condition_video_filename) }}" target="_blank">{{ disease.condition_video_filename | truncate(30) }}</a>
+                <div class="form-check form-check-inline ms-2">
+                    <input class="form-check-input" type="checkbox" id="delete_video" name="delete_video">
+                    <label class="form-check-label" for="delete_video">Delete current video</label>
+                </div>
+            </div>
+        {% endif %}
+        <small class="form-text text-muted">Allowed video types: {{ config.ALLOWED_VIDEO_EXTENSIONS | join(', ') }}</small>
+    </div>
+</div>
+
+{# ... rest of the form and submit button ... #}
+
             <div class="form-actions">
                 <a href="{{ url_for('disease_management.list_diseases') }}" class="button button-outline button-secondary">Cancel</a>
-                <button type="submit" class="button button-primary">
-                    <i class="fas fa-save fa-fw"></i> {{ 'Update Condition' if disease else 'Add Condition' }}
-                </button>
+                <button type="submit" class="button button-primary"><i class="fas fa-save fa-fw"></i> {{ 'Update Condition' if disease else 'Add Condition' }}</button>
             </div>
         </form>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-{# Include Bootstrap JS if needed for dismissible alerts #}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-{# Include Select2 JS if using #}
-{# <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> #}
 <script>
-    // Optional: Initialize Select2 or Choices.js for better multi-select UX
-    // document.addEventListener('DOMContentLoaded', function() {
-    //     // Example using jQuery and Select2
-    //     // if (typeof $ !== 'undefined' && $.fn.select2) {
-    //     //     $('#symptom_ids').select2({ placeholder: "Select symptoms", allowClear: true, width: '100%' });
-    //     //     $('#factor_ids').select2({ placeholder: "Select risk factors", allowClear: true, width: '100%' });
-    //     //     $('#protocol_ids').select2({ placeholder: "Select protocols", allowClear: true, width: '100%' });
-    //     // }
-    // });
+    document.addEventListener('DOMContentLoaded', function() { /* Basic JS if needed */ });
 </script>
 {% endblock %}

@@ -1,0 +1,31 @@
+{% extends "Doctor_Portal/settings_layout.html" %}
+
+{% block settings_content %}
+<h3>Profile Photo</h3>
+<hr>
+<div class="row">
+    <div class="col-md-4 text-center mb-3">
+        <h5>Current Photo</h5>
+        {% if doctor_info.profile_photo_url %}
+            <img src="{{ url_for('static', filename=doctor_info.profile_photo_url) }}" alt="Current Profile Photo" class="img-thumbnail mb-2">
+            <form method="POST" action="{{ url_for('settings.delete_photo_action') }}" onsubmit="return confirm('Are you sure you want to remove your profile photo?');">
+                <button type="submit" class="button button-danger button-small">Remove Photo</button>
+            </form>
+        {% else %}
+            <img src="{{ url_for('static', filename='images/default_avatar.png') }}" alt="Default Profile Photo" class="img-thumbnail mb-2">
+            <p class="text-muted">No profile photo uploaded.</p>
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h5>Upload New Photo</h5>
+        <form method="POST" action="{{ url_for('settings.photo_settings') }}" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label for="profile_photo" class="form-label">Choose Photo File</label>
+                <input class="form-control form-control-sm" type="file" id="profile_photo" name="profile_photo" accept="image/png, image/jpeg, image/gif" required>
+                <small class="form-text text-muted">Allowed types: JPG, PNG, GIF. Max size: {{ max_upload_mb }}MB.</small>
+            </div>
+            <button type="submit" class="button button-success">Upload Photo</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

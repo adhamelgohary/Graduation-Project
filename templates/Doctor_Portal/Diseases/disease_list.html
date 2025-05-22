@@ -1,97 +1,120 @@
 {# templates/Doctor_Portal/Diseases/disease_list.html #}
 {% extends "Doctor_Portal/base.html" %}
 
-{% block title %}Disease Catalog{% endblock %}
+{% block title %}Disease & Condition Catalog{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/disease_catalog.css') }}">
     <style>
-        .filter-form .form-select-sm { height: calc(1.5em + 0.5rem + 2px); }
-        .urgency-low { color: var(--color-success); }
-        .urgency-medium { color: #fd7e14; } /* Bootstrap Orange */
-        .urgency-high { color: var(--color-danger); }
-        .urgency-emergency { color: var(--color-danger); font-weight: bold; background-color: #f8d7da; padding: 0.1em 0.3em; border-radius: 3px;}
+        .filter-form .form-select-sm { height: calc(1.5em + 0.5rem + 2px); } /* Bootstrap 5 form-select-sm height */
+
+        /* Urgency visual cues (consistent with detail page) */
+        .urgency-low { color: var(--color-success, #198754); }
+        .urgency-medium { color: #fd7e14; } /* Bootstrap Orange or similar */
+        .urgency-high { color: var(--color-danger, #dc3545); }
+        .urgency-emergency {
+            color: var(--color-danger-dark, #842029);
+            font-weight: bold;
+            background-color: var(--color-danger-light, #f8d7da);
+            padding: 0.1em 0.4em;
+            border-radius: var(--border-radius-sm, 0.2rem);
+            border: 1px solid var(--color-danger, #f5c2c7);
+            display: inline-block; /* To allow padding and bg color */
+        }
+
         th a { color: inherit; text-decoration: none; }
-        th a:hover { color: var(--color-primary); }
+        th a:hover { color: var(--color-primary, #007bff); }
         th .sort-icon { opacity: 0.4; font-size: 0.8em; margin-left: 5px; }
-        th .sort-icon.active { opacity: 1; color: var(--color-primary); }
-        .table th, .table td { vertical-align: middle; } /* Align content vertically */
-        .department-filter-info { font-style: italic; color: var(--color-text-muted); } /* Styling for department info */
+        th .sort-icon.active { opacity: 1; color: var(--color-primary, #007bff); }
+        .table th, .table td { vertical-align: middle; }
+        .department-filter-info {
+            font-style: italic;
+            color: var(--color-text-muted, #6c757d);
+            background-color: var(--color-surface-secondary, #f8f9fa); /* Light background for info */
+            padding: var(--spacing-sm, 0.5rem) var(--spacing-md, 1rem);
+            border-radius: var(--border-radius, 0.25rem);
+            border: 1px solid var(--color-border, #dee2e6);
+        }
+        .action-buttons .button, .action-buttons form { margin-left: var(--spacing-xs, 0.25rem); }
+        .action-buttons .button:first-child, .action-buttons form:first-child { margin-left: 0; }
+
+        .no-results-message {
+            padding: var(--spacing-lg, 1.5rem);
+            text-align: center;
+            border: 1px dashed var(--color-border, #ccc);
+            border-radius: var(--border-radius, 0.25rem);
+            background-color: var(--color-surface-secondary, #f8f9fa);
+        }
     </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1>Disease / Condition Catalog</h1>
-    <a href="{{ url_for('disease_management.add_disease') }}" class="button button-primary"> <i class="fas fa-plus fa-fw"></i> Add New Condition </a>
+    <h1>Disease & Condition Catalog</h1>
+    <a href="{{ url_for('disease_management.add_disease') }}" class="button button-primary">
+        <i class="fas fa-plus fa-fw"></i> Add New Condition
+    </a>
 </div>
 
-{# --- Display Department Filter Information --- #}
+{# Display Department Filter Information #}
 <p class="department-filter-info mb-3">
-    <i class="fas fa-filter fa-fw"></i>
-    Showing conditions associated with the <strong>'{{ doctor_department_name | default('All') }}'</strong> Department.
+    <i class="fas fa-clinic-medical fa-fw"></i> <!-- Changed icon -->
+    Currently displaying conditions relevant to the <strong>'{{ doctor_department_name | default('All') }}'</strong> Department.
 </p>
 
-{# --- Search & Filter Form (Department Filter Removed) --- #}
+{# Search & Filter Form #}
 <form method="GET" action="{{ url_for('disease_management.list_diseases') }}" class="search-form card card-body mb-4">
     <div class="row g-3 align-items-end">
-        {# Search Input #}
         <div class="col-lg-4 col-md-12">
-            <label for="search" class="form-label visually-hidden">Search</label>
+            <label for="search" class="form-label visually-hidden">Search Conditions</label>
             <div class="input-group">
                  <span class="input-group-text"><i class="fas fa-search fa-fw"></i></span>
-                <input type="search" class="form-control" id="search" name="search" placeholder="Search Name, Desc, Code..." value="{{ search_term | default('') }}">
+                <input type="search" class="form-control" id="search" name="search" placeholder="Search Name, Code, Description, Symptoms..." value="{{ search_term | default('') }}">
             </div>
         </div>
-        {# Urgency Filter #}
-        <div class="col-lg col-md-4 col-sm-6"> {# Adjusted col size #}
+        <div class="col-lg col-md-4 col-sm-6">
              <label for="filter_urgency" class="form-label">Urgency</label>
             <select id="filter_urgency" name="filter_urgency" class="form-select form-select-sm">
                  <option value="" {% if not filters.urgency %}selected{% endif %}>Any Urgency</option>
-                 {% for level in urgency_levels %}
+                 {% for level in urgency_levels or [] %}
                     <option value="{{ level }}" {% if filters.urgency == level %}selected{% endif %}>{{ level | title }}</option>
                  {% endfor %}
             </select>
         </div>
-        {# Type Filter #}
-        <div class="col-lg col-md-4 col-sm-6"> {# Adjusted col size #}
+        <div class="col-lg col-md-4 col-sm-6">
             <label for="filter_type" class="form-label">Type</label>
              <select id="filter_type" name="filter_type" class="form-select form-select-sm">
                  <option value="" {% if not filters.type %}selected{% endif %}>Any Type</option>
-                  {% for type_val in condition_types %}
+                  {% for type_val in condition_types or [] %}
                     <option value="{{ type_val }}" {% if filters.type == type_val %}selected{% endif %}>{{ type_val | title }}</option>
                  {% endfor %}
             </select>
         </div>
-        {# --- REMOVED Department Filter Dropdown --- #}
-        {# Action Buttons #}
-        <div class="col-lg-auto col-md-4 col-sm-12 d-flex justify-content-end gap-2 flex-wrap"> {# Adjusted col size #}
-             {# Check remaining filters #}
-             {% if search_term or filters.urgency or filters.type or filters.testing_type_id or filters.diagnosis_type_id %}
-                 <a href="{{ url_for('disease_management.list_diseases') }}" class="button button-outline button-secondary button-small mt-3">Clear Filters</a>
+        {# Add other filters like testing_type, diagnosis_type if needed and passed from backend #}
+        <div class="col-lg-auto col-md-4 col-sm-12 d-flex justify-content-start justify-content-md-end gap-2 flex-wrap">
+             {% set has_any_filter = search_term or filters.urgency or filters.type %} {# Add other filter checks here #}
+             {% if has_any_filter %}
+                 <a href="{{ url_for('disease_management.list_diseases') }}" class="button button-outline button-secondary button-small mt-md-0 mt-2">Clear Filters</a>
              {% endif %}
-             <button type="submit" class="button button-primary button-small mt-3">Apply Filters</button>
+             <button type="submit" class="button button-primary button-small mt-md-0 mt-2">Apply Filters</button>
         </div>
     </div>
-     {# Hidden inputs for sorting persistence (Remove department filter) #}
      <input type="hidden" name="sort_by" value="{{ sort_by | default('name') }}">
      <input type="hidden" name="sort_dir" value="{{ sort_dir | default('ASC') }}">
 </form>
 
-{# --- Disease Table --- #}
+{# Disease Table #}
 <div class="card shadow-sm disease-list-card">
-    <div class="card-body p-0">
+    <div class="card-body p-0"> {# Remove padding from card-body if table is full width #}
         {% if diseases %}
         <div class="table-responsive">
             <table class="table table-striped table-hover disease-list-table mb-0">
                 <thead>
                     <tr>
-                        {# Sorting Links - pass current filters along (excluding department) #}
                         {% macro sort_link(col_key, col_title) %}
                             {% set current_dir = 'ASC' if sort_by != col_key else ('DESC' if sort_dir == 'ASC' else 'ASC') %}
-                            {# Base args for sorting links - EXCLUDE department filter #}
-                            {% set base_args_sort = {'page': 1, 'search': search_term, 'filter_urgency': filters.urgency, 'filter_type': filters.type, 'filter_testing_type': filters.testing_type_id, 'filter_diagnosis_type': filters.diagnosis_type_id} %}
+                            {% set base_args_sort = {'page': 1, 'search': search_term, 'filter_urgency': filters.urgency, 'filter_type': filters.type } %} {# Add other filters to base_args #}
                             <a href="{{ url_for('disease_management.list_diseases', sort_by=col_key, sort_dir=current_dir, **base_args_sort) }}" title="Sort by {{ col_title }}">
                                 {{ col_title }}
                                 {% if sort_by == col_key %}
@@ -102,13 +125,12 @@
                             </a>
                         {% endmacro %}
                         <th style="width: 5%;">{{ sort_link('id', 'ID') }}</th>
-                        <th style="width: 25%;">{{ sort_link('name', 'Condition Name') }}</th>
+                        <th style="width: 30%;">{{ sort_link('name', 'Condition Name') }}</th>
                         <th style="width: 10%;">{{ sort_link('code', 'ICD Code') }}</th>
-                        <th style="width: 12%;">{{ sort_link('type', 'Type') }}</th>
-                        <th style="width: 12%;">{{ sort_link('urgency', 'Urgency') }}</th>
-                        {# Display Department Column (read-only now) #}
+                        <th style="width: 15%;">{{ sort_link('type', 'Type') }}</th>
+                        <th style="width: 15%;">{{ sort_link('urgency', 'Urgency') }}</th>
                         <th style="width: 15%;">{{ sort_link('dept', 'Department') }}</th>
-                        <th class="text-end" style="width: 21%;">Actions</th>
+                        <th class="text-end" style="width: 10%;">Actions</th> {# Reduced width if text hidden on small screens #}
                     </tr>
                 </thead>
                 <tbody>
@@ -122,19 +144,17 @@
                         </td>
                         <td>{{ disease.icd_code | default('-') }}</td>
                         <td>{{ disease.condition_type | title | default('-') }}</td>
-                        <td>{# Visual Cue for Urgency #}
-                           <span class="urgency-{{ disease.urgency_level | lower }}">{{ disease.urgency_level | title | default('-') }}</span>
+                        <td>
+                           <span class="urgency-{{ disease.urgency_level | lower | replace(' ', '-') }}">{{ disease.urgency_level | title | default('-') }}</span>
                         </td>
-                        {# Display Department #}
-                        <td>{{ disease.department_name | default('-') }}</td>
-                        <td class="action-buttons text-end"> {# Align buttons to the right #}
-                            <a href="{{ url_for('disease_management.view_disease', condition_id=disease.condition_id) }}" class="button button-outline button-small" title="View Details"><i class="fas fa-eye fa-fw"></i> <span class="d-none d-lg-inline">View</span></a> {# Adjust d-lg-inline if needed #}
-                            <a href="{{ url_for('disease_management.edit_disease', condition_id=disease.condition_id) }}" class="button button-outline button-secondary button-small" title="Edit Condition"><i class="fas fa-edit fa-fw"></i> <span class="d-none d-lg-inline">Edit</span></a>
-                            {# Deactivate Form - Uses POST #}
-                            <form action="{{ url_for('disease_management.deactivate_disease', condition_id=disease.condition_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate condition \'{{ disease.condition_name|escape }}\'?');">
-                                {# CSRF token if needed #}
+                        <td>{{ disease.department_name | default('N/A') }}</td>
+                        <td class="action-buttons text-end">
+                            <a href="{{ url_for('disease_management.view_disease', condition_id=disease.condition_id) }}" class="button button-outline button-info button-small" title="View Details"><i class="fas fa-eye fa-fw"></i> <span class="d-none d-md-inline">View</span></a>
+                            <a href="{{ url_for('disease_management.edit_disease', condition_id=disease.condition_id) }}" class="button button-outline button-secondary button-small" title="Edit Condition"><i class="fas fa-edit fa-fw"></i> <span class="d-none d-md-inline">Edit</span></a>
+                            {# Deactivate Form #}
+                            <form action="{{ url_for('disease_management.delete_disease', condition_id=disease.condition_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete condition \'{{ disease.condition_name|escape }}\'?');">
                                 <button type="submit" class="button button-outline button-danger button-small" title="Deactivate Condition">
-                                    <i class="fas fa-times-circle fa-fw"></i> <span class="d-none d-lg-inline">Deactivate</span>
+                                    <i class="fas fa-times-circle fa-fw"></i> <span class="d-none d-md-inline">delete</span>
                                 </button>
                             </form>
                         </td>
@@ -144,43 +164,42 @@
             </table>
         </div>
 
-        {# Pagination Controls (Remove department filter from base_args) #}
+        {# Pagination Controls #}
         {% if total_pages > 1 %}
-        <div class="card-footer d-flex justify-content-center">
+        <div class="card-footer d-flex justify-content-center bg-light border-top py-2"> {# Added bg-light and border-top #}
              <nav aria-label="Disease list navigation">
                 <ul class="pagination pagination-sm mb-0">
-                     {# Base args for pagination links - EXCLUDE department filter #}
-                    {% set base_args_page = {'search': search_term, 'sort_by': sort_by, 'sort_dir': sort_dir, 'filter_urgency': filters.urgency, 'filter_type': filters.type, 'filter_testing_type': filters.testing_type_id, 'filter_diagnosis_type': filters.diagnosis_type_id} %}
-                     {# Previous Page Link #}
-                     <li class="page-item {{ 'disabled' if current_page <= 1 else '' }}">
-                        <a class="page-link" href="{{ url_for('disease_management.list_diseases', page=current_page-1, **base_args_page) }}">« Prev</a>
+                    {% set base_args_page = {'search': search_term, 'sort_by': sort_by, 'sort_dir': sort_dir, 'filter_urgency': filters.urgency, 'filter_type': filters.type} %} {# Add other filters #}
+                    <li class="page-item {{ 'disabled' if current_page <= 1 else '' }}">
+                        <a class="page-link" href="{{ url_for('disease_management.list_diseases', page=current_page-1, **base_args_page) }}">« <span class="d-none d-sm-inline">Prev</span></a>
                     </li>
-                     {# Page Number Links (dynamic generation - unchanged logic) #}
                      {% set max_links = 5 %}{% set start_page = [1, current_page - (max_links // 2)] | max %}{% set end_page = [total_pages, start_page + max_links - 1] | min %}
                      {% if start_page > 1 %}<li class="page-item"><a class="page-link" href="{{ url_for('disease_management.list_diseases', page=1, **base_args_page) }}">1</a></li>{% if start_page > 2 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}{% endif %}
                      {% for page_num in range(start_page, end_page + 1) %}<li class="page-item {{ 'active' if page_num == current_page else '' }}"><a class="page-link" href="{{ url_for('disease_management.list_diseases', page=page_num, **base_args_page) }}">{{ page_num }}</a></li>{% endfor %}
                      {% if end_page < total_pages %}{% if end_page < total_pages - 1 %}<li class="page-item disabled"><span class="page-link">...</span></li>{% endif %}<li class="page-item"><a class="page-link" href="{{ url_for('disease_management.list_diseases', page=total_pages, **base_args_page) }}">{{ total_pages }}</a></li>{% endif %}
-                     {# Next Page Link #}
                     <li class="page-item {{ 'disabled' if current_page >= total_pages else '' }}">
-                        <a class="page-link" href="{{ url_for('disease_management.list_diseases', page=current_page+1, **base_args_page) }}">Next »</a>
+                        <a class="page-link" href="{{ url_for('disease_management.list_diseases', page=current_page+1, **base_args_page) }}"><span class="d-none d-sm-inline">Next</span> »</a>
                     </li>
                 </ul>
             </nav>
         </div>
         {% endif %}
 
-        {% elif not diseases %} {# Handle case where no diseases match the department + filters #}
-            <div class="no-results-message p-4 text-center"> {# Added padding/alignment #}
+        {% elif not diseases %}
+            <div class="no-results-message">
                  <i class="fas fa-book-medical fa-3x mb-3 text-muted"></i><br>
-                 {# Updated message check to see if *any* filters were applied #}
-                {% set has_filters = search_term or filters.urgency or filters.type or filters.testing_type_id or filters.diagnosis_type_id %}
+                {% set has_filters = search_term or filters.urgency or filters.type %} {# Add other filter checks #}
                 {% if has_filters %}
-                    No conditions found in the '{{ doctor_department_name | default('assigned') }}' department matching your current filters. <a href="{{ url_for('disease_management.list_diseases') }}">Clear filters?</a>
+                    No conditions found in the '{{ doctor_department_name | default('assigned') }}' department matching your current filters.
+                    <a href="{{ url_for('disease_management.list_diseases') }}">Clear all filters?</a>
                 {% else %}
-                    No conditions found associated with the '{{ doctor_department_name | default('assigned') }}' department. {% if current_user and current_user.user_type == 'admin' %} <a href="{{ url_for('disease_management.add_disease') }}">Add a condition?</a> {% endif %} {# Allow Admin to add #}
+                    No conditions found associated with the '{{ doctor_department_name | default('assigned') }}' department.
+                    {% if current_user and current_user.user_type == 'admin' %}
+                        <a href="{{ url_for('disease_management.add_disease') }}">Add a new condition?</a>
+                    {% endif %}
                 {% endif %}
             </div>
         {% endif %}
-    </div>{# end card-body #}
+    </div>
 </div>
 {% endblock %}

@@ -1,0 +1,156 @@
+{# templates/Patient_Portal/my_account.html #}
+{% extends "Website/base.html" %}
+
+{% block title %}My Account - {{ super() }}{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/my_account.css') }}"> {# Optional specific CSS for this page #}
+    <style>
+     /* static/Patient_Portal/my_account.css */
+.account-container {
+    max-width: 900px; /* Or 1140px for wider layout */
+    margin: 2rem auto;
+    padding: 1rem;
+}
+
+.account-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color); /* Using variable from your base.css */
+}
+
+.account-header h1 {
+    font-size: 2.25rem; /* Slightly larger */
+    color: var(--heading-color); /* Using variable */
+    margin-bottom: 0.5rem;
+}
+.account-header p {
+    font-size: 1.1rem;
+    color: var(--secondary-color); /* Using variable */
+}
+
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.75rem; /* Slightly increased gap */
+}
+
+.account-card {
+    background-color: var(--white-color); /* Using variable */
+    border-radius: var(--border-radius); /* Using variable */
+    box-shadow: var(--box-shadow-sm); /* Using variable */
+    padding: 1.75rem; /* Increased padding */
+    text-align: center;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Helps align buttons if text length varies */
+}
+
+.account-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow); /* Using variable for larger shadow */
+}
+
+.account-card i.fas, .account-card i.far, .account-card i.fab  { /* Target font awesome icons */
+    font-size: 2.75rem; /* Larger icons */
+    color: var(--primary-color);
+    margin-bottom: 1.25rem;
+}
+
+.account-card h4 {
+    font-size: 1.3rem; /* Slightly larger card title */
+    margin-bottom: 0.75rem;
+    color: var(--heading-color);
+}
+
+.account-card p {
+    font-size: 0.95rem;
+    color: var(--text-color); /* Using variable */
+    margin-bottom: 1.5rem;
+    flex-grow: 1; /* Allows paragraph to take space, pushing button down */
+    min-height: 50px; /* Adjust as needed */
+}
+
+.account-card .button, 
+.account-card a.button { /* Ensure 'a' tags styled as buttons are targeted */
+    display: inline-block;
+    padding: 0.7rem 1.4rem; /* Slightly larger button */
+    background-color: var(--primary-color);
+    color: var(--white-color);
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    border: none; /* Ensure button-like appearance */
+    cursor: pointer;
+    margin-top: auto; /* Pushes button to the bottom of the card flex container */
+}
+
+.account-card .button:hover,
+.account-card a.button:hover {
+    background-color: var(--primary-color-darker); /* Using variable */
+    color: var(--white-color);
+}
+
+/* Responsive adjustments if needed */
+@media (max-width: 600px) {
+    .account-grid {
+        grid-template-columns: 1fr; /* Stack cards on small screens */
+    }
+    .account-header h1 {
+        font-size: 1.8rem;
+    }
+     .account-header p {
+        font-size: 1rem;
+    }
+}
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="account-container">
+    <div class="account-header">
+        <h1>Welcome, {{ current_user.first_name }}!</h1>
+        <p>Manage your health information and appointments all in one place.</p>
+    </div>
+
+    {% include '_flash_messages.html' %}
+
+    <div class="account-grid">
+        {# Card 1: Manage Profile #}
+        <div class="account-card">
+            <i class="fas fa-user-edit"></i>
+            <h4>My Profile</h4>
+            <p>Update your personal, contact, and insurance details.</p>
+            <a href="{{ url_for('patient_profile.manage_profile') }}" class="button">Edit Profile</a>
+        </div>
+
+        {# Card 3: Allergies #}
+        <div class="account-card">
+            <i class="fas fa-allergies"></i>
+            <h4>Allergies</h4>
+            <p>Keep your allergy information up to date.</p>
+            <a href="{{ url_for('patient_medical_info.manage_allergies') }}" class="button">Manage Allergies</a>
+        </div>
+
+        {# Card 5: Vitals #}
+        <div class="account-card">
+            <i class="fas fa-heartbeat"></i> {# Or fas fa-weight, fas fa-ruler-vertical #}
+            <h4>Vitals & Measurements</h4>
+            <p>Log your weight and other key health measurements.</p>
+            <a href="{{ url_for('patient_medical_info.manage_vitals') }}" class="button">Manage Vitals</a>
+        </div>
+
+        {# Card 6: Medical History (Link to view, add might be separate or on that page) #}
+        <div class="account-card">
+            <i class="fas fa-file-medical-alt"></i>
+            <h4>Medical History</h4>
+            <p>View your recorded medical conditions and history.</p>
+            <a href="{{ url_for('patient_medical_info.view_history') }}" class="button">View History</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
