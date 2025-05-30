@@ -1,179 +1,144 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Add New Patient{% endblock %}
+{% block title %}Add New Patient - Pro Health Admin Portal{% endblock %}
 
-{% block nav_patient %}active{% endblock %}
-
-{% block header_title %}
-<h1 class="page-title">
-    <i class="fas fa-user-plus"></i> Add New Patient
-</h1>
-{% endblock %}
-
-{% block head_extra %}
-{# Styles removed, assuming they are handled by an external CSS file linked in base_admin.html #}
-{% endblock %}
+{% block header_icon %}<i class="fas fa-user-plus fa-fw me-2"></i>{% endblock %}
+{% block header_title %}Add New Patient{% endblock %}
 
 {% block content %}
-<div class="form-container card">
-    <div class="card-header form-header"> {# Using card-header for consistency #}
-        <h2 class="card-title mb-0">Patient Information</h2> {# Using card-title #}
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5>Patient Registration Form</h5>
     </div>
-
-    <div class="card-body"> {# Wrapping form content in card-body #}
-        {% include '_flash_messages.html' ignore missing %}
-
-        <form action="{{ url_for('patient_management.add_patient') }}" method="POST" class="needs-validation" novalidate>
-            <h3 class="mb-3 fs-5 text-secondary">Account Details</h3>
-            <div class="row mb-3"> {# Using Bootstrap row for form-row #}
-                <div class="col-md-6 form-group"> {# Using Bootstrap col for responsiveness #}
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('patient_management.add_patient') }}">
+            <h6 class="text-primary">User Account Details</h6>
+            <hr>
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                    <input type="text" id="username" name="username" class="form-control" value="{{ request.form.username }}" required>
-                    <div class="invalid-feedback">Please provide a username.</div>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ request.form.username or '' }}" required>
                 </div>
-                <div class="col-md-6 form-group">
+                <div class="col-md-6 mb-3">
                     <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                    <input type="email" id="email" name="email" class="form-control" value="{{ request.form.email }}" required>
-                    <div class="invalid-feedback">Please provide a valid email.</div>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ request.form.email or '' }}" required>
                 </div>
             </div>
-            <div class="form-group mb-3">
-                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                <input type="password" id="password" name="password" class="form-control" required minlength="8">
-                 <small class="form-text text-muted">Min. 8 characters. Set an initial password for the patient.</small>
-                 <div class="invalid-feedback">Password must be at least 8 characters.</div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                 <div class="col-md-6 mb-3">
+                    {# Assuming no confirm password field on add form based on backend, add if needed #}
+                </div>
             </div>
 
-            <hr class="my-4">
-            <h3 class="mb-3 fs-5 text-secondary">Personal Information</h3>
-            <div class="row mb-3">
-                <div class="col-md-6 form-group">
+            <h6 class="mt-4 text-primary">Personal Information</h6>
+            <hr>
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
-                    <input type="text" id="first_name" name="first_name" class="form-control" value="{{ request.form.first_name }}" required>
-                     <div class="invalid-feedback">First name is required.</div>
+                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ request.form.first_name or '' }}" required>
                 </div>
-                <div class="col-md-6 form-group">
+                <div class="col-md-6 mb-3">
                     <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
-                    <input type="text" id="last_name" name="last_name" class="form-control" value="{{ request.form.last_name }}" required>
-                    <div class="invalid-feedback">Last name is required.</div>
+                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ request.form.last_name or '' }}" required>
                 </div>
             </div>
-            <div class="row mb-3">
-                <div class="col-md-6 form-group">
-                    <label for="date_of_birth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
-                    <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="{{ request.form.date_of_birth }}" required>
-                    <div class="invalid-feedback">Date of birth is required.</div>
-                </div>
-                 <div class="col-md-6 form-group">
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label for="phone" class="form-label">Phone</label>
-                    <input type="tel" id="phone" name="phone" class="form-control" value="{{ request.form.phone }}" placeholder="e.g., 123-456-7890">
+                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ request.form.phone or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="date_of_birth" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" value="{{ request.form.date_of_birth or '' }}" required>
                 </div>
             </div>
-             <div class="row mb-3">
-                <div class="col-md-4 form-group"> {# Adjusted col size #}
+             <div class="row">
+                <div class="col-md-4 mb-3">
                     <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
-                    <select id="gender" name="gender" class="form-select" required>
-                        {# For add_patient.html, patient will not exist, so patient.gender check is for edit_patient.html #}
-                        <option value="" disabled {% if not request.form.gender and (not patient or not patient.gender) %}selected{% endif %}>-- Select --</option>
-                        {% for g_option in gender_options %}
-                            <option value="{{ g_option }}" 
-                                    {% if request.form.gender == g_option or (patient and patient.gender == g_option) %}selected{% endif %}>
-                                {{ g_option }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                     <div class="invalid-feedback">Please select a gender.</div>
-                </div>
-                <div class="col-md-4 form-group">
-                    <label for="marital_status" class="form-label">Marital Status</label>
-                    <select id="marital_status" name="marital_status" class="form-select">
-                        <option value="" selected>-- Select --</option>
-                        {% for status in marital_statuses %}
-                            <option value="{{ status }}" {% if request.form.marital_status == status %}selected{% endif %}>{{ status }}</option>
+                    <select class="form-select" id="gender" name="gender" required>
+                        <option value="" disabled {% if not request.form.gender %}selected{% endif %}>Select Gender...</option>
+                        {% for option in gender_options %}
+                        <option value="{{ option }}" {% if request.form.gender == option %}selected{% endif %}>{{ option|capitalize }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                 <div class="col-md-4 form-group">
-                     <label for="occupation" class="form-label">Occupation</label>
-                    <input type="text" id="occupation" name="occupation" class="form-control" value="{{ request.form.occupation }}">
-                </div>
-            </div>
-
-             <hr class="my-4">
-             <h3 class="mb-3 fs-5 text-secondary">Medical Information</h3>
-              <div class="row mb-3">
-                <div class="col-md-4 form-group">
+                <div class="col-md-4 mb-3">
                     <label for="blood_type" class="form-label">Blood Type</label>
-                    <select id="blood_type" name="blood_type" class="form-select">
-                         <option value="" selected>-- Select --</option>
-                         {% for bt in blood_types %}
-                             <option value="{{ bt }}" {% if request.form.blood_type == bt %}selected{% endif %}>{{ bt }}</option>
-                         {% endfor %}
+                    <select class="form-select" id="blood_type" name="blood_type">
+                        <option value="" {% if not request.form.blood_type %}selected{% endif %}>Select Blood Type (Optional)...</option>
+                        {% for type in blood_types %}
+                        <option value="{{ type }}" {% if request.form.blood_type == type %}selected{% endif %}>{{ type }}</option>
+                        {% endfor %}
                     </select>
                 </div>
-                 <div class="col-md-4 form-group">
+                <div class="col-md-4 mb-3">
+                    <label for="marital_status" class="form-label">Marital Status</label>
+                    <select class="form-select" id="marital_status" name="marital_status">
+                        <option value="" {% if not request.form.marital_status %}selected{% endif %}>Select Marital Status (Optional)...</option>
+                        {% for status in marital_statuses %}
+                        <option value="{{ status }}" {% if request.form.marital_status == status %}selected{% endif %}>{{ status|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
                     <label for="height_cm" class="form-label">Height (cm)</label>
-                    <input type="number" id="height_cm" name="height_cm" class="form-control" step="0.1" value="{{ request.form.height_cm }}">
+                    <input type="number" step="0.1" class="form-control" id="height_cm" name="height_cm" value="{{ request.form.height_cm or '' }}">
                 </div>
-                 <div class="col-md-4 form-group">
+                <div class="col-md-4 mb-3">
                     <label for="weight_kg" class="form-label">Weight (kg)</label>
-                    <input type="number" id="weight_kg" name="weight_kg" class="form-control" step="0.1" value="{{ request.form.weight_kg }}">
+                    <input type="number" step="0.1" class="form-control" id="weight_kg" name="weight_kg" value="{{ request.form.weight_kg or '' }}">
+                </div>
+                 <div class="col-md-4 mb-3">
+                    <label for="occupation" class="form-label">Occupation</label>
+                    <input type="text" class="form-control" id="occupation" name="occupation" value="{{ request.form.occupation or '' }}">
                 </div>
             </div>
 
-             <hr class="my-4">
-             <h3 class="mb-3 fs-5 text-secondary">Insurance Information</h3>
-             <div class="row mb-3">
-                 <div class="col-md-6 form-group">
+            <h6 class="mt-4 text-primary">Insurance Information (Optional)</h6>
+            <hr>
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label for="insurance_provider_id" class="form-label">Insurance Provider</label>
-                    <select id="insurance_provider_id" name="insurance_provider_id" class="form-select">
-                         <option value="" selected>-- Select Provider (Optional) --</option>
-                         {% for provider in insurance_providers %}
-                            <option value="{{ provider.id }}" {% if request.form.insurance_provider_id|string == provider.id|string %}selected{% endif %}>{{ provider.provider_name }}</option>
-                         {% endfor %}
+                    <select class="form-select" id="insurance_provider_id" name="insurance_provider_id">
+                        <option value="" {% if not request.form.insurance_provider_id %}selected{% endif %}>Select Provider...</option>
+                        {% for provider in insurance_providers %}
+                        <option value="{{ provider.id }}" {% if request.form.insurance_provider_id == provider.id|string %}selected{% endif %}>{{ provider.provider_name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-6 form-group">
+                <div class="col-md-6 mb-3">
                     <label for="insurance_policy_number" class="form-label">Policy Number</label>
-                    <input type="text" id="insurance_policy_number" name="insurance_policy_number" class="form-control" value="{{ request.form.insurance_policy_number }}">
+                    <input type="text" class="form-control" id="insurance_policy_number" name="insurance_policy_number" value="{{ request.form.insurance_policy_number or '' }}">
                 </div>
             </div>
-            <div class="row mb-3">
-                <div class="col-md-6 form-group">
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label for="insurance_group_number" class="form-label">Group Number</label>
-                    <input type="text" id="insurance_group_number" name="insurance_group_number" class="form-control" value="{{ request.form.insurance_group_number }}">
+                    <input type="text" class="form-control" id="insurance_group_number" name="insurance_group_number" value="{{ request.form.insurance_group_number or '' }}">
                 </div>
-                <div class="col-md-6 form-group">
-                    <label for="insurance_expiration" class="form-label">Expiration Date</label>
-                    <input type="date" id="insurance_expiration" name="insurance_expiration" class="form-control" value="{{ request.form.insurance_expiration }}">
+                <div class="col-md-6 mb-3">
+                    <label for="insurance_expiration" class="form-label">Insurance Expiration Date</label>
+                    <input type="date" class="form-control" id="insurance_expiration" name="insurance_expiration" value="{{ request.form.insurance_expiration or '' }}">
                 </div>
             </div>
+            
+            <p class="text-muted small mt-3"><span class="text-danger">*</span> Required fields for account creation and basic profile.</p>
 
-            <div class="form-actions mt-4 text-end"> {# Using text-end for button alignment #}
-                <a href="{{ url_for('patient_management.index') }}" class="btn btn-secondary me-2">Cancel</a>
-                <button type="submit" class="btn btn-primary"><i class="fas fa-user-plus me-1"></i> Add Patient</button>
+            <div class="d-flex justify-content-end mt-4">
+                <a href="{{ url_for('patient_management.index') }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-1"></i> Register Patient
+                </button>
             </div>
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts_extra %}
-<script>
-// Bootstrap 5 form validation
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('.needs-validation')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
-</script>
 {% endblock %}

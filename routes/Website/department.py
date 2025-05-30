@@ -4,38 +4,29 @@ from flask import Blueprint, render_template, current_app, abort, url_for
 import mysql.connector
 import sys
 import os
-import re # Import regex for potential cleanup
 
-# --- Database Connection Setup ---
-# ... (keep as is) ...
+_project_root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if _project_root_path not in sys.path:
+    sys.path.append(_project_root_path)
+
 try:
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
     from db import get_db_connection
 except ImportError:
-    try:
-        from db import get_db_connection
-    except ImportError:
-        print("CRITICAL ERROR: Failed to import get_db_connection. Check PYTHONPATH and db.py location.", file=sys.stderr)
-        def get_db_connection():
-            print("CRITICAL ERROR: get_db_connection is not available.", file=sys.stderr)
-            return None
+    print("CRITICAL ERROR: Failed to import get_db_connection in department.py.", file=sys.stderr)
+    def get_db_connection(): return None
 
-# --- Import Shared Functions ---
-# ... (keep as is) ...
+try:
+    from utils.directory_configs import get_relative_path_for_db
+except ImportError:
+    print("CRITICAL ERROR: Failed to import get_relative_path_for_db from utils.directory_configs in department.py.", file=sys.stderr)
+    def get_relative_path_for_db(absolute_filepath): return None
+
 try:
     from .home import get_all_departments_from_db
 except ImportError as e:
     print(f"WARNING: Could not import get_all_departments_from_db from .home. Error: {e}", file=sys.stderr)
-    def get_all_departments_from_db():
-        if current_app:
-             current_app.logger.warning("Using fallback get_all_departments_from_db due to import error.")
-        else:
-             print("WARNING: Using fallback get_all_departments_from_db due to import error.", file=sys.stderr)
-        return []
+    def get_all_departments_from_db(): return []
 
-
-# --- Blueprint Definition ---
-# ... (keep as is) ...
 department_bp = Blueprint(
     'department',
     __name__,
@@ -43,266 +34,179 @@ department_bp = Blueprint(
     url_prefix='/departments'
 )
 
-# --- Helper: Simple Text Snippet Generation ---
 def create_snippet(text, max_length=250, indicator="..."):
-    """
-    Creates a snippet from text if it exceeds max_length.
-    Tries to break cleanly at sentence ends or spaces near the limit.
-    Returns the snippet and a boolean indicating if more content exists.
-    """
     if not text or len(text) <= max_length:
-        return text, False # No snippet needed or text is short
-
-    # Try to find a sentence end near the max_length
+        return text, False
     end_sentence = text.rfind('.', 0, max_length + 1)
-    if end_sentence > max_length * 0.7: # Found a sentence end reasonably close
-        snippet = text[:end_sentence + 1]
-        return snippet, True
-
-    # Try to find a space near the max_length
+    if end_sentence > max_length * 0.7:
+        return text[:end_sentence + 1], True
     end_space = text.rfind(' ', 0, max_length + 1)
-    if end_space > max_length * 0.7: # Found a space reasonably close
-         snippet = text[:end_space] + indicator
-         return snippet, True
-
-    # Fallback: hard cut
-    snippet = text[:max_length] + indicator
-    return snippet, True
-
-# --- Helper Functions ---
+    if end_space > max_length * 0.7:
+         return text[:end_space] + indicator, True
+    return text[:max_length] + indicator, True
 
 def get_department_by_id(dept_id):
-    # ... (keep as is - no changes needed here for read more) ...
-    """Fetches department details by ID, adds image URL and specific theme info."""
-    department = None
-    conn = None
-    cursor = None
+    department = None; conn = None; cursor = None
     logger = current_app.logger if current_app else print
-    log_method_error = logger.error if hasattr(logger, 'error') else logger
-    log_method_exception = logger.exception if hasattr(logger, 'exception') else logger
-
     try:
         conn = get_db_connection()
-        if not conn:
-             log_method_error(f"Failed to get DB connection for department ID {dept_id}")
-             return None
+        if not conn: 
+            getattr(logger, 'error', print)(f"Failed to get DB connection for dept ID {dept_id}"); return None
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT * FROM departments WHERE department_id = %s"
-        cursor.execute(query, (dept_id,))
+        cursor.execute("SELECT * FROM departments WHERE department_id = %s", (dept_id,))
         department = cursor.fetchone()
-
         if department:
-            # Image URL construction using url_for (keep for images)
-            db_filename = department.get('image_filename')
-            department['image_url'] = url_for('static', filename=f"images/departments/{db_filename}") if db_filename else url_for('static', filename="images/departments/placeholder.jpg")
-
-            # Theme/CSS mapping (Add your specific logic here)
-            # REMOVED url_for for CSS paths - using direct strings relative to static folder
-            # ASSUMPTION: CSS files are in 'static/website/' directory
+            db_filename_from_db = department.get('image_filename')
+            if db_filename_from_db and current_app and 'UPLOAD_FOLDER_DEPARTMENTS' in current_app.config and get_relative_path_for_db:
+                # *** WORKAROUND: Extract only the filename if path is included ***
+                actual_filename = os.path.basename(db_filename_from_db)
+                full_image_path = os.path.join(current_app.config['UPLOAD_FOLDER_DEPARTMENTS'], actual_filename)
+                relative_image_path = get_relative_path_for_db(full_image_path)
+                if relative_image_path:
+                    department['image_url'] = url_for('static', filename=relative_image_path)
+                else:
+                    department['image_url'] = url_for('static', filename="images/departments/placeholder.jpg")
+                    getattr(logger, 'warning', print)(f"Could not generate relative path for department image: {actual_filename} (original: {db_filename_from_db}) for dept ID {dept_id}. Using placeholder.")
+            else:
+                department['image_url'] = url_for('static', filename="images/departments/placeholder.jpg")
+            
             dept_name = department.get('name', '')
             if dept_name == 'Cardiology':
-                department['specific_css'] = 'website/cardio.css' # FIXED
-                department['hero_icon'] = 'fa-heart-pulse'
-                department['hero_highlight'] = 'Cardiology'
-                department['hero_main'] = 'Care'
+                department['specific_css'] = 'Website/Departments/cardio.css'
+                department['hero_icon'] = 'fa-heart-pulse'; department['hero_highlight'] = 'Cardiology'; department['hero_main'] = 'Rhythm'
             elif dept_name == 'Neurology':
-                department['specific_css'] = 'website/neuro.css' # FIXED
-                department['hero_icon'] = 'fa-brain'
-                department['hero_highlight'] = 'Neurology'
-                department['hero_main'] = 'Expertise'
+                department['specific_css'] = 'Website/Departments/neuro.css'
+                department['hero_icon'] = 'fa-brain'; department['hero_highlight'] = 'Neurology'; department['hero_main'] = 'Insight'
             elif dept_name == 'Orthopedics':
-                department['specific_css'] = 'website/ortho.css' # FIXED
-                department['hero_icon'] = 'fa-bone'
-                department['hero_highlight'] = 'Orthopedics'
-                department['hero_main'] = 'Expertise'
-            # Add elif blocks for other specific departments...
-            else: # Default fallback
-                department['specific_css'] = 'website/generic_department.css' # FIXED
-                department['hero_icon'] = 'fa-stethoscope'
-                department['hero_highlight'] = department.get('name', 'Medical')
-                department['hero_main'] = 'Services'
-                department['hero_images'] = []
-
-    except mysql.connector.Error as db_err:
-        log_method_error(f"Database error fetching department ID {dept_id}: {db_err}")
-    except Exception as e:
-        log_method_exception(f"Unexpected error fetching department ID {dept_id}: {e}")
+                department['specific_css'] = 'Website/Departments/ortho.css'
+                department['hero_icon'] = 'fa-bone'; department['hero_highlight'] = 'Orthopedics'; department['hero_main'] = 'Mobility'
+            elif dept_name == 'Dermatology':
+                department['specific_css'] = 'Website/Departments/derma.css'
+                department['hero_icon'] = 'fa-skin'; department['hero_highlight'] = 'Dermatology'; department['hero_main'] = 'Radiance'
+            else: 
+                department['specific_css'] = 'Website/generic_department.css'
+                department['hero_icon'] = 'fa-stethoscope'; department['hero_highlight'] = department.get('name', 'Medical'); department['hero_main'] = 'Care'
+                department['hero_images'] = [] 
+    except Exception as e: getattr(logger, 'exception', print)(f"Error fetching dept ID {dept_id}: {e}")
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
     return department
 
-
 def get_conditions_by_department(dept_id):
-    # --- Added snippet generation for condition list descriptions ---
-    """Fetches active conditions, generates short descriptions for list view."""
-    conditions = []
-    conn = None
-    cursor = None
+    conditions = []; conn = None; cursor = None
     logger = current_app.logger if current_app else print
-    log_method_error = logger.error if hasattr(logger, 'error') else logger
-    log_method_exception = logger.exception if hasattr(logger, 'exception') else logger
-    SNIPPET_LENGTH_LIST = 100 # Shorter snippet for list view
-
+    SNIPPET_LENGTH_LIST = 100
     try:
         conn = get_db_connection()
-        if not conn:
-            log_method_error(f"Failed to get DB connection for conditions in dept {dept_id}")
-            return []
+        if not conn: 
+            getattr(logger, 'error', print)(f"DB conn failed for conditions in dept {dept_id}"); return []
         cursor = conn.cursor(dictionary=True)
-        query = """
-            SELECT condition_id, condition_name, description, condition_image_filename
-            FROM conditions
-            WHERE department_id = %s AND is_active = TRUE
-            ORDER BY condition_name ASC
-        """
-        cursor.execute(query, (dept_id,))
-        results = cursor.fetchall()
-        for condition_data in results:
-            # Keep url_for for images
-            condition_img_filename = condition_data.get('condition_image_filename')
-            condition_data['image_url'] = url_for('static', filename=f"images/conditions/{condition_img_filename}") if condition_img_filename else url_for('static', filename="images/conditions/disease_placeholder.png")
-
-            condition_data['name'] = condition_data.get('condition_name')
-            desc = condition_data.get('description', '')
-            # Use helper to generate snippet for the list view
-            condition_data['short_description'], _ = create_snippet(desc, SNIPPET_LENGTH_LIST) # Ignore 'has_more' flag for list view
-
-            conditions.append(condition_data)
-    except mysql.connector.Error as db_err:
-         if db_err.errno == 1054:
-             try: column_name = str(db_err).split("'")[1]
-             except IndexError: column_name = "unknown"
-             log_method_error(f"DB Error fetching conditions: Column '{column_name}' missing. Schema mismatch? Err: {db_err}")
-         elif db_err.errno == 1146:
-             log_method_error(f"DB Error fetching conditions: Table 'conditions' missing. Err: {db_err}")
-         else:
-             log_method_error(f"Database error fetching conditions for dept {dept_id}: {db_err}")
-    except Exception as e:
-        log_method_exception(f"Unexpected error fetching conditions for dept {dept_id}: {e}")
+        cursor.execute("SELECT condition_id, condition_name, description, condition_image_filename FROM conditions WHERE department_id = %s AND is_active = TRUE ORDER BY condition_name ASC", (dept_id,))
+        for cond_data in cursor.fetchall():
+            img_file_from_db = cond_data.get('condition_image_filename')
+            if img_file_from_db and current_app and 'UPLOAD_FOLDER_CONDITIONS' in current_app.config and get_relative_path_for_db:
+                # *** WORKAROUND: Extract only the filename if path is included ***
+                actual_filename = os.path.basename(img_file_from_db)
+                full_image_path = os.path.join(current_app.config['UPLOAD_FOLDER_CONDITIONS'], actual_filename)
+                relative_image_path = get_relative_path_for_db(full_image_path)
+                if relative_image_path:
+                    cond_data['image_url'] = url_for('static', filename=relative_image_path)
+                else:
+                    cond_data['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
+                    getattr(logger, 'warning', print)(f"Could not generate relative path for condition image: {actual_filename} (original: {img_file_from_db}) in dept {dept_id}. Using placeholder.")
+            else:
+                cond_data['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
+            
+            cond_data['name'] = cond_data.get('condition_name')
+            desc = cond_data.get('description', '')
+            cond_data['short_description'], _ = create_snippet(desc, SNIPPET_LENGTH_LIST)
+            conditions.append(cond_data)
+    except Exception as e: getattr(logger, 'exception', print)(f"Error fetching conditions for dept {dept_id}: {e}")
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
     return conditions
 
-def get_condition_details_by_id(condition_id):
-    """
-    Fetches detailed condition info, generates snippets for long text fields,
-    and adds flags indicating if more content exists.
-    """
-    condition = None
-    conn = None
-    cursor = None
+def get_condition_details_by_id(condition_id): 
+    condition = None; conn = None; cursor = None
     logger = current_app.logger if current_app else print
-    log_method_error = logger.error if hasattr(logger, 'error') else logger
-    log_method_exception = logger.exception if hasattr(logger, 'exception') else logger
-    SNIPPET_LENGTH_DETAIL = 250 # Define snippet length for detail view
-
+    SNIPPET_LENGTH_DETAIL = 250
     try:
         conn = get_db_connection()
-        if not conn:
-            log_method_error(f"Failed to get DB connection for condition ID {condition_id}")
-            return None
+        if not conn: 
+            getattr(logger, 'error', print)(f"DB conn failed for condition ID {condition_id}"); return None
         cursor = conn.cursor(dictionary=True)
-        # Fetch all necessary fields
         query = """
-            SELECT
-                c.condition_id, c.condition_name AS name, c.description, c.overview,
-                c.symptoms_text AS symptoms, c.causes_text AS causes,
-                c.diagnosis_details AS diagnosis,
-                c.testing_details AS testing, c.educational_content,
-                c.icd_code, c.urgency_level, c.condition_type, c.age_relevance,
-                c.gender_relevance, c.specialist_type, c.self_treatable,
-                c.typical_duration, c.condition_image_filename,
-                dept.name AS department_name, dept.department_id
+            SELECT c.*, c.condition_name AS name, dept.name AS department_name, dept.department_id
             FROM conditions c
             LEFT JOIN departments dept ON c.department_id = dept.department_id
             WHERE c.condition_id = %s AND c.is_active = TRUE
         """
         cursor.execute(query, (condition_id,))
         condition = cursor.fetchone()
-
         if condition:
-            # --- Snippet Generation & Flags ---
-            fields_to_snippet = [ 'symptoms', 'causes', 'diagnosis', 'testing', 'educational_content', 'emergency_info']
+            fields_to_snippet = ['description', 'overview', 'symptoms_text', 'causes_text', 'diagnosis_details', 'testing_details', 'treatment_options', 'prevention_tips', 'prognosis', 'management_lifestyle', 'when_to_see_doctor', 'emergency_info', 'educational_content']
             for field in fields_to_snippet:
                 full_text = condition.get(field)
                 snippet, has_more = create_snippet(full_text, SNIPPET_LENGTH_DETAIL)
-                condition[f"{field}_snippet"] = snippet # e.g., condition['symptoms_snippet']
-                condition[f"{field}_has_more"] = has_more # e.g., condition['symptoms_has_more']
-            # --- End Snippet Generation ---
-
-            # Keep url_for for images
-            img_file = condition.get('condition_image_filename')
-            condition['image_url'] = url_for('static', filename=f"images/conditions/{img_file}") if img_file else url_for('static', filename="images/conditions/disease_placeholder.png")
-
-            # CSS Mapping (direct paths)
-            dept_name = condition.get('department_name')
-            if dept_name == 'Cardiology': condition['specific_css'] = 'website/cardisease.css'
-            elif dept_name == 'Neurology': condition['specific_css'] = 'website/neurodisease.css'
-            elif dept_name == 'Orthopedics': condition['specific_css'] = 'website/orthodisease.css'
-            elif dept_name == 'Dermatology': condition['specific_css'] = 'website/dermadisease.css'
-            elif dept_name == 'Oncology': condition['specific_css'] = 'website/oncologydisease.css'
-            else: condition['specific_css'] = 'website/generic_disease.css'
-
-            # Boolean Display
-            if 'self_treatable' in condition and condition['self_treatable'] is not None:
-                 condition['self_treatable_display'] = 'Yes' if condition['self_treatable'] else 'No'
+                condition[f"{field}_snippet"] = snippet
+                condition[f"{field}_has_more"] = has_more
+            
+            img_file_from_db = condition.get('condition_image_filename')
+            if img_file_from_db and current_app and 'UPLOAD_FOLDER_CONDITIONS' in current_app.config and get_relative_path_for_db:
+                # *** WORKAROUND: Extract only the filename if path is included ***
+                actual_filename = os.path.basename(img_file_from_db)
+                full_image_path = os.path.join(current_app.config['UPLOAD_FOLDER_CONDITIONS'], actual_filename)
+                relative_image_path = get_relative_path_for_db(full_image_path)
+                if relative_image_path:
+                    condition['image_url'] = url_for('static', filename=relative_image_path)
+                else:
+                    condition['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
             else:
-                condition['self_treatable_display'] = 'N/A'
+                condition['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
 
-    except mysql.connector.Error as db_err:
-         if db_err.errno == 1054:
-             try: column_name = str(db_err).split("'")[1]
-             except IndexError: column_name = "unknown"
-             log_method_error(f"DB Error fetching condition details: Column '{column_name}' missing. Schema mismatch? Err: {db_err}")
-         elif db_err.errno == 1146:
-             log_method_error(f"DB Error fetching condition details: Table 'conditions' or 'departments' missing. Err: {db_err}")
-         else:
-             log_method_error(f"Database error fetching condition ID {condition_id}: {db_err}")
-    except Exception as e:
-        log_method_exception(f"Unexpected error fetching condition ID {condition_id}: {e}")
+            dept_name = condition.get('department_name')
+            if dept_name == 'Cardiology': condition['specific_css'] = 'Website/Conditions/cardiodisease.css'
+            elif dept_name == 'Neurology': condition['specific_css'] = 'Website/Conditions/neurodisease.css'
+            elif dept_name == 'Orthopedics': condition['specific_css'] = 'Website/Conditions/orthodisease.css'
+            elif dept_name == 'Dermatology': condition['specific_css'] = 'Website/Conditions/dermadisease.css'
+            else: condition['specific_css'] = 'Website/Conditions/generic_disease.css'
+            condition['self_treatable_display'] = 'Yes' if condition.get('self_treatable') else ('No' if condition.get('self_treatable') is not None else 'N/A')
+    except Exception as e: getattr(logger, 'exception', print)(f"Error fetching condition ID {condition_id}: {e}")
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
+    return condition
 
-    return condition # Returns None if error or not found
-
-
-# --- Routes ---
-
+# ... (rest of the routes remain the same) ...
 @department_bp.route('/')
 def list_departments():
-    # ... (keep as is) ...
-    """Renders the page listing all available departments."""
-    all_departments = get_all_departments_from_db()
-    if not all_departments and current_app:
-        current_app.logger.warning("Department list page: get_all_departments_from_db returned empty. Check logs for that function.")
-
-    return render_template(
-        'Website/Departments/department_list.html',
-        departments=all_departments
-    )
+    all_departments_raw = get_all_departments_from_db()
+    departments_to_display = []
+    excluded_department_name = "Nutrition Services"
+    if all_departments_raw:
+        for dept in all_departments_raw:
+            if dept.get('name', '').strip().lower() != excluded_department_name.lower():
+                departments_to_display.append(dept)
+    if not departments_to_display and current_app:
+        current_app.logger.info(f"No departments to display after excluding '{excluded_department_name}'.")
+    return render_template('Website/Departments/department_list.html', departments=departments_to_display)
 
 @department_bp.route('/<int:dept_id>/')
 def department_landing(dept_id):
-    # ... (keep as is) ...
-    """Renders the landing page for a specific department."""
     department = get_department_by_id(dept_id)
     if not department:
-        if current_app:
-            current_app.logger.warning(f"Department landing page requested for non-existent ID {dept_id}.")
         abort(404, description=f"Department with ID {dept_id} not found.")
-
+    excluded_department_name = "Nutrition Services"
+    if department.get('name', '').strip().lower() == excluded_department_name.lower():
+        abort(404, description="This department page is not available.")
     department_conditions = get_conditions_by_department(dept_id)
-    if current_app:
-        current_app.logger.debug(f"Rendering landing page for dept {dept_id} ('{department.get('name')}'). Conditions found: {len(department_conditions)}")
+    return render_template('Website/Departments/department_landing.html', department=department, conditions=department_conditions)
 
-    template_path = 'Website/Departments/department_landing.html'
-    return render_template(
-        template_path,
-        department=department,
-        conditions=department_conditions
-    )
-
-# --- End of Routes ---
+@department_bp.route('/condition/<int:condition_id>/')
+def condition_detail_page(condition_id): 
+    condition = get_condition_details_by_id(condition_id)
+    if not condition:
+        abort(404, description=f"Condition with ID {condition_id} not found.")
+    return render_template('Website/Departments/disease_detail.html', condition=condition, page_title=condition.get('name', 'Condition Details'))

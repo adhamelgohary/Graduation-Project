@@ -1,0 +1,23 @@
+{% extends "Doctor_Portal/Settings/settings_layout.html" %}
+
+{% block settings_content %}
+<h3>Password & Security</h3>
+<hr>
+<form method="POST" action="{{ url_for('settings.security_settings') }}">
+    <div class="mb-3">
+        <label for="current_password" class="form-label">Current Password <span class="text-danger">*</span></label>
+        <input type="password" class="form-control form-control-sm" id="current_password" name="current_password" required>
+    </div>
+    <div class="mb-3">
+        <label for="new_password" class="form-label">New Password <span class="text-danger">*</span></label>
+        <input type="password" class="form-control form-control-sm" id="new_password" name="new_password" required minlength="8">
+        <small class="form-text text-muted">Minimum 8 characters.</small>
+    </div>
+    <div class="mb-3">
+        <label for="confirm_password" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
+        <input type="password" class="form-control form-control-sm" id="confirm_password" name="confirm_password" required>
+    </div>
+    <hr>
+    <button type="submit" class="button button-primary">Update Password</button>
+</form>
+{% endblock %}

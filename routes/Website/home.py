@@ -12,6 +12,9 @@ home_bp = Blueprint(
 )
 
 # --- Helper to fetch ALL departments including image filename from DB ---
+# This function remains as it might be used by other parts of the application
+# or future features. It is NOT directly used by the modified homepage /index route
+# for the "Our Departments" section anymore.
 def get_all_departments_from_db():
     """
     Fetches ALL departments from the database, including image filename.
@@ -20,9 +23,7 @@ def get_all_departments_from_db():
     departments_data = []
     conn = None
     cursor = None
-    # Define the path for your placeholder image. Ensure this path is
-    # resolvable by the browser in the same way your database paths are.
-    placeholder_image_path = "images/placeholder.jpg" # Example: Adjust if needed
+    placeholder_image_path = "images/placeholder.jpg"
 
     try:
         conn = get_db_connection()
@@ -36,7 +37,7 @@ def get_all_departments_from_db():
                 department_id,
                 name,
                 description,
-                image_filename  -- Fetch the image path/filename stored in the DB
+                image_filename
             FROM departments
             ORDER BY name ASC
         """
@@ -44,28 +45,15 @@ def get_all_departments_from_db():
         cursor.execute(query)
         results = cursor.fetchall()
 
-        # Process results to create the image URL path
         for dept in results:
-            # Get the path/filename from DB
             db_image_path = dept.get('image_filename')
-
-            # --- UPDATED LOGIC ---
-            # Use the database path directly if it exists, otherwise use the placeholder path
             if db_image_path:
-                dept['image_url'] = db_image_path # Use the exact value from the DB
+                dept['image_url'] = db_image_path
             else:
-                dept['image_url'] = placeholder_image_path # Use the defined placeholder path
-            # --- END UPDATED LOGIC ---
-
-            # Optional cleanup: remove raw filename if not needed in template
-            # (You might keep it if the template logic differs based on whether it's a placeholder)
-            # if 'image_filename' in dept:
-            #    del dept['image_filename']
-
+                dept['image_url'] = placeholder_image_path
             departments_data.append(dept)
 
     except mysql.connector.Error as db_err:
-        # Specific check for missing column 'image_filename'
         if db_err.errno == 1054 and 'image_filename' in str(db_err):
              current_app.logger.error(f"Database error fetching departments: Column 'image_filename' might be missing in the 'departments' table. Please verify schema. Error: {db_err}")
         else:
@@ -82,24 +70,17 @@ def get_all_departments_from_db():
     return departments_data
 
 
-# --- Main Homepage Route (No changes needed here) ---
+# --- Main Homepage Route ---
 @home_bp.route('/')
 def index():
     """
     Renders the public homepage.
-    Fetches ALL departments from the database for the categories section.
+    The "Our Departments" section is now statically defined in the home.html template.
     """
-    all_departments = get_all_departments_from_db()
+    # The previous logic for fetching 'featured_departments' is no longer needed
+    # for the "Our Departments" section as it's now static in the template.
+    # If other parts of home.html needed all_departments, that logic would remain here.
+    # Based on the provided home.html, it's not currently used.
 
-    featured_names = [
-       "Cardiology", "Neurology", "Dermatology",
-       "Orthopedics", "Nutrition Services", "General Medicine"
-    ]
-    name_to_dept = {dept['name']: dept for dept in all_departments}
-    featured_departments = [name_to_dept.get(name) for name in featured_names if name_to_dept.get(name)]
-
-    if len(featured_departments) < len(featured_names):
-        current_app.logger.warning(f"Requested featured departments {featured_names}, but only found {len(featured_departments)}. Check names or database.")
-
-    current_app.logger.info(f"Displaying {len(featured_departments)} featured departments on homepage.")
-    return render_template('Website/home.html', featured_departments=featured_departments)
+    current_app.logger.info("Rendering homepage with static 'Our Departments' section.")
+    return render_template('Website/home.html')

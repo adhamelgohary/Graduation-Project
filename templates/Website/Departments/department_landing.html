@@ -18,13 +18,33 @@
         flex-direction: column;
         height: 100%;
     }
+    .conditions-section .conditions .card .image-container { /* Added for image styling */
+        width: 100%;
+        height: 200px; /* Or your desired fixed height */
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #f0f0f0; /* Placeholder background */
+        margin-bottom: 15px;
+        border-radius: var(--border-radius-md, 0.3rem) var(--border-radius-md, 0.3rem) 0 0;
+    }
+    .conditions-section .conditions .card .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Or 'contain' if you prefer */
+    }
     .conditions-section .conditions .card .content {
         flex-grow: 1;
         display: flex;
         flex-direction: column;
+        padding: 15px; /* Add padding to content if image is separate */
     }
     .conditions-section .conditions .card .btn {
         margin-top: auto;
+        margin-left: 15px; /* Align with padding */
+        margin-right: 15px;
+        margin-bottom: 15px;
     }
     @media (max-width: 992px) {
         .conditions-section .conditions {
@@ -101,7 +121,7 @@
                 <img src="{{ url_for('static', filename='png/h1.PNG') }}" alt="Decorative Heart" class="heart-image" style="top: 10%; left: 25%; transform: scale(1.4) rotate(10deg);">
                 <img src="{{ url_for('static', filename='png/h2.png') }}" alt="Decorative Heart" class="heart-image" style="bottom: 15%; left: 70%; transform: scale(1.6) rotate(-15deg);">
                 <img src="{{ url_for('static', filename='png/h3.png') }}" alt="Decorative Heart" class="heart-image" style="bottom: 50%; left: 50%; transform: scale(1.6) rotate(-15deg);">
-                <img src="{{ url_for('static', filename='png/h1.png') }}" alt="Decorative Heart" class="heart-image" style="top: 50%; left: 10%; transform: scale(1.1) rotate(5deg); opacity: 0.7;"> {# Assuming h1.PNG and h1.png are distinct or a typo, adjust if needed #}
+                <img src="{{ url_for('static', filename='png/h1.png') }}" alt="Decorative Heart" class="heart-image" style="top: 50%; left: 10%; transform: scale(1.1) rotate(5deg); opacity: 0.7;">
                 <img src="{{ url_for('static', filename='png/h2.png') }}" alt="Decorative Heart" class="heart-image" style="top: 15%; right: 0%; transform: scale(1.6) rotate(-15deg);">
             <div class="cell" style="top: 15%; left: 70%;"></div>
             <div class="cell" style="top: 45%; left: 20%;"></div>
@@ -144,11 +164,7 @@
                 <img src="{{ url_for('static', filename='png/b4.png') }}" alt="Decorative brain" class="heart-image" style="top: 15%; right: 0%; transform: scale(1.6) rotate(-15deg);">
          </div>
          {% elif department.name == 'Dermatology' %}
-        {# --- Dermatology Section --- #}
         <div class="animated-skin-pattern-container">
-            {# Option 1: Simple repeating SVG pattern or CSS background #}
-            {# For CSS: you could use a repeating-linear-gradient or a subtle texture image #}
-            {# For SVG: A simple pattern definition #}
             <svg width="100%" height="100%" style="position: absolute; top: 0; left: 0; z-index: -1; opacity: 0.1;">
                 <defs>
                     <pattern id="skinPattern" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
@@ -161,7 +177,6 @@
             </svg>
         </div>
         <div class="visual-content dermatology-visuals">
-            {# Simple SVG for skin layer / cell or a lotion bottle #}
             <div class="floating-icon skin-cell-icon" style="top: 20%; left: 15%; width: 60px; height: 60px;">
                 <svg viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="40" fill="var(--illustration-element-bg, #f0f0f0)" stroke="var(--illustration-accent-color, #cccccc)" stroke-width="3"/>
@@ -176,15 +191,12 @@
                     <rect x="22" y="5" width="6" height="5" fill="var(--accent-secondary, #6c757d)" />
                 </svg>
             </div>
-            {# You can add more PNGs if you have them #}
             <img src="{{ url_for('static', filename='png/magnifying_glass.png') }}" alt="Magnifying Glass" class="derma-image" style="top: 30%; left: 60%; width: 100px; opacity: 0.7; animation: floatAnimation 8s ease-in-out infinite alternate;">
             <img src="{{ url_for('static', filename='png/leaf_aloe.png') }}" alt="Aloe Leaf" class="derma-image" style="bottom: 10%; left: 30%; width: 120px; opacity: 0.8; animation: floatAnimation 10s ease-in-out infinite alternate-reverse;">
         </div>
 
-        {% elif department.name == 'Vaccines' or department.name == 'Immunizations' %} {# Or however you name it #}
-        {# --- Vaccines/Immunizations Section --- #}
+        {% elif department.name == 'Vaccines' or department.name == 'Immunizations' %}
         <div class="animated-shield-background">
-            {# CSS animated shields or a static background pattern #}
         </div>
         <div class="visual-content vaccine-visuals">
             <div class="floating-icon syringe-icon-vaccine" style="top: 25%; left: 20%; width: 100px; height: 30px; transform: rotate(-30deg);">
@@ -204,14 +216,11 @@
                     <rect x="10" y="20" width="20" height="30" fill="var(--accent-info, #17a2b8)" opacity="0.7"/>
                 </svg>
             </div>
-            {# Add more icons or PNGs #}
              <img src="{{ url_for('static', filename='png/virus_icon.png') }}" alt="Virus Icon" class="vaccine-image" style="top: 10%; right: 15%; width: 80px; opacity: 0.6; animation: floatSlowAnimation 12s ease-in-out infinite;">
         </div>
 
         {% else %}
-        {# --- Default Fallback Visuals (Optional) --- #}
         <div class="visual-content default-visuals">
-            {# Generic medical icons or a simple pattern #}
             <div class="floating-icon default-icon-1" style="top: 20%; left: 20%;"> <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="var(--illustration-element-bg)"/></svg></div>
             <div class="floating-icon default-icon-2" style="top: 70%; left: 80%;"> <svg viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80" fill="var(--illustration-element-fill)"/></svg></div>
         </div>
@@ -241,16 +250,14 @@
         {% if conditions %}
             {% for condition in conditions %}
             <div class="card">
+                <div class="image-container">
+                    {# *** CORRECTED IMAGE HANDLING HERE *** #}
+                    <img src="{{ condition.image_url | default(url_for('static', filename='images/conditions/disease_placeholder.png')) }}" alt="{{ condition.name | default('Condition image') }}">
+                </div>
                 <div class="content">
                     <h1>{{ condition.name | default('Condition') }}</h1>
-                    <div class="image-text-container">
-                        {# MODIFIED LINE BELOW #}
-                        {% if condition.condition_image_filename %}
-    <img src="{{ url_for('disease_management.serve_condition_image', image_filename_in_db=condition.condition_image_filename) }}" alt="{{ condition.condition_name }}">
-{% endif %}
-                        {# Use 'or' to provide an empty string if description is None or empty, then truncate #}
-                        <p>{{ (condition.description or '') | truncate(120, True) | default('Learn more about this condition.', True) }}</p>
-                    </div>
+                    {# Removed image-text-container as image is now separate #}
+                    <p>{{ (condition.short_description or condition.description or '') | truncate(120, True) | default('Learn more about this condition.', True) }}</p>
                 </div>
                 <a href="{{ url_for('disease_info.view_condition', condition_id=condition.condition_id) }}" class="btn" >Read More</a>
             </div>

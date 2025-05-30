@@ -20,10 +20,18 @@ logger = logging.getLogger(__name__)
 # --- Authorization Helpers ---
 
 def check_doctor_authorization(user):
-    """Checks if the user is an authenticated doctor."""
-    if not user or not user.is_authenticated:
+    logger.info("<<<<< THIS IS THE REAL check_doctor_authorization from Doctor_Portal/utils.py >>>>>") # Add this
+    logger.debug(f"Checking doctor authorization for user: {user}")
+    if not user or not hasattr(user, 'is_authenticated') or not user.is_authenticated:
+        logger.debug("User is not authenticated.")
         return False
-    return getattr(user, 'user_type', None) == 'doctor'
+    logger.debug(f"User ID: {getattr(user, 'id', 'N/A')}")
+    logger.debug(f"User type/role: {getattr(user, 'user_type', 'N/A')}") # Or whatever attribute stores the role
+
+    # Example check:
+    is_doctor = hasattr(user, 'user_type') and user.user_type == 'doctor'
+    logger.debug(f"Is doctor based on check? {is_doctor}")
+    return is_doctor
 
 def can_modify_appointment(cursor, appointment_id, user_id_int):
     """Checks if the user is the provider for the appointment using an existing cursor."""

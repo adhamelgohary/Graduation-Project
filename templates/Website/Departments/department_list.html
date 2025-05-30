@@ -2,7 +2,7 @@
 
 {% extends "Website/base.html" %}
 
-{% block title %}All Departments - Pro Health Center{% endblock %}
+{% block title %}All Medical Departments - Pro Health Center{% endblock %}
 
 {% block head_extra %}
   {# Reuse home.css for card styling, or create a specific department_list.css #}
@@ -120,7 +120,7 @@
 
 {% block content %}
 <div class="main-container department-list-container"> {# Added main-container for width control #}
-  <h1 class="page-title">Our Departments</h1>
+  <h1 class="page-title">Our Medical Departments</h1>
 
   {% include '_flash_messages.html' %} {# Good practice to include flash messages #}
 
@@ -135,25 +135,16 @@
           <img src="{{ url_for('static', filename=(dept.image_url if dept.image_url else 'images/departments/placeholder.jpg')) }}" 
                alt="Image for {{ dept.name | default('Department') }}">
           
-          <div class="card-content">
-            <h3>{{ dept.name | title | default('Unnamed Department') }}</h3>
-            
-            {# --- DESCRIPTION with fix for NoneType --- #}
-            {# Using default(..., true) makes it also replace empty strings with the default #}
-            {# If you only want to replace None, just dept.description | default('fallback') is fine #}
-            <p>{{ (dept.description | default('Discover more about our specialized services in this department.', true)) | truncate(120, true, '...') }}</p>
-            {# truncate(length, killwords, end) #}
-            {# killwords=true allows truncation mid-word if necessary #}
-            {# end='...' is the default ellipsis #}
-
-            {# --- LINK --- #}
-            {% if dept.department_id %}
-              <a href="{{ url_for('department.department_landing', dept_id=dept.department_id) }}" class="button learn-more">View Details</a>
-            {% else %}
-              {# Fallback for safety, though department_id should always exist #}
-              <a href="#" class="button learn-more disabled" aria-disabled="true">Details Unavailable</a>
-            {% endif %}
-          </div>
+               <div class="card-content">
+                <h3>{{ dept.name | title | default('Unnamed Department') }}</h3>
+                <p>{{ (dept.description | default('Discover more about our specialized services in this department.', true)) | truncate(120, true, '...') }}</p>
+                
+                {% if dept.department_id %}
+                  <a href="{{ url_for('department.department_landing', dept_id=dept.department_id) }}" class="button learn-more">View Details</a>
+                {% else %}
+                  <a href="#" class="button learn-more disabled" aria-disabled="true" onclick="return false;">Details Unavailable</a>
+                {% endif %}
+              </div>
         </div>
       {% endfor %}
     </div>

@@ -58,11 +58,6 @@
                 Gender: {{ patient.patient_info.gender | title | replace('_', ' ') if patient.patient_info.gender else 'N/A' }}
             </div>
         </div>
-        <div class="header-actions">
-            <a href="{{ url_for('appointments.create_appointment', patient_id=patient.user_info.user_id) }}" class="button button-primary button-small">
-                <i class="fas fa-calendar-plus fa-fw"></i> Schedule Appointment
-            </a>
-        </div>
     </div>
 
     {% include '_flash_messages.html' %}

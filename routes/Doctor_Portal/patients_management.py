@@ -436,7 +436,7 @@ def view_patient_profile(patient_id):
         
         # Fetch patient's existing vaccinations
         cursor.execute("""
-            SELECT pv.*, v.name as vaccine_name, v.abbreviation as vaccine_abbreviation
+            SELECT pv.*, v.vaccine_name as vaccine_name, v.abbreviation as vaccine_abbreviation
             FROM patient_vaccinations pv
             JOIN vaccines v ON pv.vaccine_id = v.vaccine_id
             WHERE pv.patient_id = %s

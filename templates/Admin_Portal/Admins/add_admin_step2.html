@@ -1,40 +1,56 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Add Admin - Step 2{% endblock %}
+{% block title %}Add Admin (Step 2) - Pro Health Admin Portal{% endblock %}
+
+{% block header_icon %}<i class="fas fa-user-cog fa-fw me-2"></i>{% endblock %}
+{% block header_title %}Add New Admin - Step 2: Admin Level{% endblock %}
 
 {% block content %}
-<h1>Add New Admin - Step 2: Set Admin Level</h1>
-<hr>
-
-{% if user %}
-<div class="mb-3 p-3 bg-light border rounded">
-    <p><strong>User Created:</strong></p>
-    <p><strong>Username:</strong> {{ user.username }}<br>
-       <strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
-</div>
-
-<form method="POST" action="{{ url_for('admin_management.add_admin_step2', user_id=user.user_id) }}">
-
-    <div class="mb-3">
-        <label for="admin_level" class="form-label">Admin Level <span class="text-danger">*</span></label>
-        <select class="form-select" id="admin_level" name="admin_level" required>
-            <option value="" disabled {% if not current_level and not selected_level %}selected{% endif %}>-- Select Level --</option>
-            {% for level in admin_levels %}
-                <option value="{{ level }}" {% if level == current_level or level == selected_level %}selected{% endif %}>
-                    {{ level.capitalize() }}
-                </option>
-            {% endfor %}
-        </select>
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5>Configure Admin Role</h5>
     </div>
-     <p class="text-muted"><small>The admin record should have been created automatically by a trigger. Confirm or change the level here.</small></p>
+    <div class="card-body">
+        {% if user %}
+        <div class="alert alert-info small">
+            <p class="mb-1"><strong>Admin User:</strong> {{ user.first_name }} {{ user.last_name }} (Username: {{ user.username }})</p>
+            <p class="mb-0">The user account has been created with a 'pending' status. Now, please assign an admin level.</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('admin_management.add_admin_step2', user_id=user.user_id) }}">
+            <div class="mb-3">
+                <label for="admin_level" class="form-label">Admin Level <span class="text-danger">*</span></label>
+                <select class="form-select" id="admin_level" name="admin_level" required>
+                    <option value="" disabled {% if not current_level and not selected_level %}selected{% endif %}>Select admin level...</option>
+                    {% for level in admin_levels %}
+                    <option value="{{ level }}" {% if selected_level == level or (not selected_level and current_level == level) %}selected{% endif %}>
+                        {{ level|capitalize }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            {% if current_level %}
+                <input type="hidden" name="current_level_hidden" value="{{ current_level }}">
+                <p class="small text-muted">Default admin level (if set by system): {{ current_level|capitalize }}. You can change it here.</p>
+            {% endif %}
 
-    <hr>
-    <button type="submit" class="btn btn-success">Complete Admin Setup</button>
-    <a href="{{ url_for('admin_management.index') }}" class="btn btn-secondary">Cancel (Admin might be incomplete)</a>
-     <a href="{{ url_for('admin_management.edit_admin_form', admin_id=user.user_id) }}" class="btn btn-outline-info">Go To Edit</a>
-</form>
-{% else %}
- <div class="alert alert-danger">Error: User details not found. Cannot proceed.</div>
- <a href="{{ url_for('admin_management.index') }}" class="btn btn-primary">Back to Admin List</a>
-{% endif %}
+            <p class="text-muted small"><span class="text-danger">*</span> Required field</p>
+
+            <div class="d-flex justify-content-end mt-3">
+                <a href="{{ url_for('admin_management.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-times me-1"></i>Cancel & View Admins
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check-circle me-1"></i> Finish & Create Admin
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>Error: User details not found. Please <a href="{{ url_for('admin_management.add_admin_step1_form') }}" class="alert-link">start the process over</a>.
+        </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

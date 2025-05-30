@@ -494,17 +494,6 @@ def list_appointments():
         provider_locations=provider_locations_list,
         valid_sort_columns=list(VALID_SORT_COLUMNS.keys()))
 
-@appointments_bp.route('/calendar', methods=['GET'])
-@login_required
-def calendar_view():
-    if not check_doctor_authorization(current_user):
-        abort(403)
-    provider_id = get_provider_id(current_user)
-    if provider_id is None:
-        flash("Could not identify provider for calendar view.", "danger")
-        return redirect(url_for('auth.login')) # Or a generic portal dashboard
-    return render_template('Doctor_Portal/Appointments/calendar_view.html', provider_id=provider_id)
-
 @appointments_bp.route('/<int:appointment_id>', methods=['GET'])
 @login_required
 def view_appointment(appointment_id):
@@ -527,153 +516,6 @@ def view_appointment(appointment_id):
                            appointment=details,
                            appointment_statuses=appointment_statuses_enum,
                            is_editable=is_editable)
-
-@appointments_bp.route('/create', methods=['GET', 'POST'])
-@login_required
-def create_appointment():
-    if not check_doctor_authorization(current_user):
-        abort(403)
-    provider_user_id = get_provider_id(current_user)
-    if provider_user_id is None:
-        flash("Could not identify provider.", "danger")
-        return redirect(url_for('auth.login'))
-
-    all_appointment_types_list = get_all_appointment_types()
-    patients_list = get_all_simple(
-        'users', 'user_id', "CONCAT(last_name, ', ', first_name, ' (ID:', user_id, ')')",
-        where_clause="user_type='patient' AND account_status='active'",
-        order_by="last_name, first_name"
-    )
-    doctors_list = [{'user_id': provider_user_id, 'name': f"Dr. {current_user.last_name}, {current_user.first_name}"}]
-    # CRITICAL: Use the real function for locations
-    locations_list = get_all_provider_locations(provider_user_id)
-    if not locations_list and request.method == 'GET': # Only flash on initial load if no locations
-        flash("Warning: No practice locations found. You must add a location in settings before creating appointments.", "warning")
-
-    appointment_type_durations = {str(appt_type['id']): appt_type['default_duration_minutes'] for appt_type in all_appointment_types_list}
-    today_iso = date.today().isoformat()
-    form_data = {} # Initialize for GET
-
-    if request.method == 'POST':
-        conn = None; cursor = None; errors = []
-        form_data = request.form.to_dict() # Repopulate form_data on POST attempt
-
-        patient_id = request.form.get('patient_id', type=int)
-        doctor_id = provider_user_id # Doctor is always the current logged-in user
-        appt_date_str = request.form.get('appointment_date')
-        start_time_str = request.form.get('start_time')
-        appointment_type_id_str = request.form.get('appointment_type_id')
-        doctor_location_id_str = request.form.get('doctor_location_id')
-        reason = form_data.get('reason', '').strip() or None
-        notes = form_data.get('notes', '').strip() or None
-
-        # --- Validation ---
-        if not patient_id: errors.append("Patient is required.")
-        if not appointment_type_id_str: errors.append("Appointment type is required.")
-        appointment_type_id = int(appointment_type_id_str) if appointment_type_id_str and appointment_type_id_str.isdigit() else None
-        if appointment_type_id is None or str(appointment_type_id) not in appointment_type_durations:
-            errors.append("Invalid appointment type selected.")
-
-        if not doctor_location_id_str: errors.append("Practice location is required.")
-        doctor_location_id = int(doctor_location_id_str) if doctor_location_id_str and doctor_location_id_str.isdigit() else None
-        # Validate selected location against the provider's actual locations
-        if doctor_location_id is None or not any(loc['doctor_location_id'] == doctor_location_id for loc in locations_list):
-             if not any(e.startswith("Invalid practice location") for e in errors): errors.append("Invalid practice location selected.")
-        elif not locations_list: # If locations_list is empty, this means no locations exist for the provider
-            errors.append("No practice locations available. Please add one in settings.")
-
-
-        appt_date, start_time, end_time = None, None, None
-        if not appt_date_str or not start_time_str:
-            errors.append("Appointment date and start time are required.")
-        else:
-            try:
-                appt_date = date.fromisoformat(appt_date_str)
-                start_time = time.fromisoformat(start_time_str)
-                if datetime.combine(appt_date, start_time) < datetime.now() - timedelta(minutes=1):
-                    errors.append("Cannot schedule appointments in the past.")
-
-                if appointment_type_id and str(appointment_type_id) in appointment_type_durations:
-                    duration_minutes = appointment_type_durations[str(appointment_type_id)]
-                    end_time = (datetime.combine(appt_date, start_time) + timedelta(minutes=duration_minutes)).time()
-                elif not any(e.startswith("Invalid appointment type") for e in errors): # Avoid duplicate if type already invalid
-                    errors.append("Could not determine appointment duration due to invalid type.")
-            except ValueError:
-                errors.append("Invalid date or time format for appointment.")
-
-        if errors:
-            for err_msg in errors: flash(err_msg, 'danger')
-        else: # Proceed to availability check and DB insert if no validation errors
-            try:
-                # --- Availability Check ---
-                conn_check = get_db_connection()
-                if not conn_check: raise ConnectionError("DB connection failed for availability check.")
-                cursor_check = conn_check.cursor(dictionary=True)
-                is_avail, msg = is_slot_available(cursor_check, doctor_id, doctor_location_id, appt_date, start_time, end_time)
-                if cursor_check: cursor_check.close()
-                if conn_check and conn_check.is_connected(): conn_check.close()
-
-                if not is_avail:
-                    flash(f"Selected slot is not available: {msg}", 'danger')
-                else:
-                    # --- DB Insert ---
-                    conn = get_db_connection()
-                    if not conn: raise ConnectionError("DB connection failed for insert.")
-                    conn.start_transaction()
-                    cursor = conn.cursor()
-                    sql = """
-                        INSERT INTO appointments (patient_id, doctor_id, appointment_date, start_time, end_time,
-                                                  appointment_type_id, status, reason, notes,
-                                                  doctor_location_id, created_by, updated_by, created_at, updated_at)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
-                    """
-                    # Default status for new appointments created by doctor can be 'confirmed'
-                    params = (patient_id, doctor_id, appt_date, start_time, end_time,
-                              appointment_type_id, 'confirmed', reason, notes,
-                              doctor_location_id, provider_user_id, provider_user_id)
-                    cursor.execute(sql, params)
-                    new_id = cursor.lastrowid
-                    conn.commit()
-                    flash(f"Appointment (ID: {new_id}) created successfully for {appt_date_str} at {start_time_str}.", "success")
-                    return redirect(url_for('.view_appointment', appointment_id=new_id))
-
-            except (mysql.connector.Error, ConnectionError) as db_err:
-                logger.error(f"Database error during appointment creation for provider {provider_user_id}: {db_err}", exc_info=True)
-                flash("A database error occurred. Please try again.", "danger")
-                if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
-            except Exception as e:
-                logger.error(f"Unexpected error during appointment creation for provider {provider_user_id}: {e}", exc_info=True)
-                flash("An unexpected error occurred. Please try again.", "danger")
-                if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
-            finally:
-                if 'cursor' in locals() and cursor: cursor.close()
-                if 'conn' in locals() and conn and conn.is_connected(): conn.close()
-                if 'cursor_check' in locals() and cursor_check: cursor_check.close()
-                if 'conn_check' in locals() and conn_check and conn_check.is_connected(): conn_check.close()
-
-        # Re-render form on POST error or if availability check failed
-        return render_template(
-            'Doctor_Portal/Appointments/create_appointment_form.html',
-            form_data=form_data,
-            patients=patients_list,
-            doctors=doctors_list,
-            locations=locations_list,
-            appointment_types=all_appointment_types_list,
-            errors=errors if 'errors' in locals() and errors else [], # Pass errors if they exist
-            today_iso=today_iso
-        )
-
-    # Initial GET request
-    return render_template(
-        'Doctor_Portal/Appointments/create_appointment_form.html',
-        patients=patients_list,
-        doctors=doctors_list,
-        locations=locations_list,
-        appointment_types=all_appointment_types_list,
-        today_iso=today_iso,
-        form_data=form_data,
-        errors=None
-    )
 
 @appointments_bp.route('/<int:appointment_id>/cancel', methods=['POST'])
 @login_required
@@ -698,32 +540,57 @@ def cancel_appointment(appointment_id):
             flash(f"Cannot cancel appointment: Current status is '{appt['status']}'.", "warning")
         else:
             appt_date_str_for_redirect = appt.get('appointment_date').isoformat() if appt.get('appointment_date') else None
-            if cursor.is_connected(): cursor.close() # Close dict cursor
-            cursor = conn.cursor() # Non-dict cursor for update
-            conn.start_transaction()
+            
+            if cursor:
+                cursor.close() 
+            
+            cursor = conn.cursor() 
+
+            # --- Start Transaction Safely ---
+            transaction_started_here = False
+            if not conn.in_transaction:
+                conn.start_transaction()
+                transaction_started_here = True # Keep track if WE started it here
+            # --- End Start Transaction Safely ---
+
             cursor.execute("UPDATE appointments SET status = 'canceled', updated_by = %s, updated_at = NOW() WHERE appointment_id = %s",
                            (provider_user_id, appointment_id))
-            conn.commit()
+            
+            # Only commit if a transaction is active. If we didn't start one,
+            # and one wasn't already active, and autocommit is somehow true,
+            # this commit might not be what we want.
+            # However, with autocommit=False (ideal), this commit is correct.
+            if conn.in_transaction:
+                conn.commit()
+            
             if cursor.rowcount > 0:
                 flash("Appointment canceled successfully.", "success")
                 success = True
             else:
                 flash("Failed to cancel appointment. It might have been modified by another process.", "warning")
-                if conn.in_transaction: conn.rollback()
+                # Rollback if a transaction is active.
+                # If we started it, we should manage it. If one was already in progress,
+                # rolling back here might affect things outside this specific DML.
+                # This part needs careful consideration of your overall transaction strategy.
+                if conn.in_transaction: # Check before rollback
+                    conn.rollback() 
 
     except Exception as err:
         logger.error(f"Error canceling appointment {appointment_id} for provider {provider_user_id}: {err}", exc_info=True)
         flash("An error occurred while canceling the appointment.", "danger")
-        if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
+        if conn and conn.is_connected() and conn.in_transaction:
+            conn.rollback()
     finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
+        if cursor:
+            cursor.close()
+        if conn and conn.is_connected():
+            conn.close()
+
 
     redirect_url = request.referrer or url_for('.list_appointments')
     if success and request.referrer and f'/appointments/{appointment_id}' in request.referrer:
         redirect_url = url_for('.list_appointments', view='custom', start_date=appt_date_str_for_redirect, end_date=appt_date_str_for_redirect) if appt_date_str_for_redirect else url_for('.list_appointments')
     return redirect(redirect_url)
-
 
 @appointments_bp.route('/<int:appointment_id>/reschedule', methods=['GET', 'POST'])
 @login_required
@@ -885,14 +752,6 @@ def reschedule_appointment(appointment_id):
     # No finally needed here as conn_fetch/cursor_fetch are closed within the try
 
 
-# routes/Doctor_Portal/appointment_management.py
-
-# ... (other imports and functions) ...
-
-# routes/Doctor_Portal/appointment_management.py
-
-# ... (other imports and functions) ...
-
 @appointments_bp.route('/<int:appointment_id>/update_status', methods=['POST'])
 @login_required
 def update_appointment_status(appointment_id):
@@ -1012,91 +871,6 @@ def update_appointment_notes(appointment_id):
         logger.error(f"Error updating notes for appointment {appointment_id}: {err}", exc_info=True)
         if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
         return jsonify(success=False, message="A server error occurred while updating notes."), 500
-    finally:
-        if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-
-@appointments_bp.route('/feed', methods=['GET'])
-@login_required
-def appointment_data_feed():
-    if not check_doctor_authorization(current_user):
-        return jsonify([])
-    provider_user_id = get_provider_id(current_user)
-    if provider_user_id is None:
-        return jsonify({"error": "Provider not found."}), 400
-
-    start_str, end_str = request.args.get('start'), request.args.get('end')
-    if not (start_str and end_str):
-        return jsonify({"error": "Start and end date parameters are required."}), 400
-
-    try:
-        start_date = date.fromisoformat(start_str.split('T')[0])
-        end_date_fc = date.fromisoformat(end_str.split('T')[0]) # FullCalendar end is exclusive for dayGrid
-    except ValueError:
-        return jsonify({"error": "Invalid date format for start or end date."}), 400
-
-    conn = None; cursor = None; events = []
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        sql = """
-            SELECT a.appointment_id as id,
-                   CONCAT(p_user.last_name, ', ', p_user.first_name) as title_patient,
-                   at.type_name,
-                   a.appointment_date, a.start_time, a.end_time, a.status,
-                   dl.location_name
-            FROM appointments a
-            JOIN users p_user ON a.patient_id = p_user.user_id
-            LEFT JOIN doctor_locations dl ON a.doctor_location_id = dl.doctor_location_id
-            LEFT JOIN appointment_types at ON a.appointment_type_id = at.type_id
-            WHERE a.doctor_id = %s
-              AND a.appointment_date >= %s
-              AND a.appointment_date < %s  -- Use < for end_date as FullCalendar typically provides the start of the day *after* the range for all-day slots
-              AND a.status NOT IN ('canceled')
-        """
-        cursor.execute(sql, (provider_user_id, start_date, end_date_fc)) # Use end_date_fc from FullCalendar
-        appointments = cursor.fetchall()
-
-        status_colors = { # Ensure these match your CSS color scheme if using class-based coloring
-            'confirmed': '#198754', 'completed': '#6c757d', 'no-show': '#ffc107',
-            'rescheduled': '#fd7e14', 'scheduled': '#0d6efd', 'pending': '#0dcaf0'
-        }
-
-        for appt in appointments:
-            try:
-                if not isinstance(appt['start_time'], timedelta) or not isinstance(appt['end_time'], timedelta):
-                    logger.warning(f"Skipping appointment {appt['id']} due to invalid time data in feed.")
-                    continue
-                start_dt = datetime.combine(appt['appointment_date'], time.min) + appt['start_time']
-                end_dt = datetime.combine(appt['appointment_date'], time.min) + appt['end_time']
-                start_dt_str, end_dt_str = start_dt.isoformat(), end_dt.isoformat()
-            except (TypeError, ValueError) as time_err:
-                logger.warning(f"Skipping appointment {appt['id']} due to time formatting error in feed: {time_err}")
-                continue
-
-            loc_info = f" @ {appt['location_name']}" if appt.get('location_name') else ""
-            type_name_display = appt.get('type_name', 'Appointment')
-            event_title = f"{appt['title_patient']} ({type_name_display}{loc_info})"
-
-            event = {
-                'id': appt['id'],
-                'title': event_title,
-                'start': start_dt_str,
-                'end': end_dt_str,
-                'color': status_colors.get(appt['status'], '#6c757d'), # Default color
-                'url': url_for('.view_appointment', appointment_id=appt['id']),
-                'extendedProps': {
-                    'status': appt['status'],
-                    'type': type_name_display,
-                    'location': appt.get('location_name', 'N/A')
-                }
-            }
-            events.append(event)
-        return jsonify(events)
-
-    except Exception as err:
-        logger.error(f"Error generating appointment data feed for provider {provider_user_id}: {err}", exc_info=True)
-        return jsonify({"error": "A server error occurred while fetching appointment data."}), 500
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()

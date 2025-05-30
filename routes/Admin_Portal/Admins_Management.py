@@ -1,18 +1,8 @@
 # admin_management.py
-# Adapted for the new schema structure BUT reverts to PLAIN TEXT PASSWORDS.
-# WARNING: THIS VERSION STORES PASSWORDS IN PLAIN TEXT IN THE 'password' COLUMN.
-# THIS IS HIGHLY INSECURE AND NOT RECOMMENDED FOR PRODUCTION ENVIRONMENTS.
-# Relies on explicit commit/rollback. Assumes db connection has autocommit=False.
-# Also relies on the database trigger 'after_users_insert_professional' for subtype record creation.
-#
-# ADDED FEATURES:
-#   * Suspend/Deactivate users via account_status in Edit Admin.
-#   * Password Reset is handled via the existing Edit Admin password fields.
-#   * Role Definition management (List, Add, Edit, Delete Roles).
 
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
-# Removed: from werkzeug.security import generate_password
+from werkzeug.security import generate_password_hash # Added for password hashing
 from db import get_db_connection
 from math import ceil
 import mysql.connector # For specific error handling
@@ -22,11 +12,8 @@ admin_management = Blueprint('admin_management', __name__)
 
 # --- Constants ---
 PER_PAGE = 10
-# Allowed sort columns remain the same as they map to users/admins tables
-ALLOWED_SORT_COLUMNS = {'first_name', 'last_name', 'email', 'admin_level', 'account_status'} # Added account_status
-# Default/fallback admin levels matching the new schema
+ALLOWED_SORT_COLUMNS = {'first_name', 'last_name', 'email', 'admin_level', 'account_status'}
 DEFAULT_ADMIN_LEVELS = ['regular', 'super']
-# Default/fallback account statuses matching the new schema
 DEFAULT_ACCOUNT_STATUSES = ['active', 'inactive', 'suspended', 'pending']
 
 
@@ -40,14 +27,15 @@ def get_enum_values(table_name, column_name):
     try:
         connection = get_db_connection()
         if not connection or not connection.is_connected():
+            current_app.logger.error(f"DB connection object invalid or not connected for ENUM fetch {table_name}.{column_name}")
             raise ConnectionError("DB connection failed for ENUM fetch")
+
         cursor = connection.cursor()
         db_name = connection.database
         if not db_name:
             db_name = current_app.config.get('MYSQL_DB')
         if not db_name:
             current_app.logger.warning("Could not determine database name to fetch ENUMs.")
-            # Return defaults based on common columns if name unknown
             if table_name == 'admins' and column_name == 'admin_level': return DEFAULT_ADMIN_LEVELS
             if table_name == 'users' and column_name == 'account_status': return DEFAULT_ACCOUNT_STATUSES
             return []
@@ -62,21 +50,21 @@ def get_enum_values(table_name, column_name):
         result = cursor.fetchone()
 
         if result and result[0]:
-            # Improved parsing for ENUM('val1','val2',...)
             enum_def = result[0]
             if enum_def.lower().startswith("enum("):
-                # Extract content between parentheses and split by comma
-                content = enum_def[5:-1] # Remove "enum(" and ")"
-                # Split by comma, remove surrounding quotes (single or double)
+                content = enum_def[5:-1]
                 enum_values = [val.strip().strip("'").strip('"') for val in content.split(',')]
             else:
-                 current_app.logger.warning(f"Could not parse ENUM string: {result[0]}")
+                 current_app.logger.warning(f"Could not parse ENUM string: {result[0]} for {table_name}.{column_name}")
         else:
             current_app.logger.warning(f"Could not find ENUM definition for {table_name}.{column_name}")
 
     except mysql.connector.Error as db_err:
         current_app.logger.error(f"Database error fetching ENUM values for {table_name}.{column_name}: {db_err}")
-        enum_values = [] # Ensure empty list on error
+        enum_values = []
+    except ConnectionError as conn_err:
+        current_app.logger.error(f"Connection error during ENUM fetch for {table_name}.{column_name}: {conn_err}")
+        enum_values = []
     except Exception as e:
         current_app.logger.error(f"General error fetching ENUM values for {table_name}.{column_name}: {e}")
         enum_values = []
@@ -84,7 +72,6 @@ def get_enum_values(table_name, column_name):
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
-    # Use defaults if fetching failed for known columns
     if not enum_values:
         if table_name == 'admins' and column_name == 'admin_level':
             current_app.logger.warning("ENUM fetch failed for admin_level, using defaults.")
@@ -102,12 +89,12 @@ def get_admin_or_404(admin_id):
     try:
         connection = get_db_connection()
         if not connection or not connection.is_connected():
-            current_app.logger.error(f"DB connection failed in get_admin_or_404")
+            current_app.logger.error(f"DB connection failed in get_admin_or_404 for admin_id {admin_id}")
             raise ConnectionError("DB connection failed")
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
             SELECT u.user_id, u.username, u.first_name, u.last_name, u.email, u.phone,
-                   u.account_status, u.created_at, u.updated_at, -- Added user fields
+                   u.account_status, u.created_at, u.updated_at,
                    a.admin_level
             FROM users u
             JOIN admins a ON u.user_id = a.user_id
@@ -115,10 +102,13 @@ def get_admin_or_404(admin_id):
         """, (admin_id,))
         admin = cursor.fetchone()
         if not admin:
-            current_app.logger.warning(f"Admin not found for ID {admin_id} in get_admin_or_404")
+            current_app.logger.warning(f"Admin not found for ID {admin_id} in get_admin_or_404 (user_type check might be relevant).")
     except mysql.connector.Error as db_err:
         current_app.logger.error(f"DB Error in get_admin_or_404 for ID {admin_id}: {db_err}")
-        admin = None # Ensure None on error
+        admin = None
+    except ConnectionError as conn_err:
+        current_app.logger.error(f"Connection Error in get_admin_or_404 for ID {admin_id}: {conn_err}")
+        admin = None
     except Exception as e:
         current_app.logger.error(f"General Error in get_admin_or_404 for ID {admin_id}: {e}")
         admin = None
@@ -128,13 +118,14 @@ def get_admin_or_404(admin_id):
     return admin
 
 def get_user_basic_info(user_id):
-    """Fetches basic user info (username, names) for display."""
+    """Fetches basic user info (username, names) for display. Ensures user_type is 'admin'."""
     connection = None
     cursor = None
     user_info = None
     try:
         connection = get_db_connection()
         if not connection or not connection.is_connected():
+            current_app.logger.error(f"DB connection failed for basic user info (user_id: {user_id})")
             raise ConnectionError("DB connection failed for basic user info")
         cursor = connection.cursor(dictionary=True)
         cursor.execute("""
@@ -143,9 +134,14 @@ def get_user_basic_info(user_id):
             WHERE user_id = %s AND user_type = 'admin'
         """, (user_id,))
         user_info = cursor.fetchone()
-        current_app.logger.debug(f"get_user_basic_info for {user_id} found: {user_info}")
+        if user_info:
+            current_app.logger.debug(f"get_user_basic_info for admin user {user_id} found: {user_info}")
+        else:
+            current_app.logger.warning(f"get_user_basic_info for user_id {user_id} returned no data (is user_type 'admin'?).")
     except mysql.connector.Error as db_err:
          current_app.logger.error(f"DB error fetching basic info for user ID {user_id}: {db_err}")
+    except ConnectionError as conn_err:
+        current_app.logger.error(f"Connection error fetching basic info for user ID {user_id}: {conn_err}")
     except Exception as e:
         current_app.logger.error(f"General error fetching basic info for user ID {user_id}: {e}")
     finally:
@@ -153,62 +149,15 @@ def get_user_basic_info(user_id):
         if connection and connection.is_connected(): connection.close()
     return user_info
 
-def get_role_id(role_name):
-    """Fetches the role_id for a given role_name."""
-    connection = None
-    cursor = None
-    role_id = None
-    try:
-        connection = get_db_connection()
-        if not connection or not connection.is_connected():
-            raise ConnectionError("DB connection failed for role ID fetch")
-        cursor = connection.cursor()
-        cursor.execute("SELECT role_id FROM roles WHERE role_name = %s", (role_name,))
-        result = cursor.fetchone()
-        if result:
-            role_id = result[0]
-        else:
-            current_app.logger.error(f"Role '{role_name}' not found in roles table.")
-    except mysql.connector.Error as db_err:
-         current_app.logger.error(f"DB error fetching role ID for '{role_name}': {db_err}")
-    except Exception as e:
-        current_app.logger.error(f"General error fetching role ID for '{role_name}': {e}")
-    finally:
-        if cursor: cursor.close()
-        if connection and connection.is_connected(): connection.close()
-    return role_id
-
-# --- NEW HELPER ---
-def get_role_or_404(role_id):
-    """Fetches role details by ID or returns None."""
-    connection = None
-    cursor = None
-    role = None
-    try:
-        connection = get_db_connection()
-        if not connection or not connection.is_connected():
-            raise ConnectionError("DB connection failed getting role")
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT role_id, role_name, description, created_at, updated_at FROM roles WHERE role_id = %s", (role_id,))
-        role = cursor.fetchone()
-    except mysql.connector.Error as db_err:
-        current_app.logger.error(f"DB Error fetching role ID {role_id}: {db_err}")
-    except Exception as e:
-        current_app.logger.error(f"General Error fetching role ID {role_id}: {e}")
-    finally:
-        if cursor: cursor.close()
-        if connection and connection.is_connected(): connection.close()
-    return role
 
 # --- Admin User Routes ---
 
 @admin_management.route('/admin/admins', methods=['GET'])
 @login_required
 def index():
-    """Displays a paginated list of admins with search and sort."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
-        return redirect(url_for('login.login')) # Or wherever non-admins should go
+        flash("Access denied. You must be an admin to view this page.", "danger")
+        return redirect(url_for('login.login'))
 
     page = request.args.get('page', 1, type=int)
     search_term = request.args.get('q', '').strip()
@@ -226,6 +175,7 @@ def index():
     try:
         connection = get_db_connection()
         if not connection or not connection.is_connected():
+            current_app.logger.error("DB connection failed in admin index route.")
             raise ConnectionError("DB connection failed in admin index")
         cursor = connection.cursor(dictionary=True)
 
@@ -249,12 +199,11 @@ def index():
         total_pages = ceil(total_items / PER_PAGE) if total_items > 0 else 0
 
         offset = (page - 1) * PER_PAGE
-        # Determine prefix for sort column
         if sort_by == "admin_level":
             sort_column_prefix = "a."
         elif sort_by == "account_status":
             sort_column_prefix = "u."
-        else: # first_name, last_name, email are in users table
+        else:
             sort_column_prefix = "u."
 
         data_query = f"""
@@ -269,51 +218,50 @@ def index():
     except mysql.connector.Error as db_err:
         flash(f"Database error fetching admins: {db_err}", "danger")
         current_app.logger.error(f"DB Error fetching admin list: {db_err}")
+    except ConnectionError as conn_err:
+        flash("Error connecting to the database to fetch admins.", "danger")
+        current_app.logger.error(f"Connection error fetching admin list: {conn_err}")
     except Exception as e:
         flash(f"Error fetching admins: {str(e)}", "danger")
-        current_app.logger.error(f"General Error fetching admin list: {e}")
+        current_app.logger.error(f"General Error fetching admin list: {e}", exc_info=True)
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
     return render_template(
-        'Admin_Portal/Admins/manage_admins.html', # Assuming this is the template name
+        'Admin_Portal/Admins/manage_admins.html',
         admins=admins, page=page, total_pages=total_pages, per_page=PER_PAGE,
         total_items=total_items, search_term=search_term, sort_by=sort_by,
         sort_order=sort_order,
-        allowed_sort_columns=ALLOWED_SORT_COLUMNS # Pass allowed columns for template links
+        allowed_sort_columns=ALLOWED_SORT_COLUMNS
     )
 
-
-# --- Add Admin Step 1 (No changes needed here for the requested features) ---
 
 @admin_management.route('/admin/admins/add/step1', methods=['GET'])
 @login_required
 def add_admin_step1_form():
-    """Displays Step 1 of the add admin form (User details)."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('login.login'))
-    return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data={}) # Assuming template name
+    return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data={})
 
 @admin_management.route('/admin/admins/add/step1', methods=['POST'])
 @login_required
 def add_admin_step1():
-    """Processes Step 1: Creates user, stores PLAIN TEXT password, assigns role."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('login.login'))
 
     username = request.form.get('username')
     email = request.form.get('email')
-    password = request.form.get('password') # Plain text password
+    password = request.form.get('password')
     confirm_password = request.form.get('confirm_password')
     first_name = request.form.get('first_name')
     last_name = request.form.get('last_name')
     phone = request.form.get('phone') or None
 
     form_data_for_render = request.form.copy()
-    form_data_for_render['password'] = '' # Clear passwords for re-render
+    form_data_for_render['password'] = ''
     form_data_for_render['confirm_password'] = ''
 
     if not all([username, email, password, confirm_password, first_name, last_name]):
@@ -324,22 +272,16 @@ def add_admin_step1():
         flash("Passwords do not match.", "danger")
         return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data=form_data_for_render)
 
-    # WARNING: No Hashing - Storing plain text password
-    # hashed_password = generate_password(password) # Removed
+    hashed_password = generate_password_hash(password)
 
     connection = None
     cursor = None
     user_id = None
-    admin_role_id = get_role_id('Admin') # Fetch Admin role ID
-
-    if not admin_role_id:
-        flash("Critical Error: 'Admin' role not found in the database.", "danger")
-        current_app.logger.error("Could not find role_id for 'Admin' during admin creation.")
-        return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data=form_data_for_render)
 
     try:
         connection = get_db_connection()
         if not connection or not connection.is_connected():
+            current_app.logger.error("DB connection failed in add_admin_step1 POST.")
             raise ConnectionError("DB connection failed")
         cursor = connection.cursor()
 
@@ -349,103 +291,104 @@ def add_admin_step1():
             flash("Email or Username already exists.", "danger")
             return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data=form_data_for_render)
 
-        # Insert into users table with PLAIN TEXT password into password column
-        # Default account_status should be handled by DB default or trigger. Assuming 'pending' or 'active'.
         cursor.execute("""
             INSERT INTO users (username, email, password, first_name, last_name,
-                               user_type, phone)
-            VALUES (%s, %s, %s, %s, %s, 'admin', %s)
-        """, (username, email, password, first_name, last_name, phone)) # Using plain 'password' here
+                               user_type, phone, account_status)
+            VALUES (%s, %s, %s, %s, %s, 'admin', %s, %s)
+        """, (username, email, hashed_password, first_name, last_name, phone, 'pending'))
 
         user_id = cursor.lastrowid
         if not user_id:
              connection.rollback()
-             current_app.logger.error(f"Failed to get lastrowid for user {username} even after INSERT seemed okay.")
+             current_app.logger.error(f"Failed to get lastrowid for user {username} after INSERT.")
              flash("Error: Could not retrieve user ID after creation.", "danger")
              return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data=form_data_for_render)
 
-        # Insert into user_roles table
-        cursor.execute("""
-            INSERT INTO user_roles (user_id, role_id) VALUES (%s, %s)
-        """, (user_id, admin_role_id))
+        # The trigger 'after_users_insert_professional' should create the 'admins' record.
+        # If it doesn't, Step 2 will encounter issues.
 
-        # Trigger 'after_users_insert_professional' should create the 'admins' record.
+        connection.commit()
 
-        connection.commit() # Commit both inserts
-
-        current_app.logger.info(f"Step 1: Committed user insert for {username} (ID: {user_id}) with PLAIN TEXT password and assigned Admin role. Trigger should create admins record. Redirecting to Step 2.")
-        flash("Step 1 complete: User account created with default admin settings. Now confirm or change admin level.", "info")
+        current_app.logger.info(f"Step 1: Committed user insert for {username} (ID: {user_id}) with HASHED password. Trigger should create admins record. Redirecting to Step 2.")
+        flash("Step 1 complete: User account created with default admin settings and 'pending' status. Now confirm admin level.", "info")
         return redirect(url_for('admin_management.add_admin_step2_form', user_id=user_id))
 
     except mysql.connector.Error as db_err:
         try:
             if connection and connection.is_connected(): connection.rollback()
         except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
-        if db_err.errno == 1062: # Duplicate entry
+        if db_err.errno == 1062:
              flash(f"Database error: Username or Email likely already exists.", "danger")
              current_app.logger.warning(f"Duplicate entry error adding admin {username}/{email}: {db_err}")
         else:
              flash(f"Database error creating user: {db_err}", "danger")
-             current_app.logger.error(f"DB Error adding user/role (step 1) for {username}: {db_err}")
+             current_app.logger.error(f"DB Error adding user (step 1) for {username}: {db_err}")
+        return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data=form_data_for_render)
+    except ConnectionError as conn_err:
+        try:
+            if connection and connection.is_connected(): connection.rollback()
+        except Exception as rb_err: current_app.logger.error(f"Error during rollback after connection error: {rb_err}")
+        flash("Error connecting to the database. Could not create user.", "danger")
+        current_app.logger.error(f"Connection error during add admin step 1 for {username}: {conn_err}")
         return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data=form_data_for_render)
     except Exception as e:
         try:
             if connection and connection.is_connected(): connection.rollback()
         except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt after general error: {rb_err}")
         flash(f"Error creating user: {str(e)}", "danger")
-        current_app.logger.error(f"Non-DB Error adding user/role (step 1) for {username}: {e}")
+        current_app.logger.error(f"Non-DB Error adding user (step 1) for {username}: {e}", exc_info=True)
         return render_template('Admin_Portal/Admins/add_admin_step1.html', form_data=form_data_for_render)
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
-    # Fallback redirect in case of unexpected flow
     return redirect(url_for('admin_management.add_admin_step1_form'))
 
-
-# --- Add Admin Step 2 (No changes needed here for the requested features) ---
 
 @admin_management.route('/admin/admins/add/step2/<int:user_id>', methods=['GET'])
 @login_required
 def add_admin_step2_form(user_id):
-    """Displays Step 2 of the add admin form (Set Admin Level)."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('login.login'))
 
     current_app.logger.info(f"Step 2 Form (GET): Received request for user_id = {user_id}")
     user_info = get_user_basic_info(user_id)
 
     if not user_info:
-        current_app.logger.error(f"Step 2 Form (GET): User info not found for ID {user_id}. User might not exist or is not an admin.")
-        flash("Admin user not found or invalid ID.", "danger")
+        current_app.logger.error(f"Step 2 Form (GET): Admin user info not found for ID {user_id}. User might not exist or is not an admin type.")
+        flash("Admin user not found or invalid ID. Ensure user was created as an admin type.", "danger")
         return redirect(url_for('admin_management.index'))
 
     admin_levels = get_enum_values('admins', 'admin_level') or DEFAULT_ADMIN_LEVELS
 
-    # Fetch the current admin level set by the trigger (or previous step)
     connection = None
     cursor = None
     current_level = None
     try:
         connection = get_db_connection()
-        cursor = connection.cursor()
+        if not connection or not connection.is_connected():
+            current_app.logger.error(f"DB connection failed in add_admin_step2_form for user {user_id}")
+            raise ConnectionError("DB connection failed")
+        cursor = connection.cursor(dictionary=True)
         cursor.execute("SELECT admin_level FROM admins WHERE user_id = %s", (user_id,))
         result = cursor.fetchone()
         if result:
-            current_level = result[0]
+            current_level = result['admin_level']
         else:
-            current_app.logger.warning(f"Step 2 Form (GET): No record found in 'admins' table for user_id {user_id}. Trigger might have failed.")
-            # Don't flash here, let the POST handle it if it fails
+            current_app.logger.warning(f"Step 2 Form (GET): No record found in 'admins' table for user_id {user_id}. Trigger might have failed or not run yet.")
+    except mysql.connector.Error as db_err:
+        current_app.logger.error(f"DB Error fetching current admin level for {user_id} in Step 2 GET: {db_err}")
+    except ConnectionError as conn_err:
+        current_app.logger.error(f"Connection Error fetching current admin level for {user_id} in Step 2 GET: {conn_err}")
     except Exception as e:
-        current_app.logger.error(f"Error fetching current admin level for {user_id} in Step 2 GET: {e}")
-        # Don't flash, proceed with defaults
+        current_app.logger.error(f"Error fetching current admin level for {user_id} in Step 2 GET: {e}", exc_info=True)
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
     return render_template(
-        'Admin_Portal/Admins/add_admin_step2.html', # Assuming template name
+        'Admin_Portal/Admins/add_admin_step2.html',
         user=user_info,
         admin_levels=admin_levels,
         current_level=current_level
@@ -454,9 +397,8 @@ def add_admin_step2_form(user_id):
 @admin_management.route('/admin/admins/add/step2/<int:user_id>', methods=['POST'])
 @login_required
 def add_admin_step2(user_id):
-    """Processes Step 2: Updates the admin level in the 'admins' table."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('login.login'))
 
     admin_level = request.form.get('admin_level')
@@ -464,17 +406,20 @@ def add_admin_step2(user_id):
 
     admin_levels_valid = get_enum_values('admins', 'admin_level') or DEFAULT_ADMIN_LEVELS
 
+    user_info = get_user_basic_info(user_id)
+    if not user_info:
+        current_app.logger.error(f"Step 2 (POST): User info lost for ID {user_id} (not an admin type or does not exist).")
+        flash("Admin user not found. Cannot set admin level.", "danger")
+        return redirect(url_for('admin_management.index'))
+
     if not admin_level or admin_level not in admin_levels_valid:
         flash("Invalid or missing admin level selected.", "danger")
-        user_info = get_user_basic_info(user_id) # Refetch needed info for re-render
-        if not user_info:
-            current_app.logger.error(f"Step 2 (POST): User info lost for ID {user_id} on validation fail.")
-            return redirect(url_for('admin_management.index')) # Redirect if user info lost
         return render_template(
             'Admin_Portal/Admins/add_admin_step2.html',
             user=user_info,
             admin_levels=admin_levels_valid,
-            selected_level=admin_level # Pass back invalid selection
+            selected_level=admin_level,
+            current_level=request.form.get('current_level_hidden')
         )
 
     connection = None
@@ -482,34 +427,44 @@ def add_admin_step2(user_id):
     try:
         connection = get_db_connection()
         if not connection or not connection.is_connected():
+            current_app.logger.error(f"DB connection failed in add_admin_step2 POST for user {user_id}")
             raise ConnectionError("DB connection failed for step 2 update")
         cursor = connection.cursor()
 
-        # Use INSERT ... ON DUPLICATE KEY UPDATE or check existence first if trigger might fail
-        # Simpler approach: Just try UPDATE. If trigger failed, this won't find the row.
-        cursor.execute("""
-            UPDATE admins SET admin_level = %s WHERE user_id = %s
-        """, (admin_level, user_id))
+        cursor.execute("SELECT user_id FROM admins WHERE user_id = %s", (user_id,))
+        admin_record_exists = cursor.fetchone()
+
+        if not admin_record_exists:
+            current_app.logger.warning(f"Step 2 (POST): No record in 'admins' for user_id {user_id}. Attempting to create it.")
+            cursor.execute("""
+                INSERT INTO admins (user_id, admin_level) VALUES (%s, %s)
+                ON DUPLICATE KEY UPDATE admin_level = VALUES(admin_level)
+            """, (user_id, admin_level))
+        else:
+            cursor.execute("""
+                UPDATE admins SET admin_level = %s WHERE user_id = %s
+            """, (admin_level, user_id))
 
         rows_affected = cursor.rowcount
         connection.commit()
 
-        if rows_affected == 0:
-             # Could be trigger failure OR the level selected was the same as current
-             # Check if the record exists at all to differentiate
-             cursor.execute("SELECT 1 FROM admins WHERE user_id = %s", (user_id,))
-             exists = cursor.fetchone()
-             if not exists:
-                 current_app.logger.error(f"Step 2 (POST): FAILED. No record in 'admins' table for user_id {user_id}. Trigger likely failed.")
-                 flash("ERROR: Admin setup failed. Could not find admin-specific record. Please delete user and retry.", "danger")
-                 # Redirect to index might be confusing, maybe back to step 1 or show user details?
-                 return redirect(url_for('admin_management.index')) # Or specific error page
+        if rows_affected == 0 and admin_record_exists:
+             cursor.execute("SELECT admin_level FROM admins WHERE user_id = %s", (user_id,))
+             current_db_level = cursor.fetchone()
+             if current_db_level and current_db_level[0] == admin_level:
+                 current_app.logger.info(f"Step 2 (POST): Admin level for user {user_id} was already '{admin_level}'. No change made.")
+                 flash(f"Admin level was already '{admin_level}'. No changes applied.", "info")
              else:
-                 current_app.logger.info(f"Step 2 (POST): Admin level for user {user_id} was likely unchanged.")
-                 flash("Admin level was not changed.", "info") # Inform user no change occurred
-        else:
-            current_app.logger.info(f"Step 2 (POST): Successfully updated admin level for user {user_id} to '{admin_level}'.")
+                 current_app.logger.error(f"Step 2 (POST): FAILED to update. 'admins' record for user_id {user_id} exists, but update reported 0 rows affected and level is different.")
+                 flash("ERROR: Admin setup failed. Could not update admin-specific record. Please check logs.", "danger")
+                 return redirect(url_for('admin_management.index'))
+        elif rows_affected > 0 or (not admin_record_exists and cursor.lastrowid):
+            current_app.logger.info(f"Step 2 (POST): Successfully set/updated admin level for user {user_id} to '{admin_level}'.")
             flash("Admin created/updated successfully with the specified level.", "success")
+        else:
+            current_app.logger.error(f"Step 2 (POST): FAILED. No record in 'admins' for user_id {user_id} and attempt to create failed.")
+            flash("ERROR: Admin setup failed. Could not create/update admin-specific record. Trigger may have failed and manual insert also failed.", "danger")
+            return redirect(url_for('admin_management.index'))
 
         return redirect(url_for('admin_management.index'))
 
@@ -519,84 +474,81 @@ def add_admin_step2(user_id):
         except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
         flash(f"Database error setting admin level: {db_err}", "danger")
         current_app.logger.error(f"DB Error updating admin level (step 2) for user ID {user_id}: {db_err}")
+    except ConnectionError as conn_err:
+        try:
+            if connection and connection.is_connected(): connection.rollback()
+        except Exception as rb_err: current_app.logger.error(f"Error during rollback after connection error: {rb_err}")
+        flash("Error connecting to the database. Could not set admin level.", "danger")
+        current_app.logger.error(f"Connection Error updating admin level (step 2) for user ID {user_id}: {conn_err}")
     except Exception as e:
         try:
             if connection and connection.is_connected(): connection.rollback()
         except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt after general error: {rb_err}")
         flash(f"Error setting admin level: {str(e)}", "danger")
-        current_app.logger.error(f"Non-DB Error updating admin level (step 2) for user ID {user_id}: {e}")
+        current_app.logger.error(f"Non-DB Error updating admin level (step 2) for user ID {user_id}: {e}", exc_info=True)
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
-    # Fallback redirect if errors occurred before successful redirect
     return redirect(url_for('admin_management.add_admin_step2_form', user_id=user_id))
 
-
-# --- Edit Admin ---
 
 @admin_management.route('/admin/admins/edit/<int:admin_id>', methods=['GET'])
 @login_required
 def edit_admin_form(admin_id):
-    """Displays the form to edit an existing admin."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('login.login'))
 
     admin = get_admin_or_404(admin_id)
     if not admin:
-         flash("Admin not found.", "danger")
+         flash("Admin not found or user is not an admin type.", "danger")
          return redirect(url_for('admin_management.index'))
 
     admin_levels = get_enum_values('admins', 'admin_level') or DEFAULT_ADMIN_LEVELS
-    account_statuses = get_enum_values('users', 'account_status') or DEFAULT_ACCOUNT_STATUSES # Fetch statuses
+    account_statuses = get_enum_values('users', 'account_status') or DEFAULT_ACCOUNT_STATUSES
 
     return render_template(
-        'Admin_Portal/Admins/edit_admin.html', # Assuming template name
+        'Admin_Portal/Admins/edit_admin.html',
         admin=admin,
         admin_levels=admin_levels,
-        account_statuses=account_statuses # Pass statuses to template
+        account_statuses=account_statuses
     )
 
 @admin_management.route('/admin/admins/edit/<int:admin_id>', methods=['POST'])
 @login_required
 def edit_admin(admin_id):
-    """Processes editing of admin details, including status, PLAIN TEXT password updates/reset."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('login.login'))
 
     connection = None
     cursor = None
-    current_admin_data = get_admin_or_404(admin_id) # Fetch current data for comparison and re-render
+    current_admin_data = get_admin_or_404(admin_id)
     if not current_admin_data:
-        flash("Cannot edit admin: Admin not found.", "danger")
+        flash("Cannot edit admin: Admin not found or user is not an admin type.", "danger")
         return redirect(url_for('admin_management.index'))
 
-    # Prepare data needed for re-rendering the form in case of error
-    admin_data_for_render = current_admin_data.copy() # Start with current data
-    redirect_target = url_for('admin_management.index') # Default redirect target
+    admin_data_for_render = current_admin_data.copy()
+    redirect_target = url_for('admin_management.index')
     admin_levels_for_render = get_enum_values('admins', 'admin_level') or DEFAULT_ADMIN_LEVELS
     account_statuses_for_render = get_enum_values('users', 'account_status') or DEFAULT_ACCOUNT_STATUSES
 
     try:
-        # Get form data
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
         email = request.form.get('email')
         phone = request.form.get('phone') or None
         admin_level = request.form.get('admin_level')
-        account_status = request.form.get('account_status') # Get selected status
-        new_password = request.form.get('new_password') # Plain text for reset/change
-        confirm_password = request.form.get('confirm_password') # Plain text
+        account_status = request.form.get('account_status')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
 
-        # Update the dictionary we'll use for re-rendering if there's an error
         admin_data_for_render.update({
              'first_name': first_name, 'last_name': last_name, 'email': email,
              'phone': phone, 'admin_level': admin_level, 'account_status': account_status
         })
 
-        # --- Validation ---
         if not all([first_name, last_name, email, admin_level, account_status]):
              flash("Missing required fields (First Name, Last Name, Email, Admin Level, Account Status).", "danger")
              return render_template('Admin_Portal/Admins/edit_admin.html',
@@ -615,10 +567,9 @@ def edit_admin(admin_id):
                                    admin=admin_data_for_render, admin_levels=admin_levels_for_render,
                                    account_statuses=account_statuses_for_render)
 
-        # Password change/reset logic (plain text)
         update_password = False
-        password_to_update = None # Will store the plain text password if changing
-        if new_password or confirm_password: # If either field is touched, assume intent to change
+        hashed_password_to_update = None
+        if new_password or confirm_password:
             if not new_password or not confirm_password:
                  flash("Both New Password and Confirm Password are required to change/reset the password.", "warning")
                  return render_template('Admin_Portal/Admins/edit_admin.html',
@@ -630,19 +581,16 @@ def edit_admin(admin_id):
                                         admin=admin_data_for_render, admin_levels=admin_levels_for_render,
                                         account_statuses=account_statuses_for_render)
             else:
-                # WARNING: Using plain text password directly
-                password_to_update = new_password
+                hashed_password_to_update = generate_password_hash(new_password)
                 update_password = True
-                current_app.logger.warning(f"Updating password for admin {admin_id} with PLAIN TEXT.")
+                current_app.logger.info(f"Password will be updated (hashed) for admin {admin_id}.")
 
-
-        # --- Database Operations ---
         connection = get_db_connection()
         if not connection or not connection.is_connected():
+            current_app.logger.error(f"DB connection failed in edit_admin POST for admin {admin_id}")
             raise ConnectionError("DB connection failed for edit admin")
         cursor = connection.cursor()
 
-        # Check for email uniqueness (excluding the current user)
         cursor.execute("SELECT user_id FROM users WHERE email = %s AND user_id != %s", (email, admin_id))
         existing_email_user = cursor.fetchone()
         if existing_email_user:
@@ -651,7 +599,6 @@ def edit_admin(admin_id):
                                    admin=admin_data_for_render, admin_levels=admin_levels_for_render,
                                    account_statuses=account_statuses_for_render)
 
-        # Build UPDATE for users table only if fields changed
         user_update_fields = []
         user_params = []
 
@@ -664,17 +611,15 @@ def edit_admin(admin_id):
         if email != current_admin_data.get('email'):
             user_update_fields.append("email = %s")
             user_params.append(email)
-        if phone != current_admin_data.get('phone'): # Handles None correctly
+        if phone != current_admin_data.get('phone'):
             user_update_fields.append("phone = %s")
             user_params.append(phone)
-        # Check if account status changed
         if account_status != current_admin_data.get('account_status'):
              user_update_fields.append("account_status = %s")
              user_params.append(account_status)
         if update_password:
-            # Updating the password column with the plain text password
             user_update_fields.append("password = %s")
-            user_params.append(password_to_update) # Plain text password
+            user_params.append(hashed_password_to_update)
 
         user_rows_affected = 0
         if user_update_fields:
@@ -683,7 +628,6 @@ def edit_admin(admin_id):
             cursor.execute(user_update_query, tuple(user_params))
             user_rows_affected = cursor.rowcount
 
-        # Update admin_level in admins table if it changed
         admin_rows_affected = 0
         if admin_level != current_admin_data.get('admin_level'):
              cursor.execute("""
@@ -691,14 +635,14 @@ def edit_admin(admin_id):
              """, (admin_level, admin_id))
              admin_rows_affected = cursor.rowcount
 
-        # Commit changes if any were made
         if user_rows_affected > 0 or admin_rows_affected > 0:
             connection.commit()
-            flash_msg = "Admin updated successfully"
-            if update_password: flash_msg += " (Plain Text Password Changed - INSECURE)"
-            if account_status != current_admin_data.get('account_status'): flash_msg += f" (Status set to {account_status})"
-            flash(flash_msg, "success")
-            current_app.logger.info(f"Admin {admin_id} updated. UserRows:{user_rows_affected}, AdminRows:{admin_rows_affected}. PW changed: {update_password} (plain text). Status changed: {account_status != current_admin_data.get('account_status')}")
+            flash_msg_parts = ["Admin updated successfully"]
+            if update_password: flash_msg_parts.append("(Password Changed)")
+            if account_status != current_admin_data.get('account_status'):
+                flash_msg_parts.append(f"(Status set to {account_status})")
+            flash(" ".join(flash_msg_parts), "success")
+            current_app.logger.info(f"Admin {admin_id} updated. UserRows:{user_rows_affected}, AdminRows:{admin_rows_affected}. PW changed: {update_password} (hashed). Status changed: {account_status != current_admin_data.get('account_status')}")
         else:
             flash("No changes detected for the admin.", "info")
             current_app.logger.info(f"No changes detected during edit for admin {admin_id}.")
@@ -707,90 +651,84 @@ def edit_admin(admin_id):
         try:
             if connection and connection.is_connected(): connection.rollback()
         except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
-        if db_err.errno == 1062: # Duplicate entry (likely email if check failed somehow)
+        if db_err.errno == 1062:
             flash(f"Database error: Could not update admin, possibly due to duplicate email. {db_err}", "danger")
             current_app.logger.warning(f"Duplicate entry error editing admin {admin_id}: {db_err}")
         else:
             flash(f"Database error updating admin: {db_err}", "danger")
             current_app.logger.error(f"DB Error updating admin {admin_id}: {db_err}")
-        # Ensure we redirect back to the edit form on DB error
         redirect_target = url_for('admin_management.edit_admin_form', admin_id=admin_id)
-        # Re-render template with error message and submitted data
         return render_template('Admin_Portal/Admins/edit_admin.html',
                                admin=admin_data_for_render, admin_levels=admin_levels_for_render,
                                account_statuses=account_statuses_for_render)
-
+    except ConnectionError as conn_err:
+        try:
+            if connection and connection.is_connected(): connection.rollback()
+        except Exception as rb_err: current_app.logger.error(f"Error during rollback after connection error: {rb_err}")
+        flash("Error connecting to the database. Could not update admin.", "danger")
+        current_app.logger.error(f"Connection Error updating admin {admin_id}: {conn_err}")
+        redirect_target = url_for('admin_management.edit_admin_form', admin_id=admin_id)
     except Exception as e:
         try:
             if connection and connection.is_connected(): connection.rollback()
         except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt after general error: {rb_err}")
         flash(f"An unexpected error occurred updating admin: {str(e)}", "danger")
         current_app.logger.error(f"Non-DB Error updating admin {admin_id}: {e}", exc_info=True)
-        # Redirect back to edit form on general error unless it's a connection issue
         if "connection" not in str(e).lower():
              redirect_target = url_for('admin_management.edit_admin_form', admin_id=admin_id)
              return render_template('Admin_Portal/Admins/edit_admin.html',
                                     admin=admin_data_for_render, admin_levels=admin_levels_for_render,
                                     account_statuses=account_statuses_for_render)
-        else: # If connection error, redirecting to index might be safer
-             redirect_target = url_for('admin_management.index')
-
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
-    return redirect(redirect_target) # Redirect to index on success or specific error cases
+    return redirect(redirect_target)
 
-
-# --- Delete Admin (No changes needed here for the requested features) ---
 
 @admin_management.route('/admin/admins/delete/<int:admin_id>', methods=['GET'])
 @login_required
 def delete_admin_form(admin_id):
-    """Displays the confirmation page before deleting an admin."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('login.login'))
 
-    # Prevent self-deletion
-    current_user_id = None
+    current_user_id_int = None
     try:
-        current_user_id = int(current_user.id)
-    except (ValueError, TypeError, AttributeError):
-        current_app.logger.error(f"Could not get valid integer ID from current_user.id ({getattr(current_user, 'id', 'N/A')})")
-        flash("Error identifying current user.", "danger")
+        current_user_id_int = int(current_user.id)
+    except (ValueError, TypeError, AttributeError) as e:
+        current_app.logger.error(f"Could not get valid integer ID from current_user.id ({getattr(current_user, 'id', 'N/A')}): {e}")
+        flash("Error identifying current user. Cannot proceed with deletion check.", "danger")
         return redirect(url_for('admin_management.index'))
 
-    if admin_id == current_user_id:
+    if admin_id == current_user_id_int:
        flash("You cannot delete your own admin account.", "danger")
        return redirect(url_for('admin_management.index'))
 
     admin = get_admin_or_404(admin_id)
     if not admin:
-        flash("Admin not found.", "danger")
+        flash("Admin not found or user is not an admin type.", "danger")
         return redirect(url_for('admin_management.index'))
 
-    return render_template('Admin_Portal/Admins/delete_confirmation.html', admin=admin) # Assuming template name
+    return render_template('Admin_Portal/Admins/delete_confirmation.html', admin=admin)
 
 @admin_management.route('/admin/admins/delete/<int:admin_id>', methods=['POST'])
 @login_required
 def delete_admin(admin_id):
-    """Processes the deletion of an admin (relies on FK cascade or manual cleanup)."""
     if current_user.user_type != "admin":
-        flash("Access denied", "danger")
+        flash("Access denied.", "danger")
         return redirect(url_for('login.login'))
 
-    # Prevent self-deletion (double check)
-    current_user_id = None
+    current_user_id_int = None
     try:
-        current_user_id = int(current_user.id)
-    except (ValueError, TypeError, AttributeError):
-        current_app.logger.error(f"Could not get valid integer ID from current_user.id for delete POST ({getattr(current_user, 'id', 'N/A')})")
+        current_user_id_int = int(current_user.id)
+    except (ValueError, TypeError, AttributeError) as e:
+        current_app.logger.error(f"Could not get valid integer ID from current_user.id for delete POST ({getattr(current_user, 'id', 'N/A')}): {e}")
         flash("Error identifying current user for delete confirmation.", "danger")
         return redirect(url_for('admin_management.index'))
 
-    if admin_id == current_user_id:
-        flash("You cannot delete your own admin account.", "danger")
+    if admin_id == current_user_id_int:
+        flash("You cannot delete your own admin account. This action is prohibited.", "danger")
         return redirect(url_for('admin_management.index'))
 
     connection = None
@@ -799,269 +737,47 @@ def delete_admin(admin_id):
     try:
         connection = get_db_connection()
         if not connection or not connection.is_connected():
+            current_app.logger.error(f"DB connection failed in delete_admin POST for admin {admin_id}")
             raise ConnectionError("DB connection failed for delete admin")
         cursor = connection.cursor()
 
-        # IMPORTANT: Assumes Foreign Key constraints with ON DELETE CASCADE are set up
-        # for 'admins' table and 'user_roles' table referencing 'users.user_id'.
-        # If not, you would need to manually delete from those tables FIRST.
-        # e.g., cursor.execute("DELETE FROM admins WHERE user_id = %s", (admin_id,))
-        # e.g., cursor.execute("DELETE FROM user_roles WHERE user_id = %s", (admin_id,))
-
-        # Delete ONLY from the users table.
         cursor.execute("DELETE FROM users WHERE user_id = %s AND user_type = 'admin'", (admin_id,))
         user_rows_deleted = cursor.rowcount
 
         connection.commit()
 
         if user_rows_deleted == 0:
-             flash("Admin user record not found or already deleted.", "warning")
-             current_app.logger.warning(f"Delete request for non-existent admin user ID {admin_id} or wrong user_type. 0 rows affected.")
+             flash("Admin user record not found, was not an admin type, or already deleted.", "warning")
+             current_app.logger.warning(f"Delete request for admin user ID {admin_id} resulted in 0 rows affected. User might not exist or user_type was not 'admin'.")
         else:
             flash("Admin deleted successfully.", "success")
-            current_app.logger.info(f"Successfully deleted admin user ID {admin_id}. Related records should be handled by cascade delete.")
+            current_app.logger.info(f"Successfully deleted admin user ID {admin_id}. Related records in 'admins' should be handled by ON DELETE CASCADE.") # Removed 'user_roles'
 
     except mysql.connector.Error as db_err:
         try:
             if connection and connection.is_connected(): connection.rollback()
         except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
 
-        if db_err.errno == 1451: # Foreign Key Constraint violation
-             flash(f"Database error: Could not delete admin. There might be related data (e.g., audit logs, assigned tasks) that needs to be removed or reassigned first. Check foreign key constraints. (Error: {db_err})", "danger")
-             current_app.logger.error(f"FK Constraint Error deleting admin {admin_id}: {db_err}. Cascade might be missing or pointing to other tables not handled.")
+        if db_err.errno == 1451:
+             flash(f"Database error: Could not delete admin. There might be related data (e.g., audit logs, assigned tasks) that needs to be removed or reassigned first. (Error: {db_err.msg})", "danger")
+             current_app.logger.error(f"FK Constraint Error deleting admin {admin_id}: {db_err}. Cascade might be missing or other tables might be referencing this user.", exc_info=True)
         else:
-            flash(f"Database error deleting admin: {db_err}", "danger")
-            current_app.logger.error(f"DB Error deleting admin {admin_id}: {db_err}")
+            flash(f"Database error deleting admin: {db_err.msg}", "danger")
+            current_app.logger.error(f"DB Error deleting admin {admin_id}: {db_err}", exc_info=True)
+    except ConnectionError as conn_err:
+        try:
+            if connection and connection.is_connected(): connection.rollback()
+        except Exception as rb_err: current_app.logger.error(f"Error during rollback after connection error: {rb_err}")
+        flash("Error connecting to the database. Could not delete admin.", "danger")
+        current_app.logger.error(f"Connection Error deleting admin {admin_id}: {conn_err}")
     except Exception as e:
         try:
             if connection and connection.is_connected(): connection.rollback()
         except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt after general error: {rb_err}")
         flash(f"Error deleting admin: {str(e)}", "danger")
-        current_app.logger.error(f"Non-DB Error deleting admin {admin_id}: {e}")
+        current_app.logger.error(f"Non-DB Error deleting admin {admin_id}: {e}", exc_info=True)
     finally:
         if cursor: cursor.close()
         if connection and connection.is_connected(): connection.close()
 
     return redirect(url_for('admin_management.index'))
-
-
-# ==============================================
-# --- NEW: Role Definition Management Routes ---
-# ==============================================
-
-@admin_management.route('/admin/roles', methods=['GET'])
-@login_required
-def manage_roles():
-    """Displays a list of defined roles."""
-    if current_user.user_type != "admin":
-        flash("Access denied", "danger")
-        return redirect(url_for('login.login_route'))
-
-    connection = None
-    cursor = None
-    roles = []
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor(dictionary=True)
-        cursor.execute("SELECT role_id, role_name, description, created_at, updated_at FROM roles ORDER BY role_name")
-        roles = cursor.fetchall()
-    except mysql.connector.Error as db_err:
-        flash(f"Database error fetching roles: {db_err}", "danger")
-        current_app.logger.error(f"DB Error fetching role list: {db_err}")
-    except Exception as e:
-        flash(f"Error fetching roles: {str(e)}", "danger")
-        current_app.logger.error(f"General Error fetching role list: {e}")
-    finally:
-        if cursor: cursor.close()
-        if connection and connection.is_connected(): connection.close()
-
-    # You'll need a template for this: 'Admin_Portal/Roles/manage_roles.html'
-    return render_template('Admin_Portal/Roles/manage_roles.html', roles=roles)
-
-@admin_management.route('/admin/roles/add', methods=['GET', 'POST'])
-@login_required
-def add_role():
-    """Handles adding a new role definition."""
-    if current_user.user_type != "admin":
-        flash("Access denied", "danger")
-        return redirect(url_for('login.login_route'))
-
-    if request.method == 'POST':
-        role_name = request.form.get('role_name', '').strip()
-        description = request.form.get('description', '').strip() or None # Allow empty description
-
-        if not role_name:
-            flash("Role Name is required.", "danger")
-            # Re-render form with submitted data
-            return render_template('Admin_Portal/Roles/add_role.html', role_name=role_name, description=description) # Assuming template name
-
-        connection = None
-        cursor = None
-        try:
-            connection = get_db_connection()
-            cursor = connection.cursor()
-            cursor.execute("INSERT INTO roles (role_name, description) VALUES (%s, %s)", (role_name, description))
-            connection.commit()
-            flash(f"Role '{role_name}' created successfully.", "success")
-            current_app.logger.info(f"Admin {current_user.id} created role '{role_name}'.")
-            return redirect(url_for('admin_management.manage_roles'))
-        except mysql.connector.Error as db_err:
-            try:
-                if connection and connection.is_connected(): connection.rollback()
-            except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
-            if db_err.errno == 1062: # Duplicate entry
-                flash(f"Role name '{role_name}' already exists.", "danger")
-                current_app.logger.warning(f"Attempt to add duplicate role name '{role_name}': {db_err}")
-            else:
-                flash(f"Database error creating role: {db_err}", "danger")
-                current_app.logger.error(f"DB error creating role '{role_name}': {db_err}")
-            # Re-render form with submitted data on error
-            return render_template('Admin_Portal/Roles/add_role.html', role_name=role_name, description=description)
-        except Exception as e:
-            try:
-                if connection and connection.is_connected(): connection.rollback()
-            except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
-            flash(f"Error creating role: {str(e)}", "danger")
-            current_app.logger.error(f"Non-DB error creating role '{role_name}': {e}")
-            # Re-render form with submitted data on error
-            return render_template('Admin_Portal/Roles/add_role.html', role_name=role_name, description=description)
-        finally:
-            if cursor: cursor.close()
-            if connection and connection.is_connected(): connection.close()
-
-    # GET request: Display the add role form
-    # You'll need a template for this: 'Admin_Portal/Roles/add_role.html'
-    return render_template('Admin_Portal/Roles/add_role.html')
-
-
-@admin_management.route('/admin/roles/edit/<int:role_id>', methods=['GET', 'POST'])
-@login_required
-def edit_role(role_id):
-    """Handles editing an existing role definition."""
-    if current_user.user_type != "admin":
-        flash("Access denied", "danger")
-        return redirect(url_for('login.login'))
-
-    role = get_role_or_404(role_id)
-    if not role:
-        flash("Role not found.", "danger")
-        return redirect(url_for('admin_management.manage_roles'))
-
-    if request.method == 'POST':
-        role_name = request.form.get('role_name', '').strip()
-        description = request.form.get('description', '').strip() or None
-
-        if not role_name:
-            flash("Role Name is required.", "danger")
-            # Re-render form with submitted data and original role ID
-            return render_template('Admin_Portal/Roles/edit_role.html', role=role, role_name=role_name, description=description) # Template name
-
-        # Check if changes were actually made
-        if role_name == role['role_name'] and description == role['description']:
-             flash("No changes detected for the role.", "info")
-             return redirect(url_for('admin_management.manage_roles'))
-
-
-        connection = None
-        cursor = None
-        try:
-            connection = get_db_connection()
-            cursor = connection.cursor()
-            cursor.execute("""
-                UPDATE roles SET role_name = %s, description = %s, updated_at = NOW()
-                WHERE role_id = %s
-            """, (role_name, description, role_id))
-            connection.commit()
-            flash(f"Role '{role_name}' updated successfully.", "success")
-            current_app.logger.info(f"Admin {current_user.id} updated role ID {role_id} to name '{role_name}'.")
-            return redirect(url_for('admin_management.manage_roles'))
-        except mysql.connector.Error as db_err:
-            try:
-                if connection and connection.is_connected(): connection.rollback()
-            except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
-            if db_err.errno == 1062: # Duplicate entry
-                flash(f"Another role with the name '{role_name}' already exists.", "danger")
-                current_app.logger.warning(f"Attempt to update role ID {role_id} to duplicate name '{role_name}': {db_err}")
-            else:
-                flash(f"Database error updating role: {db_err}", "danger")
-                current_app.logger.error(f"DB error updating role ID {role_id}: {db_err}")
-            # Re-render edit form with submitted data on error
-            role['role_name'] = role_name # Update dict for render
-            role['description'] = description
-            return render_template('Admin_Portal/Roles/edit_role.html', role=role)
-        except Exception as e:
-            try:
-                if connection and connection.is_connected(): connection.rollback()
-            except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
-            flash(f"Error updating role: {str(e)}", "danger")
-            current_app.logger.error(f"Non-DB error updating role ID {role_id}: {e}")
-            # Re-render edit form with submitted data on error
-            role['role_name'] = role_name # Update dict for render
-            role['description'] = description
-            return render_template('Admin_Portal/Roles/edit_role.html', role=role)
-        finally:
-            if cursor: cursor.close()
-            if connection and connection.is_connected(): connection.close()
-
-    # GET request: Display the edit role form, pre-filled
-    # You'll need a template for this: 'Admin_Portal/Roles/edit_role.html'
-    return render_template('Admin_Portal/Roles/edit_role.html', role=role)
-
-
-@admin_management.route('/admin/roles/delete/<int:role_id>', methods=['POST'])
-@login_required
-def delete_role(role_id):
-    """Processes the deletion of a role definition."""
-    if current_user.user_type != "admin":
-        flash("Access denied", "danger")
-        return redirect(url_for('login.login_route'))
-
-    # Optional: Add GET route for confirmation page if desired
-    # Optional: Prevent deletion of core roles like 'Admin'
-    role = get_role_or_404(role_id) # Get role info for logging/messages
-    if not role:
-        flash("Role not found.", "warning") # Warning as it might have just been deleted
-        return redirect(url_for('admin_management.manage_roles'))
-
-    # Simple check for core role (adjust name if needed)
-    if role['role_name'].lower() == 'admin':
-         flash("The core 'Admin' role cannot be deleted.", "danger")
-         return redirect(url_for('admin_management.manage_roles'))
-
-    connection = None
-    cursor = None
-    try:
-        connection = get_db_connection()
-        cursor = connection.cursor()
-        cursor.execute("DELETE FROM roles WHERE role_id = %s", (role_id,))
-        rows_deleted = cursor.rowcount
-        connection.commit()
-
-        if rows_deleted > 0:
-            flash(f"Role '{role['role_name']}' deleted successfully.", "success")
-            current_app.logger.info(f"Admin {current_user.id} deleted role '{role['role_name']}' (ID: {role_id}).")
-        else:
-            flash(f"Role '{role['role_name']}' not found or already deleted.", "warning")
-            current_app.logger.warning(f"Attempted delete for non-existent role ID {role_id} ('{role['role_name']}').")
-
-    except mysql.connector.Error as db_err:
-        try:
-            if connection and connection.is_connected(): connection.rollback()
-        except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
-        if db_err.errno == 1451: # Foreign Key constraint violation
-            flash(f"Cannot delete role '{role['role_name']}'. It is currently assigned to users or has associated permissions.", "danger")
-            current_app.logger.warning(f"FK constraint prevented deletion of role ID {role_id} ('{role['role_name']}'): {db_err}")
-        else:
-            flash(f"Database error deleting role: {db_err}", "danger")
-            current_app.logger.error(f"DB error deleting role ID {role_id} ('{role['role_name']}'): {db_err}")
-    except Exception as e:
-        try:
-            if connection and connection.is_connected(): connection.rollback()
-        except Exception as rb_err: current_app.logger.error(f"Error during rollback attempt: {rb_err}")
-        flash(f"Error deleting role: {str(e)}", "danger")
-        current_app.logger.error(f"Non-DB error deleting role ID {role_id} ('{role['role_name']}'): {e}")
-    finally:
-        if cursor: cursor.close()
-        if connection and connection.is_connected(): connection.close()
-
-    return redirect(url_for('admin_management.manage_roles'))

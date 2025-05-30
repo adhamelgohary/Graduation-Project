@@ -1,99 +1,65 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Add Doctor - Step 1{% endblock %}
+{% block title %}Add Doctor (Step 1) - Pro Health Admin Portal{% endblock %}
 
-{% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_management.css') }}"> {# Ensure this CSS exists #}
-{% endblock %}
+{% block header_icon %}<i class="fas fa-user-plus fa-fw me-2"></i>{% endblock %}
+{% block header_title %}Add New Doctor - Step 1: User Account{% endblock %}
 
 {% block content %}
-<h1>Add New Doctor - Step 1: User Account</h1>
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.index') }}">Manage Doctors</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Add Doctor (Step 1)</li>
-  </ol>
-</nav>
-<hr>
-
-<div class="alert alert-info small" role="alert">
-    <i class="fas fa-info-circle me-1"></i> Enter the basic user details and set an initial password. Professional details are added in Step 2. The doctor should be encouraged to change this password upon first login.
-</div>
-
 <div class="card shadow-sm">
-<div class="card-body">
-<form method="POST" action="{{ url_for('Doctors_Management.add_doctor_step1') }}" class="needs-validation" novalidate>
-
-    <div class="row g-3">
-        <div class="col-md-6 mb-3">
-            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="username" name="username" value="{{ form_data.get('username', '') }}" required>
-            <div class="invalid-feedback">Username is required.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-            <input type="email" class="form-control" id="email" name="email" value="{{ form_data.get('email', '') }}" required>
-            <div class="invalid-feedback">Valid email is required.</div>
-        </div>
+    <div class="card-header">
+        <h5>Create Doctor's User Account</h5>
     </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('Doctors_Management.add_doctor_step1') }}">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ form_data.username or '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ form_data.email or '' }}" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                    <div class="form-text">Must be at least 8 characters.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="confirm_password" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ form_data.first_name or '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ form_data.last_name or '' }}" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone (Optional)</label>
+                <input type="tel" class="form-control" id="phone" name="phone" value="{{ form_data.phone or '' }}">
+            </div>
+            
+            <p class="text-muted small"><span class="text-danger">*</span> Required fields.</p>
+            <p class="small text-info"><i class="fas fa-info-circle me-1"></i>Account status will be 'Pending' and verification 'Pending Info' after this step.</p>
 
-    <div class="row g-3">
-        <div class="col-md-6 mb-3">
-            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ form_data.get('first_name', '') }}" required>
-            <div class="invalid-feedback">First name is required.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ form_data.get('last_name', '') }}" required>
-            <div class="invalid-feedback">Last name is required.</div>
-        </div>
+            <div class="d-flex justify-content-end mt-3">
+                <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    Next: Professional Details <i class="fas fa-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </form>
     </div>
-
-     <div class="mb-3">
-        <label for="phone" class="form-label">Phone Number (Optional)</label>
-        <input type="tel" class="form-control" id="phone" name="phone" value="{{ form_data.get('phone', '') }}">
-    </div>
-
-    {# NEW: Password fields for admin to set initial password #}
-    <div class="row g-3">
-        <div class="col-md-6 mb-3">
-            <label for="password" class="form-label">Set Initial Password <span class="text-danger">*</span></label>
-            <input type="password" class="form-control" id="password" name="password" required minlength="8">
-            <small class="form-text text-muted">Min. 8 characters. Doctor should change this later.</small>
-            <div class="invalid-feedback">Password is required (min 8 chars).</div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="confirm_password" class="form-label">Confirm Initial Password <span class="text-danger">*</span></label>
-            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-            <div class="invalid-feedback">Please confirm the password.</div>
-        </div>
-    </div>
-
-    <hr>
-    <button type="submit" class="btn btn-primary">Next: Add Professional Details <i class="fas fa-arrow-right ms-1"></i></button>
-    <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-secondary">Cancel</a>
-</form>
 </div>
-</div>
-{% endblock %}
-
-{% block scripts_extra %}
-<script>
-// Bootstrap 5 form validation
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('.needs-validation')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
-</script>
 {% endblock %}

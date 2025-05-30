@@ -1,0 +1,478 @@
+/* static/Website/vaccine.css */
+
+/* VACCINE PAGE SPECIFIC THEME VARIABLES */
+:root {
+  /* Dark theme variables (default FOR VACCINE PAGE) */
+  --vaccine-bg-primary: #05152a;
+  --vaccine-bg-secondary: rgba(5, 21, 42, 0.95); /* Used for headers if different from cards */
+  --vaccine-text-primary: white;
+  --vaccine-text-secondary: rgba(255, 255, 255, 0.7);
+  --vaccine-text-highlight: #3182ce; /* Blue highlight */
+  --vaccine-accent-color: #3182ce;  /* Main accent, often same as highlight */
+  --vaccine-accent-pink: #ff3b5c; /* Secondary accent, if needed for specific elements */
+  --vaccine-border-color: rgba(255, 255, 255, 0.1);
+  --vaccine-particle-bg: rgba(0, 180, 255, 0.05);
+  --vaccine-neon-blue: #00f0ff; /* Brighter neon blue for effects */
+  --vaccine-neon-blue-rgb: 0, 240, 255;
+  --vaccine-hero-bg: rgba(5, 21, 42, 0.7);
+  --vaccine-card-bg: rgba(8, 28, 56, 0.8);
+  --vaccine-section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c);
+  --vaccine-input-bg: rgba(255, 255, 255, 0.1); /* Consistent with original search-bar */
+  --vaccine-placeholder-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Light Mode Variables for VACCINE PAGE */
+[data-theme="light"] { /* This will apply IF base.html toggles data-theme on <html> */
+  --vaccine-bg-primary: #f0f4f8;
+  --vaccine-bg-secondary: rgba(240, 244, 248, 0.95);
+  --vaccine-text-primary: #1a365d;
+  --vaccine-text-secondary: rgba(26, 54, 93, 0.7);
+  --vaccine-text-highlight: #3182ce;
+  --vaccine-accent-color: #3182ce;
+  --vaccine-accent-pink: #e31b3d; /* Light theme pink variant */
+  --vaccine-border-color: rgba(0, 0, 0, 0.1);
+  --vaccine-particle-bg: rgba(49, 130, 206, 0.05);
+  --vaccine-neon-blue: #3182ce; /* Less "neon" in light mode */
+  --vaccine-neon-blue-rgb: 49, 130, 206;
+  --vaccine-hero-bg: rgba(240, 244, 248, 0.7);
+  --vaccine-card-bg: rgba(255, 255, 255, 0.9);
+  --vaccine-section-title-gradient: linear-gradient(90deg, #3182ce, #4299e1);
+  --vaccine-input-bg: rgba(0, 0, 0, 0.05);
+  --vaccine-placeholder-color: rgba(26, 54, 93, 0.5);
+}
+
+
+/* --- Hero Section Specifics for Vaccine Page --- */
+.vaccine-page-container .hero-section {
+  padding: 100px 0 80px; 
+  background-color: var(--vaccine-hero-bg); 
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--vaccine-border-color);
+}
+
+.vaccine-page-container .hero-particle {
+  position: absolute;
+  border-radius: 50%;
+  background-color: var(--vaccine-particle-bg); 
+  z-index: 0;
+}
+
+.vaccine-page-container .hero-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 5%;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.vaccine-page-container .text-content {
+  flex: 1;
+  padding-right: 40px;
+  z-index: 2;
+}
+
+.vaccine-page-container .visual-content {
+  flex: 1;
+  position: relative;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vaccine-page-container .hero-content h1 {
+  color: var(--vaccine-text-primary);
+  font-size: 40px;
+  margin-bottom: 20px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.vaccine-page-container .hero-content h1 .highlight {
+  color: var(--vaccine-text-highlight); /* Using vaccine specific highlight */
+  font-weight: 700;
+}
+
+.vaccine-page-container .hero-content p {
+  color: var(--vaccine-text-secondary);
+  font-size: 16px;
+  line-height: 1.7;
+  margin-bottom: 30px;
+  max-width: 600px;
+}
+
+.vaccine-page-container .search-bar {
+  background-color: var(--vaccine-input-bg);
+  border-radius: 25px;
+  padding: 10px 18px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--vaccine-border-color);
+  max-width: 350px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.vaccine-page-container .search-bar input {
+  background: transparent;
+  border: none;
+  color: var(--vaccine-text-primary);
+  outline: none;
+  width: 100%;
+  font-size: 15px;
+  padding-left: 8px;
+}
+.vaccine-page-container .search-bar input::placeholder {
+  color: var(--vaccine-placeholder-color);
+}
+.vaccine-page-container .search-bar .search-icon {
+  color: var(--vaccine-text-secondary);
+  font-size: 1.1em;
+}
+
+/* --- Visual Elements specific to Vaccine Page --- */
+.vaccine-page-container .virus-image {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.vaccine-page-container .cell {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: 1px solid var(--vaccine-neon-blue);
+  background-color: rgba(var(--vaccine-neon-blue-rgb, 0, 240, 255), 0.08); /* Use the local var if defined */
+  box-shadow: 0 0 12px rgba(var(--vaccine-neon-blue-rgb, 0, 240, 255), 0.4);
+  z-index: 0;
+  animation: float 12s infinite ease-in-out alternate;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) translateX(0) scale(1) rotate(0deg); }
+  50% { transform: translateY(-20px) translateX(10px) scale(1.1) rotate(15deg); }
+  100% { transform: translateY(5px) translateX(-5px) scale(0.95) rotate(-10deg); }
+}
+
+/* --- SVG Needle Animation Styling (Line Art Style) --- */
+.svg-vaccine-injection-container {
+  width: 300px; 
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1; /* Ensure it's above general .visual-content background elements */
+}
+
+.vaccine-animation-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible; 
+}
+
+#skin-surface-line {
+  fill: none;
+  stroke: var(--vaccine-text-secondary); 
+  stroke-width: 2.5; 
+  stroke-linecap: round;
+  transition: d 0.2s ease-in-out; 
+}
+
+.needle-assembly-group-line path,
+.needle-assembly-group-line line,
+.needle-assembly-group-line rect {
+  fill: none;
+  stroke-width: 2; 
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.needle-assembly-group-line .syringe-barrel-outline,
+.needle-assembly-group-line .syringe-nozzle-outline,
+.needle-assembly-group-line .syringe-plunger-handle-outline {
+  stroke: var(--vaccine-text-secondary); 
+}
+
+.needle-assembly-group-line .syringe-plunger-outline {
+  stroke: var(--vaccine-text-highlight); 
+  stroke-width: 1.5;
+}
+
+.needle-assembly-group-line .needle-line-outline {
+  stroke: var(--vaccine-accent-pink); /* Using the pink accent for needle */
+  stroke-width: 2.5; 
+}
+
+/* Light theme adjustments for SVG strokes if needed beyond variable changes */
+[data-theme="light"] #skin-surface-line {
+  stroke: var(--vaccine-text-secondary); /* Uses light theme var */
+}
+[data-theme="light"] .needle-assembly-group-line .syringe-barrel-outline,
+[data-theme="light"] .needle-assembly-group-line .syringe-nozzle-outline,
+[data-theme="light"] .needle-assembly-group-line .syringe-plunger-handle-outline {
+  stroke: var(--vaccine-text-secondary); /* Uses light theme var */
+}
+[data-theme="light"] .needle-assembly-group-line .syringe-plunger-outline {
+  stroke: var(--vaccine-text-highlight); /* Uses light theme var */
+}
+[data-theme="light"] .needle-assembly-group-line .needle-line-outline {
+  stroke: var(--vaccine-accent-pink); /* Uses light theme var */
+}
+
+
+.needle-assembly-group-line {
+  transform-origin: 150px 155px; /* MUST MATCH YOUR SVG NEEDLE TIP */
+  animation: svg-needle-inject-lineart 5s ease-in-out infinite;
+}
+
+@keyframes svg-needle-inject-lineart {
+  0%, 100% { 
+      transform: translate(0px, -100px) rotate(-35deg);
+      opacity: 0;
+  }
+  15% { 
+      transform: translate(0px, -100px) rotate(-35deg);
+      opacity: 0;
+  }
+  30% { 
+      transform: translate(0px, 3px) rotate(-35deg); 
+      opacity: 1;
+  }
+  50% { 
+      transform: translate(5px, 13px) rotate(-35deg); 
+  }
+  70% { 
+      transform: translate(0px, 3px) rotate(-35deg);
+  }
+  85% { 
+      transform: translate(0px, -100px) rotate(-35deg);
+      opacity: 1;
+  }
+}
+
+/* --- Main Content & Vaccine Cards specific to Vaccine Page --- */
+.vaccine-page-container .main-content {
+  max-width: 1400px;
+  margin: 40px auto;
+  padding: 0 5%;
+  position: relative; /* For z-indexing of decorative SVGs if added here */
+  z-index: 1;
+}
+
+.vaccine-page-container .section-title {
+  font-size: 28px;
+  margin-bottom: 30px;
+  color: var(--vaccine-text-primary);
+}
+.vaccine-page-container .section-title::after {
+  margin: 10px auto 25px;
+  background: var(--vaccine-section-title-gradient);
+}
+
+.vaccines-section {
+  margin-bottom: 60px;
+}
+
+.vaccines {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.vaccines-section .card {
+  background-color: var(--vaccine-card-bg);
+  border: 1px solid var(--vaccine-border-color);
+  /* Other .card styles like border-radius, shadow, transition will be inherited from base.css,
+     but background and border are specific to vaccine theme here. */
+}
+
+.vaccines-section .card:hover {
+  /* Hover effects from base.css .card:hover apply.
+     If vaccine cards need a different hover, define it here. Example:
+     box-shadow: 0 15px 35px rgba(var(--vaccine-neon-blue-rgb, 0, 240, 255), 0.2);
+     border-color: rgba(var(--vaccine-neon-blue-rgb, 0, 240, 255), 0.3);
+  */
+}
+
+.vaccines-section .card .content {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.vaccines-section .card h1 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: var(--vaccine-text-primary);
+  position: relative;
+  padding-bottom: 8px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.vaccines-section .card h1::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 35px;
+  height: 2px;
+  background: var(--vaccine-section-title-gradient);
+}
+
+.vaccines-section .image-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  flex-grow: 1;
+}
+
+.vaccines-section .image-text-container img {
+  width: 80px;
+  height: 95px;
+  object-fit: contain;
+  border-radius: 8px;
+  background-color: rgba(var(--vaccine-neon-blue-rgb, 0, 240, 255), 0.05);
+  padding: 5px;
+  border: 1px solid rgba(var(--vaccine-neon-blue-rgb, 0, 240, 255), 0.1);
+}
+[data-theme="light"] .vaccines-section .image-text-container img {
+  background-color: rgba(var(--vaccine-neon-blue-rgb, 49, 130, 206), 0.08); /* Adjust for light theme */
+  border: 1px solid rgba(var(--vaccine-neon-blue-rgb, 49, 130, 206), 0.15);
+}
+
+.vaccines-section .image-text-container p {
+  font-size: 13px;
+  color: var(--vaccine-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+/* Vaccine card button using specific vaccine theme colors */
+.vaccines-section .btn {
+  background-color: rgba(var(--vaccine-accent-color-rgb, 49, 130, 206), 0.3); /* Using vaccine accent color */
+  color: var(--vaccine-text-primary); /* Ensure text is readable */
+  border: 1px solid var(--vaccine-accent-color);
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-size: 13px;
+  width: auto;
+  min-width: 120px;
+  margin: 15px auto 20px;
+  align-self: center;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.vaccines-section .btn:hover {
+  background-color: var(--vaccine-accent-color); /* Solid accent on hover */
+  color: white; /* Assuming accent is dark enough for white text */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(var(--vaccine-accent-color-rgb, 49, 130, 206), 0.3);
+}
+
+
+/* --- Media Queries for Vaccine Page --- */
+@media (max-width: 992px) {
+  .vaccine-page-container .hero-content {
+      flex-direction: column;
+      text-align: center;
+  }
+  .vaccine-page-container .text-content {
+      padding-right: 0;
+      margin-bottom: 40px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+  }
+  .vaccine-page-container .hero-content p {
+      max-width: 100%;
+  }
+  .vaccine-page-container .visual-content {
+      min-height: 300px;
+      width: 80%; 
+      margin-top: 30px;
+  }
+  .vaccine-page-container .search-bar {
+      margin-left: auto;
+      margin-right: auto;
+  }
+  .svg-vaccine-injection-container {
+      width: 180px; 
+      height: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .vaccine-page-container .hero-section {
+      padding-top: 100px; 
+      padding-bottom: 60px;
+  }
+  .vaccine-page-container .hero-content h1 {
+      font-size: 30px; 
+  }
+  .vaccines { 
+      grid-template-columns: 1fr; 
+  }
+  .vaccine-page-container .search-bar {
+      width: 90%;
+      max-width: none;
+  }
+  .vaccine-page-container .main-content {
+      padding: 20px 3%; 
+  }
+  .vaccine-page-container .section-title {
+      font-size: 26px;
+  }
+  .svg-vaccine-injection-container {
+      width: 150px;
+      height: 120px;
+      margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vaccine-page-container .hero-content h1 {
+      font-size: 26px;
+  }
+  .vaccine-page-container .hero-content p {
+      font-size: 14px;
+  }
+  .vaccines-section .btn {
+      padding: 8px 18px;
+      font-size: 12px;
+  }
+  .vaccines-section .card h1 {
+      font-size: 18px;
+  }
+  .vaccines-section .image-text-container img {
+      width: 60px; 
+      height: 75px;
+  }
+  .vaccines-section .image-text-container p {
+      font-size: 12px;
+  }
+  .vaccine-page-container .section-title {
+      font-size: 22px;
+  }
+  .vaccine-page-container .virus-image { 
+      opacity: 0.3; 
+      width: 30px; height: 30px;
+  }
+   .svg-vaccine-injection-container { 
+      width: 120px;
+      height: 100px;
+  }
+}

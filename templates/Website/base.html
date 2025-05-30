@@ -6,19 +6,17 @@
 
   <title>{% block title %}Pro Health Center{% endblock %}</title>
 
-  {# Base CSS for the website section #}
   <link rel="stylesheet" href="{{ url_for('static', filename='Website/base.css') }}">
-  {# Font Awesome for icons #}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  {# Favicon #}
   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
 
-  {# Block for page-specific CSS or head elements #}
-  {% block head_extra %}{% endblock %}
+  {# Block for base_with_bot.html to add its CSS, or for direct children to add theirs #}
+  {% block base_with_bot_head_extra %}
+    {% block head_extra %}{% endblock %}
+  {% endblock %}
 </head>
 <body>
   <nav class="navbar">
-    {# Logo linking to homepage #}
     <a href="{{ url_for('home.index') | default('/') }}" class="nav-logo">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
@@ -26,40 +24,44 @@
       <h1>{% block nav_brand %}Pro Health Center{% endblock %}</h1>
     </a>
 
-    {# --- Desktop Navigation Links --- #}
     <div class="nav-links">
-      {# Block for child templates IF they needed to ADD links, but not OVERRIDE #}
-      {# We define the CORE links here now #}
       <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
-      <a href="{{ url_for('department.list_departments') }}" class="{{ 'active' if request.endpoint.startswith('department.') else '' }}">Departments</a>
-      <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
-      <a href="#">Contact</a> {# Placeholder #}
+      
+      <div class="dropdown" id="departments-dropdown-container">
+        <button type="button" id="departments-toggle-btn"
+           class="dropbtn {{ 'active' if request.endpoint.startswith('department.') or request.endpoint == 'vaccines_bp.vaccine_landing' or request.endpoint.startswith('nutrition_bp.') else '' }}">
+           Departments <i class="fas fa-caret-down"></i>
+        </button>
+        <div class="dropdown-content" id="departments-menu-content">
+          <a href="{{ url_for('department.list_departments') }}">Medical Departments</a>
+          <a href="{{ url_for('nutrition_bp.nutrition_landing_page') }}">Dietetics & Nutrition</a>
+          <a href="{{ url_for('vaccines_bp.vaccine_landing') }}">Immunization Center</a>
+          <hr style="margin: 4px 0; border-color: var(--border-color); opacity: 0.5;">
+          <a href="{{ url_for('department.list_departments') }}">View All Departments</a>
+        </div>
+      </div>
 
-      {# --- Login/Logout Conditional --- #}
+      <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
+      <a href="#">Contact</a>
+
       {% if current_user.is_authenticated %}
-         {# Links for logged-in users #}
          <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
          <a href="{{ url_for('patient_messaging.list_my_chats') }}" class="{{ 'active' if request.blueprint == 'patient_messaging' else '' }}">Messages</a>
-         {# Link to appropriate dashboard/settings based on role #}
          {% if current_user.user_type == 'doctor' %}
-            <a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.endpoint.startswith('settings.') else '' }}">Settings</a> {# Doctor settings #}
             <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
          {% elif current_user.user_type == 'admin' %}
-             <a href="{{ url_for('admin_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.dashboard' else '' }}">Admin Panel</a> {# Admin dashboard #}
-             {% else %} {# Assume patient #}
+             <a href="{{ url_for('admin_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.dashboard' else '' }}">Admin Panel</a>
+         {% else %}
              <a href="{{ url_for('patient_profile.my_account_dashboard') }}" class="{{ 'active' if request.endpoint.startswith('patient_profile.') or request.endpoint.startswith('patient_medical_info.') else '' }}">My Account</a>
           {% endif %}
-         <a href="{{ url_for('login.logout_route') }}">Logout</a> {# Logout Link #}
+         <a href="{{ url_for('login.logout_route') }}">Logout</a>
       {% else %}
-         {# Links for logged-out users #}
-         <a href="{{ url_for('login.login_route', next=request.path) }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a> {# Login Link #}
-         <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a> {# Register Link #}
+         <a href="{{ url_for('login.login_route', next=request.path) }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a>
+         <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a>
       {% endif %}
-      {# --- End Conditional --- #}
     </div>
 
-    {# Theme Toggle & Mobile Menu Button Container #}
-    <div style="display: flex; align-items: center; gap: 10px;">
+    <div class="navbar-actions-group"> 
         <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode" title="Toggle Theme">
             <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
             <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -70,46 +72,41 @@
     </div>
   </nav>
 
-  {# --- Mobile Menu Container --- #}
   <div class="mobile-menu" id="mobile-menu">
-      {# Define mobile links directly here #}
       <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
-      <a href="{{ url_for('department.list_departments') }}" class="{{ 'active' if request.endpoint.startswith('department.') else '' }}">Departments</a>
+      
+      <a href="{{ url_for('department.list_departments') }}" class="dropdown-mobile-header {{ 'active' if request.endpoint == 'department.list_departments' else '' }}">Departments (All)</a>
+      <a href="{{ url_for('department.list_departments') }}" class="dropdown-mobile-item {{ 'active' if request.endpoint == 'department.list_departments' else '' }}">– Medical Departments</a>
+      <a href="{{ url_for('nutrition_bp.nutrition_landing_page') }}" class="dropdown-mobile-item {{ 'active' if request.endpoint.startswith('nutrition_bp.') else '' }}">– Dietetics & Nutrition</a>
+      <a href="{{ url_for('vaccines_bp.vaccine_landing') }}" class="dropdown-mobile-item {{ 'active' if request.endpoint == 'vaccines_bp.vaccine_landing' else '' }}">– Immunization Center</a>
+      
       <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
-      <a href="#">Services</a> {# <-- ADDED Services Link #}
-      <a href="#">Contact</a> {# Placeholder #}
-      {# --- Login/Logout Conditional (Mobile) --- #}
+      <a href="#">Services</a>
+      <a href="#">Contact</a>
       {% if current_user.is_authenticated %}
-          <hr> {# Separator #}
+          <hr>
           <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
-
           <a href="{{ url_for('patient_messaging.list_my_chats') }}" class="{{ 'active' if request.blueprint == 'patient_messaging' else '' }}">Messages</a>
-           {# Add dashboard/settings links similar to desktop nav #}
            {% if current_user.user_type == 'doctor' %}
-              <a href="{{ url_for('settings.view_settings') }}" class="{{ 'active' if request.endpoint.startswith('settings.') else '' }}">Settings</a>
               <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
            {% elif current_user.user_type == 'admin' %}
                <a href="{{ url_for('admin_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.dashboard' else '' }}">Admin Panel</a>
-           {% else %} {# Assume Patient #}
-              <a href="#">My Account</a> {# Placeholder #}
+           {% else %}
+              <a href="{{ url_for('patient_profile.my_account_dashboard') }}" class="{{ 'active' if request.endpoint.startswith('patient_profile.') or request.endpoint.startswith('patient_medical_info.') else '' }}">My Account</a>
            {% endif %}
           <a href="{{ url_for('login.logout_route') }}">Logout</a>
       {% else %}
-          <hr> {# Separator #}
+          <hr>
           <a href="{{ url_for('login.login_route', next=request.path) }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a>
           <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a>
       {% endif %}
-      {# --- End Conditional --- #}
   </div>
 
-  {# Main Content Area #}
   <main class="main-container">
-    {# --- Flash Messages --- #}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div class="flash-messages-container"> {# Optional container for positioning #}
+        <div class="flash-messages-container">
           {% for category, message in messages %}
-            {# Use status_badge filter for consistent class mapping #}
             <div class="alert alert-{{ category | status_badge }}" role="alert">
               {{ message }}
               <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';" aria-label="Close">×</button>
@@ -118,24 +115,27 @@
         </div>
       {% endif %}
     {% endwith %}
-    {# --- End Flash Messages --- #}
 
-    {% block content %}{% endblock %} {# Page-specific content goes here #}
+    {# This block will be filled by base_with_bot.html's content block, #}
+    {# OR directly by child templates that don't use the bot. #}
+    {% block base_with_bot_content %}
+        {% block content %}{% endblock %}
+    {% endblock %}
   </main>
 
-  {# Footer Block #}
   {% block footer %}
   <footer class="site-footer">
     <div class="footer-content">
       <h2>Contact Us</h2>
       <p>Email: info@prohealth.com | Phone: (123) 456-7890</p>
-      {# Use the Jinja global function #}
       <p>© {{ get_current_year() }} Pro Health Center. All Rights Reserved.</p>
     </div>
   </footer>
   {% endblock %}
 
-  {# Base JavaScript #}
+  {# New block for elements like the bot to be added at the end of the body by inheriting templates #}
+  {% block body_end_elements %}{% endblock %} 
+
   <script>
     // Theme toggle functionality
     (function() {
@@ -179,14 +179,44 @@
     function scrollToSection(sectionId) {
         const section = document.getElementById(sectionId);
         if (section) {
-            const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 70;
+            const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 70; 
             const sectionTop = section.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
             window.scrollTo({ top: sectionTop, behavior: 'smooth' });
         }
     }
+
+    // Desktop Dropdown Menu Functionality (Click-Only)
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdownContainer = document.getElementById('departments-dropdown-container');
+        const toggleButton = document.getElementById('departments-toggle-btn');
+        const menuContent = document.getElementById('departments-menu-content');
+
+        if (toggleButton && menuContent && dropdownContainer) {
+            toggleButton.addEventListener('click', function(event) {
+                event.stopPropagation(); 
+                const isOpen = menuContent.classList.toggle('is-open');
+                toggleButton.classList.toggle('menu-is-open', isOpen);
+            });
+            document.addEventListener('click', function(event) {
+                if (!dropdownContainer.contains(event.target) && menuContent.classList.contains('is-open')) {
+                    menuContent.classList.remove('is-open');
+                    if (toggleButton) toggleButton.classList.remove('menu-is-open');
+                }
+            });
+            menuContent.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                    menuContent.classList.remove('is-open');
+                     if (toggleButton) toggleButton.classList.remove('menu-is-open');
+                }
+            });
+        }
+    });
   </script>
 
-  {# Block for page-specific JavaScript #}
-  {% block scripts %}{% endblock %}
+  {# This block is now for scripts from base_with_bot.html OR directly from child templates #}
+  {% block base_with_bot_scripts %}
+      {# Child templates that extend base.html directly will use this original scripts block #}
+      {% block scripts %}{% endblock %}
+  {% endblock %}
 </body>
 </html>

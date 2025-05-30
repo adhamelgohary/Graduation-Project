@@ -1,13 +1,13 @@
-# routes/Doctor_Portal/location_management.py
+# routes/Doctor_Portal/locations/location_management.py
 
 import mysql.connector
 from flask import (
-    Blueprint, request, jsonify, current_app, flash, redirect, url_for, render_template
+    Blueprint, request, jsonify, current_app, flash, redirect, url_for, render_template, abort
 )
 from flask_login import login_required, current_user
 from db import get_db_connection
 import logging
-from datetime import datetime # <--- IMPORT DATETIME HERE
+from datetime import datetime
 
 # Assuming utils.py is in the same directory or correctly referenced in your project
 try:
@@ -39,7 +39,6 @@ def get_doctor_locations_list(doctor_id):
         locations = cursor.fetchall()
         
         for loc in locations:
-            # Check if the key exists and is a datetime object before formatting
             created_at_val = loc.get('created_at')
             if created_at_val and isinstance(created_at_val, datetime):
                 loc['created_at'] = created_at_val.strftime('%Y-%m-%d %H:%M:%S')
@@ -47,17 +46,44 @@ def get_doctor_locations_list(doctor_id):
             updated_at_val = loc.get('updated_at')
             if updated_at_val and isinstance(updated_at_val, datetime):
                 loc['updated_at'] = updated_at_val.strftime('%Y-%m-%d %H:%M:%S')
-
     except (mysql.connector.Error, ConnectionError) as err:
         logger.error(f"DB/Conn Error fetching locations for P:{doctor_id}: {err}", exc_info=True)
-        raise # Re-raise to be handled by the calling route
+        raise 
     except Exception as e:
         logger.error(f"Unexpected error fetching locations for P:{doctor_id}: {e}", exc_info=True)
-        raise # Re-raise
+        raise 
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
     return locations
+
+def get_doctor_location_details(doctor_id, location_id):
+    conn = None; cursor = None; location = None
+    try:
+        conn = get_db_connection()
+        if not conn: raise ConnectionError("DB Connection failed.")
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT * FROM doctor_locations WHERE doctor_id = %s AND doctor_location_id = %s AND is_active = TRUE"
+        cursor.execute(query, (doctor_id, location_id))
+        location = cursor.fetchone()
+        if location:
+            created_at_val = location.get('created_at')
+            if created_at_val and isinstance(created_at_val, datetime):
+                location['created_at'] = created_at_val.strftime('%Y-%m-%d %H:%M:%S')
+            updated_at_val = location.get('updated_at')
+            if updated_at_val and isinstance(updated_at_val, datetime):
+                location['updated_at'] = updated_at_val.strftime('%Y-%m-%d %H:%M:%S')
+    except (mysql.connector.Error, ConnectionError) as err:
+        logger.error(f"DB/Conn Error fetching location L_ID:{location_id} for P:{doctor_id}: {err}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error fetching location L_ID:{location_id} for P:{doctor_id}: {e}", exc_info=True)
+        raise
+    finally:
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
+    return location
+
 
 # --- Route to display the locations management page ---
 @locations_bp.route('', methods=['GET'])
@@ -68,7 +94,7 @@ def manage_locations_page():
     doctor_id = get_provider_id(current_user)
     if doctor_id is None:
         flash("Invalid user session or provider ID not found.", "danger")
-        return redirect(url_for('doctor_main.dashboard')) 
+        return redirect(url_for('doctor_main.dashboard'))
 
     try:
         current_locations = get_doctor_locations_list(doctor_id)
@@ -77,7 +103,41 @@ def manage_locations_page():
         flash("Could not load location data. Please try again.", "danger")
         current_locations = [] 
 
-    return render_template('Doctor_Portal/location_management.html', locations=current_locations)
+    return render_template('Doctor_Portal/locations/location_management.html', locations=current_locations)
+
+# --- Route to display Add Location Page ---
+@locations_bp.route('/new', methods=['GET'])
+@login_required
+def add_location_page():
+    if not check_doctor_authorization(current_user):
+        abort(403)
+    # Pass an empty dictionary or specific default values for the form if needed
+    return render_template('Doctor_Portal/locations/add_location.html', location={})
+
+
+# --- Route to display Edit Location Page ---
+@locations_bp.route('/<int:location_id>/edit', methods=['GET'])
+@login_required
+def edit_location_page(location_id):
+    if not check_doctor_authorization(current_user):
+        abort(403)
+    doctor_id = get_provider_id(current_user)
+    if doctor_id is None:
+        flash("Invalid user session.", "danger")
+        return redirect(url_for('locations.manage_locations_page'))
+
+    try:
+        location = get_doctor_location_details(doctor_id, location_id)
+    except Exception as e:
+        logger.error(f"Error fetching location details for edit page P:{doctor_id} L:{location_id}: {e}", exc_info=True)
+        flash("Could not load location details for editing.", "danger")
+        return redirect(url_for('locations.manage_locations_page'))
+
+    if not location:
+        flash("Location not found or you are not authorized to edit it.", "warning")
+        return redirect(url_for('locations.manage_locations_page'))
+    
+    return render_template('Doctor_Portal/locations/edit_location.html', location=location)
 
 
 # --- Routes for Location Management (CRUD operations) ---
@@ -86,10 +146,17 @@ def manage_locations_page():
 @login_required
 def add_doctor_location():
     if not check_doctor_authorization(current_user):
-        return jsonify({"success": False, "message": "Access Denied."}), 403
+        # For standard form POST, abort or redirect with flash is better than JSON
+        flash("Access Denied.", "danger")
+        return redirect(url_for('locations.manage_locations_page'))
+
     doctor_id = get_provider_id(current_user)
     if doctor_id is None:
-        return jsonify({"success": False, "message": "Invalid session or provider ID missing."}), 401
+        flash("Invalid session or provider ID missing.", "danger")
+        return redirect(url_for('locations.manage_locations_page'))
+
+    # Store form data to re-populate form in case of error
+    form_data = request.form.to_dict()
 
     conn = None; cursor = None; operation_successful = False
     try:
@@ -98,20 +165,22 @@ def add_doctor_location():
         city = request.form.get('city', '').strip() or None
         state = request.form.get('state', '').strip() or None
         zip_code = request.form.get('zip_code', '').strip() or None
-        country = request.form.get('country', '').strip() or 'United States' 
+        country = request.form.get('country', '').strip() or 'United States'
         phone_number = request.form.get('phone_number', '').strip() or None
         is_primary = request.form.get('is_primary') == 'on' 
         notes = request.form.get('notes', '').strip() or None
+        google_maps_link = request.form.get('google_maps_link', '').strip() or None
 
         if not location_name: raise ValueError("Location Name is required.")
         if not address: raise ValueError("Address is required.")
 
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB Connection failed.")
+        
         if conn.in_transaction:
-            logger.warning(f"add_location: Conn already in transaction. P:{doctor_id}")
-            try: conn.rollback()
-            except Exception as e_rb: logger.error(f"Pre-emptive rollback failed: {e_rb}", exc_info=True)
+             logger.warning(f"add_location: Conn already in transaction for P:{doctor_id}. Attempting rollback.")
+             try: conn.rollback()
+             except Exception as rb_ex: logger.error(f"Rollback attempt failed for P:{doctor_id}: {rb_ex}")
         
         conn.start_transaction()
         cursor = conn.cursor(dictionary=True)
@@ -120,38 +189,31 @@ def add_doctor_location():
             cursor.execute("UPDATE doctor_locations SET is_primary = FALSE WHERE doctor_id = %s", (doctor_id,))
 
         query = """
-            INSERT INTO doctor_locations (doctor_id, location_name, address, city, state, zip_code, country, phone_number, is_primary, notes, is_active)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE)
+            INSERT INTO doctor_locations 
+            (doctor_id, location_name, address, city, state, zip_code, country, phone_number, is_primary, notes, is_active, google_maps_link)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, TRUE, %s)
         """
-        params = (doctor_id, location_name, address, city, state, zip_code, country, phone_number, is_primary, notes)
+        params = (doctor_id, location_name, address, city, state, zip_code, country, phone_number, is_primary, notes, google_maps_link)
         cursor.execute(query, params)
-        new_location_id = cursor.lastrowid
+        # new_location_id = cursor.lastrowid # Not strictly needed for redirect flow
         
         conn.commit()
         operation_successful = True
+        flash("Location added successfully.", "success")
+        return redirect(url_for('locations.manage_locations_page'))
 
-        cursor.execute("SELECT * FROM doctor_locations WHERE doctor_location_id = %s", (new_location_id,))
-        new_location_data = cursor.fetchone()
-        
-        # Format datetime for JSON response consistency
-        created_at_val = new_location_data.get('created_at')
-        if created_at_val and isinstance(created_at_val, datetime):
-            new_location_data['created_at'] = created_at_val.strftime('%Y-%m-%d %H:%M:%S')
-        
-        updated_at_val = new_location_data.get('updated_at')
-        if updated_at_val and isinstance(updated_at_val, datetime): # Should be NOW() from insert
-            new_location_data['updated_at'] = updated_at_val.strftime('%Y-%m-%d %H:%M:%S')
-
-
-        return jsonify({"success": True, "message": "Location added successfully.", "location": new_location_data}), 201
-
-    except ValueError as ve: return jsonify({"success": False, "message": str(ve)}), 400
+    except ValueError as ve: 
+        flash(str(ve), "danger")
+        # Re-render the add form with the data they entered and the error
+        return render_template('Doctor_Portal/locations/add_location.html', location=form_data, error=str(ve))
     except (mysql.connector.Error, ConnectionError) as err:
         logger.error(f"DB/Conn Error adding location P:{doctor_id}: {err}", exc_info=True)
-        return jsonify({"success": False, "message": "Database error adding location."}), 500
+        flash("Database error adding location. Please try again.", "danger")
+        return render_template('Doctor_Portal/locations/add_location.html', location=form_data, error="Database error.")
     except Exception as e:
         logger.error(f"Unexpected error adding location P:{doctor_id}: {e}", exc_info=True)
-        return jsonify({"success": False, "message": "An unexpected error occurred."}), 500
+        flash("An unexpected error occurred. Please try again.", "danger")
+        return render_template('Doctor_Portal/locations/add_location.html', location=form_data, error="Unexpected error.")
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected():
@@ -166,22 +228,32 @@ def add_doctor_location():
 @login_required
 def update_doctor_location(location_id):
     if not check_doctor_authorization(current_user):
-        return jsonify({"success": False, "message": "Access Denied."}), 403
+        flash("Access Denied.", "danger")
+        return redirect(url_for('locations.manage_locations_page'))
+
     doctor_id = get_provider_id(current_user)
     if doctor_id is None:
-        return jsonify({"success": False, "message": "Invalid session or provider ID missing."}), 401
+        flash("Invalid session or provider ID missing.", "danger")
+        return redirect(url_for('locations.manage_locations_page'))
+
+    # Store form data to re-populate form in case of error
+    form_data = request.form.to_dict()
+    # Add location_id to form_data for re-rendering edit page
+    form_data['doctor_location_id'] = location_id
+
 
     conn = None; cursor = None; operation_successful = False
     try:
         location_name = request.form.get('location_name', '').strip()
         address = request.form.get('address', '').strip()
         city = request.form.get('city', '').strip() or None
-        state = request.form.get('state', '').strip() or None
+        state = request.form.get('state', '').strip() or None 
         zip_code = request.form.get('zip_code', '').strip() or None
-        country = request.form.get('country', '').strip() or 'United States'
+        country = request.form.get('country', '').strip() or 'United States' 
         phone_number = request.form.get('phone_number', '').strip() or None
         is_primary = request.form.get('is_primary') == 'on'
         notes = request.form.get('notes', '').strip() or None
+        google_maps_link = request.form.get('google_maps_link', '').strip() or None
         
         if not location_name: raise ValueError("Location Name is required.")
         if not address: raise ValueError("Address is required.")
@@ -189,16 +261,18 @@ def update_doctor_location(location_id):
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB Connection failed.")
         if conn.in_transaction:
-            logger.warning(f"update_location: Conn already in transaction. P:{doctor_id}, L_ID:{location_id}")
+            logger.warning(f"update_location: Conn already in transaction for P:{doctor_id}, L:{location_id}. Attempting rollback.")
             try: conn.rollback()
-            except Exception as e_rb: logger.error(f"Pre-emptive rollback failed: {e_rb}", exc_info=True)
+            except Exception as rb_ex: logger.error(f"Rollback attempt failed for P:{doctor_id}, L:{location_id}: {rb_ex}")
 
         conn.start_transaction()
         cursor = conn.cursor(dictionary=True)
 
+        # Verify ownership before update
         cursor.execute("SELECT 1 FROM doctor_locations WHERE doctor_location_id = %s AND doctor_id = %s", (location_id, doctor_id))
         if not cursor.fetchone():
-            return jsonify({"success": False, "message": "Location not found or not authorized."}), 404
+            flash("Location not found or not authorized for update.", "warning")
+            return redirect(url_for('locations.manage_locations_page'))
 
         if is_primary:
             cursor.execute("UPDATE doctor_locations SET is_primary = FALSE WHERE doctor_id = %s AND doctor_location_id != %s", (doctor_id, location_id))
@@ -206,35 +280,29 @@ def update_doctor_location(location_id):
         query = """
             UPDATE doctor_locations SET
             location_name = %s, address = %s, city = %s, state = %s, zip_code = %s, country = %s,
-            phone_number = %s, is_primary = %s, notes = %s, updated_at = NOW() 
+            phone_number = %s, is_primary = %s, notes = %s, updated_at = NOW(),
+            google_maps_link = %s 
             WHERE doctor_location_id = %s AND doctor_id = %s
         """ 
-        params = (location_name, address, city, state, zip_code, country, phone_number, is_primary, notes, location_id, doctor_id)
+        params = (location_name, address, city, state, zip_code, country, phone_number, is_primary, notes, google_maps_link, location_id, doctor_id)
         cursor.execute(query, params)
         
         conn.commit()
         operation_successful = True
+        flash("Location updated successfully.", "success")
+        return redirect(url_for('locations.manage_locations_page'))
 
-        cursor.execute("SELECT * FROM doctor_locations WHERE doctor_location_id = %s", (location_id,))
-        updated_location_data = cursor.fetchone()
-
-        created_at_val = updated_location_data.get('created_at')
-        if created_at_val and isinstance(created_at_val, datetime):
-            updated_location_data['created_at'] = created_at_val.strftime('%Y-%m-%d %H:%M:%S')
-        
-        updated_at_val = updated_location_data.get('updated_at') # Should be NOW() from update
-        if updated_at_val and isinstance(updated_at_val, datetime):
-            updated_location_data['updated_at'] = updated_at_val.strftime('%Y-%m-%d %H:%M:%S')
-
-        return jsonify({"success": True, "message": "Location updated successfully.", "location": updated_location_data}), 200
-
-    except ValueError as ve: return jsonify({"success": False, "message": str(ve)}), 400
+    except ValueError as ve:
+        flash(str(ve), "danger")
+        return render_template('Doctor_Portal/locations/edit_location.html', location=form_data, error=str(ve))
     except (mysql.connector.Error, ConnectionError) as err:
         logger.error(f"DB/Conn Error updating L_ID:{location_id} for P:{doctor_id}: {err}", exc_info=True)
-        return jsonify({"success": False, "message": "Database error updating location."}), 500
+        flash("Database error updating location. Please try again.", "danger")
+        return render_template('Doctor_Portal/locations/edit_location.html', location=form_data, error="Database error.")
     except Exception as e:
         logger.error(f"Unexpected error updating L_ID:{location_id} for P:{doctor_id}: {e}", exc_info=True)
-        return jsonify({"success": False, "message": "An unexpected error occurred."}), 500
+        flash("An unexpected error occurred. Please try again.", "danger")
+        return render_template('Doctor_Portal/locations/edit_location.html', location=form_data, error="Unexpected error.")
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected():
@@ -248,6 +316,8 @@ def update_doctor_location(location_id):
 @locations_bp.route('/<int:location_id>/delete', methods=['POST']) 
 @login_required
 def delete_doctor_location(location_id):
+    # This endpoint will still be called via AJAX/fetch from the main list page.
+    # So, it should still return JSON.
     if not check_doctor_authorization(current_user):
         return jsonify({"success": False, "message": "Access Denied."}), 403
     doctor_id = get_provider_id(current_user)
@@ -259,32 +329,33 @@ def delete_doctor_location(location_id):
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB Connection failed.")
         if conn.in_transaction:
-            logger.warning(f"delete_location: Conn already in transaction. P:{doctor_id}, L_ID:{location_id}")
+            logger.warning(f"delete_location: Conn already in transaction for P:{doctor_id}, L:{location_id}. Attempting rollback.")
             try: conn.rollback()
-            except Exception as e_rb: logger.error(f"Pre-emptive rollback failed: {e_rb}", exc_info=True)
+            except Exception as rb_ex: logger.error(f"Rollback attempt failed for P:{doctor_id}, L:{location_id}: {rb_ex}")
         
         conn.start_transaction()
-        cursor = conn.cursor()
+        cursor = conn.cursor() 
 
-        # Consider soft delete: "UPDATE doctor_locations SET is_active = FALSE WHERE ..."
         query = "DELETE FROM doctor_locations WHERE doctor_location_id = %s AND doctor_id = %s"
         cursor.execute(query, (location_id, doctor_id))
 
         if cursor.rowcount == 0:
-            with conn.cursor() as check_cursor: # Use a separate cursor for this read
-                check_cursor.execute("SELECT 1 FROM doctor_locations WHERE doctor_location_id = %s", (location_id,))
-                exists = check_cursor.fetchone()
-            status_code = 403 if exists else 404
-            return jsonify({"success": False, "message": "Location not found or not authorized."}), status_code
+            exists_check_cursor = conn.cursor(dictionary=True)
+            exists_check_cursor.execute("SELECT 1 FROM doctor_locations WHERE doctor_location_id = %s", (location_id,))
+            exists = exists_check_cursor.fetchone()
+            exists_check_cursor.close()
+            
+            status_code = 403 if exists else 404 
+            return jsonify({"success": False, "message": "Location not found or not authorized for deletion."}), status_code
         
         conn.commit()
         operation_successful = True
         return jsonify({"success": True, "message": "Location deleted successfully."}), 200
 
     except mysql.connector.Error as err:
-        if err.errno == 1451: # FK constraint
-             logger.error(f"FK Constraint error L_ID:{location_id} P:{doctor_id}: {err}")
-             return jsonify({"success": False, "message": "Cannot delete location: it is referenced by other records (e.g., availability slots, appointments). Please remove these references first or deactivate the location if possible."}), 409 
+        if err.errno == 1451: 
+             logger.warning(f"FK Constraint error on delete L_ID:{location_id} P:{doctor_id}: {err}")
+             return jsonify({"success": False, "message": "Cannot delete location: it's currently in use (e.g., by appointments or availability schedules). Please update those records first."}), 409 
         logger.error(f"DB Error deleting L_ID:{location_id} P:{doctor_id}: {err}", exc_info=True)
         return jsonify({"success": False, "message": "Database error deleting location."}), 500
     except ConnectionError as ce:

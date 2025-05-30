@@ -1,0 +1,133 @@
+{% extends "Nuitrition/base_with_bot.html" %}
+{% block title %}{{ plan.plan_name }} - Details{% endblock %}
+
+{% block head_extra %}
+<style>
+    .plan-header { margin-bottom: 30px; text-align: center; }
+    .plan-summary {
+        background-color: var(--card-bg-color);
+        padding: 20px;
+        border-radius: var(--border-radius);
+        margin-bottom: 30px;
+        border: 1px solid var(--border-color);
+    }
+    .plan-summary h2 { color: var(--primary-color); margin-top: 0; }
+    .plan-summary p { margin-bottom: 8px; }
+
+    .meal-card {
+        background-color: var(--nested-card-bg, var(--bg-secondary));
+        border: 1px solid var(--border-color);
+        padding: 20px;
+        margin-bottom: 25px;
+        border-radius: var(--border-radius);
+    }
+    .meal-card h3 {
+        color: var(--accent-pink, var(--primary-color)); /* Match theme */
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px dashed var(--border-color);
+    }
+    .meal-card .meal-meta p { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px; }
+    
+    .food-item-list {
+        list-style: none;
+        padding-left: 0;
+    }
+    .food-item-list li {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid var(--border-color-light, rgba(var(--border-color-rgb), 0.5)); /* Lighter border */
+    }
+    .food-item-list li:last-child {
+        border-bottom: none;
+    }
+    .food-item-list strong { color: var(--text-primary); }
+    .food-item-list .nutrient-details {
+        font-size: 0.85em;
+        color: var(--text-secondary);
+        display: block; /* Block for better layout */
+        margin-top: 4px;
+    }
+    .food-item-list .notes, .food-item-list .alternatives {
+        font-size: 0.8em;
+        font-style: italic;
+        color: var(--text-secondary-darker, var(--text-secondary)); /* Slightly darker italic text */
+        display: block;
+        margin-top: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>document.body.dataset.pageType = 'nutrition';</script>
+<div class="main-container">
+    <div class="plan-header">
+        <h1 class="page-title">{{ plan.plan_name }}</h1>
+    </div>
+    
+    <div class="plan-summary">
+        <h2>Plan Overview</h2>
+        <p>{{ plan.description | safe if plan.description else 'No detailed description available.' }}</p>
+        <p><strong>Plan Type:</strong> {{ plan.plan_type|replace('_', ' ')|title }}</p>
+        <p><strong>Target Conditions:</strong> {{ plan.target_conditions if plan.target_conditions else 'General Wellness' }}</p>
+        <p><strong>Approx. Daily Calories:</strong> {{ plan.calories or 'Varies' }}</p>
+        <p><strong>Approx. Daily Protein:</strong> {{ plan.protein_grams or 'Varies' }}g</p>
+        <p><strong>Approx. Daily Carbs:</strong> {{ plan.carbs_grams or 'Varies' }}g</p>
+        <p><strong>Approx. Daily Fat:</strong> {{ plan.fat_grams or 'Varies' }}g</p>
+        <p><strong>Approx. Daily Fiber:</strong> {{ plan.fiber_grams or 'Varies' }}g</p>
+        <p><strong>Approx. Daily Sodium:</strong> {{ plan.sodium_mg or 'Varies' }}mg</p>
+        {% if plan.creator_username %}
+            <p><small>Created by: {{ plan.creator_username }}</small></p>
+        {% endif %}
+    </div>
+
+    <h2>Daily Meals</h2>
+    {% if meal_data %}
+        {% for meal_entry in meal_data %}
+            <div class="meal-card">
+                <h3>{{ meal_entry.meal_info.meal_name }} ({{ meal_entry.meal_info.meal_type|title }})</h3>
+                {% if meal_entry.meal_info.description %}
+                    <p><em>{{ meal_entry.meal_info.description|safe }}</em></p>
+                {% endif %}
+                <div class="meal-meta">
+                    {% if meal_entry.meal_info.time_of_day %}<p><strong>Time:</strong> {{ meal_entry.meal_info.time_of_day.strftime('%I:%M %p') if meal_entry.meal_info.time_of_day else 'Flexible' }}</p>{% endif %}
+                    <p><strong>Approx. Calories:</strong> {{ meal_entry.meal_info.calories or 'Varies' }}</p>
+                    <p><strong>Protein:</strong> {{ meal_entry.meal_info.protein_grams or 'N/A' }}g | 
+                       <strong>Carbs:</strong> {{ meal_entry.meal_info.carbs_grams or 'N/A' }}g | 
+                       <strong>Fat:</strong> {{ meal_entry.meal_info.fat_grams or 'N/A' }}g |
+                       <strong>Fiber:</strong> {{ meal_entry.meal_info.fiber_grams or 'N/A' }}g |
+                       <strong>Sodium:</strong> {{ meal_entry.meal_info.sodium_mg or 'N/A' }}mg
+                    </p>
+                </div>
+                
+                {% if meal_entry.items %}
+                    <h4>Food Items:</h4>
+                    <ul class="food-item-list">
+                    {% for item in meal_entry.items %}
+                        <li>
+                            <strong>{{ item.food_name }}</strong> - {{ item.serving_size }}
+                            <span class="nutrient-details">
+                                Cals: {{ item.calories if item.calories is not none else 'N/A' }} | 
+                                P: {{ "%.1f"|format(item.protein_grams) if item.protein_grams is not none else 'N/A' }}g | 
+                                C: {{ "%.1f"|format(item.carbs_grams) if item.carbs_grams is not none else 'N/A' }}g | 
+                                F: {{ "%.1f"|format(item.fat_grams) if item.fat_grams is not none else 'N/A' }}g
+                            </span>
+                            {% if item.notes %}<span class="notes">Notes: {{ item.notes|safe }}</span>{% endif %}
+                            {% if item.alternatives %}<span class="alternatives">Alternatives: {{ item.alternatives|safe }}</span>{% endif %}
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No specific food items listed for this meal.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No meals have been defined for this diet plan yet.</p>
+    {% endif %}
+    <p style="text-align: center; margin-top: 30px;">
+        <a href="{{ url_for('nutrition_bp.list_diet_plans') }}" class="button">« Back to All Diet Plans</a>
+    </p>
+</div>
+{% endblock %}

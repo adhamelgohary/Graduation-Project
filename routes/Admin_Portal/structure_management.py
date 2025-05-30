@@ -5,87 +5,101 @@ import uuid
 from flask import (
     Blueprint, render_template, request, flash, redirect, url_for, current_app
 )
-from flask_login import login_required
+from flask_login import login_required # Assuming you have an admin_required decorator or similar
 import mysql.connector
-from werkzeug.utils import secure_filename
+from werkzeug.utils import secure_filename as werkzeug_secure_filename # Renamed for clarity
 from db import get_db_connection
 
-# --- Use config keys set by directory_configs.py ---
-UPLOAD_FOLDER_CONFIG_KEY = 'UPLOAD_FOLDER_DEPARTMENTS'
-ALLOWED_EXTENSIONS_CONFIG_KEY = 'ALLOWED_IMAGE_EXTENSIONS'
-STATIC_FOLDER_CONFIG_KEY = 'STATIC_FOLDER' # Key for the static folder path
+# Import the helper from directory_configs
+# Adjust the import path based on your project structure if utils is not directly accessible
+try:
+    from utils.directory_configs import get_relative_path_for_db
+except ImportError:
+    current_app.logger.critical("CRITICAL: Failed to import get_relative_path_for_db from utils.directory_configs in structure_management.")
+    # Define a dummy fallback if needed, or let it raise an error if this is essential
+    def get_relative_path_for_db(absolute_filepath): return None
 
-# ... (keep admin_required check comment or implementation) ...
+
+# --- Use config keys set by directory_configs.py ---
+UPLOAD_FOLDER_CONFIG_KEY_DEPT = 'UPLOAD_FOLDER_DEPARTMENTS' # Specific for department images
+ALLOWED_EXTENSIONS_CONFIG_KEY_IMG = 'ALLOWED_IMAGE_EXTENSIONS' # Specific for images
 
 structure_bp = Blueprint(
     'admin_structure',
     __name__,
     url_prefix='/admin/structure',
-    template_folder='../../templates'
+    template_folder='../../templates' # Adjust if your templates are elsewhere (e.g., ../templates/Admin_Portal/structure)
 )
 
-# --- File Handling Helper Functions (No changes needed here) ---
+# --- Admin Check (Placeholder - implement your actual admin check) ---
+# from functools import wraps
+# def admin_required(f):
+#     @wraps(f)
+#     def decorated_function(*args, **kwargs):
+#         if not getattr(current_user, 'user_type', None) == 'admin':
+#             flash("You do not have permission to access this page.", "danger")
+#             return redirect(url_for('login.login_route')) # Or your main dashboard
+#         return f(*args, **kwargs)
+#     return decorated_function
 
-def allowed_file(filename, allowed_extensions):
+# --- File Handling Helper Functions ---
+
+def allowed_file(filename, allowed_extensions_set): # Takes a set now
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions_set
 
-def generate_secure_filename(original_filename):
-    extension = original_filename.rsplit('.', 1)[1].lower()
-    unique_id = uuid.uuid4().hex
-    safe_original_name = secure_filename(original_filename.rsplit('.', 1)[0])
-    safe_original_name = safe_original_name[:50] if len(safe_original_name) > 50 else safe_original_name
-    return f"{safe_original_name}_{unique_id}.{extension}"
+def generate_unique_filesystem_name(original_filename): # Renamed for clarity
+    """Generates a secure and unique filename for storing on the filesystem."""
+    cleaned_filename = werkzeug_secure_filename(original_filename)
+    base, ext = os.path.splitext(cleaned_filename)
+    base = base[:100] if base else "image" # Ensure base is not empty and limit length
+    return f"{uuid.uuid4().hex}_{base}{ext}"
 
-def delete_existing_image(filename_db_path): # Removed config_key argument
-    """Safely deletes an existing image file using app config."""
-    if not filename_db_path:
+def delete_existing_image_file(db_relative_path):
+    """
+    Safely deletes an existing image file.
+    Assumes db_relative_path is the path stored in DB, relative to the static folder.
+    e.g., "uploads/department_images/image.jpg"
+    """
+    if not db_relative_path:
         return False
 
-    # Get folder paths from app config
-    upload_folder = current_app.config.get(UPLOAD_FOLDER_CONFIG_KEY) # Use department key specifically
-    static_folder = current_app.config.get(STATIC_FOLDER_CONFIG_KEY)
-
-    if not upload_folder or not static_folder:
-        current_app.logger.error(f"Upload/Static folder key not configured ('{UPLOAD_FOLDER_CONFIG_KEY}' or '{STATIC_FOLDER_CONFIG_KEY}'). Cannot delete file.")
+    if not current_app.static_folder:
+        current_app.logger.error("Flask app's static_folder is not configured. Cannot delete file.")
         return False
 
     try:
-        # Construct full path using static folder and the relative DB path
-        full_path = os.path.join(static_folder, filename_db_path)
+        # Construct full absolute path using static folder and the relative DB path
+        full_absolute_path = os.path.join(current_app.static_folder, db_relative_path)
+        full_absolute_path = os.path.normpath(full_absolute_path) # Normalize
 
-        if os.path.exists(full_path) and os.path.isfile(full_path):
-            os.remove(full_path)
-            current_app.logger.info(f"Deleted existing file: {full_path}")
+        if os.path.exists(full_absolute_path) and os.path.isfile(full_absolute_path):
+            os.remove(full_absolute_path)
+            current_app.logger.info(f"Deleted existing file: {full_absolute_path}")
             return True
         else:
-            # It's okay if file doesn't exist (might have been manually deleted)
-            current_app.logger.warning(f"File to delete not found at: {full_path} (DB path: {filename_db_path})")
-            return False # Indicate file wasn't found to delete
+            current_app.logger.warning(f"File to delete not found at: {full_absolute_path} (DB path: {db_relative_path})")
+            return False 
     except OSError as e:
-        current_app.logger.error(f"Error deleting file {full_path}: {e}")
-        return False
+        current_app.logger.error(f"OSError deleting file {db_relative_path} (abs: {full_absolute_path}): {e}")
     except Exception as e:
-         current_app.logger.error(f"Unexpected error constructing path or deleting file {filename_db_path}: {e}")
-         return False
+         current_app.logger.error(f"Unexpected error deleting file {db_relative_path}: {e}", exc_info=True)
+    return False
 
 
-# --- Database Helper Functions (No changes needed here) ---
-# ... (get_all_departments, get_all_specializations_with_dept_name, get_department, get_specialization remain the same) ...
+# --- Database Helper Functions ---
 def get_all_departments():
-    """Fetches all departments ordered by name."""
     conn = None; cursor = None; departments = []
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT department_id, name, description, image_filename FROM departments ORDER BY name ASC")
         departments = cursor.fetchall()
-        # Construct full URL for images
         for dept in departments:
-            if dept.get('image_filename'):
+            if dept.get('image_filename'): # image_filename is path relative to static (e.g. uploads/department_images/file.jpg)
                 dept['image_url'] = url_for('static', filename=dept['image_filename'])
             else:
-                dept['image_url'] = url_for('static', filename='Admin_Portal/images/dept_placeholder.png') # Default image
+                dept['image_url'] = url_for('static', filename='Admin_Portal/images/dept_placeholder.png')
     except mysql.connector.Error as err:
         current_app.logger.error(f"Error fetching all departments: {err}")
         flash("Error retrieving departments from database.", "danger")
@@ -95,7 +109,6 @@ def get_all_departments():
     return departments
 
 def get_all_specializations_with_dept_name():
-    """Fetches all specializations with their associated department name."""
     conn = None; cursor = None; specializations = []
     try:
         conn = get_db_connection()
@@ -104,7 +117,7 @@ def get_all_specializations_with_dept_name():
             SELECT s.specialization_id, s.name, s.description, s.department_id, d.name as department_name
             FROM specializations s
             LEFT JOIN departments d ON s.department_id = d.department_id
-            ORDER BY s.name ASC
+            ORDER BY d.name ASC, s.name ASC
         """
         cursor.execute(query)
         specializations = cursor.fetchall()
@@ -117,7 +130,6 @@ def get_all_specializations_with_dept_name():
     return specializations
 
 def get_department(dept_id):
-    """Fetches a single department by ID, adding image URL."""
     conn = None; cursor = None; department = None
     try:
         conn = get_db_connection()
@@ -128,7 +140,7 @@ def get_department(dept_id):
              if department.get('image_filename'):
                  department['image_url'] = url_for('static', filename=department['image_filename'])
              else:
-                 department['image_url'] = url_for('static', filename='Admin_Portal/images/dept_placeholder.png') # Default
+                 department['image_url'] = url_for('static', filename='Admin_Portal/images/dept_placeholder.png')
     except mysql.connector.Error as err:
         current_app.logger.error(f"Error fetching department {dept_id}: {err}")
         flash(f"Error retrieving department {dept_id}.", "danger")
@@ -137,8 +149,8 @@ def get_department(dept_id):
         if conn and conn.is_connected(): conn.close()
     return department
 
+# (get_specialization can remain the same)
 def get_specialization(spec_id):
-    """Fetches a single specialization by ID."""
     conn = None; cursor = None; specialization = None
     try:
         conn = get_db_connection()
@@ -157,13 +169,12 @@ def get_specialization(spec_id):
 
 @structure_bp.route('/')
 @login_required
-# @admin_required
+# @admin_required # Apply your admin check
 def manage_structure():
-    # ... (no changes needed) ...
     departments = get_all_departments()
     specializations = get_all_specializations_with_dept_name()
     return render_template(
-        'Admin_Portal/structure/manage_structure.html',
+        'Admin_Portal/structure/manage_structure.html', # Ensure this template path is correct
         departments=departments,
         specializations=specializations
     )
@@ -174,7 +185,6 @@ def manage_structure():
 @login_required
 # @admin_required
 def add_department():
-    # ... (variable retrieval) ...
     name = request.form.get('department_name', '').strip()
     description = request.form.get('department_description', '').strip() or None
     image_file = request.files.get('department_image')
@@ -184,49 +194,49 @@ def add_department():
         return redirect(url_for('.manage_structure'))
 
     conn = None; cursor = None
-    saved_filename_db_path = None
-    saved_filepath_full = None
+    saved_filename_db_path = None # This will be relative to static folder
+    saved_file_absolute_path = None # For actual saving and cleanup on error
     upload_error = False
 
-    # --- Handle File Upload ---
     if image_file and image_file.filename != '':
-        # Get config values using the defined keys
-        allowed_extensions = current_app.config.get(ALLOWED_EXTENSIONS_CONFIG_KEY)
-        upload_folder = current_app.config.get(UPLOAD_FOLDER_CONFIG_KEY)
-        static_folder = current_app.config.get(STATIC_FOLDER_CONFIG_KEY)
+        allowed_extensions = current_app.config.get(ALLOWED_EXTENSIONS_CONFIG_KEY_IMG)
+        # UPLOAD_FOLDER_DEPARTMENTS stores the absolute path
+        upload_folder_absolute = current_app.config.get(UPLOAD_FOLDER_CONFIG_KEY_DEPT) 
 
-        if not upload_folder or not static_folder:
-            flash("Server configuration error: Upload/Static folder not set.", "danger")
+        if not upload_folder_absolute:
+            flash("Server configuration error: Department upload folder not set.", "danger")
             upload_error = True
         elif allowed_extensions and allowed_file(image_file.filename, allowed_extensions):
             try:
-                secure_name = generate_secure_filename(image_file.filename)
-                saved_filepath_full = os.path.join(upload_folder, secure_name)
-                # Calculate DB path relative to static folder
-                relative_folder = os.path.relpath(upload_folder, static_folder)
-                saved_filename_db_path = os.path.join(relative_folder, secure_name).replace(os.path.sep, '/')
+                filesystem_secure_name = generate_unique_filesystem_name(image_file.filename)
+                saved_file_absolute_path = os.path.join(upload_folder_absolute, filesystem_secure_name)
+                
+                os.makedirs(upload_folder_absolute, exist_ok=True) # Ensure dir exists
+                image_file.save(saved_file_absolute_path)
+                current_app.logger.info(f"Department image saved to: {saved_file_absolute_path}")
 
-                # os.makedirs already handled by configure_directories
-                image_file.save(saved_filepath_full)
-                current_app.logger.info(f"Department image saved to: {saved_filepath_full}")
+                # Generate path for DB relative to static folder
+                saved_filename_db_path = get_relative_path_for_db(saved_file_absolute_path)
+                if not saved_filename_db_path:
+                    raise ValueError("Could not determine relative path for database storage.")
+
             except Exception as e:
                 current_app.logger.error(f"Error saving department image: {e}", exc_info=True)
-                flash("Error saving uploaded image.", "danger")
+                flash(f"Error saving uploaded image: {str(e)}", "danger")
                 upload_error = True
         else:
             flash("Invalid image file type. Allowed types: {}".format(', '.join(allowed_extensions or [])), "danger")
             upload_error = True
 
-    if upload_error:
+    if upload_error: # If any file upload error, don't proceed to DB
         return redirect(url_for('.manage_structure'))
-    # --- End File Upload Handling ---
 
-    # --- Database Insert ---
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        conn.autocommit = False
         cursor.execute(
-            "INSERT INTO departments (name, description, image_filename) VALUES (%s, %s, %s)",
+            "INSERT INTO departments (name, description, image_filename, created_at, updated_at) VALUES (%s, %s, %s, NOW(), NOW())",
             (name, description, saved_filename_db_path)
         )
         conn.commit()
@@ -235,21 +245,22 @@ def add_department():
         if conn: conn.rollback()
         current_app.logger.error(f"Error adding department to DB: {err}")
         if err.errno == 1062: flash(f"Error: Department name '{name}' already exists.", "danger")
-        else: flash(f"Database error adding department: {err.msg}", "danger")
-        # Cleanup orphaned file
-        if saved_filepath_full and os.path.exists(saved_filepath_full):
-             if delete_existing_image(saved_filename_db_path): # Call helper
-                 current_app.logger.warning(f"Orphaned file deleted after DB error: {saved_filepath_full}")
+        else: flash(f"Database error adding department: {err.msg if hasattr(err, 'msg') else str(err)}", "danger")
+        if saved_file_absolute_path and os.path.exists(saved_file_absolute_path):
+             if delete_existing_image_file(saved_filename_db_path): 
+                 current_app.logger.warning(f"Cleaned up orphaned file after DB error: {saved_file_absolute_path}")
     except Exception as e:
         if conn: conn.rollback()
         current_app.logger.error(f"Unexpected error adding department: {e}", exc_info=True)
         flash("An unexpected error occurred while adding the department.", "danger")
-        if saved_filepath_full and os.path.exists(saved_filepath_full):
-             if delete_existing_image(saved_filename_db_path):
-                 current_app.logger.warning(f"Orphaned file deleted after unexpected error: {saved_filepath_full}")
+        if saved_file_absolute_path and os.path.exists(saved_file_absolute_path):
+             if delete_existing_image_file(saved_filename_db_path):
+                 current_app.logger.warning(f"Cleaned up orphaned file after unexpected error: {saved_file_absolute_path}")
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
+        if conn and conn.is_connected(): 
+            if not conn.autocommit: conn.autocommit = True
+            conn.close()
 
     return redirect(url_for('.manage_structure'))
 
@@ -258,8 +269,13 @@ def add_department():
 @login_required
 # @admin_required
 def edit_department(dept_id):
-    # ... (variable retrieval) ...
     conn = None; cursor = None
+    
+    current_department_data = get_department(dept_id) # Fetch initial data for GET and pre-POST
+    if not current_department_data:
+        flash("Department not found.", "warning")
+        return redirect(url_for('.manage_structure'))
+
     if request.method == 'POST':
         name = request.form.get('department_name', '').strip()
         description = request.form.get('department_description', '').strip() or None
@@ -268,74 +284,56 @@ def edit_department(dept_id):
 
         if not name:
             flash("Department name cannot be empty.", "danger")
-            department = get_department(dept_id)
-            return render_template('Admin_Portal/structure/edit_department.html', department=department)
+            # Pass current_department_data back to avoid re-fetching if validation fails early
+            return render_template('Admin_Portal/structure/edit_department.html', department=current_department_data)
 
-        new_image_db_path = None
-        upload_error = False
-        saved_filepath_full = None
-
-        current_department_data = get_department(dept_id)
-        if not current_department_data:
-            flash("Department not found.", "warning")
-            return redirect(url_for('.manage_structure'))
-        current_image_db_path = current_department_data.get('image_filename')
-
-        # --- Handle Image Update/Deletion ---
+        new_image_db_path = current_department_data.get('image_filename') # Start with existing
+        saved_file_absolute_path_for_cleanup_on_error = None
+        old_image_to_delete_if_replaced = None
+        
         if delete_image_flag:
-            if current_image_db_path:
-                if delete_existing_image(current_image_db_path):
-                    new_image_db_path = None
-                    flash("Current image marked for deletion.", "info")
-                else:
-                    flash("Failed to delete current image file, update aborted.", "warning")
-                    # Re-render form without proceeding to DB update
-                    department = get_department(dept_id)
-                    return render_template('Admin_Portal/structure/edit_department.html', department=department)
-            else:
-                new_image_db_path = None # Was already null
+            if new_image_db_path: # If there was an image
+                old_image_to_delete_if_replaced = new_image_db_path # Mark for deletion
+                new_image_db_path = None # Set to None for DB update
+            # File deletion will happen after successful DB update or on error cleanup
         elif image_file and image_file.filename != '':
-            allowed_extensions = current_app.config.get(ALLOWED_EXTENSIONS_CONFIG_KEY)
-            upload_folder = current_app.config.get(UPLOAD_FOLDER_CONFIG_KEY)
-            static_folder = current_app.config.get(STATIC_FOLDER_CONFIG_KEY)
+            allowed_extensions = current_app.config.get(ALLOWED_EXTENSIONS_CONFIG_KEY_IMG)
+            upload_folder_absolute = current_app.config.get(UPLOAD_FOLDER_CONFIG_KEY_DEPT)
 
-            if not upload_folder or not static_folder:
-                flash("Server configuration error: Upload/Static folder not set.", "danger")
-                upload_error = True
-            elif allowed_extensions and allowed_file(image_file.filename, allowed_extensions):
+            if not upload_folder_absolute:
+                flash("Server configuration error: Department upload folder not set.", "danger")
+                return render_template('Admin_Portal/structure/edit_department.html', department=current_department_data)
+            
+            if allowed_extensions and allowed_file(image_file.filename, allowed_extensions):
                 try:
-                    secure_name = generate_secure_filename(image_file.filename)
-                    saved_filepath_full = os.path.join(upload_folder, secure_name)
-                    relative_folder = os.path.relpath(upload_folder, static_folder)
-                    new_image_db_path = os.path.join(relative_folder, secure_name).replace(os.path.sep, '/')
+                    filesystem_secure_name = generate_unique_filesystem_name(image_file.filename)
+                    saved_file_absolute_path = os.path.join(upload_folder_absolute, filesystem_secure_name)
+                    
+                    os.makedirs(upload_folder_absolute, exist_ok=True)
+                    image_file.save(saved_file_absolute_path)
+                    current_app.logger.info(f"New department image for {dept_id} saved: {saved_file_absolute_path}")
+                    
+                    temp_db_path = get_relative_path_for_db(saved_file_absolute_path)
+                    if not temp_db_path:
+                        raise ValueError("Could not determine relative path for new image.")
+                    
+                    old_image_to_delete_if_replaced = new_image_db_path # Mark current image for deletion
+                    new_image_db_path = temp_db_path # This is the new path for the DB
+                    saved_file_absolute_path_for_cleanup_on_error = saved_file_absolute_path
 
-                    # os.makedirs already handled by configure_directories
-                    image_file.save(saved_filepath_full)
-                    current_app.logger.info(f"New department image saved: {saved_filepath_full}")
-                    # Delete OLD image only if new one saved successfully
-                    if current_image_db_path:
-                         delete_existing_image(current_image_db_path)
                 except Exception as e:
-                    current_app.logger.error(f"Error saving updated department image: {e}", exc_info=True)
-                    flash("Error saving uploaded image.", "danger")
-                    upload_error = True
-                    new_image_db_path = current_image_db_path # Revert to old path
+                    current_app.logger.error(f"Error saving updated department image for {dept_id}: {e}", exc_info=True)
+                    flash(f"Error saving uploaded image: {str(e)}", "danger")
+                    # Don't change new_image_db_path, keep the old one
+                    return render_template('Admin_Portal/structure/edit_department.html', department=current_department_data)
             else:
                 flash("Invalid new image file type. Allowed types: {}".format(', '.join(allowed_extensions or [])), "danger")
-                upload_error = True
-                new_image_db_path = current_image_db_path
-        else:
-            new_image_db_path = current_image_db_path # Keep current
+                return render_template('Admin_Portal/structure/edit_department.html', department=current_department_data)
 
-        if upload_error:
-             department = get_department(dept_id)
-             return render_template('Admin_Portal/structure/edit_department.html', department=department)
-        # --- End Image Update/Deletion ---
-
-        # --- Database Update ---
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
+            conn.autocommit = False
             cursor.execute(
                 """UPDATE departments SET
                    name = %s, description = %s, image_filename = %s, updated_at = NOW()
@@ -343,134 +341,148 @@ def edit_department(dept_id):
                 (name, description, new_image_db_path, dept_id)
             )
             conn.commit()
+
+            # If DB update was successful, now delete the old physical file if it was replaced or marked for deletion
+            if old_image_to_delete_if_replaced and old_image_to_delete_if_replaced != new_image_db_path:
+                delete_existing_image_file(old_image_to_delete_if_replaced)
+            
             flash(f"Department '{name}' updated successfully.", "success")
             return redirect(url_for('.manage_structure'))
+
         except mysql.connector.Error as err:
-            # ... (keep DB error handling, log potential file inconsistencies) ...
             if conn: conn.rollback()
             current_app.logger.error(f"Error updating department {dept_id} in DB: {err}")
             if err.errno == 1062: flash(f"Error: Department name '{name}' already exists.", "danger")
-            else: flash(f"Database error updating department: {err.msg}", "danger")
-            # Log potential inconsistencies
-            if saved_filepath_full and os.path.exists(saved_filepath_full) and new_image_db_path != current_image_db_path:
-                 current_app.logger.warning(f"DB error after file operations for dept {dept_id}. New file '{saved_filepath_full}' might be orphaned.")
-            elif delete_image_flag and new_image_db_path is None and current_image_db_path is not None: # Check if delete seemed successful file-wise but DB failed
-                 current_app.logger.warning(f"DB error after deleting image for dept {dept_id}. File deleted but DB not updated.")
-
-            department = get_department(dept_id) # Refetch for template
-            return render_template('Admin_Portal/structure/edit_department.html', department=department)
+            else: flash(f"Database error updating department: {err.msg if hasattr(err, 'msg') else str(err)}", "danger")
+            
+            # If a new file was saved but DB update failed, try to clean up the new file
+            if saved_file_absolute_path_for_cleanup_on_error and os.path.exists(saved_file_absolute_path_for_cleanup_on_error):
+                if get_relative_path_for_db(saved_file_absolute_path_for_cleanup_on_error) == new_image_db_path: # ensure it's the one we tried to set
+                    delete_existing_image_file(new_image_db_path)
+                    current_app.logger.warning(f"Cleaned up newly uploaded file {new_image_db_path} for dept {dept_id} due to DB error.")
         except Exception as e:
-             # ... (keep general exception handling) ...
             if conn: conn.rollback()
             current_app.logger.error(f"Unexpected error updating department {dept_id}: {e}", exc_info=True)
             flash("An unexpected error occurred while updating.", "danger")
-            department = get_department(dept_id) # Refetch for template
-            return render_template('Admin_Portal/structure/edit_department.html', department=department)
+            if saved_file_absolute_path_for_cleanup_on_error and os.path.exists(saved_file_absolute_path_for_cleanup_on_error):
+                 if get_relative_path_for_db(saved_file_absolute_path_for_cleanup_on_error) == new_image_db_path:
+                    delete_existing_image_file(new_image_db_path)
+                    current_app.logger.warning(f"Cleaned up newly uploaded file {new_image_db_path} for dept {dept_id} due to unexpected error.")
         finally:
             if cursor: cursor.close()
-            if conn and conn.is_connected(): conn.close()
+            if conn and conn.is_connected(): 
+                if not conn.autocommit: conn.autocommit = True
+                conn.close()
+        # Re-render form with potentially unchanged department data on error
+        return render_template('Admin_Portal/structure/edit_department.html', department=get_department(dept_id))
 
-    # --- GET Request ---
-    department = get_department(dept_id)
-    if not department:
-        flash("Department not found.", "warning")
-        return redirect(url_for('.manage_structure'))
-    return render_template('Admin_Portal/structure/edit_department.html', department=department)
+
+    # GET Request
+    return render_template('Admin_Portal/structure/edit_department.html', department=current_department_data)
 
 
 @structure_bp.route('/departments/<int:dept_id>/delete', methods=['POST'])
 @login_required
 # @admin_required
 def delete_department(dept_id):
-    # ... (Get image filename before deleting DB record) ...
     conn = None; cursor = None
-    department_data = get_department(dept_id)
+    department_data = get_department(dept_id) # Fetch before delete to get image filename
     image_to_delete_db_path = department_data.get('image_filename') if department_data else None
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        conn.autocommit = False
+        
+        # Consider what happens to specializations linked to this department.
+        # If FK is SET NULL: specializations.department_id will become NULL.
+        # If FK is RESTRICT/NO ACTION: this delete will fail if specializations are linked.
+        # Current specializations table has ON DELETE SET NULL for department_id in its FK.
+        
         cursor.execute("DELETE FROM departments WHERE department_id = %s", (dept_id,))
-        conn.commit()
-
+        
         if cursor.rowcount > 0:
-            flash("Department deleted successfully. Associated specializations are now unlinked.", "success")
-            # Delete image file AFTER DB success
+            conn.commit() # Commit DB changes first
+            flash("Department deleted successfully. Associated specializations' department links are set to NULL.", "success")
             if image_to_delete_db_path:
-                delete_existing_image(image_to_delete_db_path) # Call helper
+                delete_existing_image_file(image_to_delete_db_path)
         else:
+            if conn.in_transaction: conn.rollback()
             flash("Department not found or already deleted.", "warning")
-    # ... (keep error handling) ...
+
     except mysql.connector.Error as err:
-        if conn: conn.rollback()
+        if conn and conn.is_connected() and not conn.autocommit : conn.rollback()
         current_app.logger.error(f"Error deleting department {dept_id}: {err}")
-        flash(f"Database error deleting department: {err.msg}", "danger")
+        if err.errno == 1451: # Foreign key constraint fails (e.g. if specializations FK was RESTRICT)
+            flash("Cannot delete department. It might be referenced by other records (e.g., specializations if FK was restrictive, or doctors if directly linked).", "danger")
+        else:
+            flash(f"Database error deleting department: {err.msg if hasattr(err, 'msg') else str(err)}", "danger")
     except Exception as e:
-         if conn: conn.rollback()
+         if conn and conn.is_connected() and not conn.autocommit : conn.rollback()
          current_app.logger.error(f"Unexpected error deleting department {dept_id}: {e}", exc_info=True)
          flash("An unexpected error occurred during deletion.", "danger")
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
+        if conn and conn.is_connected(): 
+            if not conn.autocommit : conn.autocommit = True
+            conn.close()
 
     return redirect(url_for('.manage_structure'))
 
 
-# --- Specialization Routes (No changes needed) ---
-# ... (keep add_specialization, edit_specialization, delete_specialization as they were) ...
+# --- Specialization Routes (No file handling, largely unchanged) ---
 @structure_bp.route('/specializations/add', methods=['POST'])
 @login_required
 # @admin_required
 def add_specialization():
-    # if not current_user.is_admin(): abort(403)
     name = request.form.get('specialization_name', '').strip()
     description = request.form.get('specialization_description', '').strip() or None
     department_id_str = request.form.get('department_id', '').strip()
 
     if not name:
         flash("Specialization name is required.", "danger")
-        return redirect(url_for('.manage_structure') + '#specializations-section') # Jump to section
+        return redirect(url_for('.manage_structure') + '#specializations-section')
 
     department_id = None
-    if department_id_str:
-        try:
-            department_id = int(department_id_str)
+    if department_id_str: # Department is optional for a specialization
+        try: department_id = int(department_id_str)
         except ValueError:
-            flash("Invalid Department selected.", "danger")
+            flash("Invalid Department selected for specialization.", "danger")
             return redirect(url_for('.manage_structure') + '#specializations-section')
 
     conn = None; cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
+        conn.autocommit = False
         cursor.execute(
-            "INSERT INTO specializations (name, description, department_id) VALUES (%s, %s, %s)",
-            (name, description, department_id) # department_id can be None
+            "INSERT INTO specializations (name, description, department_id, created_at, updated_at) VALUES (%s, %s, %s, NOW(), NOW())",
+            (name, description, department_id) 
         )
         conn.commit()
         flash(f"Specialization '{name}' added successfully.", "success")
     except mysql.connector.Error as err:
-        conn.rollback()
+        if conn: conn.rollback()
         current_app.logger.error(f"Error adding specialization: {err}")
-        if err.errno == 1062: # Duplicate entry
+        if err.errno == 1062: 
             flash(f"Error: Specialization name '{name}' already exists.", "danger")
-        elif err.errno == 1452: # FK constraint violation
-             flash(f"Error: Invalid Department selected.", "danger")
+        elif err.errno == 1452 and department_id is not None: # FK constraint violation only if department_id was provided
+             flash(f"Error: Invalid Department selected for specialization.", "danger")
         else:
-            flash(f"Database error adding specialization: {err.msg}", "danger")
+            flash(f"Database error adding specialization: {err.msg if hasattr(err, 'msg') else str(err)}", "danger")
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-
+        if conn and conn.is_connected(): 
+            if not conn.autocommit: conn.autocommit = True
+            conn.close()
     return redirect(url_for('.manage_structure') + '#specializations-section')
 
 @structure_bp.route('/specializations/<int:spec_id>/edit', methods=['GET', 'POST'])
 @login_required
 # @admin_required
 def edit_specialization(spec_id):
-    # if not current_user.is_admin(): abort(403)
     conn = None; cursor = None
-
+    
     if request.method == 'POST':
         name = request.form.get('specialization_name', '').strip()
         description = request.form.get('specialization_description', '').strip() or None
@@ -478,7 +490,7 @@ def edit_specialization(spec_id):
 
         if not name:
             flash("Specialization name cannot be empty.", "danger")
-            # Fetch data again for re-render
+            # Re-fetch for re-render
             specialization = get_specialization(spec_id)
             departments = get_all_departments()
             if not specialization: return redirect(url_for('.manage_structure'))
@@ -486,8 +498,7 @@ def edit_specialization(spec_id):
 
         department_id = None
         if department_id_str:
-            try:
-                department_id = int(department_id_str)
+            try: department_id = int(department_id_str)
             except ValueError:
                 flash("Invalid Department selected.", "danger")
                 specialization = get_specialization(spec_id)
@@ -498,6 +509,7 @@ def edit_specialization(spec_id):
         try:
             conn = get_db_connection()
             cursor = conn.cursor()
+            conn.autocommit = False
             cursor.execute(
                 """UPDATE specializations SET
                    name = %s, description = %s, department_id = %s, updated_at = NOW()
@@ -508,32 +520,31 @@ def edit_specialization(spec_id):
             flash(f"Specialization '{name}' updated successfully.", "success")
             return redirect(url_for('.manage_structure') + '#specializations-section')
         except mysql.connector.Error as err:
-            conn.rollback()
+            if conn: conn.rollback()
             current_app.logger.error(f"Error updating specialization {spec_id}: {err}")
             if err.errno == 1062:
                 flash(f"Error: Specialization name '{name}' already exists.", "danger")
-            elif err.errno == 1452:
+            elif err.errno == 1452 and department_id is not None:
                  flash(f"Error: Invalid Department selected.", "danger")
             else:
-                flash(f"Database error updating specialization: {err.msg}", "danger")
-            # Fetch data again for re-render
-            specialization = get_specialization(spec_id)
+                flash(f"Database error updating specialization: {err.msg if hasattr(err, 'msg') else str(err)}", "danger")
+            specialization = get_specialization(spec_id) # Re-fetch for form
             departments = get_all_departments()
-            if not specialization: return redirect(url_for('.manage_structure'))
             return render_template('Admin_Portal/structure/edit_specialization.html', specialization=specialization, departments=departments)
         finally:
             if cursor: cursor.close()
-            if conn and conn.is_connected(): conn.close()
+            if conn and conn.is_connected(): 
+                if not conn.autocommit: conn.autocommit = True
+                conn.close()
 
     # GET Request
     specialization = get_specialization(spec_id)
     if not specialization:
         flash("Specialization not found.", "warning")
         return redirect(url_for('.manage_structure'))
-
-    departments = get_all_departments() # Need list for dropdown
+    departments = get_all_departments()
     return render_template(
-        'Admin_Portal/structure/edit_specialization.html',
+        'Admin_Portal/structure/edit_specialization.html', # Ensure this template path is correct
         specialization=specialization,
         departments=departments
     )
@@ -542,12 +553,11 @@ def edit_specialization(spec_id):
 @login_required
 # @admin_required
 def delete_specialization(spec_id):
-    # if not current_user.is_admin(): abort(403)
     conn = None; cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        # IMPORTANT: Doctors FK uses ON DELETE RESTRICT. Deletion will fail if doctors use this spec.
+        conn.autocommit = False
         cursor.execute("DELETE FROM specializations WHERE specialization_id = %s", (spec_id,))
         conn.commit()
         if cursor.rowcount > 0:
@@ -555,14 +565,15 @@ def delete_specialization(spec_id):
         else:
             flash("Specialization not found or already deleted.", "warning")
     except mysql.connector.Error as err:
-        conn.rollback()
+        if conn: conn.rollback()
         current_app.logger.error(f"Error deleting specialization {spec_id}: {err}")
-        if err.errno == 1451: # FK constraint fail (likely doctors linked)
-             flash(f"Cannot delete specialization: It is currently assigned to one or more doctors. Reassign doctors first.", "danger")
+        if err.errno == 1451: 
+             flash(f"Cannot delete specialization: It is currently assigned to one or more doctors. Reassign doctors first or update their specialization to 'Unassigned'.", "danger")
         else:
-            flash(f"Database error deleting specialization: {err.msg}", "danger")
+            flash(f"Database error deleting specialization: {err.msg if hasattr(err, 'msg') else str(err)}", "danger")
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected(): conn.close()
-
+        if conn and conn.is_connected(): 
+            if not conn.autocommit: conn.autocommit = True
+            conn.close()
     return redirect(url_for('.manage_structure') + '#specializations-section')

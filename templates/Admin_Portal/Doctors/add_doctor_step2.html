@@ -1,220 +1,116 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Add Doctor - Step 2{% endblock %}
+{% block title %}Add Doctor (Step 2) - Pro Health Admin Portal{% endblock %}
 
-{% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_management.css') }}"> {# Ensure this CSS exists #}
-{% endblock %}
+{% block header_icon %}<i class="fas fa-stethoscope fa-fw me-2"></i>{% endblock %}
+{% block header_title %}Add New Doctor - Step 2: Professional Details{% endblock %}
 
 {% block content %}
-<h1>Add New Doctor - Step 2: Professional Details</h1>
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.index') }}">Manage Doctors</a></li>
-    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.add_doctor_step1') }}">Add Step 1</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Add Step 2</li>
-  </ol>
-</nav>
-<hr>
-
-{% if user %}
-<div class="mb-3 p-3 bg-light border rounded">
-    <p class="mb-1"><strong>Adding details for:</strong> {{ user.first_name }} {{ user.last_name }}</p>
-    <p class="mb-0"><small>Username: {{ user.username }} | User ID: {{ user.user_id }}</small></p>
-</div>
-
 <div class="card shadow-sm">
-<div class="card-body">
-{# MODIFIED: Action URL for the new POST route #}
-<form method="POST" action="{{ url_for('Doctors_Management.add_doctor_step2_submit', user_id=user.user_id) }}" class="needs-validation" novalidate>
-
-    <div class="row g-3">
-        <div class="col-md-6 mb-3">
-            <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
-            <select class="form-select" id="department_id" name="department_id" required>
-                <option value="" disabled {% if not form_data.get('department_id') %}selected{% endif %}>-- Select Department --</option>
-                {% for dept in departments %}
-                <option value="{{ dept.department_id }}" {% if form_data.get('department_id')|string == dept.department_id|string %}selected{% endif %}>
-                    {{ dept.name }}
-                </option>
-                {% endfor %}
-            </select>
-            <div class="invalid-feedback">Department is required.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="specialization_id" class="form-label">Specialization <span class="text-danger">*</span></label>
-            <select class="form-select" id="specialization_id" name="specialization_id" required
-                {% if form_data.get('specialization_id') %}data-persisted-value="{{ form_data.get('specialization_id') }}"{% endif %}>
-                <option value="" disabled selected>
-                    {% if form_data.get('department_id') %}-- Select Specialization --{% else %}-- Select Department First --{% endif %}
-                </option>
-                {# Options will be loaded by JS, or pre-filled on error by backend if department was selected #}
-                {% if form_data.get('department_id') and specializations_for_selected_dept_on_error %} {# This var name implies it's for error state #}
-                    {% for spec in specializations_for_selected_dept_on_error %}
-                         <option value="{{ spec.specialization_id }}" {% if form_data.get('specialization_id')|string == spec.specialization_id|string %}selected{% endif %}>
+    <div class="card-header">
+        <h5>Professional Information for Dr. {{ user.first_name }} {{ user.last_name }} ({{user.username}})</h5>
+    </div>
+    <div class="card-body">
+        {% if user %}
+        <form method="POST" action="{{ url_for('Doctors_Management.add_doctor_step2_submit', user_id=user.user_id) }}">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
+                    <select class="form-select" id="department_id" name="department_id" required>
+                        <option value="" disabled {% if not form_data.department_id %}selected{% endif %}>Select Department...</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.department_id }}" {% if form_data.department_id|int == dept.department_id %}selected{% endif %}>
+                            {{ dept.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="specialization_id" class="form-label">Specialization <span class="text-danger">*</span></label>
+                    <select class="form-select" id="specialization_id" name="specialization_id" required>
+                        <option value="" disabled {% if not form_data.specialization_id %}selected{% endif %}>Select Specialization...</option>
+                        {# This might need JS to filter specializations based on department if they are linked #}
+                        {% for spec in specializations %}
+                        <option value="{{ spec.specialization_id }}" {% if form_data.specialization_id|int == spec.specialization_id %}selected{% endif %}>
                             {{ spec.name }}
                         </option>
-                    {% endfor %}
-                {% endif %}
-            </select>
-            <div class="invalid-feedback">Specialization is required.</div>
-        </div>
-    </div>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
-    <div class="row g-3">
-         <div class="col-md-6 mb-3">
-             <label for="npi_number" class="form-label">NPI Number (Optional)</label>
-            <input type="text" class="form-control" id="npi_number" name="npi_number" value="{{ form_data.get('npi_number', '') }}">
-         </div>
-    </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="license_number" name="license_number" value="{{ form_data.license_number or '' }}" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="license_state" class="form-label">License State <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="license_state" name="license_state" value="{{ form_data.license_state or '' }}" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="license_expiration" class="form-label">License Expiration <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="license_expiration" name="license_expiration" value="{{ form_data.license_expiration or '' }}" required>
+                </div>
+            </div>
 
-    <h5 class="mt-3 mb-3 border-bottom pb-2">License Information</h5>
-     <div class="row g-3">
-        <div class="col-md-4 mb-3">
-            <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="license_number" name="license_number" value="{{ form_data.get('license_number', '') }}" required>
-            <div class="invalid-feedback">License number is required.</div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <label for="license_state" class="form-label">License State <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="license_state" name="license_state" value="{{ form_data.get('license_state', '') }}" required>
-            <div class="invalid-feedback">License state is required.</div>
-        </div>
-         <div class="col-md-4 mb-3">
-            <label for="license_expiration" class="form-label">License Expiration <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="license_expiration" name="license_expiration" value="{{ form_data.get('license_expiration', '') }}" required>
-            <div class="invalid-feedback">License expiration date is required.</div>
-        </div>
-     </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="npi_number" class="form-label">NPI Number (Optional)</label>
+                    <input type="text" class="form-control" id="npi_number" name="npi_number" value="{{ form_data.npi_number or '' }}">
+                </div>
+                 <div class="col-md-6 mb-3">
+                    <label for="medical_school" class="form-label">Medical School (Optional)</label>
+                    <input type="text" class="form-control" id="medical_school" name="medical_school" value="{{ form_data.medical_school or '' }}">
+                </div>
+            </div>
 
-    <h5 class="mt-3 mb-3 border-bottom pb-2">Education & Background</h5>
-    <div class="row g-3">
-        <div class="col-md-8 mb-3">
-            <label for="medical_school" class="form-label">Medical School (Optional)</label>
-            <input type="text" class="form-control" id="medical_school" name="medical_school" value="{{ form_data.get('medical_school', '') }}">
-        </div>
-        <div class="col-md-4 mb-3">
-             <label for="graduation_year" class="form-label">Graduation Year (Optional)</label>
-            <input type="number" class="form-control" id="graduation_year" name="graduation_year" value="{{ form_data.get('graduation_year', '') }}" min="1900" max="{{ current_year }}">
-        </div>
-         <div class="col-12 mb-3">
-            <label for="certifications" class="form-label">Certifications (Optional, comma-separated)</label>
-            <input type="text" class="form-control" id="certifications" name="certifications" value="{{ form_data.get('certifications', '') }}">
-        </div>
-        <div class="col-12 mb-3">
-             <label for="biography" class="form-label">Biography (Optional)</label>
-            <textarea class="form-control" id="biography" name="biography" rows="4">{{ form_data.get('biography', '') }}</textarea>
-        </div>
-    </div>
+            <div class="row">
+                 <div class="col-md-6 mb-3">
+                    <label for="graduation_year" class="form-label">Graduation Year (Optional)</label>
+                    <input type="number" class="form-control" id="graduation_year" name="graduation_year" value="{{ form_data.graduation_year or '' }}" min="1900" max="{{ current_year }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                     <label for="certifications" class="form-label">Certifications (Optional, comma-separated)</label>
+                    <input type="text" class="form-control" id="certifications" name="certifications" value="{{ form_data.certifications or '' }}">
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="clinic_address" class="form-label">Clinic Address (Optional)</label>
+                <textarea class="form-control" id="clinic_address" name="clinic_address" rows="2">{{ form_data.clinic_address or '' }}</textarea>
+            </div>
 
-     <h5 class="mt-3 mb-3 border-bottom pb-2">Clinic & Availability</h5>
-     <div class="row g-3">
-        <div class="col-md-9 mb-3">
-            <label for="clinic_address" class="form-label">Clinic Address (Optional)</label>
-            <input type="text" class="form-control" id="clinic_address" name="clinic_address" value="{{ form_data.get('clinic_address', '') }}">
-        </div>
-         <div class="col-md-3 mb-3 align-self-center">
-             <div class="form-check form-switch mt-3">
-                <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" {% if form_data.get('accepting_new_patients') == '1' or form_data.get('accepting_new_patients') == 1 %}checked{% endif %}>
+            <div class="mb-3">
+                <label for="biography" class="form-label">Biography (Optional)</label>
+                <textarea class="form-control" id="biography" name="biography" rows="3">{{ form_data.biography or '' }}</textarea>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" {% if form_data.accepting_new_patients == 1 or form_data.accepting_new_patients == '1' %}checked{% endif %}>
                 <label class="form-check-label" for="accepting_new_patients">
-                    Accepting New Patients?
+                    Accepting New Patients
                 </label>
             </div>
+            
+            <p class="text-muted small"><span class="text-danger">*</span> Required fields.</p>
+            <p class="small text-info"><i class="fas fa-info-circle me-1"></i>Submitting these details will set verification status to 'Pending Info' and activate the user account if it was 'Pending'.</p>
+
+
+            <div class="d-flex justify-content-end mt-3">
+                 <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=user.user_id) }}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-eye me-1"></i>Skip & View Profile (Incomplete)
+                </a>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check-circle me-1"></i> Finish & Save Details
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="alert alert-danger" role="alert">
+            Error: User details not found. Please <a href="{{ url_for('Doctors_Management.add_doctor_step1') }}" class="alert-link">start over</a>.
         </div>
-     </div>
-
-    <hr class="my-4">
-    <button type="submit" class="btn btn-success"><i class="fas fa-user-check me-1"></i> Save Professional Details</button>
-    <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-secondary">Cancel</a>
-</form>
+        {% endif %}
+    </div>
 </div>
-</div>
-
-{% else %}
- <div class="alert alert-danger">Error: User details not found. Cannot proceed.</div>
- <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-primary">Back to Doctor List</a>
-{% endif %}
-{% endblock %}
-
-{% block scripts_extra %}
-<script>
-// Bootstrap 5 form validation
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('.needs-validation')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})();
-
-// --- Department and Specialization Cascading Dropdowns Script ---
-async function fetchSpecializationsForAddDoctor(departmentId, specializationSelectElement, persistedSpecializationId) {
-    if (!specializationSelectElement) return;
-
-    specializationSelectElement.innerHTML = '<option value="" selected disabled>Loading specializations...</option>';
-    specializationSelectElement.disabled = true;
-
-    if (!departmentId) {
-        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
-        specializationSelectElement.disabled = false; // Keep enabled
-        return;
-    }
-
-    try {
-        // Assuming your endpoint is correctly defined in register.py or a similar blueprint
-        const response = await fetch(`/get_specializations_for_department/${departmentId}`);
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({detail: "Unknown server error"}));
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.detail || response.statusText}`);
-        }
-        const specializations = await response.json();
-
-        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Specialization --</option>';
-        if (specializations && specializations.length > 0) {
-            specializations.forEach(spec => {
-                const option = document.createElement('option');
-                option.value = spec.specialization_id;
-                option.textContent = spec.name;
-                specializationSelectElement.appendChild(option);
-            });
-            if (persistedSpecializationId && specializations.some(s => s.specialization_id.toString() === persistedSpecializationId)) {
-                specializationSelectElement.value = persistedSpecializationId;
-            }
-        } else {
-            specializationSelectElement.innerHTML = '<option value="" selected disabled>-- No specializations found --</option>';
-        }
-    } catch (error) {
-        console.error('Error fetching specializations for add doctor:', error);
-        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Error loading specializations --</option>';
-    } finally {
-        specializationSelectElement.disabled = false;
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const departmentSelect = document.getElementById('department_id');
-    const specializationSelect = document.getElementById('specialization_id');
-
-    if (departmentSelect && specializationSelect) {
-        const persistedSpecId = specializationSelect.getAttribute('data-persisted-value');
-        departmentSelect.addEventListener('change', function() {
-            fetchSpecializationsForAddDoctor(this.value, specializationSelect, null); 
-        });
-
-        // Initial fetch if a department is already selected (e.g., on page load after POST error)
-        if (departmentSelect.value) { // Check if a department is selected on load
-             fetchSpecializationsForAddDoctor(departmentSelect.value, specializationSelect, persistedSpecId);
-        } else {
-            specializationSelect.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
-        }
-    }
-});
-</script>
 {% endblock %}

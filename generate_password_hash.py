@@ -2,7 +2,7 @@
 from werkzeug.security import generate_password_hash
 
 # The password you want to set
-new_password_plain = "Adham@patient" # Case-sensitive, ensure it matches exactly
+new_password_plain = "123456789" # Case-sensitive, ensure it matches exactly
 
 # The username or email of the user whose password you want to update
 # You'll use this in your WHERE clause

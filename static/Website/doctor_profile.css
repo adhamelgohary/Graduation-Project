@@ -1,241 +1,304 @@
 /* static/Website/doctor_profile.css */
 
-/* Inherits from base.css and components.css */
-
-.doctor-profile-page .profile-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-xl);
-    align-items: flex-start;
+/* --- Base Page Setup --- */
+.doctor-profile-page-fullwidth {
+    /* This container itself might not need much if base.html's .main-container handles page padding */
+    /* background-color: var(--page-bg, var(--bg-primary)); */ /* Let base.html body handle this */
 }
 
-.profile-sidebar {
-    flex: 0 0 300px; /* Adjust width as needed */
-    max-width: 100%; /* Ensure it doesn't overflow on very small screens before wrapping */
-}
-.profile-sidebar .profile-card {
-    position: sticky;
-    top: calc(70px + var(--spacing-lg)); /* Navbar height + desired top margin */
-    padding: var(--spacing-lg);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    /* Consider a min-height if content is very short, or let natural height work */
-    /* Forcing height can be tricky with varying content, flex-grow on info helps */
-    background-color: var(--bg-secondary); /* Ensure card has its own background */
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--card-shadow);
-}
-
-.profile-card-image-container {
-    margin-bottom: var(--spacing-md);
-}
-
-.doctor-profile-image {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin: 0 auto;
-    border: 4px solid var(--neon-blue);
-    box-shadow: 0 0 15px var(--shadow-glow);
-    background-color: var(--bg-primary); /* Fallback if image is transparent */
-}
-
-.profile-card-info {
-    flex-grow: 1; /* Key for pushing action to bottom */
-    margin-bottom: var(--spacing-md); /* Space before button if info is short */
-}
-.profile-sidebar .profile-card-info h2 {
-    font-size: 1.6em;
-    margin-bottom: var(--spacing-xs);
-    color: var(--text-color);
-}
-.profile-sidebar .profile-card-info .specialty {
-    font-size: 1.1em;
-    color: var(--accent-pink);
-    font-weight: 500;
-    margin-bottom: var(--spacing-xs);
-}
-.profile-sidebar .profile-card-info .department {
-    font-size: 0.95em;
-    color: var(--text-secondary);
-    margin-bottom: 0; /* No margin if it's the last item in this block */
-}
-
-.profile-card-action {
-    margin-top: auto; /* Pushes this div to the bottom */
-    padding-top: var(--spacing-md);
-    width: 100%;
-}
-
-.profile-sidebar .button-primary.btn-schedule {
-    width: 100%;
-    padding: var(--spacing-md) var(--spacing-sm);
-    font-size: 1.05em;
-}
-
-
-.profile-main {
-    flex: 1;
-    min-width: 0;
-}
-
-.profile-details-card.card {
-    /* Styles from base.css .card apply */
-}
-.profile-details-card .card-body {
-    padding: var(--spacing-lg) var(--spacing-xl);
-}
-
-.profile-section {
-    margin-bottom: var(--spacing-xl);
-    padding-bottom: var(--spacing-lg);
+/* --- Header Section --- */
+.doctor-profile-header-section {
+    background-color: var(--hero-bg-light, var(--bg-secondary));
+    padding: var(--spacing-xl, 32px) 0; /* Vertical padding */
+    margin-bottom: var(--spacing-xl, 32px);
     border-bottom: 1px solid var(--border-color);
 }
-.profile-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
+[data-theme="dark"] .doctor-profile-header-section {
+    background-color: var(--hero-bg-dark, var(--bg-secondary-dark));
+    border-bottom-color: var(--border-color-dark);
 }
 
-.profile-section h4 {
-    font-size: 1.4em; /* Slightly larger section titles */
-    color: var(--text-color);
-    margin-bottom: var(--spacing-lg); /* More space after title */
-    padding-bottom: var(--spacing-sm);
-    border-bottom: 2px solid var(--accent-pink);
-    display: inline-block;
-}
-.profile-section h4 i.fas {
-    margin-right: var(--spacing-md); /* More space for icon */
-    color: var(--accent-pink);
-    opacity: 0.9;
-    font-size: 0.9em; /* Slightly smaller icon relative to h4 */
+.doctor-profile-header-section .container { /* For centering content within full-width band */
+    max-width: var(--container-max-width, 1140px);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding, 15px);
+    padding-right: var(--container-padding, 15px);
 }
 
-.profile-section p,
-.profile-section address,
-.profile-section ul {
-    color: var(--text-secondary);
-    line-height: 1.7;
-    margin-bottom: var(--spacing-md); /* Increased margin for paragraphs/lists */
-    font-size: 1rem; /* Standard text size for readability */
-}
-.profile-section p:last-child,
-.profile-section address:last-child,
-.profile-section ul:last-child {
-    margin-bottom: 0; /* No margin for the last element in a section */
+.doctor-intro-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg, 24px);
+    flex-wrap: wrap; 
 }
 
-.profile-section p strong {
-    color: var(--text-color);
+.doctor-image-container { flex-shrink: 0; }
+.doctor-profile-image-large {
+    width: 120px; /* Increased size */
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--accent-blue, #007bff);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.doctor-intro-text { flex-grow: 1; }
+.doctor-intro-text h1 {
+    font-size: clamp(1.8rem, 3.5vw, 2.2rem); 
+    color: var(--text-heading, var(--text-color));
+    margin: 0 0 var(--spacing-xs, 4px) 0;
     font-weight: 600;
-}
-.profile-section address {
-    font-style: normal;
-}
-
-.text-muted.small { /* For specialization/department descriptions */
-    font-size: 0.9em;
-    color: var(--text-secondary);
-    opacity: 0.85;
-    display: block;
-    margin-top: var(--spacing-xs);
-    margin-left: calc(var(--spacing-md) + 1.1em); /* Indent under icon+space if h4 has icon */
-}
-.profile-section h4 + .text-muted.small { /* If it's directly after an h4 */
-    margin-left: 0;
-}
-
-
-/* Credentials and Documents Lists */
-.credentials-list,
-.documents-list {
-    list-style: none;
-    padding-left: 0;
-}
-.credentials-list li,
-.documents-list li {
-    margin-bottom: var(--spacing-sm); /* Tighter list items */
-    padding: var(--spacing-sm) 0;
-    border-bottom: 1px dotted var(--border-color);
     display: flex;
-    align-items: flex-start;
+    align-items: center;
 }
-.credentials-list li:last-child,
-.documents-list li:last-child {
-    border-bottom: none;
+.verified-badge-large {
+    color: var(--accent-blue, #007bff);
+    font-size: 0.8em; 
+    margin-left: 10px;
 }
-
-.credentials-list li i.text-success,
-.documents-list li i.fas {
-    color: var(--neon-blue);
-    margin-right: var(--spacing-md);
-    font-size: 1.1em;
-    margin-top: 0.15em; /* Fine-tune vertical alignment */
-    flex-shrink: 0; /* Prevent icon from shrinking */
-}
-.credentials-list li i.text-success {
-     color: var(--dept-color-pediatrics) !important; /* Your success color */
-}
-
-/* Specific document type icons (optional) */
-.document-icon-license { color: var(--neon-blue); }
-.document-icon-certification { color: var(--dept-color-oncology); } /* Example: orange */
-.document-icon-education { color: var(--dept-color-neurology); } /* Example: indigo */
-.document-icon-identity { color: var(--dept-color-pediatrics); } /* Example: green */
-.document-icon-other { color: var(--text-secondary); }
-
-
-.documents-list li strong { /* Document type */
-    color: var(--text-color);
+.doctor-intro-text .specialty-title {
+    font-size: clamp(1.1rem, 2vw, 1.25rem);
+    color: var(--accent-pink, #ff3b5c);
     font-weight: 500;
-    margin-right: var(--spacing-xs);
+    margin: 0 0 var(--spacing-sm, 8px) 0;
 }
-.documents-list li .text-muted { /* Upload date */
-    font-size: 0.8em;
-    opacity: 0.7;
-    margin-left: auto; /* Push date to the right if space allows */
-    padding-left: var(--spacing-md);
-    white-space: nowrap;
-}
-.documents-list li div { /* Wrapper for text content */
+.doctor-intro-text .department-info,
+.doctor-intro-text .location-info {
+    font-size: clamp(0.9rem, 1.8vw, 0.95rem);
+    color: var(--text-secondary);
+    margin: 4px 0;
     display: flex;
-    flex-direction: column; /* Stack strong and small if needed */
-    flex-grow: 1;
+    align-items: center;
+}
+.doctor-intro-text .department-info i,
+.doctor-intro-text .location-info i {
+    margin-right: 8px;
+    color: var(--icon-color-muted, var(--text-secondary));
+    width: 16px; 
+}
+
+.doctor-header-actions {
+    display: flex;
+    gap: var(--spacing-sm, 10px);
+    margin-left: auto; 
+    align-self: flex-start; 
+}
+.icon-button-styled {
+    background-color: var(--button-icon-bg, transparent);
+    border: 1px solid var(--button-icon-border, var(--border-color));
+    color: var(--button-icon-color, var(--text-secondary));
+    width: 40px; height: 40px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1rem; cursor: pointer; transition: all 0.2s ease;
+}
+.icon-button-styled:hover {
+    background-color: var(--button-icon-hover-bg, var(--border-color-light));
+    color: var(--button-icon-hover-color, var(--accent-blue));
+}
+[data-theme="dark"] .icon-button-styled {
+    background-color: var(--button-icon-bg-dark, #2a3b4e80); /* Semi-transparent */
+    border-color: var(--button-icon-border-dark, var(--border-color-dark));
+    color: var(--button-icon-color-dark, var(--text-secondary));
+}
+[data-theme="dark"] .icon-button-styled:hover {
+    background-color: var(--button-icon-hover-bg-dark, var(--border-color-dark));
+    color: var(--button-icon-hover-color-dark, var(--accent-blue));
 }
 
 
-/* Responsive adjustments for profile page */
-@media (max-width: 992px) {
-    .doctor-profile-page .profile-container {
-        flex-direction: column;
-    }
-    .profile-sidebar {
-        flex: 0 0 auto;
-        width: 100%;
-        margin-bottom: var(--spacing-lg);
-        position: static; /* Remove sticky for smaller screens */
-    }
-    .profile-sidebar .profile-card {
-        height: auto; /* Let content define height */
-        min-height: 0;
-    }
-    .doctor-profile-image {
-        width: 120px; /* Smaller image on mobile */
-        height: 120px;
+/* --- Main Content Area (Full Width) --- */
+.doctor-profile-main-content .container { /* Styles for the inner container if needed */
+    padding-top: var(--spacing-md);
+}
+
+.profile-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr; 
+    gap: var(--spacing-xl, 30px);
+}
+@media (max-width: 991px) { /* Tablet and mobile */
+    .profile-content-grid {
+        grid-template-columns: 1fr; /* Stack columns */
     }
 }
-@media (max-width: 768px) {
-    .profile-details-card .card-body {
-        padding: var(--spacing-lg);
-    }
-    .profile-section h4 {
-        font-size: 1.25em;
-    }
-    .profile-section p, .profile-section address, .profile-section ul {
-        font-size: 0.95rem;
-    }
+
+.profile-main-column, .profile-sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg, 24px);
 }
+
+.profile-content-card {
+    background-color: var(--card-bg, var(--bg-secondary));
+    padding: var(--spacing-lg, 24px);
+    border-radius: var(--border-radius-lg, 12px);
+    box-shadow: var(--card-shadow-light, 0 2px 8px rgba(0,0,0,0.06));
+    border: 1px solid var(--border-color);
+}
+[data-theme="dark"] .profile-content-card {
+    background-color: var(--card-bg-dark, var(--bg-secondary-dark));
+    border-color: var(--border-color-dark);
+}
+
+.card-section-title {
+    font-size: 1.2rem; /* Adjusted size */
+    font-weight: 600;
+    color: var(--text-heading, var(--text-color));
+    margin: 0 0 var(--spacing-md, 16px) 0;
+    padding-bottom: var(--spacing-sm, 8px);
+    border-bottom: 1px solid var(--border-color-light, var(--border-color));
+    display: flex;
+    align-items: center;
+}
+.card-section-title i {
+    margin-right: 10px;
+    color: var(--icon-color-accent, var(--accent-blue));
+    font-size: 0.9em;
+}
+
+.about-text-fullwidth { /* This is the wrapper now */
+    line-height: 1.7;
+    color: var(--text-content, var(--text-secondary));
+}
+.about-text-fullwidth p {
+    font-size: 0.95rem;
+    margin-bottom: var(--spacing-sm);
+}
+.about-text-fullwidth.collapsible-content {
+    max-height: 100px; /* Initial collapsed height for a few lines */
+    overflow: hidden;
+    position: relative;
+    transition: max-height 0.4s ease-in-out;
+}
+.about-text-fullwidth.collapsible-content.expanded {
+    max-height: 1000px; /* Large enough to show all content */
+}
+.read-more-button-styled {
+    background: none; border: none;
+    color: var(--link-color, var(--accent-blue));
+    font-weight: 500; cursor: pointer;
+    padding: 8px 0 0 0; margin-top: 8px;
+    display: inline-flex; align-items: center;
+    font-size: 0.9rem;
+}
+.read-more-button-styled i { margin-left: 5px; transition: transform 0.2s; }
+.collapsible-content.expanded + .read-more-button-styled i { transform: rotate(180deg); }
+
+
+.working-hours-list-styled { list-style: none; padding: 0; margin: 0; }
+.working-hours-list-styled li {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; font-size: 0.95rem;
+    color: var(--text-content, var(--text-secondary));
+    border-bottom: 1px dotted var(--border-color-light, var(--border-color));
+}
+.working-hours-list-styled li:last-child { border-bottom: none; }
+.working-hours-list-styled .day { color: var(--text-label, var(--text-primary)); font-weight: 500; }
+.working-hours-list-styled .time.closed { color: var(--status-danger-text, var(--red-500)); font-style: italic; }
+
+.details-list-styled p { margin-bottom: 8px; font-size: 0.95rem; line-height: 1.6; color: var(--text-content); }
+.details-list-styled p strong { color: var(--text-label, var(--text-primary)); }
+.text-muted-small-styled { font-size: 0.85rem; color: var(--text-muted, #888); display: block; margin-top: -5px; margin-bottom: 10px; }
+
+.credentials-list-styled-items { list-style: none; padding: 0; }
+.credentials-list-styled-items li { display: flex; align-items: center; margin-bottom: 8px; font-size: 0.95rem; color: var(--text-content); }
+.credentials-list-styled-items li i.text-accent { color: var(--text-accent, var(--accent-green)); } /* Use specific class for accent */
+.credentials-list-styled-items li i { margin-right: 10px; }
+
+
+.map-link-button-styled {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 15px; background-color: transparent;
+    color: var(--button-outline-text, var(--accent-blue));
+    border: 1px solid var(--button-outline-border, var(--accent-blue));
+    border-radius: var(--border-radius-round, 20px); font-size: 0.9rem;
+    font-weight: 500; text-decoration: none; margin-top: 10px;
+    transition: background-color 0.2s, color 0.2s;
+}
+.map-link-button-styled:hover {
+    background-color: var(--button-outline-hover-bg, var(--accent-blue));
+    color: var(--button-outline-hover-text, var(--white));
+}
+
+.status-badge-styled { 
+    padding: .3em .65em; font-size: .8em; font-weight: 600;
+    line-height: 1; color: #fff; text-align: center;
+    white-space: nowrap; vertical-align: baseline;
+    border-radius: .3rem; display: inline-block;
+}
+.status-badge-styled.status-success { background-color: var(--green-500, #22c55e); }
+.status-badge-styled.status-danger { background-color: var(--red-500, #ef4444); }
+
+/* --- Book Appointment Section (Full Width, Centered Button) --- */
+.book-appointment-section {
+    padding: var(--spacing-xl, 32px) var(--container-padding, 15px); /* Match container horizontal padding */
+    text-align: center; 
+    margin-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-color);
+    background-color: var(--bg-primary); /* Match page bg or slightly offset */
+}
+[data-theme="dark"] .book-appointment-section {
+    border-top-color: var(--border-color-dark);
+    background-color: var(--bg-primary-dark);
+}
+
+.button-primary-cta { 
+    display: inline-block; /* For centering via text-align on parent */
+    width: auto; /* Allow button to size to content + padding */
+    max-width: 400px; /* Max width for very large screens */
+    min-width: 280px; /* Min width for consistency */
+    padding: 14px 30px;
+    background-color: var(--button-primary-bg, var(--accent-blue));
+    color: var(--button-primary-text, var(--white));
+    border: none;
+    border-radius: var(--border-radius-round, 25px);
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: var(--shadow-button, 0 4px 10px rgba(0,0,0,0.1));
+}
+.button-primary-cta:hover {
+    background-color: var(--button-primary-hover-bg, color-mix(in srgb, var(--accent-blue) 85%, black));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-button-hover, 0 6px 15px rgba(0,0,0,0.15));
+}
+.button-primary-cta i { margin-right: 8px; }
+
+/* --- Modal Styles (from previous response, ensure variables match theme) --- */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); z-index: 1050; 
+    align-items: center; justify-content: center;
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+.modal-overlay.active {
+    display: flex; opacity: 1; visibility: visible;
+    transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
+.modal-content-app-style {
+    background-color: var(--card-bg, #fff); padding: 24px 30px;
+    border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    width: 90%; max-width: 420px; text-align: center; position: relative;
+    transform: scale(0.95) translateY(-10px); opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+.modal-overlay.active .modal-content-app-style { transform: scale(1) translateY(0); opacity: 1; }
+[data-theme="dark"] .modal-content-app-style { background-color: var(--card-bg-dark, #1f2937); box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+.modal-close-app-style {
+    position: absolute; top: 10px; right: 15px; background: none; border: none;
+    font-size: 1.8rem; font-weight: 300; color: var(--text-secondary, #6c757d);
+    cursor: pointer; line-height: 1; padding: 5px; transition: color 0.2s ease;
+}
+.modal-close-app-style:hover { color: var(--text-primary, #333); }
+[data-theme="dark"] .modal-close-app-style { color: var(--text-secondary-dark, #9ca3af); }
+[data-theme="dark"] .modal-close-app-style:hover { color: var(--text-primary-dark, #f0f0f0); }
+.modal-content-app-style h2 { font-size: 1.6rem; color: var(--text-heading, var(--text-color)); margin: 0 0 12px 0; font-weight: 600; }
+.modal-content-app-style p { font-size: 1rem; color: var(--text-content, var(--text-secondary)); margin-bottom: 24px; line-height: 1.6; }
+.modal-actions-app-style { display: flex; flex-direction: column; gap: 12px; }
+.modal-actions-app-style .button-primary-fullwidth,
+.modal-actions-app-style .button-secondary-fullwidth { /* Styles from previous answer for these buttons */ }

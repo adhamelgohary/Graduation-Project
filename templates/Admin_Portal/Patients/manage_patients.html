@@ -1,165 +1,178 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Patient Management{% endblock %}
+{% block title %}Manage Patients - Pro Health Admin Portal{% endblock %}
 
-{% block nav_patient %}active{% endblock %}
+{% block header_icon %}<i class="fas fa-procedures fa-fw me-2"></i>{% endblock %}
+{% block header_title %}Manage Patients{% endblock %}
 
-{% block header_title %}
-<h1 class="page-title">
-    <i class="fas fa-hospital-user"></i> Patient Management
-</h1>
+{% block extra_css %}
+<style>
+    .table th a {
+        text-decoration: none;
+        color: inherit;
+    }
+    .table th a:hover {
+        color: #0d6efd; /* Bootstrap primary blue */
+    }
+    .sort-icon {
+        margin-left: 5px;
+    }
+    .action-buttons .btn {
+        margin-right: 0.25rem;
+    }
+    .action-buttons .btn:last-child {
+        margin-right: 0;
+    }
+</style>
 {% endblock %}
-
-{% block head_extra %}
-{# Styles removed, assuming they are handled by an external CSS file linked in base_admin.html #}
-{% endblock %}
-
-{# --- Define the sort_url_generator macro --- #}
-{% macro sort_url_generator(field, current_sort_by, current_sort_order, current_search_term, current_page) %}
-    {% set new_sort_order = 'desc' if current_sort_by == field and current_sort_order == 'asc' else 'asc' %}
-    {{ url_for('patient_management.index', sort_by=field, sort_order=new_sort_order, q=current_search_term, page=current_page) }}
-{% endmacro %}
 
 {% block content %}
-<div class="list-container card">
-    <div class="card-header"> {# Using card-header for the controls section #}
-        <div class="list-controls d-flex justify-content-between align-items-center flex-wrap">
-            <div class="search-filter-container flex-grow-1 me-md-3 mb-2 mb-md-0">
-                <form method="GET" action="{{ url_for('patient_management.index') }}" class="d-flex gap-2">
-                     <input type="hidden" name="sort_by" value="{{ sort_by }}">
-                     <input type="hidden" name="sort_order" value="{{ sort_order }}">
-                     <input type="text" id="search-input" name="q" class="form-control form-control-sm" placeholder="Search name, email, phone..." value="{{ search_term or '' }}">
-                     <button type="submit" class="btn btn-sm btn-outline-secondary flex-shrink-0">Search</button>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    {# Page-specific heading can be simpler if header_title block handles main page title #}
+    <a href="{{ url_for('patient_management.add_patient_form') }}" class="btn btn-primary">
+        <i class="fas fa-user-plus me-1"></i> Add New Patient
+    </a>
+</div>
+
+<!-- Search Form -->
+<form method="GET" action="{{ url_for('patient_management.index') }}" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Search by name, email, phone, insurance..." value="{{ search_term or '' }}">
+        <input type="hidden" name="sort_by" value="{{ sort_by }}">
+        <input type="hidden" name="sort_order" value="{{ sort_order }}">
+        <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i> Search</button>
+        {% if search_term %}
+        <a href="{{ url_for('patient_management.index', sort_by=sort_by, sort_order=sort_order) }}" class="btn btn-outline-danger" title="Clear Search"><i class="fas fa-times"></i></a>
+        {% endif %}
+    </div>
+</form>
+
+{% if patients %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-light">
+            <tr>
+                {% set columns = {
+                    'last_name': 'Last Name',
+                    'first_name': 'First Name',
+                    'email': 'Email',
+                    'phone': 'Phone',
+                    'date_of_birth': 'DOB',
+                    'gender': 'Gender',
+                    'insurance_provider_name': 'Insurance',
+                    'created_at': 'Registered'
+                } %}
+                {% for col_key, col_name in columns.items() %}
+                    <th>
+                        <a href="{{ url_for('patient_management.index', q=search_term, page=page, sort_by=col_key, sort_order='desc' if sort_by == col_key and sort_order == 'asc' else 'asc') }}">
+                            {{ col_name }}
+                            {% if sort_by == col_key %}
+                                <i class="fas {{ 'fa-sort-up' if sort_order == 'asc' else 'fa-sort-down' }} sort-icon"></i>
+                            {% else %}
+                                <i class="fas fa-sort text-muted sort-icon"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                {% endfor %}
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for patient in patients %}
+            <tr>
+                <td>{{ patient.last_name }}</td>
+                <td>{{ patient.first_name }}</td>
+                <td>{{ patient.email }}</td>
+                <td>{{ patient.phone or 'N/A' }}</td>
+                <td>{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else 'N/A' }}</td>
+                <td>{{ patient.gender|capitalize if patient.gender else 'N/A' }}</td>
+                <td>{{ patient.insurance_provider_name or 'N/A' }}</td>
+                <td>{{ patient.created_at.strftime('%Y-%m-%d') if patient.created_at else 'N/A' }}</td>
+                <td class="text-center action-buttons">
+                    <a href="{{ url_for('patient_management.view_patient', patient_id=patient.user_id) }}" class="btn btn-sm btn-outline-info" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ url_for('patient_management.edit_patient_form', patient_id=patient.user_id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" title="Delete"
+                            data-bs-toggle="modal" data-bs-target="#deletePatientModal"
+                            data-patient-id="{{ patient.user_id }}"
+                            data-patient-name="{{ patient.first_name }} {{ patient.last_name }}">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('patient_management.index', page=page-1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">Previous</a>
+        </li>
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('patient_management.index', page=p, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('patient_management.index', page=page+1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">Next</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+<p class="text-center text-muted small">
+    Showing {{ patients|length }} of {{ total_items }} patients. Page {{ page }} of {{ total_pages }}.
+</p>
+
+{% else %}
+<div class="alert alert-info" role="alert">
+    No patients found. {% if search_term %}Try adjusting your search criteria.{% else %}You can <a href="{{ url_for('patient_management.add_patient_form') }}" class="alert-link">add a new patient</a>.{% endif %}
+</div>
+{% endif %}
+
+<!-- Delete Patient Modal -->
+<div class="modal fade" id="deletePatientModal" tabindex="-1" aria-labelledby="deletePatientModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deletePatientModalLabel"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the patient: <strong id="patientNameToDelete"></strong>?
+                <p class="text-danger small mt-2">This action is permanent and will delete all associated records. It cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deletePatientForm" method="POST" action="" class="d-inline">
+                     {# The action URL will be set by JavaScript using delete_patient route #}
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt me-1"></i>Delete Patient</button>
                 </form>
             </div>
-            <a href="{{ url_for('patient_management.add_patient_form') }}" class="btn btn-sm btn-primary flex-shrink-0">
-                <i class="fas fa-plus me-1"></i> Add New Patient
-            </a>
         </div>
-    </div>
-
-    <div class="card-body p-0"> {# Removed padding for table to fit edge-to-edge #}
-        {% include '_flash_messages.html' ignore missing %}
-
-        <div class="table-responsive">
-            <table class="table table-striped table-hover table-sm list-table mb-0"> {# Added Bootstrap table classes, removed bottom margin #}
-                <thead class="table-light"> {# Bootstrap class for thead background #}
-                    <tr>
-                        <th>
-                            <a href="{{ sort_url_generator('last_name', sort_by, sort_order, search_term, page) }}" class="text-decoration-none text-dark">Name 
-                                {% if sort_by == 'last_name' %}<i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
-                                {% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="{{ sort_url_generator('email', sort_by, sort_order, search_term, page) }}" class="text-decoration-none text-dark">Email 
-                                {% if sort_by == 'email' %}<i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
-                                {% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}
-                            </a>
-                        </th>
-                        <th>Phone</th>
-                        <th>
-                            <a href="{{ sort_url_generator('date_of_birth', sort_by, sort_order, search_term, page) }}" class="text-decoration-none text-dark">DOB 
-                                {% if sort_by == 'date_of_birth' %}<i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
-                                {% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}
-                            </a>
-                        </th>
-                        <th>
-                            <a href="{{ sort_url_generator('gender', sort_by, sort_order, search_term, page) }}" class="text-decoration-none text-dark">Gender 
-                                {% if sort_by == 'gender' %}<i class="fas fa-sort-{{ 'up' if sort_order == 'asc' else 'down' }}"></i>
-                                {% else %}<i class="fas fa-sort text-muted opacity-50"></i>{% endif %}
-                            </a>
-                        </th>
-                        <th class="actions-cell text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for patient in patients %}
-                    <tr>
-                        <td data-label="Name">{{ patient.first_name }} {{ patient.last_name }}</td>
-                        <td data-label="Email">{{ patient.email }}</td>
-                        <td data-label="Phone">{{ patient.phone or 'N/A' }}</td>
-                        <td data-label="DOB">{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else 'N/A' }}</td>
-                        <td data-label="Gender">{{ patient.gender|capitalize if patient.gender else 'N/A' }}</td>
-                        <td class="actions-cell action-buttons text-end">
-                            <a href="{{ url_for('patient_management.view_patient', patient_id=patient.user_id) }}"
-                               class="btn btn-icon btn-sm btn-outline-info" title="View Details">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <a href="{{ url_for('patient_management.edit_patient_form', patient_id=patient.user_id) }}"
-                               class="btn btn-icon btn-sm btn-outline-primary" title="Edit Patient">
-                                <i class="fas fa-edit"></i>
-                            </a>
-                            <a href="{{ url_for('patient_management.delete_patient_form', patient_id=patient.user_id) }}"
-                                class="btn btn-icon btn-sm btn-outline-danger">
-                                <i class="fas fa-trash"></i>
-                            </a>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="card-footer"> {# Pagination and summary in card-footer #}
-        <div class="pagination-summary-container d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div>
-                {% if total_items > 0 %}
-                    <small class="text-muted">
-                        Showing {{ ((page - 1) * per_page) + 1 }}-{{ [((page - 1) * per_page) + patients|length, total_items]|min }} of {{ total_items }} Patients
-                    </small>
-                {% endif %}
-            </div>
-            {% if total_pages > 1 %}
-            <nav aria-label="Patient pagination">
-                <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('patient_management.index', page=page-1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}" aria-label="Previous">«</a>
-                    </li>
-                    {% set show_ellipsis_start = false %}
-                    {% set show_ellipsis_end = false %}
-                    {% for p in range(1, total_pages + 1) %}
-                        {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %} {# Show more page numbers around current page #}
-                            <li class="page-item {% if p == page %}active{% endif %}">
-                                <a class="page-link" href="{{ url_for('patient_management.index', page=p, q=search_term, sort_by=sort_by, sort_order=sort_order) }}">{{ p }}</a>
-                            </li>
-                            {% set show_ellipsis_start = true if p < page - 2 else show_ellipsis_start %}
-                            {% set show_ellipsis_end = true if p > page + 2 else show_ellipsis_end %}
-                        {% elif p < page and not show_ellipsis_start %}
-                            <li class="page-item disabled"><span class="page-link">…</span></li>
-                            {% set show_ellipsis_start = true %}
-                        {% elif p > page and not show_ellipsis_end %}
-                            <li class="page-item disabled"><span class="page-link">…</span></li>
-                            {% set show_ellipsis_end = true %}
-                        {% endif %}
-                     {% endfor %}
-                    <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('patient_management.index', page=page+1, q=search_term, sort_by=sort_by, sort_order=sort_order) }}" aria-label="Next">»</a>
-                    </li>
-                </ul>
-            </nav>
-            {% endif %}
-        </div>
-
-        {% if total_items == 0 %}
-           <div class="no-results mt-3 text-center">
-                <i class="fas fa-hospital-user fs-3 mb-2 text-muted"></i> {# Adjusted icon size and color #}
-                {% if search_term %}
-                    <p>No patients found matching your search for "<strong>{{ search_term }}</strong>".</p>
-                    <a href="{{ url_for('patient_management.index', sort_by=sort_by, sort_order=sort_order) }}" class="btn btn-sm btn-outline-secondary">Clear Search</a>
-                {% else %}
-                    <p>No patients found.</p>
-                    <a href="{{ url_for('patient_management.add_patient_form') }}" class="btn btn-sm btn-outline-primary">
-                         Add a new patient
-                    </a>
-                {% endif %}
-           </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script>
+    var deletePatientModal = document.getElementById('deletePatientModal');
+    if (deletePatientModal) {
+        deletePatientModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var patientId = button.getAttribute('data-patient-id');
+            var patientName = button.getAttribute('data-patient-name');
+            var deleteForm = deletePatientModal.querySelector('#deletePatientForm');
+            deletePatientModal.querySelector('#patientNameToDelete').textContent = patientName;
+            var actionUrl = "{{ url_for('patient_management.delete_patient', patient_id=0) }}".replace('/0', '/' + patientId);
+            deleteForm.setAttribute('action', actionUrl);
+        });
+    }
+</script>
 {% endblock %}

@@ -1,0 +1,291 @@
+{# templates/Website/base_with_bot.html #}
+{% extends "Website/base.html" %}
+
+{# This block can be used by child templates if they have even more specific head elements #}
+{% block base_with_bot_head_extra %}
+  {# Link the bot's specific CSS file #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='Website/nutrition_bot_styles.css') }}">
+  {% block head_extra %}{% endblock %} {# Allow child templates to add their own CSS #}
+{% endblock %}
+
+
+{# This block will contain the main content from child templates (nutrition_landing, etc.) #}
+{% block base_with_bot_content %}
+  {% block content %}{% endblock %}
+{% endblock %}
+
+
+{# This block adds the bot's HTML structure AFTER the main content and footer from base.html #}
+{% block body_end_elements %}
+  {{ super() }} {# Includes anything from base.html's body_end_elements if it exists #}
+
+  <!-- NUTRITION BOT HTML STRUCTURE -->
+  <div class="floating-icon pulse" id="nutrition-bot-floating-icon"> {# Will be always visible on pages using this base #}
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+  </div>
+  <div class="bot-container" id="nutrition-bot-container" style="display: none;">
+      <div class="bot-header">
+          <div class="bot-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm-1.36-6.36A1.992 1.992 0 0 0 9.3 9.3a2 2 0 1 0 2.72 2.72A1.992 1.992 0 0 0 10.64 10.64z"/></svg>
+              Nutrition BOT
+          </div>
+          <button class="bot-close-button" id="nutrition-bot-close-button">×</button>
+      </div>
+      <div class="tabs">
+          <div class="tab active" id="nutrition-bot-chat-tab">Chat</div>
+          <div class="tab" id="nutrition-bot-search-tab">Food Search</div>
+          <div class="tab" id="nutrition-bot-allergies-tab">Diet Plan</div>
+      </div>
+      <div class="content-area">
+          <div class="chat-section show" id="nutrition-bot-chat-section-content">
+              <div class="messages" id="nutrition-bot-messages-container">
+                  <div class="message bot-message">
+                      Hi there! I'm your Nutrition Assistant. Ask me nutrition questions, search for food info, or get diet plan suggestions.
+                  </div>
+              </div>
+              <div class="input-area">
+                  <input type="text" class="message-input" id="nutrition-bot-message-input" placeholder="Type your message here...">
+                  <button class="send-button" id="nutrition-bot-send-button">Send</button>
+              </div>
+          </div>
+          <div class="search-section" id="nutrition-bot-search-section-content">
+              <div class="search-bar">
+                  <input type="text" class="search-input" id="nutrition-bot-food-search-input" placeholder="Search for a food (e.g., apple)">
+                  <button class="search-button" id="nutrition-bot-food-search-button">Search</button>
+              </div>
+              <div class="food-results" id="nutrition-bot-food-results-display"></div>
+          </div>
+          <div class="allergies-section" id="nutrition-bot-allergies-section-content">
+               <div class="allergies-header"><h3>Select Your Allergies</h3><p>Check all that apply to you:</p></div>
+               <div class="allergies-list" id="nutrition-bot-allergies-list">
+                  <div class="allergy-item"><input type="checkbox" id="bot-dairy" class="allergy-checkbox" value="dairy"><label for="bot-dairy">Dairy</label></div>
+                  <div class="allergy-item"><input type="checkbox" id="bot-nuts" class="allergy-checkbox" value="nuts"><label for="bot-nuts">Tree Nuts</label></div>
+                  <div class="allergy-item"><input type="checkbox" id="bot-peanuts" class="allergy-checkbox" value="peanuts"><label for="bot-peanuts">Peanuts</label></div>
+                  <div class="allergy-item"><input type="checkbox" id="bot-shellfish" class="allergy-checkbox" value="shellfish"><label for="bot-shellfish">Shellfish</label></div>
+                  <div class="allergy-item"><input type="checkbox" id="bot-fish" class="allergy-checkbox" value="fish"><label for="bot-fish">Fish</label></div>
+                  <div class="allergy-item"><input type="checkbox" id="bot-eggs" class="allergy-checkbox" value="eggs"><label for="bot-eggs">Eggs</label></div>
+                  <div class="allergy-item"><input type="checkbox" id="bot-wheat" class="allergy-checkbox" value="wheat"><label for="bot-wheat">Wheat/Gluten</label></div>
+                  <div class="allergy-item"><input type="checkbox" id="bot-soy" class="allergy-checkbox" value="soy"><label for="bot-soy">Soy</label></div>
+               </div>
+               <div class="health-conditions-header"><h3>Approximate Weight Range (kg)</h3></div>
+               <div class="health-conditions-list" id="nutrition-bot-weight-range-list">
+                  <div class="health-condition-item"><input type="radio" id="bot-weight-none" class="health-condition-radio" name="bot-weight-range" value="none" checked><label for="bot-weight-none">General</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-weight-40-55" class="health-condition-radio" name="bot-weight-range" value="40-55"><label for="bot-weight-40-55">40-55 kg</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-weight-56-76" class="health-condition-radio" name="bot-weight-range" value="56-76"><label for="bot-weight-56-76">56-76 kg</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-weight-77-90" class="health-condition-radio" name="bot-weight-range" value="77-90"><label for="bot-weight-77-90">77-90 kg</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-weight-90-plus" class="health-condition-radio" name="bot-weight-range" value="90+"><label for="bot-weight-90-plus">90+ kg</label></div>
+               </div>
+               <div class="health-conditions-header"><h3>Select Health Condition</h3></div>
+               <div class="health-conditions-list" id="nutrition-bot-health-condition-list">
+                  <div class="health-condition-item"><input type="radio" id="bot-hc-none" class="health-condition-radio" name="bot-health-condition" value="none" checked><label for="bot-hc-none">None/General</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-hc-diabetes" class="health-condition-radio" name="bot-health-condition" value="diabetes"><label for="bot-hc-diabetes">Diabetes</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-hc-hypertension" class="health-condition-radio" name="bot-health-condition" value="hypertension"><label for="bot-hc-hypertension">Hypertension</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-hc-heart" class="health-condition-radio" name="bot-health-condition" value="heart"><label for="bot-hc-heart">Heart Disease</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-hc-kidney" class="health-condition-radio" name="bot-health-condition" value="kidney"><label for="bot-hc-kidney">Kidney Disease</label></div>
+                  <div class="health-condition-item"><input type="radio" id="bot-hc-ibs" class="health-condition-radio" name="bot-health-condition" value="ibs"><label for="bot-hc-ibs">IBS</label></div>
+               </div>
+              <button class="get-plan-button" id="nutrition-bot-get-plan-button">Recommend Plans</button>
+              <div class="diet-plan-result" id="nutrition-bot-diet-plan-result-display"></div>
+          </div>
+      </div>
+  </div>
+  <!-- END NUTRITION BOT HTML STRUCTURE -->
+{% endblock %}
+
+
+{% block base_with_bot_scripts %}
+  {{ super() }} {# Includes scripts from base.html's main script block #}
+  
+  {# --- NUTRITION BOT FRONTEND JAVASCRIPT --- #}
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      const botFloatingIcon = document.getElementById('nutrition-bot-floating-icon');
+      const botContainer = document.getElementById('nutrition-bot-container');
+      const botCloseButton = document.getElementById('nutrition-bot-close-button');
+
+      // Since this base_with_bot.html is only used for nutrition pages,
+      // we can assume the bot should always be active here.
+      // The icon and container are initially display:none via inline style, JS makes them visible.
+      if (botFloatingIcon) botFloatingIcon.style.display = 'flex';
+      // Container remains display:none until icon is clicked.
+
+      if (botFloatingIcon && botContainer) {
+          botFloatingIcon.addEventListener('click', () => {
+              botFloatingIcon.classList.remove('pulse');
+              botContainer.style.display = (botContainer.style.display === 'flex') ? 'none' : 'flex';
+              if (botContainer.style.display === 'flex') {
+                  switchBotTab('chat'); // Default to chat tab when opening
+              }
+          });
+          if (botCloseButton) {
+              botCloseButton.addEventListener('click', () => botContainer.style.display = 'none');
+          }
+
+          // DOM Elements for Bot (using prefixed IDs)
+          const chatTab = document.getElementById('nutrition-bot-chat-tab');
+          const searchTab = document.getElementById('nutrition-bot-search-tab');
+          const allergiesTab = document.getElementById('nutrition-bot-allergies-tab');
+          
+          const chatSection = document.getElementById('nutrition-bot-chat-section-content');
+          const searchSection = document.getElementById('nutrition-bot-search-section-content');
+          const allergiesSectionContent = document.getElementById('nutrition-bot-allergies-section-content');
+          
+          const messagesContainer = document.getElementById('nutrition-bot-messages-container');
+          const messageInput = document.getElementById('nutrition-bot-message-input');
+          const sendButton = document.getElementById('nutrition-bot-send-button');
+          
+          const foodSearchInput = document.getElementById('nutrition-bot-food-search-input');
+          const foodSearchButton = document.getElementById('nutrition-bot-food-search-button');
+          const foodResultsDisplay = document.getElementById('nutrition-bot-food-results-display');
+          
+          const getPlanButton = document.getElementById('nutrition-bot-get-plan-button');
+          const dietPlanResultDisplay = document.getElementById('nutrition-bot-diet-plan-result-display');
+
+          function switchBotTab(tabId) {
+              [chatTab, searchTab, allergiesTab].forEach(t => t && t.classList.remove('active'));
+              [chatSection, searchSection, allergiesSectionContent].forEach(s => s && s.classList.remove('show'));
+              
+              if (tabId === 'chat') {
+                  if(chatTab) chatTab.classList.add('active');
+                  if(chatSection) chatSection.classList.add('show');
+              } else if (tabId === 'search') {
+                  if(searchTab) searchTab.classList.add('active');
+                  if(searchSection) searchSection.classList.add('show');
+              } else if (tabId === 'allergies') { 
+                  if(allergiesTab) allergiesTab.classList.add('active');
+                  if(allergiesSectionContent) allergiesSectionContent.classList.add('show');
+              }
+          }
+
+          if(chatTab) chatTab.addEventListener('click', () => switchBotTab('chat'));
+          if(searchTab) searchTab.addEventListener('click', () => switchBotTab('search'));
+          if(allergiesTab) allergiesTab.addEventListener('click', () => switchBotTab('allergies'));
+
+          function addBotUIMessage(text, senderClass) {
+              if(!messagesContainer) return;
+              const messageElement = document.createElement('div');
+              messageElement.classList.add('message', senderClass);
+              messageElement.style.whiteSpace = "pre-wrap"; 
+              messageElement.innerHTML = text.replace(/\n/g, '<br>');
+              messagesContainer.appendChild(messageElement);
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+          }
+
+          async function handleBotSendMessage() {
+              if(!messageInput || !sendButton) return;
+              const messageText = messageInput.value.trim();
+              if (messageText === '') return;
+
+              addBotUIMessage(messageText, 'user-message');
+              messageInput.value = '';
+              messageInput.disabled = true;
+              sendButton.disabled = true;
+
+              try {
+                  const response = await fetch("{{ url_for('nutrition_bp.api_bot_chat') }}", {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ message: messageText })
+                  });
+                  if (!response.ok) throw new Error(`Server error: ${response.statusText || response.status}`);
+                  const data = await response.json();
+                  addBotUIMessage(data.reply, 'bot-message');
+              } catch (error) {
+                  addBotUIMessage("Sorry, I couldn't connect. Please try again later.", 'bot-message');
+                  console.error("Bot Chat API error:", error);
+              } finally {
+                  messageInput.disabled = false;
+                  sendButton.disabled = false;
+                  messageInput.focus();
+              }
+          }
+          if(sendButton) sendButton.addEventListener('click', handleBotSendMessage);
+          if(messageInput) messageInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') handleBotSendMessage(); });
+          
+          async function handleBotFoodSearch() {
+              if(!foodSearchInput || !foodResultsDisplay) return;
+              const query = foodSearchInput.value.trim();
+              if (query.length < 2) {
+                  foodResultsDisplay.innerHTML = '<div class="message bot-message">Please enter at least 2 characters.</div>';
+                  return;
+              }
+              foodResultsDisplay.innerHTML = '<div class="message bot-message">Searching...</div>';
+              try {
+                  const response = await fetch(`{{ url_for('nutrition_bp.api_search_food_library') }}?q=${encodeURIComponent(query)}`);
+                  if (!response.ok) throw new Error(`Server error: ${response.statusText || response.status}`);
+                  const data = await response.json();
+
+                  if (data.error) {
+                      foodResultsDisplay.innerHTML = `<div class="message bot-message">${data.error}</div>`;
+                  } else if (data.length === 0) {
+                      foodResultsDisplay.innerHTML = '<div class="message bot-message">No food items found.</div>';
+                  } else {
+                      let html = '';
+                      data.forEach(food => {
+                          html += `<div class="food-item">
+                                      <div class="food-name">${food.name}</div>
+                                      <div class="food-details">
+                                          <div>Calories: ${food.calories || 'N/A'}</div>
+                                          <div>Protein: ${food.protein_grams || 'N/A'}g</div>
+                                          <div>Carbs: ${food.carbs_grams || 'N/A'}g</div>
+                                          <div>Fat: ${food.fat_grams || 'N/A'}g</div>
+                                          <div>Serving: ${food.serving || 'N/A'}</div>
+                                      </div>
+                                   </div>`;
+                      });
+                      foodResultsDisplay.innerHTML = html;
+                  }
+              } catch (error) {
+                  foodResultsDisplay.innerHTML = '<div class="message bot-message">Error searching. Try again.</div>';
+                  console.error("Bot Food Search API error:", error);
+              }
+          }
+          if(foodSearchButton) foodSearchButton.addEventListener('click', handleBotFoodSearch);
+          if(foodSearchInput) foodSearchInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') handleBotFoodSearch(); });
+
+          async function handleRecommendDietPlans() {
+              if(!getPlanButton || !dietPlanResultDisplay) return;
+              const selectedAllergies = Array.from(document.querySelectorAll('#nutrition-bot-allergies-list .allergy-checkbox:checked')).map(cb => cb.value);
+              const healthConditionEl = document.querySelector('#nutrition-bot-health-condition-list input[name="bot-health-condition"]:checked');
+              const weightRangeEl = document.querySelector('#nutrition-bot-weight-range-list input[name="bot-weight-range"]:checked');
+
+              const healthCondition = healthConditionEl ? healthConditionEl.value : 'none';
+              const weightRange = weightRangeEl ? weightRangeEl.value : 'none';
+              
+              dietPlanResultDisplay.innerHTML = '<div class="message bot-message">Finding recommendations...</div>';
+              getPlanButton.disabled = true;
+
+              try {
+                  const response = await fetch("{{ url_for('nutrition_bp.api_recommend_diet_plans') }}", {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                          allergies: selectedAllergies,
+                          health_condition: healthCondition,
+                          weight_range: weightRange
+                      })
+                  });
+                  if (!response.ok) throw new Error(`Server error: ${response.statusText || response.status}`);
+                  const data = await response.json();
+                  
+                  if (data.error) {
+                      dietPlanResultDisplay.innerHTML = `<div class="message bot-message">${data.error}</div>`;
+                  } else if (data.plan_html) {
+                      dietPlanResultDisplay.innerHTML = data.plan_html;
+                  } else {
+                      dietPlanResultDisplay.innerHTML = '<div class="message bot-message">Could not find suitable plan recommendations.</div>';
+                  }
+              } catch (error) {
+                  dietPlanResultDisplay.innerHTML = '<div class="message bot-message">Error getting recommendations. Try again.</div>';
+                  console.error("Bot Diet Plan API error:", error);
+              } finally {
+                  getPlanButton.disabled = false;
+              }
+          }
+          if(getPlanButton) getPlanButton.addEventListener('click', handleRecommendDietPlans);
+      } // End of if (botFloatingIcon && botContainer)
+  }); // End of DOMContentLoaded for Bot
+  </script>
+  {# Allow child templates (nutrition_landing, etc.) to add their own specific scripts #}
+  {% block scripts %}{% endblock %}
+{% endblock %}

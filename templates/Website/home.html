@@ -24,35 +24,54 @@
     </div>
   </section>
 
-  {# Categories Section #}
-  <section id="categories" class="categories">
-    <h2 class="section-title">Categories</h2>
+  {# Our Departments Section (Formerly Categories) #}
+  <section id="categories" class="categories"> {# Kept id="categories" for CSS/JS continuity, can be changed if CSS/JS is updated #}
+    <h2 class="section-title">Our Departments</h2> {# MODIFIED TITLE #}
     <div class="carousel-container">
       <button class="prev-btn"><i class="fas fa-chevron-left"></i></button>
       <div class="categories-section">
 
-        {# Loop through departments fetched from backend #}
-        {% if featured_departments %}
-          {% for dept in featured_departments %}
-          <div class="container-card">
-            <img src="{{ url_for('static', filename=(dept.image_url | default('images/placeholder.jpg'))) }}" alt="{{ dept.name | default('Department Image') }}">
-            <div class="card-content">
-              <h3>{{ dept.name | title | default('Department') }}</h3>
-              <p>{{ dept.description | default('Learn more about our services in this department.') | truncate(120) }}</p>
-              {% if dept.department_id %}
-                 {# Link to the specific department landing page #}
-                <a href="{{ url_for('department.department_landing', dept_id=dept.department_id) }}" class="learn-more">Learn More</a>
-              {% else %}
-                 <a href="{{ url_for('department.list_departments') }}" class="learn-more disabled">Learn More</a> {# Fallback link #}
-              {% endif %}
-            </div>
+        {# --- STATIC CARDS START --- #}
+
+        {# Card 1: Disease or Medical Departments #}
+        <div class="container-card">
+          <img src="{{ url_for('static', filename='images/Medical.jpg') }}" alt="Medical Departments">
+          {# Suggestion: Use a more specific image if available, e.g., 'images/medical_departments_category.jpg' #}
+          <div class="card-content">
+            <h3>Medical Departments</h3>
+            <p>Explore our specialized medical departments addressing a wide range of diseases and health conditions.</p>
+            {# This link now points to a general listing page for departments.
+               Adjust if you have a more specific page for this category. #}
+            <a href="{{ url_for('department.list_departments') }}" class="learn-more">Learn More</a>
           </div>
-          {% endfor %}
-        {% else %}
-           <p style="text-align: center; width: 100%; color: var(--text-secondary); padding: 20px;">
-               Featured categories could not be loaded at this time.
-            </p>
-        {% endif %}
+        </div>
+
+        {# Card 2: Nutrition Department #}
+        <div class="container-card">
+          <img src="{{ url_for('static', filename='images/Nuitrtion.jpg') }}" alt="Nutrition Department">
+          {# Suggestion: Use a more specific image if available, e.g., 'images/nutrition_department_category.jpg' #}
+          <div class="card-content">
+            <h3>Dietetics & Nutrition</h3>
+            <p>Discover personalized nutrition plans and guidance from our expert dietitians for optimal health.</p>
+            {# This link now points to a general listing page for departments.
+               Adjust if you have a specific page for Nutrition. #}
+            <a href="{{ url_for('nutrition_bp.nutrition_landing_page') }}" class="learn-more">Learn More</a>
+          </div>
+        </div>
+
+        {# Card 3: Vaccines Department #}
+        <div class="container-card">
+          <img src="{{ url_for('static', filename='images/Vaccination.jpg') }}" alt="Vaccines Department">
+          {# Suggestion: Use a more specific image if available, e.g., 'images/vaccines_department_category.jpg' #}
+          <div class="card-content">
+            <h3>Immunization Center</h3>
+            <p>Stay protected with our comprehensive vaccination services for all ages and needs.</p>
+            {# This link now points to a general listing page for departments.
+               Adjust if you have a specific page for Vaccines. #}
+            <a href="{{ url_for('vaccines_bp.vaccine_landing') }}" class="learn-more">Learn More</a>
+          </div>
+        </div>
+        {# --- STATIC CARDS END --- #}
 
       </div>
       <button class="next-btn"><i class="fas fa-chevron-right"></i></button>
@@ -69,7 +88,7 @@
 
 
 {% block scripts %}
-  {# Keep carousel JavaScript #}
+  {# Keep carousel JavaScript - it should work with the static cards #}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const prevBtn = document.querySelector('.prev-btn');
@@ -79,24 +98,28 @@
 
       if (!prevBtn || !nextBtn || !categoriesSection || cards.length === 0) {
          console.warn("Carousel elements not found or no cards present, skipping carousel setup.");
-         // Optionally hide buttons if no cards or not enough to scroll
          if(prevBtn) prevBtn.style.display = 'none';
          if(nextBtn) nextBtn.style.display = 'none';
          return;
       }
 
-      // --- Carousel Logic (Keep as is or improve) ---
       let currentIndex = 0;
       let cardStyle = window.getComputedStyle(cards[0]);
       let gap = parseFloat(window.getComputedStyle(categoriesSection).getPropertyValue('gap')) || 30;
       let cardWidth = cards[0].offsetWidth + gap;
       const carouselContainer = document.querySelector('.carousel-container');
-      let visibleCards = 1; // Calculate below
+      let visibleCards = 1;
 
       function calculateVisibleCards() {
           if(cards.length === 0 || !carouselContainer || !cards[0]) return 1;
           gap = parseFloat(window.getComputedStyle(categoriesSection).getPropertyValue('gap')) || 30;
-          cardWidth = cards[0].offsetWidth + gap;
+          // Ensure cardWidth is calculated based on the first card if it exists
+          if(cards[0]) {
+            cardWidth = cards[0].offsetWidth + gap;
+          } else {
+            // Fallback if no cards, though the initial check should prevent this
+            cardWidth = 300 + gap; // Arbitrary fallback
+          }
           visibleCards = Math.max(1, Math.floor(carouselContainer.offsetWidth / cardWidth));
       }
 
@@ -105,7 +128,6 @@
           calculateVisibleCards();
 
           const maxIndex = Math.max(0, cards.length - visibleCards);
-          // Adjust currentIndex if it becomes invalid after resize
           if (currentIndex > maxIndex) {
               currentIndex = maxIndex;
           }
@@ -113,7 +135,6 @@
           let newTransform = -(currentIndex * cardWidth);
           categoriesSection.style.transform = `translateX(${newTransform}px)`;
 
-          // Update button states
           prevBtn.disabled = currentIndex === 0;
           prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
           prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
@@ -122,7 +143,6 @@
           nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
           nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
 
-           // Hide buttons if not enough cards to scroll
            const shouldShowButtons = cards.length > visibleCards;
            prevBtn.style.display = shouldShowButtons ? 'flex' : 'none';
            nextBtn.style.display = shouldShowButtons ? 'flex' : 'none';
@@ -136,7 +156,7 @@
       });
 
       nextBtn.addEventListener('click', function() {
-          calculateVisibleCards(); // Recalculate on click in case of resize
+          calculateVisibleCards();
           const maxIndex = Math.max(0, cards.length - visibleCards);
           if (currentIndex < maxIndex) {
               currentIndex++;
@@ -144,7 +164,7 @@
           }
       });
 
-      window.addEventListener('resize', updateCarousel); // Recalculate on resize
+      window.addEventListener('resize', updateCarousel);
       updateCarousel(); // Initial setup
     });
   </script>

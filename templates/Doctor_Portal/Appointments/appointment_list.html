@@ -1,258 +1,330 @@
-{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS and base.css #}
+{% extends "Doctor_Portal/base.html" %}
 
-{% block title %}Appointments - Doctor Portal{% endblock %}
+{% block title %}Appointments{% endblock %}
 
 {% block head_extra %}
-{{ super() if super }} {# Include base head extras #}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-    /* Styles leveraging base.css variables and Bootstrap compatibility */
-    .container-portal {
-        background-color: var(--color-surface, #ffffff);
-        padding: var(--spacing-lg, 1.5rem) var(--spacing-xl, 2rem);
-        border-radius: var(--border-radius, 0.3rem);
-        box-shadow: var(--box-shadow-lg, 0 4px 12px rgba(0,0,0,0.1));
-        margin-top: var(--spacing-lg, 1.5rem);
+    .filters-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background-color: #f8f9fa; /* Light background for filter section */
+        border-radius: var(--border-radius);
+        border: 1px solid var(--color-border);
     }
-    .filter-section {
-        background-color: #f8f9fc; /* Keep slightly different for visual separation */
-        padding: var(--spacing-lg, 1.5rem);
-        border: 1px solid var(--color-border, #dee2e6);
-        border-radius: var(--border-radius, 0.3rem);
-        margin-bottom: var(--spacing-xl, 2rem);
+    .filters-bar .form-group {
+        margin-bottom: 0; /* Remove bottom margin for inline elements */
+        flex-grow: 1;
+        min-width: 180px; /* Ensure filters don't get too squished */
     }
-    .table thead th { /* base.css styles .table thead th, this can be for minor overrides if needed */
-        font-weight: 600; /* Ensure header weight */
+    .filters-bar .form-group label {
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+        color: var(--color-text-muted);
     }
-    .table td, .table th {
-        vertical-align: middle;
-        font-size: 0.9rem; /* Standard table font size */
-    }
-    .table th a { text-decoration: none; color: inherit; }
-    .table th a:hover { color: var(--color-primary, #007bff); }
-
-    /* Status Badges - Retaining specific medical status colors */
-    .status-badge {
-        padding: 0.35em 0.65em;
-        font-size: 0.8em; /* Slightly smaller for fitting in table */
-        font-weight: 600;
-        border-radius: var(--border-radius, 0.25rem);
-        text-transform: capitalize;
-        border-width: 1px;
-        border-style: solid;
-        line-height: 1; /* Ensure consistent height */
-        display: inline-block; /* Ensure proper rendering */
-    }
-    .status-scheduled    { background-color: #cfe2ff; color: #084298; border-color: #b6d4fe;}
-    .status-confirmed    { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc;}
-    .status-completed    { background-color: #e2e3e5; color: #41464b; border-color: #d3d6d8;}
-    .status-canceled     { background-color: #f8d7da; color: #58151c; border-color: #f1c6cb;}
-    .status-no-show      { background-color: #fff3cd; color: #664d03; border-color: #ffe69c;}
-    .status-rescheduled  { background-color: #ffe5d0; color: #803A00; border-color: #fedec6;}
-
-    /* Pagination - Using Bootstrap defaults, ensure they align with base.css if overrides exist */
-    .pagination .page-link {
-        color: var(--color-primary, #007bff);
-        border-radius: var(--border-radius, 0.25rem);
-        margin: 0 2px;
+    .filters-bar .form-control, .filters-bar .form-select {
         font-size: 0.9rem;
+        padding: 0.4rem 0.6rem;
+    }
+    .table th a {
+        color: inherit;
+        text-decoration: none;
+    }
+    .table th a:hover {
+        color: var(--color-primary);
+    }
+    .table .badge {
+        font-size: 0.75em;
+        padding: 0.4em 0.6em;
+    }
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1.5rem;
+    }
+    .pagination {
+        margin-bottom: 0;
+        display: flex;
+        list-style: none;
+        padding-left: 0;
+        border-radius: var(--border-radius);
+    }
+    .pagination .page-item .page-link {
+        padding: 0.5rem 0.75rem;
+        margin-left: -1px;
+        line-height: 1.25;
+        color: var(--color-primary);
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-border);
+        text-decoration: none;
+    }
+    .pagination .page-item:first-child .page-link {
+        margin-left: 0;
+        border-top-left-radius: var(--border-radius);
+        border-bottom-left-radius: var(--border-radius);
+    }
+    .pagination .page-item:last-child .page-link {
+        border-top-right-radius: var(--border-radius);
+        border-bottom-right-radius: var(--border-radius);
     }
     .pagination .page-item.active .page-link {
-        background-color: var(--color-primary, #007bff);
-        border-color: var(--color-primary, #007bff);
-        color: white;
+        z-index: 3;
+        color: var(--color-text-light);
+        background-color: var(--color-primary);
+        border-color: var(--color-primary);
     }
-    .pagination .page-item.disabled .page-link { color: var(--color-text-muted, #6c757d); }
+    .pagination .page-item.disabled .page-link {
+        color: var(--color-secondary);
+        pointer-events: none;
+        background-color: var(--color-surface);
+        border-color: var(--color-border);
+    }
+    .view-mode-buttons .button {
+        margin-right: 0.5rem;
+    }
+    .view-mode-buttons .button.active {
+        background-color: var(--color-primary-dark);
+        border-color: var(--color-primary-dark);
+    }
+    .status-filter-group {
+        max-width: 250px; /* Limit width of multi-select */
+    }
+    .status-filter-group .form-select {
+        height: auto; /* Allow multi-select to expand */
+        padding-top: 0.4rem;
+        padding-bottom: 0.4rem;
+    }
+    /* Status specific colors for table cells */
+    .status-confirmed { color: #198754; font-weight: 500; }
+    .status-completed { color: #6c757d; }
+    .status-canceled { color: #dc3545; text-decoration: line-through; }
+    .status-noshow { color: #ffc107; font-weight: 500; } /* no-show */
+    .status-rescheduled { color: #fd7e14; font-weight: 500;}
+    .status-pending, .status-scheduled { color: #0d6efd; }
 
-    .form-check-inline { margin-right: 0.8rem; }
-    .form-check-label { font-size: 0.85rem; }
-    .form-label { /* Ensure alignment with base.css .form-label if used outside Bootstrap context */
-        font-size: 0.85rem;
-        font-weight: 500;
-        color: var(--color-text-muted, #5a5c69);
-        margin-bottom: 0.3rem;
-    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid container-portal">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-dark">Appointments</h1>
-        <a href="{{ url_for('appointments.create_appointment') }}" class="button button-small button-success"> {# Changed to button-success for "New" #}
-            <i class="fas fa-plus fa-sm me-1"></i> New Appointment
-        </a>
-    </div>
+<div class="page-header">
+    <h1><i class="fas fa-calendar-check fa-fw"></i> Appointments</h1>
+    {# Add New Appointment button can be added here if functionality exists #}
+    {# <a href="{{ url_for('appointments.create_appointment') }}" class="button button-success"><i class="fas fa-plus fa-fw"></i> New Appointment</a> #}
+</div>
 
-    {% include '_flash_messages.html' %}
+<div class="card">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('.list_appointments') }}">
+            {# Hidden fields to preserve sort order and other non-filter params #}
+            <input type="hidden" name="sort_by" value="{{ sort_by }}">
+            <input type="hidden" name="sort_dir" value="{{ sort_dir }}">
+            
+            {# View Mode Buttons #}
+            <div class="mb-3 view-mode-buttons">
+                <label class="form-label d-block mb-1">Date Range:</label>
+                <button type="submit" name="view" value="today" class="button button-small button-outline {% if view_mode == 'today' %}active{% endif %}">Today</button>
+                <button type="submit" name="view" value="week" class="button button-small button-outline {% if view_mode == 'week' %}active{% endif %}">This Week</button>
+                <button type="submit" name="view" value="month" class="button button-small button-outline {% if view_mode == 'month' %}active{% endif %}">This Month</button>
+                <button type="submit" name="view" value="upcoming" class="button button-small button-outline {% if view_mode == 'upcoming' %}active{% endif %}">Upcoming</button>
+                <button type="submit" name="view" value="past" class="button button-small button-outline {% if view_mode == 'past' %}active{% endif %}">Past</button>
+                <button type="submit" name="view" value="custom" class="button button-small button-outline {% if view_mode == 'custom' %}active{% endif %}">Custom</button>
+            </div>
 
-    <div class="filter-section">
-        <form method="GET" action="{{ url_for('appointments.list_appointments') }}">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label for="search" class="form-label">Search Patient/Reason/Type</label>
-                    <input type="text" class="form-control form-control-sm" id="search" name="search" value="{{ search_term or '' }}" placeholder="e.g., Smith, Follow-up...">
+            {# Search and Filters Bar #}
+            <div class="filters-bar">
+                <div class="form-group" style="min-width: 250px;">
+                    <label for="search">Search Patient/Reason</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search_term }}" placeholder="Patient, reason, type...">
                 </div>
-                <div class="col-md-2">
-                    <label for="view_mode" class="form-label">View Range</label>
-                    <select class="form-select form-select-sm" id="view_mode" name="view">
-                        <option value="upcoming" {% if view_mode == 'upcoming' %}selected{% endif %}>Upcoming</option>
-                        <option value="today" {% if view_mode == 'today' %}selected{% endif %}>Today</option>
-                        <option value="week" {% if view_mode == 'week' %}selected{% endif %}>This Week</option>
-                        <option value="month" {% if view_mode == 'month' %}selected{% endif %}>This Month</option>
-                        <option value="past" {% if view_mode == 'past' %}selected{% endif %}>Past</option>
-                        <option value="custom" {% if view_mode == 'custom' %}selected{% endif %}>Custom Range</option>
+                
+                {% if view_mode == 'custom' %}
+                <div class="form-group">
+                    <label for="start_date">Start Date</label>
+                    <input type="text" class="form-control flatpickr-date" id="start_date" name="start_date" value="{{ start_date_str }}" placeholder="YYYY-MM-DD">
+                </div>
+                <div class="form-group">
+                    <label for="end_date">End Date</label>
+                    <input type="text" class="form-control flatpickr-date" id="end_date" name="end_date" value="{{ end_date_str }}" placeholder="YYYY-MM-DD">
+                </div>
+                {% else %}
+                    {# Pass through current range for non-custom views if needed by other logic #}
+                    <input type="hidden" name="start_date" value="{{ start_date_str }}">
+                    <input type="hidden" name="end_date" value="{{ end_date_str }}">
+                {% endif %}
+
+
+                <div class="form-group status-filter-group">
+                    <label for="status">Status</label>
+                    <select class="form-select" id="status" name="status" multiple size="{{ [appointment_statuses|length, 5]|min }}">
+                        {% for status_val in appointment_statuses %}
+                        <option value="{{ status_val }}" {% if status_val in filter_statuses %}selected{% endif %}>
+                            {{ status_val|replace('-', ' ')|title }}
+                        </option>
+                        {% endfor %}
                     </select>
+                     <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple.</small>
                 </div>
-                <div class="col-md-2" id="start_date_col" {% if view_mode != 'custom' %}style="display:none;"{% endif %}>
-                    <label for="start_date" class="form-label">Start Date</label>
-                    <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" value="{{ start_date_str or '' }}">
-                </div>
-                <div class="col-md-2" id="end_date_col" {% if view_mode != 'custom' %}style="display:none;"{% endif %}>
-                    <label for="end_date" class="form-label">End Date</label>
-                    <input type="date" class="form-control form-control-sm" id="end_date" name="end_date" value="{{ end_date_str or '' }}">
-                </div>
-                <div class="col-md-3">
-                    <label for="appointment_type_id" class="form-label">Type</label>
-                    <select class="form-select form-select-sm" id="appointment_type_id" name="appointment_type_id">
+
+                {% if appointment_types %}
+                <div class="form-group">
+                    <label for="appointment_type_id">Type</label>
+                    <select class="form-select" id="appointment_type_id" name="appointment_type_id">
                         <option value="">All Types</option>
                         {% for type in appointment_types %}
-                        <option value="{{ type.id }}" {% if filter_type_id == type.id %}selected{% endif %}>{{ type.name }}</option>
+                        <option value="{{ type.id }}" {% if type.id == filter_type_id %}selected{% endif %}>
+                            {{ type.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
-            </div>
-            <div class="row g-3 align-items-end mt-2">
-                 <div class="col-md-3">
-                    <label for="doctor_location_id" class="form-label">Location</label>
-                    <select class="form-select form-select-sm" id="doctor_location_id" name="doctor_location_id" {% if not provider_locations %}disabled{% endif %}>
+                {% endif %}
+
+                {% if provider_locations %}
+                <div class="form-group">
+                    <label for="doctor_location_id">Location</label>
+                    <select class="form-select" id="doctor_location_id" name="doctor_location_id">
                         <option value="">All Locations</option>
                         {% for loc in provider_locations %}
-                        <option value="{{ loc.doctor_location_id }}" {% if filter_location_id == loc.doctor_location_id %}selected{% endif %}>{{ loc.location_name }}</option>
+                        <option value="{{ loc.doctor_location_id }}" {% if loc.doctor_location_id == filter_location_id %}selected{% endif %}>
+                            {{ loc.location_name }}
+                        </option>
                         {% endfor %}
                     </select>
-                     {% if not provider_locations %}
-                        <small class="text-muted d-block mt-1">No locations defined.</small>
-                     {% endif %}
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label d-block">Status</label>
-                    {% for status_val in appointment_statuses %}
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="checkbox" name="status" id="status_{{ status_val }}" value="{{ status_val }}"
-                                {% if status_val in filter_statuses %}checked{% endif %}>
-                            <label class="form-check-label" for="status_{{ status_val }}">{{ status_val|capitalize }}</label>
-                        </div>
-                    {% endfor %}
+                {% endif %}
+                
+                <div class="form-group align-self-end">
+                    <button type="submit" class="button button-primary w-100"><i class="fas fa-filter fa-fw"></i> Filter</button>
                 </div>
-                <div class="col-md-3 d-flex align-items-end justify-content-end">
-                    <button type="submit" class="button button-small button-primary me-2">Apply Filters</button>
-                    <a href="{{ url_for('appointments.list_appointments') }}" class="button button-small button-outline button-secondary">Reset</a>
+                <div class="form-group align-self-end">
+                    <a href="{{ url_for('.list_appointments') }}" class="button button-outline button-secondary w-100"><i class="fas fa-times fa-fw"></i> Clear</a>
                 </div>
             </div>
         </form>
-    </div>
 
-    {% if appointments %}
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead>
-                <tr>
-                    <th>
-                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='date', sort_dir='asc' if sort_by=='date' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
-                            Date & Time {% if sort_by == 'date' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
+        {% if appointments %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="{{ url_for('.list_appointments', sort_by='date', sort_dir='asc' if sort_by=='date' and sort_dir=='desc' else 'desc', search=search_term, page=current_page, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}">
+                                Date & Time {% if sort_by == 'date' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }}"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ url_for('.list_appointments', sort_by='patient', sort_dir='asc' if sort_by=='patient' and sort_dir=='desc' else 'desc', search=search_term, page=current_page, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}">
+                                Patient {% if sort_by == 'patient' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }}"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                             <a href="{{ url_for('.list_appointments', sort_by='type', sort_dir='asc' if sort_by=='type' and sort_dir=='desc' else 'desc', search=search_term, page=current_page, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}">
+                                Type {% if sort_by == 'type' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }}"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                             <a href="{{ url_for('.list_appointments', sort_by='location', sort_dir='asc' if sort_by=='location' and sort_dir=='desc' else 'desc', search=search_term, page=current_page, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}">
+                                Location {% if sort_by == 'location' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }}"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ url_for('.list_appointments', sort_by='status', sort_dir='asc' if sort_by=='status' and sort_dir=='desc' else 'desc', search=search_term, page=current_page, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}">
+                                Status {% if sort_by == 'status' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }}"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr>
+                        <td>
+                            {{ appt.appointment_date_str }}<br>
+                            <small class="text-muted">{{ appt.start_time_str }} - {{ appt.end_time_str }}</small>
+                        </td>
+                        <td>{{ appt.patient_first_name }} {{ appt.patient_last_name }}</td>
+                        <td>{{ appt.type_name }}</td>
+                        <td>{{ appt.location_name }}</td>
+                        <td>
+                            <span class="badge status-{{ appt.status|lower|replace(' ', '')|replace('-', '') }}">
+                                {{ appt.status|replace('-', ' ')|title }}
+                            </span>
+                        </td>
+                        <td class="action-buttons">
+                            <a href="{{ url_for('.view_appointment', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-info" title="View Details">
+                                <i class="fas fa-eye fa-fw"></i> <span class="d-none d-md-inline">View</span>
+                            </a>
+                            {% if appt.status not in ['completed', 'canceled', 'no-show', 'rescheduled'] %}
+                            <a href="{{ url_for('.reschedule_appointment', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-warning" title="Reschedule">
+                                <i class="fas fa-edit fa-fw"></i> <span class="d-none d-md-inline">Reschedule</span>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination #}
+        <div class="pagination-container">
+            <div class="text-muted">
+                Showing {{ appointments|length }} of {{ total_items }} appointments.
+            </div>
+            {% if total_pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination">
+                    {# Previous Page Link #}
+                    <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('.list_appointments', page=current_page-1, search=search_term, sort_by=sort_by, sort_dir=sort_dir, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}" aria-label="Previous">
+                            <span aria-hidden="true">«</span>
                         </a>
-                    </th>
-                    <th>
-                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='patient', sort_dir='asc' if sort_by=='patient' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
-                            Patient {% if sort_by == 'patient' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
-                        </a>
-                    </th>
-                    <th>
-                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='type', sort_dir='asc' if sort_by=='type' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
-                            Type {% if sort_by == 'type' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
-                        </a>
-                    </th>
-                     <th>
-                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='location', sort_dir='asc' if sort_by=='location' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
-                            Location {% if sort_by == 'location' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
-                        </a>
-                    </th>
-                    <th>
-                        <a href="{{ url_for('appointments.list_appointments', search=search_term, sort_by='status', sort_dir='asc' if sort_by=='status' and sort_dir=='desc' else 'desc', view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">
-                            Status {% if sort_by == 'status' %}<i class="fas fa-sort-{{ 'up' if sort_dir=='asc' else 'down' }} fa-xs"></i>{% endif %}
-                        </a>
-                    </th>
-                    <th class="text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for appt in appointments %}
-                <tr>
-                    <td>{{ appt.appointment_date_str }}<br><small class="text-muted">{{ appt.start_time_str }} - {{ appt.end_time_str }}</small></td>
-                    <td>{{ appt.patient_last_name }}, {{ appt.patient_first_name }}</td>
-                    <td>{{ appt.type_name }}</td>
-                    <td>{{ appt.location_name or 'N/A' }}</td>
-                    <td><span class="status-badge status-{{ appt.status|lower|replace(' ', '-') }}">{{ appt.status }}</span></td>
-                    <td class="text-end action-buttons">
-                        <a href="{{ url_for('appointments.view_appointment', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-info me-1" title="View Details"><i class="fas fa-eye fa-fw"></i></a>
-                        {% if appt.status not in TERMINAL_APPT_STATUSES %}
-                        <a href="{{ url_for('appointments.reschedule_appointment', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-secondary" title="Reschedule"><i class="fas fa-calendar-alt fa-fw"></i></a>
+                    </li>
+                    {# Page Numbers #}
+                    {% for page_num in range(1, total_pages + 1) %}
+                        {% if page_num == current_page %}
+                            <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
+                        {% elif page_num > current_page - 3 and page_num < current_page + 3 %}
+                             <li class="page-item"><a class="page-link" href="{{ url_for('.list_appointments', page=page_num, search=search_term, sort_by=sort_by, sort_dir=sort_dir, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}">{{ page_num }}</a></li>
+                        {% elif page_num == 1 or page_num == total_pages or (page_num == current_page - 3 and current_page > 4) or (page_num == current_page + 3 and current_page < total_pages - 3) %}
+                            {% if (page_num == current_page - 3 and current_page > 4) or (page_num == current_page + 3 and current_page < total_pages - 3) %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                            <li class="page-item"><a class="page-link" href="{{ url_for('.list_appointments', page=page_num, search=search_term, sort_by=sort_by, sort_dir=sort_dir, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}">{{ page_num }}</a></li>
                         {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    {% endfor %}
+                    {# Next Page Link #}
+                    <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('.list_appointments', page=current_page+1, search=search_term, sort_by=sort_by, sort_dir=sort_dir, start_date=start_date_str, end_date=end_date_str, status=filter_statuses, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, view=view_mode) }}" aria-label="Next">
+                            <span aria-hidden="true">»</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle fa-fw"></i> No appointments found matching your criteria.
+        </div>
+        {% endif %}
     </div>
-
-    {% if total_pages > 1 %}
-    <nav aria-label="Page navigation" class="mt-4">
-        <ul class="pagination justify-content-center">
-            <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('appointments.list_appointments', page=current_page-1, search=search_term, sort_by=sort_by, sort_dir=sort_dir, view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">«</a>
-            </li>
-            {% for page_num in range(1, total_pages + 1) %}
-            <li class="page-item {% if page_num == current_page %}active{% endif %}">
-                <a class="page-link" href="{{ url_for('appointments.list_appointments', page=page_num, search=search_term, sort_by=sort_by, sort_dir=sort_dir, view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">{{ page_num }}</a>
-            </li>
-            {% endfor %}
-            <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
-                <a class="page-link" href="{{ url_for('appointments.list_appointments', page=current_page+1, search=search_term, sort_by=sort_by, sort_dir=sort_dir, view=view_mode, start_date=start_date_str, end_date=end_date_str, appointment_type_id=filter_type_id, doctor_location_id=filter_location_id, status=filter_statuses) }}">»</a>
-            </li>
-        </ul>
-    </nav>
-    {% endif %}
-
-    {% else %}
-    <div class="alert alert-light text-center mt-4" role="alert" style="border: 1px dashed var(--color-border, #ccc);">
-        No appointments found matching your criteria.
-    </div>
-    {% endif %}
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-{{ super() if super }}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const viewModeSelect = document.getElementById('view_mode');
-    const startDateCol = document.getElementById('start_date_col');
-    const endDateCol = document.getElementById('end_date_col');
-
-    function toggleDateFields() {
-        if (viewModeSelect.value === 'custom') {
-            startDateCol.style.display = 'block';
-            endDateCol.style.display = 'block';
-        } else {
-            startDateCol.style.display = 'none';
-            endDateCol.style.display = 'none';
-        }
-    }
-    if(viewModeSelect) {
-        viewModeSelect.addEventListener('change', toggleDateFields);
-        toggleDateFields();
-    }
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        flatpickr(".flatpickr-date", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "M j, Y",
+        });
+    });
 </script>
 {% endblock %}

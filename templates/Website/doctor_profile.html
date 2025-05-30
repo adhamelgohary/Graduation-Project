@@ -8,190 +8,280 @@
 
 {% block head_extra %}
     <link rel="stylesheet" href="{{ url_for('static', filename='Website/doctor_profile.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='Website/components.css') }}">
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Website/components.css') }}"> #}
 {% endblock %}
 
+{# --- REMOVE THE FOOTER FOR THIS SPECIFIC PAGE --- #}
+{% block footer %}{% endblock %}
+
 {% block content %}
+{# Pass login status from backend to JavaScript #}
+{# It's better if USER_IS_LOGGED_IN is always available from base.html's script block #}
+{# If not, ensure 'is_logged_in' is passed from the Python route rendering this template #}
 <script>
-  const USER_IS_LOGGED_IN = {{ is_logged_in | tojson }};
+  const USER_IS_LOGGED_IN_PROFILE = {{ is_logged_in | default(current_user.is_authenticated) | tojson }};
 </script>
 
-<div class="container profile-container doctor-profile-page">
+<div class="doctor-profile-page-fullwidth">
 
-    <aside class="profile-sidebar">
-        <div class="profile-card">
-            <div class="profile-card-image-container">
-                <img src="{{ url_for('static', filename=doctor.profile_picture_processed_url) }}" 
-                     alt="Photo of Dr. {{ doctor.first_name }} {{ doctor.last_name }}" 
-                     class="doctor-profile-image">
-            </div>
-            <div class="profile-card-info">
-                <h2>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h2>
-                <p class="specialty">{{ doctor.specialization_name | default('Specialist') }}</p>
-                <p class="department">{{ doctor.department_name | default('') }}</p>
+    <section class="doctor-profile-header-section">
+        <div class="container">
+            <div class="doctor-intro-card">
+                <div class="doctor-image-container">
+                    <img src="{{ url_for('static', filename=doctor.profile_picture_processed_url | default('images/doctors/default_doctor.png')) }}" 
+                         alt="Photo of Dr. {{ doctor.first_name }} {{ doctor.last_name }}" 
+                         class="doctor-profile-image-large">
+                </div>
+                <div class="doctor-intro-text">
+                    <h1>Dr. {{ doctor.first_name }} {{ doctor.last_name }}
+                        {% if doctor.is_verified %}
+                            <i class="fas fa-check-circle verified-badge-large" title="Verified Professional"></i>
+                        {% endif %}
+                    </h1>
+                    <p class="specialty-title">{{ doctor.specialization_name | default('Medical Specialist') }}</p>
+                    {% if doctor.department_name %}
+                        <p class="department-info"><i class="fas fa-hospital fa-fw"></i> {{ doctor.department_name }}</p>
+                    {% endif %}
+                    {% if doctor.primary_clinic_info %}
+                        <p class="location-info">
+                            <i class="fas fa-map-marker-alt fa-fw"></i> 
+                            {{ doctor.primary_clinic_info.name | default('') }}
+                            {% if doctor.primary_clinic_info.city %} - {{ doctor.primary_clinic_info.city }}{% endif %}
+                            {% if doctor.primary_clinic_info.city and doctor.primary_clinic_info.country %}, {% endif %}
+                            {% if doctor.primary_clinic_info.country %}{{ doctor.primary_clinic_info.country }}{% endif %}
+                        </p>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </aside>
+    </section>
 
-    <section class="profile-main">
-        <div class="profile-details-card card">
-            <div class="card-body">
-                <div class="profile-section">
-                    <h4><i class="fas fa-info-circle fa-fw"></i> About Dr. {{ doctor.last_name }}</h4>
-                    {% if doctor.biography %}
-                        <p>{{ doctor.biography | safe }}</p>
-                    {% else %}
-                        <p><i>A detailed biography for Dr. {{ doctor.last_name }} is not yet available.</i></p>
+    <div class="container doctor-profile-main-content">
+        <div class="profile-content-grid">
+            <div class="profile-main-column">
+                <div class="profile-content-card">
+                    <h3 class="card-section-title"><i class="fas fa-info-circle fa-fw"></i> About Dr. {{ doctor.last_name }}</h3>
+                    <div class="about-text-fullwidth {% if doctor.biography and doctor.biography|length > 300 %}collapsible-content{% endif %}" id="about-dr-text-wrapper">
+                        <p id="doctor-biography-content">
+                            {{ doctor.biography | safe if doctor.biography else "A detailed biography for Dr. " + doctor.last_name + " is currently being prepared and will be available soon." }}
+                        </p>
+                    </div>
+                    {% if doctor.biography and doctor.biography|length > 300 %}
+                        <button class="read-more-button-styled" onclick="toggleReadMore('about-dr-text-wrapper', this)">
+                            Read more <i class="fas fa-chevron-down"></i>
+                        </button>
                     {% endif %}
                 </div>
 
-                <div class="profile-section">
-                    <h4><i class="fas fa-hospital-user fa-fw"></i> Patient Information</h4>
-                    <p>
-                        <strong>Accepting New Patients:</strong>
-                        {% if doctor.accepting_new_patients %}
-                            <span class="status-badge status-success">Yes</span>
-                        {% else %}
-                            <span class="status-badge status-danger">No</span>
-                        {% endif %}
-                    </p>
-                </div>
-
-                {% if doctor.specialization_name or doctor.medical_school %}
-                <div class="profile-section">
-                    <h4><i class="fas fa-user-graduate fa-fw"></i> Education & Specialization</h4>
-                    {% if doctor.specialization_name %}
-                        <p><strong>Specialty:</strong> {{ doctor.specialization_name }}</p>
-                        {% if doctor.specialization_description %}
-                            <p class="text-muted small">{{ doctor.specialization_description }}</p>
-                        {% endif %}
-                    {% endif %}
-                    {% if doctor.department_name %}
-                        <p><strong>Department:</strong> {{ doctor.department_name }}</p>
-                        {% if doctor.department_description %}
-                             <p class="text-muted small">{{ doctor.department_description }}</p>
-                        {% endif %}
-                    {% endif %}
-                    {% if doctor.medical_school %}
-                        <p><strong>Medical School:</strong> {{ doctor.medical_school }}</p>
-                    {% endif %}
-                    {% if doctor.graduation_year %}
-                        <p><strong>Graduation Year:</strong> {{ doctor.graduation_year }}</p>
-                    {% endif %}
-                </div>
-                {% endif %}
-
-
-                {% if doctor.clinic_address %}
-                <div class="profile-section">
-                    <h4><i class="fas fa-map-marker-alt fa-fw"></i> Primary Clinic Location</h4>
-                    <address>
-                        {{ doctor.clinic_address | replace('\n', '<br>') | safe }}<br>
-                        {% if doctor.clinic_city %}{{ doctor.clinic_city }}{% endif %}{% if doctor.clinic_city and doctor.clinic_state %}, {% endif %}{% if doctor.clinic_state %}{{ doctor.clinic_state }}{% endif %} {{ doctor.clinic_zip_code | default('') }}
-                    </address>
-                    {% if doctor.clinic_phone %}
-                        <p><strong>Location Phone:</strong> {{ doctor.clinic_phone }}</p>
-                    {% endif %}
-                </div>
-                {% endif %}
-
-                <div class="profile-section">
-                    <h4><i class="fas fa-address-book fa-fw"></i> Contact Dr. {{ doctor.last_name }}</h4>
-                    <p><strong>Email:</strong> {{ doctor.email | default('Contact clinic for email') }}</p>
-                    <p><strong>Phone:</strong> {{ doctor.phone | default('Contact clinic for phone') }}</p>
-                    <p class="text-muted small">For appointments, please use the "Schedule Appointment" button or contact our main clinic line.</p>
-                </div>
-
-                {% if doctor.certifications %}
-                <div class="profile-section">
-                    <h4><i class="fas fa-certificate fa-fw"></i> Certifications & Credentials</h4>
-                    <ul class="credentials-list">
-                        {% for cert_line in doctor.certifications.split('\n') %}
-                            {% set cert_trimmed = cert_line.strip() %}
-                            {% if cert_trimmed %}
-                                <li><i class="fas fa-check-circle text-success me-2"></i>{{ cert_trimmed }}</li>
-                            {% endif %}
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-
-                {% if doctor.documents %}
-                <div class="profile-section">
-                    <h4><i class="fas fa-folder-open fa-fw"></i> Associated Documents</h4>
-                    <ul class="documents-list">
-                        {% for doc in doctor.documents %}
+                {% if doctor.working_hours_info and doctor.working_hours_info|length > 0 %}
+                <div class="profile-content-card">
+                    <h3 class="card-section-title"><i class="far fa-calendar-alt fa-fw"></i> Working Hours (Primary Location)</h3>
+                    <ul class="working-hours-list-styled">
+                        {% for wh in doctor.working_hours_info %}
                             <li>
-                                <i class="fas fa-file-alt fa-fw me-2 document-icon-{{ doc.document_type | lower }}"></i>
-                                <div> {# Wrap text content for better alignment with icon #}
-                                    <strong>{{ doc.document_type | title }}:</strong> {{ doc.file_name }}
-                                    <small class="text-muted d-block">Uploaded: {{ doc.upload_date.strftime('%Y-%m-%d') }}</small>
-                                    {# Example Download Link (requires backend route) #}
-                                    {# <a href="{{ url_for('doctor.download_document', document_id=doc.document_id) if doc.downloadable_url == '#' else doc.downloadable_url }}" 
-                                       class="button button-outline button-xsmall mt-1" 
-                                       target="_blank" rel="noopener noreferrer">View/Download</a> #}
-                                </div>
+                                <span class="day">{{ wh.day_of_week_display }}</span>
+                                {% if wh.is_closed or not wh.start_time_display or not wh.end_time_display %}
+                                    <span class="time closed">Closed</span>
+                                {% else %}
+                                    <span class="time">{{ wh.start_time_display }} - {{ wh.end_time_display }}</span>
+                                {% endif %}
                             </li>
                         {% endfor %}
                     </ul>
                 </div>
                 {% endif %}
-                <div class="profile-card-action">
-                  <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}"
-                     class="button button-primary btn-schedule schedule-prompt-btn"
-                     data-schedule-url="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}">
-                      <i class="fas fa-calendar-plus"></i> Schedule Appointment
-                  </a>
-              </div>
+
+                {% if doctor.specialization_name or doctor.medical_school %}
+                <div class="profile-content-card">
+                    <h3 class="card-section-title"><i class="fas fa-user-graduate fa-fw"></i> Education & Specialization</h3>
+                    <div class="details-list-styled">
+                        {% if doctor.specialization_name %}<p><strong>Specialty:</strong> {{ doctor.specialization_name }}</p>{% endif %}
+                        {% if doctor.specialization_description %}<p class="text-muted-small-styled">{{ doctor.specialization_description | safe }}</p>{% endif %}
+                        {% if doctor.department_name %}<p><strong>Department:</strong> {{ doctor.department_name }}</p>{% endif %}
+                        {% if doctor.department_description %}<p class="text-muted-small-styled">{{ doctor.department_description | safe }}</p>{% endif %}
+                        {% if doctor.medical_school %}<p><strong>Medical School:</strong> {{ doctor.medical_school }}</p>{% endif %}
+                        {% if doctor.graduation_year %}<p><strong>Graduation Year:</strong> {{ doctor.graduation_year }}</p>{% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="profile-sidebar-column">
+                 <div class="profile-content-card">
+                    <h3 class="card-section-title"><i class="fas fa-hospital-user fa-fw"></i> Patient Information</h3>
+                    <p>
+                        <strong>Accepting New Patients:</strong>
+                        {% if doctor.accepting_new_patients %}
+                            <span class="status-badge-styled status-success">Yes</span>
+                        {% else %}
+                            <span class="status-badge-styled status-danger">No</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+                {% if doctor.clinic_address_full_list %}
+                    {% for location in doctor.clinic_address_full_list %}
+                        <div class="profile-content-card">
+                            <h3 class="card-section-title"><i class="fas fa-map-marker-alt fa-fw"></i> 
+                                {{ "Primary Clinic" if location.is_primary else "Clinic Location" }}: {{location.name | default ('Unnamed Location')}}
+                            </h3>
+                            <address>
+                                {{ location.address_line | replace('\n', '<br>') | safe if location.address_line else 'Address not specified' }}<br>
+                                {{ location.city if location.city }}{% if location.city and location.state %}, {% endif %}{{ location.state if location.state }} {{ location.zip_code | default('') }}
+                            </address>
+                            {% if location.phone %}<p><strong>Phone:</strong> {{ location.phone }}</p>{% endif %}
+                            {% if location.google_maps_link %}
+                                <a href="{{ location.google_maps_link }}" target="_blank" rel="noopener noreferrer" class="map-link-button-styled">
+                                    <i class="fas fa-directions"></i> View on Map
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% endif %}
                 
+                <div class="profile-content-card">
+                    <h3 class="card-section-title"><i class="fas fa-address-book fa-fw"></i> Contact Information</h3>
+                    <p><strong>General Email:</strong> {{ doctor.email | default('Not Publicly Available') }}</p>
+                    <p><strong>General Phone:</strong> {{ doctor.phone | default('See Clinic Information') }}</p>
+                    <p class="text-muted-small-styled">For direct messaging (if available), please use our secure patient portal after logging in. For appointments, use the button below.</p>
+                </div>
+
+                {% if doctor.certifications %}
+                <div class="profile-content-card">
+                    <h3 class="card-section-title"><i class="fas fa-certificate fa-fw"></i> Certifications</h3>
+                    <ul class="credentials-list-styled-items">
+                        {% for cert_line in doctor.certifications.split('\n') %}
+                            {% set cert_trimmed = cert_line.strip() %}
+                            {% if cert_trimmed %}<li><i class="fas fa-award fa-fw text-accent"></i>{{ cert_trimmed }}</li>{% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
             </div>
         </div>
-    </section>
+
+        <div class="book-appointment-section">
+            <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}"
+               class="button-primary-cta schedule-prompt-btn"
+               data-schedule-url="{{ url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}">
+                <i class="fas fa-calendar-plus fa-fw"></i> Book an Appointment with Dr. {{ doctor.last_name }}
+            </a>
+        </div>
+    </div>
 </div>
 
-{# Login/Register Modal #}
-<div class="modal-overlay" id="login-register-modal">
-    <div class="modal-content">
-        <button class="modal-close" onclick="closeModal('login-register-modal')">×</button>
-        <h2>Action Required</h2>
-        <p>Please log in or create an account to schedule an appointment.</p>
-        <div class="modal-actions">
-            <a href="{{ url_for('login.login_route', next=request.path) }}" class="button btn-modal btn-login">Login</a>
-            <a href="{{ url_for('register.register_route') }}" class="button btn-modal btn-register">Register</a>
+{# Login/Register Modal (CSS for this needs to be in doctor_profile.css or base.css) #}
+<div class="modal-overlay" id="login-register-modal"> {# Removed inline style="display:none;" - CSS will handle initial state #}
+    <div class="modal-content-app-style"> 
+        <button class="modal-close-app-style" onclick="closeModal('login-register-modal')">×</button>
+        <h2>Login Required</h2>
+        <p>To book an appointment, please log in or create an account.</p>
+        <div class="modal-actions-app-style">
+            <a href="{{ url_for('login.login_route', next=request.path) }}" class="button-primary-fullwidth">Login</a>
+            <a href="{{ url_for('register.register_route', next=request.path) }}" class="button-secondary-fullwidth">Register</a>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-  {# Modal JavaScript Logic #}
+  {{ super() }} {# Include scripts from base.html if any #}
   <script>
+    // Use the IS_AUTHENTICATED from base.html if available, otherwise fallback
+    const USER_IS_LOGGED_IN = (typeof IS_AUTHENTICATED !== 'undefined') ? IS_AUTHENTICATED : {{ current_user.is_authenticated | tojson }};
+
+    function toggleReadMore(wrapperId, buttonElement) {
+        const wrapper = document.getElementById(wrapperId); // Target the wrapper
+        const icon = buttonElement.querySelector('i');
+        if (!wrapper) return;
+
+        wrapper.classList.toggle('expanded');
+
+        if (wrapper.classList.contains('expanded')) {
+            buttonElement.innerHTML = 'Read less <i class="fas fa-chevron-up"></i>';
+        } else {
+            buttonElement.innerHTML = 'Read more <i class="fas fa-chevron-down"></i>';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       const scheduleButtons = document.querySelectorAll('.schedule-prompt-btn');
-      const modal = document.getElementById('login-register-modal');
-      const modalOverlay = document.querySelector('.modal-overlay');
-      const isLoggedIn = (typeof USER_IS_LOGGED_IN !== 'undefined' && USER_IS_LOGGED_IN);
+      const loginModal = document.getElementById('login-register-modal'); // Corrected variable name
 
-      if (!modal || !modalOverlay) {
-          console.warn("Login/Register modal elements not found on profile page.");
-          return;
+      if (!loginModal && !USER_IS_LOGGED_IN) {
+          console.warn("Login/Register modal element not found, schedule buttons will use alert fallback for non-logged-in users.");
       }
+
       scheduleButtons.forEach(button => {
         button.addEventListener('click', function(event) {
-          if (isLoggedIn) {
-            window.location.href = this.getAttribute('data-schedule-url');
+          if (USER_IS_LOGGED_IN) {
+            // User is logged in, allow default link behavior or JS navigation
+            const scheduleUrl = this.getAttribute('data-schedule-url');
+            if (scheduleUrl) {
+                // No event.preventDefault() needed here, let the link navigate
+                // window.location.href = scheduleUrl; // This line is redundant if it's an <a> tag
+            } else {
+                console.warn("Schedule button clicked, but no data-schedule-url found.");
+            }
           } else {
+            // User is NOT logged in, prevent default link behavior and show modal
             event.preventDefault(); 
-            openModal('login-register-modal');
+            if (loginModal) {
+                openModal('login-register-modal');
+            } else {
+                // Fallback if modal HTML is somehow missing
+                alert("Please log in or create an account to schedule an appointment.");
+            }
           }
         });
       });
-      window.openModal = function(modalId) { const m=document.getElementById(modalId); if(m) m.classList.add('active'); }
-      window.closeModal = function(modalId) { const m=document.getElementById(modalId); if(m) m.classList.remove('active'); }
-      modalOverlay.addEventListener('click', function(event) { if (event.target === modalOverlay) { closeModal('login-register-modal'); } });
+
+      // Modal open/close functions
+      window.openModal = function(modalId) { 
+          const m = document.getElementById(modalId); 
+          if(m) {
+              m.style.display = 'flex'; // Make it flex for centering
+              setTimeout(() => { // Timeout to allow display:flex to apply before transition
+                  m.classList.add('active');
+              }, 10); // Small delay
+          }
+      }
+      window.closeModal = function(modalId) { 
+          const m = document.getElementById(modalId); 
+          if(m) {
+              m.classList.remove('active');
+              // CSS transition will handle the fade out and then display:none via visibility
+          }
+      }
+
+      if (loginModal) {
+        loginModal.addEventListener('click', function(event) { 
+            if (event.target === loginModal) { // Click on overlay itself
+                closeModal('login-register-modal'); 
+            }
+        });
+      }
       document.addEventListener('keydown', function(event) {
-        if (event.key === "Escape" && modal.classList.contains('active')) {
+        if (event.key === "Escape" && loginModal && loginModal.classList.contains('active')) {
             closeModal('login-register-modal');
+        }
+      });
+
+      // Initialize collapsible 'About' section
+      document.querySelectorAll('.collapsible-content').forEach(contentWrapper => {
+        const button = contentWrapper.nextElementSibling;
+        const actualContent = contentWrapper.querySelector('p'); // Assuming 'p' holds the text
+
+        if (button && button.classList.contains('read-more-button-styled') && actualContent) {
+            // Check if content actually overflows the initial max-height set by CSS
+            // We set max-height in CSS, so if scrollHeight is greater, it's overflowing.
+            if (actualContent.scrollHeight > parseInt(getComputedStyle(contentWrapper).maxHeight) + 10) { // Add some threshold
+                // Button should be visible by default css or by being present
+            } else {
+                button.style.display = 'none';
+                contentWrapper.classList.remove('collapsible-content'); // Show all content
+                contentWrapper.style.maxHeight = 'none'; // Explicitly remove max-height
+            }
         }
       });
     });

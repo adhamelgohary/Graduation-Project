@@ -1,295 +1,233 @@
-/* static/css/dashboard.css */
-/* Inherits from base.css */
+/* Admin_Portal/dashboard.css */
 
-/* ==========================================================================
-   Stats Overview Section
-   ========================================================================== */
+/* --- Dashboard Specific Colors (Define if not in base.css or override) --- */
+:root {
+    --primary-accent-translucent: rgba(0, 123, 255, 0.15); /* Corresponds to --primary-accent */
+    --success-color: #28a745;
+    --info-color: #17a2b8;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --accent-color: #6f42c1; /* A purple for variety */
+    /* Ensure --text-color-medium, --bg-light, --border-color-light are from base.css */
+}
+
+/* --- Stats Overview --- */
 .stats-overview {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.25rem; /* 20px */
-    margin-bottom: 1.875rem; /* 30px */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem; /* Matches --content-padding from base.css */
+    margin-bottom: 2rem;
 }
 
 .stat-card {
-    background-color: var(--white-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow-sm); /* Use base small shadow */
-    padding: 1.25rem 1.5rem; /* 20px 24px */
-    transition: var(--transition);
-    border-left: 5px solid transparent;
+    flex: 1 1 220px; /* Grow, shrink, base width */
     display: flex;
     align-items: center;
-    text-decoration: none;
-    color: var(--text-color);
-    border: 1px solid var(--border-color); /* Add subtle border */
+    padding: 1.25rem;
+    border-left-width: 5px;
+    border-left-style: solid;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    text-decoration: none; /* For <a> tags */
+    color: inherit; /* For <a> tags */
 }
-
 .stat-card:hover {
     transform: translateY(-3px);
-    box-shadow: var(--box-shadow); /* Use base standard shadow on hover */
-    border-left-color: var(--grey-color); /* Default hover border */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-decoration: none; /* For <a> tags */
+    color: inherit; /* For <a> tags */
 }
 
-/* Color borders */
-.stat-card.primary { border-left-color: var(--primary-color); }
+.stat-card.primary { border-left-color: var(--primary-accent); }
 .stat-card.success { border-left-color: var(--success-color); }
+.stat-card.info    { border-left-color: var(--info-color); }
 .stat-card.warning { border-left-color: var(--warning-color); }
 .stat-card.danger  { border-left-color: var(--danger-color); }
-.stat-card.info    { border-left-color: var(--info-color); }
-/* Hover state border colors */
-.stat-card.primary:hover { border-left-color: var(--primary-color-darker); }
-.stat-card.success:hover { border-left-color: var(--success-color); } /* Keep same or darken */
-.stat-card.warning:hover { border-left-color: var(--warning-color); }
-.stat-card.danger:hover  { border-left-color: var(--danger-color); }
-.stat-card.info:hover    { border-left-color: var(--info-color); }
-
 
 .stat-icon {
-    flex-shrink: 0;
-    width: 50px; /* Slightly smaller */
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.25rem; /* 20px */
-    margin-right: 1rem; /* 16px */
+    font-size: 2.25rem; /* Larger icons */
+    margin-right: 1rem;
+    width: 40px; /* Ensure consistent width for icon area */
+    text-align: center;
+    color: var(--text-color-medium); /* Default icon color */
 }
+.stat-card.primary .stat-icon { color: var(--primary-accent); }
+.stat-card.success .stat-icon { color: var(--success-color); }
+.stat-card.info    .stat-icon { color: var(--info-color); }
+.stat-card.warning .stat-icon { color: var(--warning-color); }
+.stat-card.danger  .stat-icon { color: var(--danger-color); }
 
-/* Colored icons with subtle backgrounds */
-.stat-card.primary .stat-icon { background-color: var(--primary-color-lighter); color: var(--primary-color); }
-.stat-card.success .stat-icon { background-color: #d1e7dd; color: var(--success-color); } /* Bootstrap success bg */
-.stat-card.warning .stat-icon { background-color: #fff3cd; color: #664d03; } /* Bootstrap warning bg/text */
-.stat-card.danger .stat-icon  { background-color: #f8d7da; color: var(--danger-color); } /* Bootstrap danger bg */
-.stat-card.info .stat-icon    { background-color: #cff4fc; color: #055160; } /* Bootstrap info bg/text */
 
 .stat-details h3 {
-    font-size: 1.75rem; /* 28px */
+    font-size: 1.75rem;
     font-weight: 700;
-    margin: 0 0 2px 0;
-    line-height: 1.1;
-    color: var(--heading-color);
+    margin-bottom: 0.1rem;
+    color: var(--text-color-dark);
 }
 .stat-details p {
-    font-size: 0.9rem; /* 14.4px */
-    color: var(--secondary-color);
-    margin: 0;
-    font-weight: 500;
+    font-size: 0.85rem;
+    color: var(--text-color-medium);
+    margin-bottom: 0;
+    white-space: nowrap;
 }
 
-/* ==========================================================================
-   Dashboard Grid & Cards
-   ========================================================================== */
+/* --- Dashboard Grid --- */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem; /* 24px */
-    margin-bottom: 1.875rem; /* 30px */
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Responsive columns */
+    gap: 1.5rem; /* Matches --content-padding from base.css */
 }
 
-/* Use base .card styles from base.css */
-.dashboard-card {
-    /* Add specific dashboard layout if needed */
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 0; /* Grid gap handles spacing */
-}
-
-.dashboard-card.full-width {
-    grid-column: 1 / -1;
-}
-
-/* Use base .card-header styles from base.css */
+/* .dashboard-card is already .card from Bootstrap,
+   we can use .admin-card styling from base.css or add specific overrides.
+   Bootstrap .card already provides much of the needed styling.
+*/
 .dashboard-card .card-header {
-     /* Base styles apply */
-}
-.dashboard-card .card-header h3 {
-    font-size: 1.125rem; /* 18px */
-    /* Base styles apply */
-}
-.dashboard-card .card-header h3 i {
-    /* Base styles apply */
-}
-.dashboard-card .card-header .btn {
-     /* Use base .btn-sm */
+    /* background-color: var(--bg-light); */ /* If different from Bootstrap default */
+    /* border-bottom: 1px solid var(--border-color-light); */
 }
 
-/* Use base .card-body styles */
-.dashboard-card .card-body {
-    padding: 1.25rem; /* Consistent padding */
-    flex-grow: 1;
-    position: relative;
-    min-height: 200px; /* Adjust min height */
-}
-.dashboard-card .card-body .text-center {
-    color: var(--secondary-color);
-    padding: 1.5rem;
-}
-
-/* ==========================================================================
-   Chart Specific Styles
-   ========================================================================== */
-.chart-container {
-    position: relative;
-    height: 320px; /* Adjusted height */
-    width: 100%;
-}
-/* Loading/NoData/Error states styling */
-.chart-loading, .chart-no-data, .chart-error {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    justify-content: center; align-items: center; text-align: center;
-    color: var(--secondary-color); font-size: 0.9rem;
-    background-color: rgba(255, 255, 255, 0.7);
-    border-radius: inherit; padding: 1rem;
-}
-.chart-loading { z-index: 3; }
-.chart-no-data { z-index: 2; }
-.chart-error   { z-index: 1; color: var(--danger-color); }
-
-/* Spinner animation */
-.spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1); width: 36px; height: 36px;
-    border-radius: 50%; border-left-color: var(--primary-color);
-    margin-bottom: 0.75rem; animation: spin 1s linear infinite;
-}
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-/* ==========================================================================
-   New Users List Styles
-   ========================================================================== */
-.user-list {
-    /* Use list-group styling from bootstrap if available, or custom */
-    margin: 0;
-    padding: 0;
-    max-height: 350px; /* Adjust max height */
-    overflow-y: auto;
-}
-.user-list .list-group-item { /* Assuming list-group is used */
+.dashboard-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0;
     display: flex;
     align-items: center;
-    padding: 0.75rem 0; /* Vertical padding, no horizontal for flush */
-    border: none;
-    border-bottom: 1px solid var(--border-color);
 }
-.user-list .list-group-item:last-child {
+.dashboard-card .card-title i {
+    margin-right: 0.6rem;
+    color: var(--text-color-medium);
+    font-size: 1.1em;
+}
+
+/* --- Chart Containers & Loaders --- */
+.chart-container {
+    position: relative;
+    min-height: 320px; /* Ensure enough space for chart and legend */
+    width: 100%;
+}
+.chart-container canvas {
+    max-height: 350px; /* Prevent charts from becoming too tall */
+}
+
+.chart-overlay-message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.85); /* Slightly more opaque */
+    backdrop-filter: blur(2px); /* Optional: for modern browsers */
+    text-align: center;
+    padding: 1rem;
+    color: var(--text-color-medium);
+    font-size: 0.9rem;
+    z-index: 10; /* Ensure it's above the canvas */
+    border-radius: inherit; /* Inherit from parent card */
+}
+.chart-overlay-message.chart-error {
+    color: var(--danger-color);
+    font-weight: 500;
+}
+.chart-overlay-message p {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+}
+
+.chart-spinner {
+    border: 4px solid rgba(0,0,0,0.1);
+    border-left-color: var(--primary-accent);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Activity List (Recently Registered Users) --- */
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 350px; /* Limit height and allow scroll if many users */
+    overflow-y: auto;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 0.25rem; /* More vertical, less horizontal padding */
+    border-bottom: 1px solid var(--border-color-light);
+}
+.user-item:last-child {
     border-bottom: none;
 }
 
-.user-avatar {
-    width: 40px;
-    height: 40px;
+.list-item-avatar {
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
+    background-color: var(--bg-medium);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
     margin-right: 1rem;
     flex-shrink: 0;
-    background-color: var(--light-color); /* Default background */
-    color: var(--secondary-color);
-    font-weight: 500; /* Make initials slightly bolder */
+    font-size: 1.1rem;
 }
-/* Specific avatar colors - using variables */
-.user-avatar.user-type-doctor { background-color: var(--primary-color-lighter); color: var(--primary-color); }
-.user-avatar.user-type-patient { background-color: #d1e7dd; color: var(--success-color); } /* bs green bg */
-.user-avatar.user-type-admin { background-color: #e2d9f3; color: #6f42c1; } /* bs purple */
 
-.user-info h4 { /* Username/Name in list */
-    font-size: 0.95rem;
+.list-item-avatar.avatar-admin   { background-color: var(--primary-accent-translucent); color: var(--primary-accent); }
+.list-item-avatar.avatar-doctor  { background-color: var(--info-color); opacity: 0.2; color: var(--info-color); } /* Example, adjust colors */
+.list-item-avatar.avatar-patient { background-color: var(--success-color); opacity: 0.2; color: var(--success-color); }
+.list-item-avatar.avatar-default { background-color: var(--bg-medium); color: var(--text-color-medium); }
+
+
+.list-item-info h4 {
+    font-size: 0.9rem;
     font-weight: 600;
-    margin: 0 0 2px 0;
-    color: var(--heading-color);
+    margin-bottom: 0.1rem;
+    color: var(--text-color-dark);
 }
-.user-info p { /* User Type / Date */
-    font-size: 0.85rem;
-    color: var(--secondary-color);
-    margin: 0;
-}
-
-/* ==========================================================================
-   Dashboard Table (.data-table) Styles for Recent Appointments
-   ========================================================================== */
-/* Use base .table styles mostly */
-.data-table {
-    /* Base .table styles apply */
-    font-size: 0.9rem; /* Slightly smaller font */
-    white-space: normal; /* Allow wrapping for dashboard view */
-}
-.data-table thead th {
-     /* Base styles apply */
-    font-size: 0.8rem; /* Smaller header */
-    padding: 0.6rem 0.8rem;
-}
-.data-table tbody td {
-     /* Base styles apply */
-    padding: 0.6rem 0.8rem;
+.list-item-info p {
+    font-size: 0.75rem;
+    color: var(--text-color-medium);
+    margin-bottom: 0;
 }
 
-/* Specific Status Badge Styling for Dashboard Table */
-.data-table .status-badge {
-    /* Use base .badge styles */
-    font-weight: 500;
-    padding: 0.25rem 0.6rem;
-    font-size: 0.75rem; /* Smaller */
-    border-radius: 0.25rem; /* Less rounded */
-    text-transform: capitalize; /* Use capitalize instead of uppercase */
-    letter-spacing: normal;
-    border: 1px solid transparent; /* Add border for definition */
+/* --- No Data Placeholders --- */
+.no-data-placeholder {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-color-medium);
+    min-height: 150px; /* Give it some space */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.no-data-placeholder i {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.7;
+}
+.no-data-placeholder p {
+    font-size: 0.9rem;
 }
 
-/* Colors matching base.css flash/stat cards */
-.status-badge.status-scheduled { background-color: var(--primary-color-lighter); color: var(--primary-color-darker); border-color: var(--primary-color-lighter); }
-.status-badge.status-confirmed { background-color: #cff4fc; color: #055160; border-color: #cff4fc; } /* bs info */
-.status-badge.status-completed { background-color: #d1e7dd; color: var(--success-color); border-color: #d1e7dd; } /* bs success */
-.status-badge.status-canceled { background-color: #f8d7da; color: var(--danger-color); border-color: #f8d7da; } /* bs danger */
-.status-badge.status-no-show { background-color: #e9ecef; color: var(--secondary-color); border-color: #e9ecef; } /* bs light */
-.status-badge.status-rescheduled { background-color: #e2d9f3; color: #6f42c1; border-color: #e2d9f3; } /* bs purple */
-.status-badge.status-checked-in { background-color: #fff3cd; color: #664d03; border-color: #fff3cd; } /* bs warning */
-.status-badge.status-pending { background-color: #f8f9fa; color: var(--secondary-color); border-color: #f8f9fa;} /* bs secondary */
-
-
-/* ==========================================================================
-   Dashboard Specific Responsiveness
-   ========================================================================== */
-@media (max-width: 1200px) { /* Adjust breakpoint if needed */
-     .stats-overview {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
+/* Optional: Adjustments for Bootstrap components if needed */
+.dashboard-card .card-body {
+    padding: 1.25rem; /* Standard Bootstrap card body padding */
 }
-
-@media (max-width: 992px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr; /* Stack cards */
-    }
-     .stats-overview {
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    }
-     .stat-details h3 { font-size: 1.5rem; }
-}
-
-@media (max-width: 768px) {
-    .stats-overview {
-        grid-template-columns: repeat(2, 1fr); /* 2 columns on mobile */
-        gap: 1rem;
-    }
-    .stat-card { padding: 1rem; flex-direction: row; align-items: center; } /* Revert stacking for 2-col */
-    .stat-icon { width: 40px; height: 40px; font-size: 1rem; margin-right: 0.75rem; margin-bottom: 0; }
-    .stat-details h3 { font-size: 1.25rem; }
-    .stat-details p { font-size: 0.8rem; }
-
-    /* Apply responsive table stacking to dashboard table if desired */
-    .data-table thead { display: none; }
-    .data-table tbody tr { display: block; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); box-shadow: var(--box-shadow-sm); padding: 0.75rem; background-color: var(--white-color); }
-    .data-table tbody td { display: block; text-align: right; padding-left: 45%; position: relative; border: none; border-bottom: 1px dashed var(--border-color); padding-top: 0.5rem; padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: flex-end; min-height: auto;}
-    .data-table tbody td:last-child { border-bottom: none; }
-    .data-table tbody td::before { content: attr(data-label); position: absolute; left: 10px; width: calc(45% - 15px); text-align: left; font-weight: 600; color: var(--heading-color); font-size: 0.8rem; text-transform: uppercase; }
-    .data-table td.actions { justify-content: flex-end; padding-left: 10px; }
-    .data-table td.actions::before { content: ""; }
-
-}
-
-@media (max-width: 480px) {
-     .stats-overview { grid-template-columns: 1fr; } /* Single column again */
-     /* Keep stat card layout from 768px */
+.dashboard-card .card-header .btn-sm { /* Example for the commented-out View All button */
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    margin-left: auto; /* Pushes button to the right */
 }

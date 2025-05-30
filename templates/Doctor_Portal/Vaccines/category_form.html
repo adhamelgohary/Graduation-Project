@@ -1,0 +1,81 @@
+{% extends "Doctor_Portal/base.html" %}
+
+{% block title %}{{ form_title or 'Vaccine Category Form' }}{% endblock %}
+
+{% block head_extra %}
+<style>
+    .current-image-preview {
+        max-width: 200px;
+        max-height: 150px;
+        border-radius: var(--border-radius); /* Assuming --border-radius is from your base.css */
+        margin-top: var(--spacing-sm); /* Assuming --spacing-sm is from your base.css */
+        border: 1px solid var(--color-border, #ccc); /* Assuming --color-border is from base.css */
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-edit fa-fw"></i> {{ form_title }}</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('vaccine_management.list_vaccine_categories') }}" class="button button-outline button-secondary">
+            <i class="fas fa-times fa-fw"></i> Cancel
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ form_action }}" enctype="multipart/form-data">
+            <div class="form-group required-field mb-3">
+                <label for="category_name" class="form-label">Category Name</label> {# Changed id and for to category_name #}
+                <input type="text" class="form-control" id="category_name" name="category_name" 
+                       value="{{ category.category_name or request.form.category_name or '' }}" required> {# Changed to category_name #}
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="3">{{ category.description or request.form.description or '' }}</textarea>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="target_group" class="form-label">Target Group</label>
+                <input type="text" class="form-control" id="target_group" name="target_group" 
+                       value="{{ category.target_group or request.form.target_group or '' }}" placeholder="e.g., Infants, Adults 65+, Travelers">
+            </div>
+            
+            <div class="form-group mb-3">
+                <label for="image_file" class="form-label">Category Image</label>
+                <input type="file" class="form-control" id="image_file" name="image_file" accept="image/png, image/jpeg, image/gif, image/webp"> {# Added webp #}
+                {% if category and category.image_filename %}
+                    <small class="form-text text-muted">Current image: {{ category.image_filename }}. Uploading a new file will replace it.</small>
+                    <img src="{{ url_for('static', filename='uploads/vaccine_category_images/' + category.image_filename) }}" alt="Current Image" class="current-image-preview mt-2">
+                {% else %}
+                    <small class="form-text text-muted">Optional. Allowed types: PNG, JPG, JPEG, GIF, WEBP.</small>
+                {% endif %}
+            </div>
+
+            {% if errors and errors|length > 0 %} {# Added length check #}
+                <div class="alert alert-danger">
+                    Please correct the following errors:
+                    <ul>
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="mt-4 d-flex justify-content-end">
+                <a href="{{ url_for('vaccine_management.list_vaccine_categories') }}" class="button button-outline button-secondary me-2">
+                    Cancel
+                </a>
+                <button type="submit" class="button button-success">
+                    <i class="fas fa-save fa-fw"></i> 
+                    {% if category and category.category_id %}Update Category{% else %}Save Category{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

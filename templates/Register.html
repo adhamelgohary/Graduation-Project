@@ -104,7 +104,6 @@
                 </div>
             </div>
 
-            <!-- Password fields - Now always visible structure-wise, JS controls 'required' and visibility -->
             <div id="password_fields" class="hidden">
                 <div class="form-row">
                     <div class="form-group">
@@ -171,7 +170,7 @@
             <div id="professional_fields" class="hidden field-section">
                 <hr>
                 <h3>Professional Information</h3>
-                <p class="info-text">Administrator review required. Provide accurate details and supporting documents.</p>
+                <p class="info-text">Administrator review required. Provide accurate details. Supporting documents can be uploaded later via your profile settings after approval.</p>
            
                 <div class="form-group">
                     <label for="department_id">Department<span class="required-star">*</span></label>
@@ -222,30 +221,6 @@
                 <div class="form-group">
                     <label for="license_expiration">License Expiration Date<span class="required-star">*</span></label>
                     <input type="date" name="license_expiration" id="license_expiration" value="{{ form_data.get('license_expiration', '') }}">
-                </div>
-           
-                <h4>Supporting Documents <small>(Optional but Recommended)</small></h4>
-                <p class="info-text">Allowed types: PDF, JPG, PNG, DOC, DOCX.</p>
-           
-                <div class="form-row">
-                    <div class="form-group file-input-group">
-                        <label for="id_document" class="form-label">Identity Document</label>
-                        <input class="form-control" type="file" id="id_document" name="id_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                    </div>
-                    <div class="form-group file-input-group">
-                        <label for="license_document" class="form-label">Medical License Scan</label>
-                        <input class="form-control" type="file" id="license_document" name="license_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group file-input-group">
-                        <label for="specialization_document" class="form-label">Proof of Specialization</label>
-                        <input class="form-control" type="file" id="specialization_document" name="specialization_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                    </div>
-                    <div class="form-group file-input-group">
-                        <label for="other_document" class="form-label">Other Supporting Document</label>
-                        <input class="form-control" type="file" id="other_document" name="other_document" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                    </div>
                 </div>
             </div>
 
@@ -321,7 +296,7 @@
 
         if (patientFields) patientFields.classList.add('hidden');
         if (professionalFields) professionalFields.classList.add('hidden');
-        if (passwordFields) passwordFields.classList.add('hidden'); // Start hidden
+        if (passwordFields) passwordFields.classList.add('hidden'); 
 
         if (dobInput) dobInput.required = false;
         if (genderSelect) genderSelect.required = false;
@@ -343,15 +318,15 @@
             if (confirmPasswordInput) confirmPasswordInput.required = true;
         } else if (userType === 'doctor') {
             if (professionalFields) professionalFields.classList.remove('hidden');
-            if (passwordFields) passwordFields.classList.remove('hidden'); // SHOW password fields for doctors
+            if (passwordFields) passwordFields.classList.remove('hidden'); 
 
             if (departmentSelect) departmentSelect.required = true;
             if (specializationSelect) specializationSelect.required = true;
             if (licenseNumberInput) licenseNumberInput.required = true;
             if (licenseStateInput) licenseStateInput.required = true;
             if (licenseExpirationInput) licenseExpirationInput.required = true;
-            if (passwordInput) passwordInput.required = true; // MAKE password required for doctors
-            if (confirmPasswordInput) confirmPasswordInput.required = true; // MAKE confirm password required
+            if (passwordInput) passwordInput.required = true; 
+            if (confirmPasswordInput) confirmPasswordInput.required = true; 
         }
     }
 
@@ -364,7 +339,7 @@
 
         if (!departmentId) {
             specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
-            specializationSelectElement.disabled = false; // Keep enabled
+            specializationSelectElement.disabled = false;
             return;
         }
 
@@ -403,7 +378,7 @@
         const departmentSelect = document.getElementById('department_id');
         const specializationSelect = document.getElementById('specialization_id');
 
-        toggleUserTypeFields(); // Initial call
+        toggleUserTypeFields(); 
         if (userTypeSelect) {
             userTypeSelect.addEventListener('change', toggleUserTypeFields);
         }
@@ -411,12 +386,13 @@
         if (departmentSelect && specializationSelect) {
             const persistedSpecId = specializationSelect.getAttribute('data-persisted-value');
             departmentSelect.addEventListener('change', function() {
-                fetchSpecializations(this.value, specializationSelect, null); // Don't persist on user change
+                fetchSpecializations(this.value, specializationSelect, null); 
             });
 
+            // On initial load, if department is pre-selected (e.g. form re-render after error)
             if (userTypeSelect && userTypeSelect.value === 'doctor' && departmentSelect.value) {
                  fetchSpecializations(departmentSelect.value, specializationSelect, persistedSpecId);
-            } else if (userTypeSelect && userTypeSelect.value === 'doctor') {
+            } else if (userTypeSelect && userTypeSelect.value === 'doctor') { // If no dept selected, reset spec
                 specializationSelect.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
             }
         }

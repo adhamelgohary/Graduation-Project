@@ -1,343 +1,285 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Hospital Admin Dashboard{% endblock %}
+{% block title %}Admin Dashboard - Aurora Portal{% endblock %}
 
-{% block nav_dashboard %}active{% endblock %}
+{% block header_icon %}<i class="fas fa-tachometer-alt"></i>{% endblock %}
+{% block header_title %}Admin Dashboard{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/dashboard.css') }}">
-{% endblock %}
-
-{% block header_title %}
-{# Use standard h1.page-title structure #}
-<h1 class="page-title">
-    <i class="fas fa-tachometer-alt"></i> Admin Dashboard
-</h1>
+    <link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/dashboard.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="stats-overview">
-    {% macro stat_card(type, icon_class, value, label, link=None) %}
-    <{% if link %}a href="{{ link }}"{% else %}div{% endif %} class="stat-card {{ type }}">
+    {% macro stat_card(type_class, icon_class, value, label, link=None) %}
+    <{% if link %}a href="{{ link }}"{% else %}div{% endif %} class="card stat-card {{ type_class }}">
         <div class="stat-icon"><i class="{{ icon_class }}"></i></div>
         <div class="stat-details">
-            <h3>{{ value | default(0) }}</h3>
+            <h3>{{ value | default('N/A') }}</h3>
             <p>{{ label }}</p>
         </div>
     </{% if link %}a{% else %}div{% endif %}>
     {% endmacro %}
 
-    {{ stat_card('primary', 'fas fa-user-md', total_doctors, 'Total Doctors', url_for('admin_users.view_doctors') if false else '#') }} {# Replace '#' with actual link later #}
-    {{ stat_card('success', 'fas fa-user-injured', total_patients, 'Total Patients', url_for('admin_users.view_patients') if false else '#') }} {# Replace '#' with actual link later #}
-    {{ stat_card('info', 'fas fa-user-check', pending_doctor_verification, 'Pending Doctor Verifications', url_for('admin_users.view_doctors', status='pending') if false else '#') }} {# Replace '#' with actual link later #}
+    {{ stat_card('primary', 'fas fa-user-md', total_doctors, 'Total Doctors', url_for('Doctors_Management.index')) }}
+    {{ stat_card('success', 'fas fa-user-injured', total_patients, 'Total Patients', url_for('patient_management.index')) }}
+    {{ stat_card('info', 'fas fa-user-check', pending_doctor_verification, 'Pending Verifications', url_for('registration_approval.index', status='pending')) }}
 </div>
 
 <div class="dashboard-grid">
-    <div class="dashboard-card">
+    <div class="card dashboard-card">
         <div class="card-header">
-            <h3><i class="fas fa-chart-line"></i> Monthly Appointments</h3>
-        </div>
-        <div class="card-body chart-container">
-            <div class="chart-loading" id="appointmentsChartLoader">
-                <div class="spinner"></div>
-                <p>Loading Chart...</p>
-            </div>
-            <canvas id="appointmentsChart" style="display: none;"></canvas>
-            <p class="chart-no-data" id="appointmentsChartNoData" style="display: none;">No monthly appointment data available.</p>
-            <p class="chart-error" id="appointmentsChartError" style="display: none;">Error loading chart data.</p>
-        </div>
-    </div>
-
-    <div class="dashboard-card">
-        <div class="card-header">
-            <h3><i class="fas fa-users"></i> User Distribution</h3>
-        </div>
-        <div class="card-body chart-container">
-            <div class="chart-loading" id="userDistributionChartLoader">
-                <div class="spinner"></div>
-                <p>Loading Chart...</p>
-            </div>
-            <canvas id="userDistributionChart" style="display: none;"></canvas>
-            <p class="chart-no-data" id="userDistributionChartNoData" style="display: none;">No user distribution data available.</p>
-            <p class="chart-error" id="userDistributionChartError" style="display: none;">Error loading chart data.</p>
-        </div>
-    </div>
-
-    <div class="dashboard-card">
-        <div class="card-header">
-            <h3><i class="fas fa-chart-pie"></i> Appointment Status</h3>
-        </div>
-        <div class="card-body chart-container">
-            <div class="chart-loading" id="appointmentStatusChartLoader">
-                <div class="spinner"></div>
-                <p>Loading Chart...</p>
-            </div>
-            <canvas id="appointmentStatusChart" style="display: none;"></canvas>
-            <p class="chart-no-data" id="appointmentStatusChartNoData" style="display: none;">No appointment status data available.</p>
-            <p class="chart-error" id="appointmentStatusChartError" style="display: none;">Error loading chart data.</p>
-        </div>
-    </div>
-
-    <div class="dashboard-card">
-        <div class="card-header">
-            <h3><i class="fas fa-user-plus"></i> New Users</h3>
-            {# Optional: Link to user management page #}
-            {# <a href="{{ url_for('admin_users.view_users') }}" class="btn btn-sm"><i class="fas fa-external-link-alt"></i> View All</a> #}
+            <h3 class="card-title"><i class="fas fa-chart-line"></i> Monthly Appointments</h3>
         </div>
         <div class="card-body">
-            <div class="user-list">
-                {% if newest_users %}
+            <div class="chart-container">
+                <div class="chart-overlay-message chart-loading" id="appointmentsChartLoader">
+                    <div class="chart-spinner"></div>
+                    <p>Loading Chart...</p>
+                </div>
+                <canvas id="appointmentsChart" style="display: none;"></canvas>
+                <div class="chart-overlay-message" id="appointmentsChartNoData" style="display: none;">No monthly appointment data available.</div>
+                <div class="chart-overlay-message chart-error" id="appointmentsChartError" style="display: none;">Error loading chart data.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card dashboard-card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-users"></i> User Distribution</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <div class="chart-overlay-message chart-loading" id="userDistributionChartLoader">
+                    <div class="chart-spinner"></div>
+                    <p>Loading Chart...</p>
+                </div>
+                <canvas id="userDistributionChart" style="display: none;"></canvas>
+                <div class="chart-overlay-message" id="userDistributionChartNoData" style="display: none;">No user distribution data available.</div>
+                <div class="chart-overlay-message chart-error" id="userDistributionChartError" style="display: none;">Error loading chart data.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card dashboard-card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-chart-pie"></i> Appointment Status Overview</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <div class="chart-overlay-message chart-loading" id="appointmentStatusChartLoader">
+                    <div class="chart-spinner"></div>
+                    <p>Loading Chart...</p>
+                </div>
+                <canvas id="appointmentStatusChart" style="display: none;"></canvas>
+                <div class="chart-overlay-message" id="appointmentStatusChartNoData" style="display: none;">No appointment status data available.</div>
+                <div class="chart-overlay-message chart-error" id="appointmentStatusChartError" style="display: none;">Error loading chart data.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card dashboard-card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-user-plus"></i> Recently Registered Users</h3>
+        </div>
+        <div class="card-body">
+            {% if newest_users and newest_users|length > 0 %}
+                <ul class="activity-list">
                     {% for user in newest_users %}
-                    <div class="user-item">
-                        <div class="user-avatar user-type-{{ user.user_type | lower | default('unknown') }}">
-                            {% if user.user_type == 'doctor' %}
-                            <i class="fas fa-user-md"></i>
-                            {% elif user.user_type == 'patient' %}
-                            <i class="fas fa-user-injured"></i>
-                            {% elif user.user_type == 'admin' %}
-                            <i class="fas fa-user-shield"></i>
-                            {% else %}
-                            <i class="fas fa-user"></i>
-                            {% endif %}
+                    <li class="user-item">
+                        <div class="list-item-avatar avatar-{{ user.user_type | lower | default('default') }}">
+                            {% if user.user_type == 'doctor' %}<i class="fas fa-user-md"></i>
+                            {% elif user.user_type == 'patient' %}<i class="fas fa-user-injured"></i>
+                            {% elif user.user_type == 'admin' %}<i class="fas fa-user-shield"></i>
+                            {% else %}<i class="fas fa-user"></i>{% endif %}
                         </div>
-                        <div class="user-info">
+                        <div class="list-item-info">
                             <h4>{{ user.name }}</h4>
                             <p>{{ user.user_type | capitalize }} • Joined: {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}</p>
                         </div>
-                         {# Optional: Link to user profile #}
-                         {# <a href="{{ url_for('admin_users.view_user_profile', user_id=user.id) }}" class="btn-icon view" title="View Profile"><i class="fas fa-eye"></i></a> #}
-                    </div>
+                    </li>
                     {% endfor %}
-                {% else %}
-                    <p class="text-center">No recent users found.</p>
-                {% endif %}
-            </div>
+                </ul>
+            {% else %}
+                <div class="text-center no-data-placeholder">
+                    <i class="fas fa-users-slash"></i>
+                    <p>No recent user registrations found.</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ super() }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-  // Helper function to show/hide chart elements
-  function handleChartState(chartId, state, message = '') {
-      const loader = document.getElementById(`${chartId}Loader`);
-      const canvas = document.getElementById(chartId);
-      const noData = document.getElementById(`${chartId}NoData`);
-      const error = document.getElementById(`${chartId}Error`);
+    function handleChartState(chartIdBase, state, message = '') {
+        const loader = document.getElementById(`${chartIdBase}Loader`);
+        const canvas = document.getElementById(chartIdBase);
+        const noData = document.getElementById(`${chartIdBase}NoData`);
+        const errorEl = document.getElementById(`${chartIdBase}Error`);
 
-      if (!loader || !canvas || !noData || !error) return;
+        if (loader) loader.style.display = 'none';
+        if (canvas) canvas.style.display = 'none';
+        if (noData) noData.style.display = 'none';
+        if (errorEl) errorEl.style.display = 'none';
 
-      loader.style.display = 'none';
-      canvas.style.display = 'none';
-      noData.style.display = 'none';
-      error.style.display = 'none';
+        switch (state) {
+            case 'loading':
+                if (loader) loader.style.display = 'flex';
+                break;
+            case 'success':
+                if (canvas) canvas.style.display = 'block';
+                break;
+            case 'nodata':
+                if (noData) {
+                    noData.style.display = 'block';
+                    if (message) noData.textContent = message;
+                }
+                break;
+            case 'error':
+                if (errorEl) {
+                    errorEl.style.display = 'block';
+                    if (message) errorEl.textContent = message;
+                }
+                break;
+        }
+    }
 
-      switch (state) {
-          case 'loading':
-              loader.style.display = 'flex';
-              break;
-          case 'success':
-              canvas.style.display = 'block';
-              break;
-          case 'nodata':
-              noData.style.display = 'block';
-              if (message) noData.textContent = message;
-              break;
-          case 'error':
-              error.style.display = 'block';
-              if (message) error.textContent = message;
-              break;
-      }
-  }
+    function safeParseJson(jsonString, chartIdBaseForError) {
+        try {
+            if (!jsonString || jsonString === 'None' || jsonString.trim() === '') {
+                console.warn(`No data string provided for ${chartIdBaseForError}, defaulting to empty array.`);
+                return [];
+            }
+            const parsed = JSON.parse(jsonString);
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            console.error(`Error parsing JSON for ${chartIdBaseForError}:`, jsonString, e);
+            handleChartState(chartIdBaseForError, 'error', `Invalid chart data format for ${chartIdBaseForError}.`);
+            return null;
+        }
+    }
 
-  // --- Appointments Chart ---
-  const appointmentsCtx = document.getElementById('appointmentsChart');
-  if (appointmentsCtx) {
-      handleChartState('appointmentsChart', 'loading');
-      try {
-          // Ensure the data from Jinja is valid JSON or handle potential errors server-side first
-          const months = JSON.parse('{{ monthly_appointments|map(attribute="month")|list|tojson|safe }}');
-          const appointmentCounts = JSON.parse('{{ monthly_appointments|map(attribute="count")|list|tojson|safe }}');
+    const rootStyles = getComputedStyle(document.documentElement);
+    const primaryColor = rootStyles.getPropertyValue('--primary-accent').trim() || '#007bff';
+    const primaryColorTranslucent = rootStyles.getPropertyValue('--primary-accent-translucent').trim() || 'rgba(0, 123, 255, 0.2)';
+    const successColor = rootStyles.getPropertyValue('--success-color').trim() || '#28a745';
+    const accentColor = rootStyles.getPropertyValue('--accent-color').trim() || '#6f42c1';
+    const textMutedColor = rootStyles.getPropertyValue('--text-color-medium').trim() || '#6c757d';
+    const infoColor = rootStyles.getPropertyValue('--info-color').trim() || '#17a2b8';
+    const warningColor = rootStyles.getPropertyValue('--warning-color').trim() || '#ffc107';
+    const dangerColor = rootStyles.getPropertyValue('--danger-color').trim() || '#dc3545';
+    const auroraBgCard = rootStyles.getPropertyValue('--bg-light').trim() || '#ffffff';
+    const auroraBorderColorStrong = rootStyles.getPropertyValue('--border-color-medium').trim() || '#ced4da';
+    const gridColor = 'rgba(0,0,0,0.05)';
 
-          if (months && appointmentCounts && months.length > 0) {
-              handleChartState('appointmentsChart', 'success');
-              new Chart(appointmentsCtx, {
-                  type: 'line',
-                  data: {
-                      labels: months,
-                      datasets: [{
-                          label: 'Monthly Appointments',
-                          data: appointmentCounts,
-                          backgroundColor: 'rgba(52, 152, 219, 0.2)', // Example: Use CSS var if desired: getComputedStyle(document.documentElement).getPropertyValue('--primary-color-alpha')
-                          borderColor: 'rgba(52, 152, 219, 1)', // Example: getComputedStyle(document.documentElement).getPropertyValue('--primary-color')
-                          borderWidth: 2,
-                          tension: 0.4,
-                          fill: true,
-                          pointBackgroundColor: 'rgba(52, 152, 219, 1)',
-                          pointRadius: 4,
-                          pointHoverRadius: 6
-                      }]
-                  },
-                  options: {
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      scales: { y: { beginAtZero: true, grid: { color: '#e0e0e0' } }, x: { grid: { display: false } } },
-                      plugins: { legend: { display: false } } // Keep it clean, label is in dataset
-                  }
-              });
-          } else {
-              handleChartState('appointmentsChart', 'nodata');
-          }
-      } catch (e) {
-          console.error("Error processing appointmentsChart data:", e);
-          handleChartState('appointmentsChart', 'error', 'Error loading chart data. Check console.');
-      }
-  } else {
-      console.warn("Element with ID 'appointmentsChart' not found.");
-  }
+    const appointmentsChartId = 'appointmentsChart';
+    const appointmentsCtx = document.getElementById(appointmentsChartId);
+    if (appointmentsCtx) {
+        handleChartState(appointmentsChartId, 'loading');
+        const monthlyAppointmentsData = safeParseJson('{{ monthly_appointments|tojson|safe }}', appointmentsChartId);
 
-  // --- User Distribution Chart ---
-  const userDistCtx = document.getElementById('userDistributionChart');
-  if (userDistCtx) {
-      handleChartState('userDistributionChart', 'loading');
-      try {
-          const userTypes = JSON.parse('{{ user_type_distribution|map(attribute="user_type")|list|tojson|safe }}');
-          const userCounts = JSON.parse('{{ user_type_distribution|map(attribute="count")|list|tojson|safe }}');
-          // Define more colors if you have more user types
-          const backgroundColorsUser = [
-              'rgba(52, 152, 219, 0.8)',  // Primary
-              'rgba(46, 204, 113, 0.8)',  // Success
-              'rgba(155, 89, 182, 0.8)',  // Purple (Admin?)
-              'rgba(230, 126, 34, 0.8)',  // Orange
-              'rgba(241, 196, 15, 0.8)',  // Warning
-              'rgba(231, 76, 60, 0.8)',   // Danger
-              'rgba(149, 165, 166, 0.8)'   // Grey
-          ];
+        if (monthlyAppointmentsData) {
+            const months = monthlyAppointmentsData.map(item => item.month);
+            const appointmentCounts = monthlyAppointmentsData.map(item => item.count);
 
-          if (userTypes && userCounts && userTypes.length > 0) {
-              handleChartState('userDistributionChart', 'success');
-              new Chart(userDistCtx, {
-                  type: 'doughnut',
-                  data: {
-                      labels: userTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)), // Capitalize
-                      datasets: [{
-                          label: 'User Distribution',
-                          data: userCounts,
-                          backgroundColor: backgroundColorsUser.slice(0, userCounts.length),
-                          borderColor: '#ffffff',
-                          borderWidth: 3,
-                          hoverOffset: 4
-                      }]
-                  },
-                  options: {
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      cutout: '65%', // Make it a thinner doughnut
-                      plugins: {
-                          legend: { position: 'bottom', labels: { padding: 15 } },
-                          tooltip: {
-                              callbacks: {
-                                  label: function(context) {
-                                      let label = context.label || '';
-                                      if (label) { label += ': '; }
-                                      if (context.parsed !== null) {
-                                          label += context.parsed;
-                                          // Calculate percentage
-                                          const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                          const percentage = ((context.parsed / total) * 100).toFixed(1) + '%';
-                                          label += ` (${percentage})`;
-                                      }
-                                      return label;
-                                  }
-                              }
-                          }
-                      }
-                  }
-              });
-          } else {
-               handleChartState('userDistributionChart', 'nodata');
-          }
-      } catch (e) {
-           console.error("Error processing userDistributionChart data:", e);
-           handleChartState('userDistributionChart', 'error', 'Error loading chart data. Check console.');
-      }
-  } else {
-      console.warn("Element with ID 'userDistributionChart' not found.");
-  }
+            if (months.length > 0 && appointmentCounts.length > 0) {
+                handleChartState(appointmentsChartId, 'success');
+                new Chart(appointmentsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Monthly Appointments', data: appointmentCounts,
+                            backgroundColor: primaryColorTranslucent, borderColor: primaryColor,
+                            borderWidth: 2.5, tension: 0.4, fill: true,
+                            pointBackgroundColor: primaryColor, pointRadius: 4, pointHoverRadius: 7,
+                            pointBorderColor: auroraBgCard, pointBorderWidth: 2
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: gridColor }, ticks:{padding:10} }, x: { grid: { display: false }, ticks:{padding:10} } }, plugins: { legend: { display: false } } }
+                });
+            } else {
+                handleChartState(appointmentsChartId, 'nodata');
+            }
+        }
+    }
 
-  // --- Appointment Status Chart ---
-  const apptStatusCtx = document.getElementById('appointmentStatusChart');
-  if (apptStatusCtx) {
-      handleChartState('appointmentStatusChart', 'loading');
-      try {
-          const statusTypes = JSON.parse('{{ appointment_status_stats|map(attribute="status")|list|tojson|safe }}');
-          const statusCounts = JSON.parse('{{ appointment_status_stats|map(attribute="count")|list|tojson|safe }}');
-          // Map statuses to colors (adjust colors as needed)
-          const statusColorMap = {
-                'scheduled': '',
-                'confirmed': 'rgba(46, 204, 113, 0.8)',        // Success
-                'completed': 'rgba(52, 152, 219, 0.8)',        // Primary
-                'canceled': 'rgba(231, 76, 60, 0.8)',         // Danger
-                'no-show': 'rgba(149, 165, 166, 0.8)',         // Grey
-                'rescheduled': 'rgba(155, 89, 182, 0.8)'       // Purple
-          };
-          const backgroundColorsStatus = statusTypes.map(status => statusColorMap[status.toLowerCase().replace(' ','-')] || 'rgba(189, 195, 199, 0.8)'); // Default grey
+    const userDistChartId = 'userDistributionChart';
+    const userDistCtx = document.getElementById(userDistChartId);
+    if (userDistCtx) {
+        handleChartState(userDistChartId, 'loading');
+        const userTypeDistributionData = safeParseJson('{{ user_type_distribution|tojson|safe }}', userDistChartId);
 
-          if (statusTypes && statusCounts && statusTypes.length > 0) {
-              handleChartState('appointmentStatusChart', 'success');
-              new Chart(apptStatusCtx, {
-                  type: 'pie',
-                  data: {
-                      // Format labels nicely (e.g., 'pending-approval' -> 'Pending Approval')
-                      labels: statusTypes.map(status => status.replace('-', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')),
-                      datasets: [{
-                          label: 'Appointment Status',
-                          data: statusCounts,
-                          backgroundColor: backgroundColorsStatus,
-                          borderColor: '#ffffff',
-                          borderWidth: 3,
-                          hoverOffset: 4
-                      }]
-                  },
-                  options: {
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                          legend: { position: 'bottom', labels: { padding: 15 } },
-                          tooltip: { // Add percentage to tooltip
-                             callbacks: {
-                                  label: function(context) {
-                                      let label = context.label || '';
-                                      if (label) { label += ': '; }
-                                      if (context.parsed !== null) {
-                                          label += context.parsed;
-                                          const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-                                          const percentage = ((context.parsed / total) * 100).toFixed(1) + '%';
-                                          label += ` (${percentage})`;
-                                      }
-                                      return label;
-                                  }
-                              }
-                          }
-                      }
-                  }
-              });
-          } else {
-               handleChartState('appointmentStatusChart', 'nodata');
-          }
-      } catch (e) {
-           console.error("Error processing appointmentStatusChart data:", e);
-           handleChartState('appointmentStatusChart', 'error', 'Error loading chart data. Check console.');
-      }
-  } else {
-      console.warn("Element with ID 'appointmentStatusChart' not found.");
-  }
+        if (userTypeDistributionData) {
+            const userTypes = userTypeDistributionData.map(item => item.user_type);
+            const userCounts = userTypeDistributionData.map(item => item.count);
+            const backgroundColorsUser = [primaryColor, successColor, accentColor, textMutedColor, infoColor, warningColor, dangerColor];
 
+            if (userTypes.length > 0 && userCounts.length > 0) {
+                handleChartState(userDistChartId, 'success');
+                new Chart(userDistCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: userTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)),
+                        datasets: [{
+                            label: 'User Distribution', data: userCounts,
+                            backgroundColor: backgroundColorsUser.slice(0, userCounts.length),
+                            borderColor: auroraBgCard,
+                            borderWidth: 3, hoverOffset: 8,
+                            hoverBorderColor: auroraBorderColorStrong
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { padding: 15, boxWidth:12, font: {size: 11} } }, tooltip: { callbacks: { label: function(c){ let l=c.label||''; if(l){l+=': ';} if(c.parsed!==null){l+=c.parsed; const t=c.chart.data.datasets[0].data.reduce((a,b)=>a+b,0); const p= t > 0 ? ((c.parsed/t)*100).toFixed(1)+'%' : '0%'; l+=` (${p})`;} return l;}}}}}
+                });
+            } else {
+                handleChartState(userDistChartId, 'nodata');
+            }
+        }
+    }
+
+    const apptStatusChartId = 'appointmentStatusChart';
+    const apptStatusCtx = document.getElementById(apptStatusChartId);
+    if (apptStatusCtx) {
+        handleChartState(apptStatusChartId, 'loading');
+        const appointmentStatusData = safeParseJson('{{ appointment_status_stats|tojson|safe }}', apptStatusChartId);
+
+        if (appointmentStatusData) {
+            const statusTypes = appointmentStatusData.map(item => item.status);
+            const statusCounts = appointmentStatusData.map(item => item.count);
+            const statusColorMap = {
+                'scheduled': infoColor, 'confirmed': primaryColor,
+                'completed': successColor, 'canceled': dangerColor,
+                'no-show': textMutedColor, 'pending': warningColor,
+                'rescheduled': accentColor, 'checked-in': '#DD6B20'
+            };
+            const backgroundColorsStatus = statusTypes.map(status => statusColorMap[status.toLowerCase().replace(/[ _]/g, '-')] || '#BDC3C7');
+
+            if (statusTypes.length > 0 && statusCounts.length > 0) {
+                handleChartState(apptStatusChartId, 'success');
+                new Chart(apptStatusCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: statusTypes.map(s => s.replace(/[_-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())),
+                        datasets: [{
+                            label: 'Appointment Status', data: statusCounts,
+                            backgroundColor: backgroundColorsStatus,
+                            borderColor: auroraBgCard,
+                            borderWidth: 3, hoverOffset: 8,
+                            hoverBorderColor: auroraBorderColorStrong
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { padding: 15, boxWidth:12, font: {size: 11} } }, tooltip: { callbacks: { label: function(c){ let l=c.label||''; if(l){l+=': ';} if(c.parsed!==null){l+=c.parsed; const t=c.chart.data.datasets[0].data.reduce((a,b)=>a+b,0); const p= t > 0 ? ((c.parsed/t)*100).toFixed(1)+'%' : '0%'; l+=` (${p})`;} return l;}}}}}
+                });
+            } else {
+                handleChartState(apptStatusChartId, 'nodata');
+            }
+        }
+    }
 });
 </script>
 {% endblock %}

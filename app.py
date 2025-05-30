@@ -1,5 +1,6 @@
 # app.py (or your main Flask file)
 import os
+from turtle import numinput
 from flask import Flask, redirect, url_for, render_template # Added render_template
 from flask_login import login_required, current_user
 
@@ -33,6 +34,9 @@ from routes.Admin_Portal.structure_management import structure_bp
 from routes.Patient_Portal.profile import patient_profile_bp
 from routes.Patient_Portal.medical_info import patient_medical_info_bp
 from routes.Patient_Portal.patient_messaging import patient_messaging_bp
+from routes.Patient_Portal.patient_trackers import patient_tracker_bp
+from routes.Website.vaccines import vaccines_bp
+from routes.Website.nutrition import nutrition_bp
 # routes of doctor portal
 from routes.Doctor_Portal.Dashboard import doctor_main
 from routes.Doctor_Portal.availability_management import availability_bp
@@ -45,6 +49,9 @@ from routes.Doctor_Portal.messaging import messaging_bp
 from routes.Doctor_Portal.location_management import locations_bp
 from routes.Doctor_Portal.food_item_management import food_items_bp
 from routes.Doctor_Portal.vaccine_management import vaccine_management_bp
+
+#Apis
+from routes.api.user_alerts import user_alerts_bp
 
 # --- Create Flask App ---
 app = Flask(__name__)
@@ -98,6 +105,11 @@ app.register_blueprint(vaccine_management_bp)
 app.register_blueprint(patient_profile_bp)
 app.register_blueprint(patient_medical_info_bp)
 app.register_blueprint(patient_messaging_bp)
+app.register_blueprint(patient_tracker_bp)
+app.register_blueprint(vaccines_bp, url_prefix='/vaccination-center') # Or your desired prefix
+app.register_blueprint(user_alerts_bp)
+# In your app.py or wherever you create the app
+app.register_blueprint(nutrition_bp, url_prefix='/nutrition')
 # --- Basic Routes ---
 
 # Add a simple health check endpoint (optional but good practice)

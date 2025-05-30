@@ -59,55 +59,7 @@
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            Uploaded Documents
-        </div>
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ID Document:
-                    {% if registration.id_document_path %}
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.id_document_path) }}" data-doc-title="ID Document - {{ registration.username }}">
-                            <i class="fas fa-eye me-1"></i> View Document
-                        </button>
-                    {% else %}
-                        <span class="text-muted">Not Provided</span>
-                    {% endif %}
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Medical License:
-                    {% if registration.license_document_path %}
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.license_document_path) }}" data-doc-title="Medical License - {{ registration.username }}">
-                           <i class="fas fa-eye me-1"></i> View Document
-                        </button>
-                    {% else %}
-                        <span class="text-muted">Not Provided</span>
-                    {% endif %}
-                </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Proof of Specialization:
-                    {% if registration.specialization_document_path %}
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.specialization_document_path) }}" data-doc-title="Proof of Specialization - {{ registration.username }}">
-                           <i class="fas fa-eye me-1"></i> View Document
-                        </button>
-                    {% else %}
-                        <span class="text-muted">Not Provided</span>
-                    {% endif %}
-                </li>
-                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Other Document:
-                    {% if registration.other_document_path %}
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentModal" data-doc-url="{{ url_for('static', filename=registration.other_document_path) }}" data-doc-title="Other Document - {{ registration.username }}">
-                           <i class="fas fa-eye me-1"></i> View Document
-                        </button>
-                    {% else %}
-                        <span class="text-muted">Not Provided</span>
-                    {% endif %}
-                </li>
-            </ul>
-        </div>
-    </div>
+    
 
     <div class="mt-4">
         {% if registration.status == 'pending' %}

@@ -1,0 +1,347 @@
+/* static/Website/nutrition_bot_styles.css */
+
+/* --- Nutrition Bot Widget Styles --- */
+
+/* Floating Icon - Using original classes, but ensure no conflict if base.css also has .floating-icon */
+#nutrition-bot-floating-icon { /* ID for specificity */
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background-color:  var(--primary-color, #173d72); /* Use theme var with fallback from original */
+    border-radius: 50%;
+    display: flex; /* Initially none, JS will change to flex */
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px var(--shadow-color, rgba(0, 0, 0, 0.2));
+    z-index: 1040;
+    transition: transform 0.3s ease;
+}
+#nutrition-bot-floating-icon:hover {
+    transform: scale(1.1);
+}
+#nutrition-bot-floating-icon svg {
+    width: 30px;
+    height: 30px;
+    fill: white;
+}
+#nutrition-bot-floating-icon.pulse { /* If you still use .pulse on the icon */
+    animation: pulseBotIcon 2s infinite;
+}
+@keyframes pulseBotIcon { /* Renamed to avoid conflict if 'pulse' is global */
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+}
+
+/* Bot Container - Using original classes, scoped with ID for specificity */
+#nutrition-bot-container {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    width: 370px;
+    height: 550px;
+    background-color: var(--card-bg-color, white); /* Theme variable */
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px var(--shadow-color, rgba(0, 0, 0, 0.25));
+    display: none; /* JS controls this */
+    flex-direction: column;
+    z-index: 1039;
+    border: 1px solid var(--border-color, #e0e0e0);
+}
+
+#nutrition-bot-container .bot-header { /* Scoped */
+    background-color: var(--navbar-bg-color, #1a365d); /* Theme variable, fallback to original dark blue */
+    color: var(--text-on-primary, white); /* Theme variable */
+    padding: 12px 15px; /* Adjusted padding */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+#nutrition-bot-container .bot-title { /* Scoped */
+    font-size: 1.1em; /* Adjusted */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#nutrition-bot-container .bot-title svg {
+    width: 22px; height: 22px; fill: currentColor;
+}
+
+#nutrition-bot-container .bot-close-button { /* Scoped */
+    background: none;
+    border: none;
+    color: var(--text-on-primary, white);
+    cursor: pointer;
+    font-size: 22px; /* Adjusted */
+    padding: 0 5px; /* Added padding for easier click */
+    line-height: 1;
+}
+
+#nutrition-bot-container .tabs { /* Scoped */
+    display: flex;
+    background-color: var(--input-bg, #f1f1f1); /* Theme variable */
+    border-bottom: 1px solid var(--border-color, #ddd);
+}
+
+#nutrition-bot-container .tab { /* Scoped */
+    padding: 10px 12px; /* Adjusted padding */
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.9em; /* Adjusted */
+    color: var(--text-secondary); /* Theme variable */
+    border-right: 1px solid var(--border-color, #ddd);
+    transition: background-color 0.2s, color 0.2s;
+}
+#nutrition-bot-container .tab:last-child { border-right: none; }
+
+#nutrition-bot-container .tab.active { /* Scoped */
+    background-color: var(--primary-color, #1a365d); /* Theme variable */
+    color: var(--text-on-primary, white);
+    font-weight: bold;
+}
+#nutrition-bot-container .tab:hover:not(.active) {
+    background-color: var(--hover-bg-color, #e9e9e9);
+}
+
+
+#nutrition-bot-container .content-area { /* Scoped */
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary, white); /* Theme variable */
+}
+
+/* Scoping child sections of .content-area */
+#nutrition-bot-container .chat-section,
+#nutrition-bot-container .search-section,
+#nutrition-bot-container .allergies-section {
+    display: none; 
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+}
+#nutrition-bot-container .chat-section.show,
+#nutrition-bot-container .search-section.show,
+#nutrition-bot-container .allergies-section.show {
+    display: flex !important;
+}
+
+#nutrition-bot-container .messages { /* Scoped */
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px;
+}
+#nutrition-bot-container .message { /* Scoped */
+    padding: 10px 12px;
+    border-radius: 10px;
+    max-width: 85%;
+    word-wrap: break-word;
+    line-height: 1.4;
+}
+#nutrition-bot-container .bot-message { /* Scoped */
+    background-color: var(--nested-card-bg, #c6c8e1); /* Theme variable, original fallback */
+    color: var(--text-primary);
+    align-self: flex-start;
+    margin-right: auto;
+}
+#nutrition-bot-container .user-message { /* Scoped */
+    background-color: var(--primary-color, #e0e0e0); /* Theme variable, original fallback */
+    color: var(--text-on-primary, white); 
+    align-self: flex-end;
+    margin-left: auto;
+    text-align: left;
+}
+
+#nutrition-bot-container .input-area { /* Scoped */
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid var(--border-color, #e0e0e0);
+    background-color: var(--input-bg, #f9f9f9);
+}
+#nutrition-bot-container .message-input { /* Scoped */
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--input-border, #ddd);
+    border-radius: 20px;
+    margin-right: 10px;
+    outline: none;
+    background-color: var(--bg-secondary, white);
+    color: var(--text-primary);
+}
+#nutrition-bot-container .send-button { /* Scoped */
+    background-color: var(--button-bg, #1a365d); /* Theme variable */
+    color: var(--button-text-color, white);
+    border: 1px solid var(--button-border-color, transparent);
+    border-radius: 20px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+#nutrition-bot-container .send-button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+/* Bot Food Search Tab Styles */
+#nutrition-bot-container .search-bar { /* Scoped */
+    padding: 15px;
+    display: flex;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+#nutrition-bot-container .search-input { /* Scoped */
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--input-border, #ddd);
+    border-radius: 20px;
+    outline: none;
+    background-color: var(--bg-secondary, white);
+    color: var(--text-primary);
+}
+#nutrition-bot-container .search-button { /* Scoped */
+    background-color: var(--button-bg, #1a365d);
+    color: var(--button-text-color, white);
+    border: 1px solid var(--button-border-color, transparent);
+    border-radius: 20px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+#nutrition-bot-container .search-button:hover {
+    background-color: var(--button-hover-bg);
+}
+#nutrition-bot-container .food-results { /* Scoped */
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+#nutrition-bot-container .food-item { /* Scoped */
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: var(--nested-card-bg, #f9f9f9);
+    border-radius: 10px;
+    border-left: 4px solid var(--primary-color, #1a365d);
+    color: var(--text-primary);
+}
+#nutrition-bot-container .food-name { /* Scoped */
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+#nutrition-bot-container .food-details { /* Scoped */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 5px;
+    font-size: 14px; /* from original */
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+}
+
+/* Bot Diet Plan Tab Styles (Allergies, Conditions, etc.) */
+#nutrition-bot-container .allergies-section { /* Scoped, used as the main content div for this tab */
+    overflow-y: auto; /* Ensure this specific section scrolls if content is long */
+    padding: 15px;
+}
+#nutrition-bot-container .allergies-header, 
+#nutrition-bot-container .health-conditions-header { /* Scoped */
+    margin-bottom: 15px;
+    text-align: center;
+    color: var(--text-primary);
+}
+#nutrition-bot-container .allergies-header h3, 
+#nutrition-bot-container .health-conditions-header h3 {
+    color:  var(--primary-color, #1a365d);
+    margin-bottom: 5px;
+    font-size: 1.1em;
+}
+#nutrition-bot-container .allergies-header p, 
+#nutrition-bot-container .health-conditions-header p {
+    font-size: 0.9em; color: var(--text-secondary);
+}
+#nutrition-bot-container .allergies-list, 
+#nutrition-bot-container .health-conditions-list { /* Scoped */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+#nutrition-bot-container .allergy-item, 
+#nutrition-bot-container .health-condition-item { /* Scoped */
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    background-color: var(--nested-card-bg, #f9f9f9);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+#nutrition-bot-container .allergy-item:hover, 
+#nutrition-bot-container .health-condition-item:hover {
+    background-color: var(--hover-bg-color, #f0f0f0);
+}
+#nutrition-bot-container .allergy-checkbox, 
+#nutrition-bot-container .health-condition-radio { /* Scoped */
+    margin-right: 10px;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+}
+#nutrition-bot-container .allergy-item label, 
+#nutrition-bot-container .health-condition-item label { /* Scoped */
+    cursor: pointer;
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 0.95em;
+}
+#nutrition-bot-container .get-plan-button { /* Scoped */
+    background-color:  var(--button-bg, #1a365d);
+    color: var(--button-text-color, white);
+    border: 1px solid var(--button-border-color, transparent);
+    border-radius: 20px;
+    padding: 10px 18px;
+    font-size: 1em;
+    cursor: pointer;
+    align-self: center; /* If parent is flex and column */
+    margin: 15px auto 20px;
+    display: block; /* For auto margins to work */
+    transition: background-color 0.3s;
+}
+#nutrition-bot-container .get-plan-button:hover {
+    background-color: var(--button-hover-bg);
+}
+#nutrition-bot-container .diet-plan-result { /* Scoped */
+    background-color: var(--nested-card-bg, #f9f9f9);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+    border-left: 4px solid  var(--primary-color, #1a365d);
+    color: var(--text-primary);
+    font-size: 0.9em;
+    /* display: none; -- JS will control display if needed, but backend sends HTML which might be empty */
+}
+/* Styles for backend-generated HTML within .diet-plan-result */
+#nutrition-bot-container .diet-plan-result h4 {
+    color:  var(--primary-color, #1a365d);
+    margin-bottom: 10px;
+}
+#nutrition-bot-container .diet-plan-result .meal-category { margin-bottom: 10px; }
+#nutrition-bot-container .diet-plan-result .meal-category h5 { margin-bottom: 5px; color: var(--text-primary); font-size: 1em; border-bottom: 1px dashed var(--border-color); padding-bottom: 3px;}
+#nutrition-bot-container .diet-plan-result .meal-list { list-style-type: none; padding-left: 0; }
+#nutrition-bot-container .diet-plan-result .meal-list li { margin-bottom: 5px; padding-left: 15px; position: relative; color: var(--text-secondary); }
+#nutrition-bot-container .diet-plan-result .meal-list li:before { content: "•"; color: var(--primary-color); position: absolute; left: 0; font-size: 1.2em; line-height: 1; }
+#nutrition-bot-container .diet-plan-result p { margin-bottom: 8px; line-height: 1.5; }
+#nutrition-bot-container .diet-plan-result em { font-style: italic; color: var(--text-secondary); }
+#nutrition-bot-container .diet-plan-result strong { font-weight: bold; color: var(--text-primary); }
+#nutrition-bot-container .diet-plan-result a { color: var(--accent-color); text-decoration: none; }
+#nutrition-bot-container .diet-plan-result a:hover { text-decoration: underline; }

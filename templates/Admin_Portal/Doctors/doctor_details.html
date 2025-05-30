@@ -1,159 +1,220 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Doctor Details: {{ doctor.first_name }} {{ doctor.last_name }}{% endblock %}
+{% block title %}Doctor: {{ doctor.first_name }} {{ doctor.last_name }} - Pro Health Admin Portal{% endblock %}
 
-{% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_management.css') }}"> {# Ensure CSS exists #}
+{% block header_icon %}<i class="fas fa-user-md fa-fw me-2"></i>{% endblock %}
+{% block header_title %}Doctor Profile: Dr. {{ doctor.first_name }} {{ doctor.last_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header { margin-bottom: 20px; }
+    .profile-details dt { font-weight: 600; }
+    .profile-details dd { margin-bottom: .5rem; }
+    .document-list .list-group-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .doc-icon { font-size: 1.2em; margin-right: 8px;}
+    .verification-pending { color: #fd7e14; }
+    .verification-approved { color: #198754; }
+    .verification-rejected { color: #dc3545; }
+    .verification-pending_info { color: #0dcaf0; }
+</style>
 {% endblock %}
 
 {% block content %}
-<h1>Doctor Details: {{ doctor.first_name }} {{ doctor.last_name }}</h1>
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ url_for('admin_main.dashboard') }}">Admin Dashboard</a></li> {# Corrected admin dashboard link #}
-    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.index') }}">Manage Doctors</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Details for ID {{ doctor.user_id }}</li>
-  </ol>
-</nav>
-<hr>
-
-<div class="row">
-    <div class="col-lg-7 col-xl-8">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                 <h5 class="mb-0"><i class="fas fa-user-circle me-2 text-primary"></i>Account Information</h5>
-                 {% set acc_status_class = 'secondary' %}
-                 {% if doctor.account_status == 'active' %}{% set acc_status_class = 'success' %}
-                 {% elif doctor.account_status == 'inactive' %}{% set acc_status_class = 'secondary' %}
-                 {% elif doctor.account_status == 'suspended' %}{% set acc_status_class = 'danger' %}
-                 {% elif doctor.account_status == 'pending' %}{% set acc_status_class = 'warning text-dark' %}
-                 {% endif %}
-                 <span class="badge bg-{{ acc_status_class }}">{{ doctor.account_status | replace('_', ' ') | title }}</span>
-            </div>
-            <div class="card-body">
-                 <dl class="row mb-0">
-                    <dt class="col-sm-4">Full Name</dt><dd class="col-sm-8">{{ doctor.first_name }} {{ doctor.last_name }}</dd>
-                    <dt class="col-sm-4">Username</dt><dd class="col-sm-8">{{ doctor.username }}</dd>
-                    <dt class="col-sm-4">Email</dt><dd class="col-sm-8"><a href="mailto:{{ doctor.email }}">{{ doctor.email }}</a></dd>
-                    <dt class="col-sm-4">Phone</dt><dd class="col-sm-8">{{ doctor.phone | default('N/A', true) }}</dd>
-                    <dt class="col-sm-4">Account Created</dt><dd class="col-sm-8">{{ doctor.user_created_at.strftime('%Y-%m-%d %H:%M') if doctor.user_created_at else 'N/A' }}</dd>
-                 </dl>
-            </div>
+{% if doctor %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><strong>ID:</strong> {{ doctor.user_id }} | <strong>Username:</strong> {{ doctor.username }}</span>
+        <div>
+            <a href="{{ url_for('Doctors_Management.edit_doctor', doctor_id=doctor.user_id) }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-edit me-1"></i> Edit Doctor
+            </a>
+             <button type="button" class="btn btn-sm btn-danger ms-2" title="Delete Doctor"
+                    data-bs-toggle="modal" data-bs-target="#deleteDoctorModalOnView"
+                    data-doctor-id="{{ doctor.user_id }}"
+                    data-doctor-name="{{ doctor.first_name }} {{ doctor.last_name }}">
+                <i class="fas fa-trash-alt me-1"></i> Delete Doctor
+            </button>
         </div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                 <h5 class="mb-0"><i class="fas fa-stethoscope me-2 text-info"></i>Professional Details</h5>
-                 {% set v_status_class = 'secondary' %}
-                 {% if doctor.verification_status == 'approved' %}{% set v_status_class = 'success' %} {# Changed from 'verified' to 'approved' #}
-                 {% elif doctor.verification_status == 'pending' %}{% set v_status_class = 'warning text-dark' %}
-                 {% elif doctor.verification_status == 'rejected' %}{% set v_status_class = 'danger' %}
-                 {% elif doctor.verification_status == 'pending_info' %}{% set v_status_class = 'info text-dark' %} {# Added pending_info #}
-                 {% endif %}
-                 <span class="badge bg-{{ v_status_class }}">{{ doctor.verification_status | replace('_', ' ') | title }}</span>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                {# --- MODIFIED IMAGE SOURCE --- #}
+                {# Assumes doctor.profile_photo_url stores only the filename, and files are in 'static/uploads/profile_pics/' #}
+                {# doctor.profile_photo_url ALREADY CONTAINS "uploads/profile_pics/filename.ext" #}
+<img src="{{ url_for('static', filename=doctor.profile_photo_url) if doctor.profile_photo_url else url_for('static', filename='Admin_Portal/images/default_doctor_avatar.png') }}"
+     alt="Profile Picture" class="img-thumbnail rounded-circle mb-2"
+     style="width: 150px; height: 150px; object-fit: cover;">
+                <h5>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h5>
+                <p class="text-muted">{{ doctor.email }}</p>
+                 <p class="verification-{{ doctor.verification_status|lower|replace(' ', '_') }}">
+                    <i class="fas
+                        {% if doctor.verification_status == 'pending' %}fa-hourglass-half
+                        {% elif doctor.verification_status == 'approved' %}fa-check-circle
+                        {% elif doctor.verification_status == 'rejected' %}fa-times-circle
+                        {% elif doctor.verification_status == 'pending_info' %}fa-info-circle
+                        {% else %}fa-question-circle{% endif %} me-1"></i>
+                    Verification: {{ doctor.verification_status|replace('_', ' ')|capitalize }}
+                </p>
+                 {% if doctor.verification_status == 'approved' and doctor.approval_date %}
+                    <p class="small text-muted">Approved: {{ doctor.approval_date.strftime('%Y-%m-%d') }}</p>
+                {% endif %}
             </div>
-            <div class="card-body">
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Department</dt><dd class="col-sm-8">{{ doctor.department_name | default('N/A', true) }}</dd> {# Display department_name #}
-                    <dt class="col-sm-4">Specialization</dt><dd class="col-sm-8">{{ doctor.specialization_name | default('N/A', true) }}</dd> {# Use specialization_name #}
-                    <dt class="col-sm-4">License Number</dt><dd class="col-sm-8">{{ doctor.license_number | default('N/A', true) }}</dd>
-                    <dt class="col-sm-4">License State</dt><dd class="col-sm-8">{{ doctor.license_state | default('N/A', true) }}</dd>
-                    <dt class="col-sm-4">License Expiration</dt><dd class="col-sm-8">{{ doctor.license_expiration_formatted or 'N/A' }}</dd>
-                    <dt class="col-sm-4">NPI Number</dt><dd class="col-sm-8">{{ doctor.npi_number | default('N/A', true) }}</dd>
-                    <dt class="col-sm-4">Medical School</dt><dd class="col-sm-8">{{ doctor.medical_school | default('N/A', true) }}</dd>
-                    <dt class="col-sm-4">Graduation Year</dt><dd class="col-sm-8">{{ doctor.graduation_year | default('N/A', true) }}</dd>
-                    <dt class="col-sm-4">Certifications</dt><dd class="col-sm-8">{{ doctor.certifications | default('N/A', true) }}</dd>
-                    <dt class="col-sm-4">Accepting Patients?</dt><dd class="col-sm-8">{{ 'Yes' if doctor.accepting_new_patients else 'No' }}</dd>
-                    <dt class="col-sm-4">Clinic Address</dt><dd class="col-sm-8">{{ doctor.clinic_address | default('N/A', true) }}</dd>
-                    {% if doctor.rejection_reason %}
-                        <dt class="col-sm-4 text-danger">Rejection Reason</dt><dd class="col-sm-8 text-danger">{{ doctor.rejection_reason }}</dd>
-                    {% endif %}
-                    {% if doctor.info_requested %}
-                        <dt class="col-sm-4 text-warning">Info Requested</dt><dd class="col-sm-8 text-warning">{{ doctor.info_requested }} ({{ doctor.info_requested_date.strftime('%Y-%m-%d') if doctor.info_requested_date else 'N/A' }})</dd>
-                    {% endif %}
-                    <dt class="col-sm-4">Biography</dt><dd class="col-sm-8"><pre class="mb-0 small" style="white-space: pre-wrap;">{{ doctor.biography | default('N/A', true) }}</pre></dd>
+            <div class="col-md-9">
+                <dl class="row profile-details">
+                    <dt class="col-sm-4">Full Name:</dt>
+                    <dd class="col-sm-8">Dr. {{ doctor.first_name }} {{ doctor.last_name }}</dd>
+                    <dt class="col-sm-4">Email:</dt>
+                    <dd class="col-sm-8">{{ doctor.email }}</dd>
+                    <dt class="col-sm-4">Phone:</dt>
+                    <dd class="col-sm-8">{{ doctor.phone or 'N/A' }}</dd>
+                    <dt class="col-sm-4">Department:</dt>
+                    <dd class="col-sm-8">{{ doctor.department_name or 'N/A' }}</dd>
+                    <dt class="col-sm-4">Specialization:</dt>
+                    <dd class="col-sm-8">{{ doctor.specialization_name or 'N/A' }}</dd>
+                    <dt class="col-sm-4">License Number:</dt>
+                    <dd class="col-sm-8">{{ doctor.license_number or 'N/A' }} ({{ doctor.license_state or 'N/A' }})</dd>
+                    <dt class="col-sm-4">License Expiration:</dt>
+                    <dd class="col-sm-8">{{ doctor.license_expiration.strftime('%Y-%m-%d') if doctor.license_expiration else 'N/A' }}</dd>
+                    <dt class="col-sm-4">NPI Number:</dt>
+                    <dd class="col-sm-8">{{ doctor.npi_number or 'N/A' }}</dd>
+                    <dt class="col-sm-4">Medical School:</dt>
+                    <dd class="col-sm-8">{{ doctor.medical_school or 'N/A' }} (Grad. {{ doctor.graduation_year or 'N/A' }})</dd>
+                    <dt class="col-sm-4">Certifications:</dt>
+                    <dd class="col-sm-8">{{ doctor.certifications or 'N/A' }}</dd>
+                    <dt class="col-sm-4">Clinic Address:</dt>
+                    <dd class="col-sm-8">{{ doctor.clinic_address or 'N/A' }}</dd>
+                    <dt class="col-sm-4">Accepting New Patients:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge {{ 'bg-success' if doctor.accepting_new_patients else 'bg-secondary' }}">
+                            {{ 'Yes' if doctor.accepting_new_patients else 'No' }}
+                        </span>
+                    </dd>
+                    <dt class="col-sm-4">Account Status:</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge {% if doctor.account_status == 'active' %}bg-success{% elif doctor.account_status == 'inactive' %}bg-secondary{% elif doctor.account_status == 'suspended' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                            {{ doctor.account_status|capitalize }}
+                        </span>
+                    </dd>
+                    <dt class="col-sm-4">Registered:</dt>
+                    <dd class="col-sm-8">{{ doctor.user_created_at.strftime('%B %d, %Y') if doctor.user_created_at else 'N/A' }}</dd>
                 </dl>
             </div>
         </div>
-    </div>
-
-    <div class="col-lg-5 col-xl-4">
-        <div class="card shadow-sm mb-4">
-             <div class="card-header"><h5 class="mb-0"><i class="fas fa-file-alt me-2 text-secondary"></i>Uploaded Documents</h5></div>
-             <div class="card-body">
-                 <div class="document-list mb-3">
-                    {% if doctor.documents %}
-                         <ul class="list-group list-group-flush">
-                         {% for doc in doctor.documents %}
-                             <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
-                                 <div>
-                                     <strong class="d-block">{{ doc.document_type | title }}</strong>
-                                     <small class="text-muted">{{ doc.file_name | truncate(30, true) }} ({{ (doc.file_size / 1024)|round(1) }} KB)</small><br>
-                                     <small class="text-muted">Uploaded: {{ doc.upload_date.strftime('%Y-%m-%d') }}</small>
-                                 </div>
-                                 <div class="actions">
-                                     {# Example for view button if UPLOAD_FOLDER_DOCS is configured and files are served #}
-                                     {% if doc.file_path %}
-                                     <a href="{{ url_for('static', filename='doctor_uploads/' + doc.file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="View Document"><i class="fas fa-eye"></i></a>
-                                     {% endif %}
-                                     <form method="POST" action="{{ url_for('Doctors_Management.delete_doctor_document', document_id=doc.document_id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this document: {{ doc.file_name }}?');">
-                                          <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Document"><i class="fas fa-trash-alt"></i></button>
-                                     </form>
-                                 </div>
-                             </li>
-                         {% endfor %}
-                         </ul>
-                    {% else %}
-                        <p class="text-muted text-center my-3">No documents uploaded yet.</p>
-                    {% endif %}
-                 </div>
-                 <hr>
-                 <h6>Upload New Document</h6>
-                 <form method="POST" action="{{ url_for('Doctors_Management.upload_doctor_document', doctor_id=doctor.user_id) }}" enctype="multipart/form-data" class="upload-form needs-validation" novalidate>
-                     <div class="mb-2">
-                        <label for="document_type" class="form-label form-label-sm">Document Type</label>
-                        <select class="form-select form-select-sm" id="document_type" name="document_type" required>
-                            <option value="" selected disabled>-- Select Type --</option>
-                             {% for type_val in valid_document_types %} {# Use valid_document_types passed from backend #}
-                            <option value="{{ type_val }}">{{ type_val | title }}</option>
-                            {% endfor %}
-                        </select>
-                        <div class="invalid-feedback">Please select a document type.</div>
-                    </div>
-                     <div class="mb-2">
-                        <label for="document" class="form-label form-label-sm">Select File</label>
-                        <input class="form-control form-control-sm" type="file" id="document" name="document" required>
-                        <div class="invalid-feedback">Please select a file.</div>
-                    </div>
-                    <button type="submit" class="btn btn-sm btn-secondary w-100"><i class="fas fa-upload me-1"></i> Upload</button>
-                 </form>
-             </div>
-        </div>
-         <div class="d-grid gap-2">
-             <a href="{{ url_for('Doctors_Management.edit_doctor', doctor_id=doctor.user_id) }}" class="btn btn-primary"><i class="fas fa-edit me-1"></i> Edit Doctor Profile</a>
-             <a href="{{ url_for('Doctors_Management.delete_doctor_confirmation', doctor_id=doctor.user_id) }}" class="btn btn-danger"><i class="fas fa-trash-alt me-1"></i> Delete Doctor Profile</a>
-             <a href="{{ url_for('Doctors_Management.index') }}" class="btn btn-outline-secondary mt-2">Back to Doctor List</a>
-         </div>
+        {% if doctor.biography %}
+        <hr>
+        <h5>Biography</h5>
+        <p class="small">{{ doctor.biography|safe }}</p>
+        {% endif %}
     </div>
 </div>
+
+{# Document Management Section #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <i class="fas fa-folder-open me-1"></i> Doctor Documents
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-7">
+                <h6>Uploaded Documents</h6>
+                {% if doctor.documents %}
+                <ul class="list-group document-list">
+                    {% for doc in doctor.documents %}
+                    <li class="list-group-item">
+                        <div>
+                            {% if doc.file_name.lower().endswith(('.pdf')) %}<i class="fas fa-file-pdf text-danger doc-icon"></i>
+                            {% elif doc.file_name.lower().endswith(('.doc', '.docx')) %}<i class="fas fa-file-word text-primary doc-icon"></i>
+                            {% elif doc.file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}<i class="fas fa-file-image text-success doc-icon"></i>
+                            {% else %}<i class="fas fa-file-alt text-secondary doc-icon"></i>{% endif %}
+                            <a href="{{ url_for('static', filename=docs_relative_path_base + '/' + doc.file_path) }}" target="_blank">
+                                {{ doc.file_name }}
+                            </a>
+                            <span class="badge bg-light text-dark ms-2">{{ doc.document_type|replace('_', ' ')|capitalize }}</span>
+                            <small class="text-muted d-block">Uploaded: {{ doc.upload_date.strftime('%Y-%m-%d') if doc.upload_date }} | Size: {{ "%.2f"|format(doc.file_size / (1024*1024)) if doc.file_size else '0' }} MB</small>
+                        </div>
+                        <form action="{{ url_for('Doctors_Management.delete_doctor_document', document_id=doc.document_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this document?');" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Document"><i class="fas fa-trash-alt"></i></button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No documents uploaded yet.</p>
+                {% endif %}
+            </div>
+            <div class="col-md-5 border-start">
+                <h6>Upload New Document</h6>
+                <form action="{{ url_for('Doctors_Management.upload_doctor_document', doctor_id=doctor.user_id) }}" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="document_type" class="form-label">Document Type <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-sm" id="document_type" name="document_type" required>
+                            <option value="" disabled selected>Select type...</option>
+                            {% for type in valid_document_types %}
+                            <option value="{{ type }}">{{ type|replace('_', ' ')|capitalize }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="documentFile" class="form-label">Select File <span class="text-danger">*</span></label>
+                        <input class="form-control form-control-sm" type="file" id="documentFile" name="document" required>
+                        <div class="form-text">Max file size: {{ max_upload_size_display }}MB. Allowed types: PDF, DOC, DOCX, JPG, PNG.</div>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-upload me-1"></i> Upload Document</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Add other relevant sections like Appointments, Reviews, Availability etc. as tabs or cards #}
+
+<!-- Delete Doctor Modal (for the button on this view page) -->
+<div class="modal fade" id="deleteDoctorModalOnView" tabindex="-1" aria-labelledby="deleteDoctorModalOnViewLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteDoctorModalOnViewLabel"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the doctor: <strong id="doctorNameToDeleteOnView"></strong>?
+                <p class="text-danger small mt-2">This action is permanent and will delete all associated records, including documents and profile photo. It cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteDoctorFormOnView" method="POST" action="" class="d-inline">
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt me-1"></i>Delete Doctor</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-danger" role="alert">
+    Doctor details could not be loaded. Please <a href="{{ url_for('Doctors_Management.index') }}" class="alert-link">return to the doctors list</a>.
+</div>
+{% endif %}
 {% endblock %}
 
-{% block scripts_extra %}
+{% block scripts %}
 <script>
-// Bootstrap 5 form validation
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('.needs-validation')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})()
+    var deleteDoctorModalOnView = document.getElementById('deleteDoctorModalOnView');
+    if (deleteDoctorModalOnView) {
+        deleteDoctorModalOnView.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var doctorId = button.getAttribute('data-doctor-id');
+            var doctorName = button.getAttribute('data-doctor-name');
+            var deleteForm = deleteDoctorModalOnView.querySelector('#deleteDoctorFormOnView');
+            deleteDoctorModalOnView.querySelector('#doctorNameToDeleteOnView').textContent = doctorName;
+            var actionUrl = "{{ url_for('Doctors_Management.delete_doctor', doctor_id=0) }}".replace('/0', '/' + doctorId);
+            deleteForm.setAttribute('action', actionUrl);
+        });
+    }
 </script>
 {% endblock %}

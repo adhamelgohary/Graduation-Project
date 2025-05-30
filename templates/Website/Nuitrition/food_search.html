@@ -1,0 +1,81 @@
+{% extends "Nuitrition/base_with_bot.html" %}
+{% block title %}Food Item Search{% endblock %}
+
+{% block head_extra %}
+<style>
+    #search-results { margin-top: 20px; }
+    .food-result-item { padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; margin-bottom: 10px; background-color: var(--card-bg-color); }
+    .search-form { display: flex; gap: 10px; margin-bottom: 20px; }
+    .search-form input[type="search"] { flex-grow: 1; padding: 10px; border: 1px solid var(--input-border); border-radius: 5px; background-color: var(--input-bg); color: var(--text-color); }
+    .search-form button { padding: 10px 15px; /* Use .button styles from base.css or define here */ }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <h1 class="page-title">Search Food Nutrition</h1>
+    <form id="food-search-form" class="search-form">
+        <input type="search" id="food-query" name="q" placeholder="Enter food name (e.g., apple, chicken breast)" required minlength="2">
+        <button type="submit" class="button">Search</button>
+    </form>
+    <div id="search-loader" style="display:none; text-align:center;">Loading...</div>
+    <div id="search-results">
+        <p>Enter a food name to search.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchForm = document.getElementById('food-search-form');
+    const queryInput = document.getElementById('food-query');
+    const resultsDiv = document.getElementById('search-results');
+    const loaderDiv = document.getElementById('search-loader');
+
+    searchForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        const query = queryInput.value.trim();
+        if (query.length < 2) {
+            resultsDiv.innerHTML = '<p class="alert alert-warning">Please enter at least 2 characters to search.</p>';
+            return;
+        }
+
+        resultsDiv.innerHTML = '';
+        loaderDiv.style.display = 'block';
+
+        fetch(`{{ url_for('nutrition_bp.api_search_food_library') }}?q=${encodeURIComponent(query)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                loaderDiv.style.display = 'none';
+                if (data.error) {
+                    resultsDiv.innerHTML = `<p class="alert alert-danger">${data.error}</p>`;
+                } else if (data.length === 0) {
+                    resultsDiv.innerHTML = '<p>No food items found matching your search.</p>';
+                } else {
+                    let html = '<ul>';
+                    data.forEach(item => {
+                        html += `<li class="food-result-item">
+                                    <strong>${item.name}</strong> (${item.serving || 'N/A'})<br>
+                                    <small>Calories: ${item.calories || 'N/A'} | Protein: ${item.protein_grams || 'N/A'}g | Carbs: ${item.carbs_grams || 'N/A'}g | Fat: ${item.fat_grams || 'N/A'}g</small>
+                                 </li>`;
+                    });
+                    html += '</ul>';
+                    resultsDiv.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                loaderDiv.style.display = 'none';
+                resultsDiv.innerHTML = `<p class="alert alert-danger">Error fetching food data: ${error.message}. Please try again later.</p>`;
+                console.error('Error fetching food data:', error);
+            });
+    });
+});
+</script>
+{% endblock %}

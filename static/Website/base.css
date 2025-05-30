@@ -5,82 +5,89 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Inter', 'Arial', sans-serif; /* Use Inter as primary sans-serif font */
-  /* Global transition for smooth theme changes and interactions */
+  font-family: 'Inter', 'Arial', sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Root variables for theming and layout */
 :root {
   /* Dark theme variables (default) */
-  --bg-primary: #05152a; /* Main background color */
-  --bg-secondary: rgba(8, 28, 56, 0.8); /* Background for cards, panels */
-  --bg-nav: rgba(5, 21, 42, 0.95); /* Navbar background */
-  --bg-footer: rgba(3, 13, 27, 0.9); /* Footer background */
-  --nested-card-bg: rgba(5, 21, 42, 0.8); /* Background for cards within other cards */
+  --bg-primary: #05152a;
+  --bg-secondary: rgba(8, 28, 56, 0.8);
+  --bg-nav: rgba(5, 21, 42, 0.95);
+  --bg-footer: rgba(3, 13, 27, 0.9);
+  --nested-card-bg: rgba(5, 21, 42, 0.8);
   
-  --accent-pink: #ff3b5c; /* Primary accent color (pink) */
-  --neon-blue: #00f0ff; /* Secondary accent color (neon blue) */
+  --accent-pink: #ff3b5c;
+  --neon-blue: #00f0ff;
+  --primary-color: var(--accent-pink); 
+  --primary-hover-color: color-mix(in srgb, var(--primary-color) 80%, black);
+  --danger-color: #e74c3c;
   
-  --text-color: white; /* Primary text color for dark theme */
-  --text-secondary: rgba(255, 255, 255, 0.7); /* Secondary text color (slightly transparent) */
+  --text-color: white;
+  --text-primary: white;
+  --text-secondary: rgba(255, 255, 255, 0.7);
   
-  --border-color: rgba(255, 255, 255, 0.1); /* Default border color */
-  --card-hover-border: rgba(255, 255, 255, 0.2); /* Border color for cards on hover */
+  --border-color: rgba(255, 255, 255, 0.1);
+  --card-hover-border: rgba(255, 255, 255, 0.2);
   
-  --input-bg: rgba(5, 21, 42, 0.8); /* Background for input fields */
-  --placeholder-color: rgba(255, 255, 255, 0.4); /* Placeholder text color */
+  --input-bg: rgba(5, 21, 42, 0.8);
+  --input-border: var(--border-color);
+  --placeholder-color: rgba(255, 255, 255, 0.4);
   
-  --grid-color: rgba(0, 120, 255, 0.1); /* Color for background grid patterns */
-  --bg-pattern: radial-gradient(circle, var(--grid-color) 1px, transparent 1px); /* Background pattern */
+  --grid-color: rgba(0, 120, 255, 0.1);
+  --bg-pattern: radial-gradient(circle, var(--grid-color) 1px, transparent 1px);
 
-  --shadow-color: rgba(0, 0, 0, 0.2); /* Standard shadow color */
-  --card-shadow: 0 10px 30px var(--shadow-color); /* Common shadow for cards */
-  --shadow-glow: rgba(0, 240, 255, 0.15); /* Glow effect shadow */
+  --shadow-color: rgba(0, 0, 0, 0.2);
+  --card-shadow: 0 10px 30px var(--shadow-color);
+  --shadow-glow: rgba(0, 240, 255, 0.15);
 
-  /* Button specific variables */
-  --button-bg: rgba(255, 59, 92, 0.3); /* Default button background (semi-transparent pink) */
-  --button-hover-bg: rgba(255, 59, 92, 0.5); /* Default button background on hover */
-  --button-text-color: var(--accent-pink); /* Default button text color */
-  --button-border-color: var(--accent-pink); /* Default button border color */
+  --button-bg: rgba(255, 59, 92, 0.3);
+  --button-hover-bg: rgba(255, 59, 92, 0.5);
+  --button-text-color: var(--accent-pink);
+  --button-border-color: var(--accent-pink);
 
-  /* Emergency/Alert specific variables */
-  --emergency-bg: rgba(255, 59, 92, 0.1); /* Background for emergency notices (light pink) */
-  --emergency-border: rgba(255, 59, 92, 0.2); /* Border for emergency notices */
-  --emergency-text: #ff3b5c; /* Text color for emergency notices */
+  --emergency-bg: rgba(255, 59, 92, 0.1);
+  --emergency-border: rgba(255, 59, 92, 0.2);
+  --emergency-text: #ff3b5c;
 
-  /* Shared styling elements */
-  --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c); /* Gradient for title underlines */
-  --doctor-avatar-bg: rgba(255, 255, 255, 0.05); /* Background for doctor avatars */
+  --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c);
+  --doctor-avatar-bg: rgba(255, 255, 255, 0.05);
 
-  /* Spacing Variables */
    --spacing-xs: 5px;
    --spacing-sm: 10px;
    --spacing-md: 15px;
    --spacing-lg: 25px;
    --spacing-xl: 40px;
 
-   /* Border Radius */
-   --border-radius: 12px; /* Standard border radius for elements like cards */
+   --border-radius: 12px;
 
-  /* Department Theme Colors (Define all department colors here) */
-  --dept-color-dermatology: #00A99D; /* Teal/Turquoise */
+  --dept-color-dermatology: #00A99D;
   --dept-color-dermatology-rgb: 0, 169, 157;
-
-  --dept-color-cardiology: #E91E63; /* Pink/Magenta (Used by cardio.css) */
+  --dept-color-cardiology: #E91E63;
   --dept-color-cardiology-rgb: 233, 30, 99;
-
-  --dept-color-neurology: #3F51B5; /* Indigo */
+  --dept-color-neurology: #3F51B5;
   --dept-color-neurology-rgb: 63, 81, 181;
-
-  --dept-color-oncology: #FF9800; /* Orange */
+  --dept-color-oncology: #FF9800;
   --dept-color-oncology-rgb: 255, 152, 0;
-
-  --dept-color-pediatrics: #4CAF50; /* Green */
+  --dept-color-pediatrics: #4CAF50;
   --dept-color-pediatrics-rgb: 76, 175, 80;
+
+  --navbar-bg-color: var(--bg-nav);
+  --navbar-hover-bg-color: rgba(255, 255, 255, 0.08);
+  --navbar-hover-text-color: var(--accent-pink);
+  --navbar-submenu-bg: rgba(0,0,0,0.1);
+  --card-bg-color: var(--bg-secondary);
+  --hover-bg-color: rgba(255, 255, 255, 0.05);
+  --secondary-bg-color: var(--nested-card-bg);
+
+  --navbar-dropdown-bg: var(--navbar-bg-color);
+  --navbar-dropdown-border-color: var(--border-color);
+  --navbar-dropdown-text-color: var(--text-primary);
+  --navbar-dropdown-hover-bg: var(--navbar-hover-bg-color);
+  --navbar-dropdown-hover-text-color: var(--navbar-hover-text-color);
 }
 
-/* Light theme variable overrides */
 [data-theme="light"] {
   --bg-primary: #f0f4f8;
   --bg-secondary: #ffffff;
@@ -88,68 +95,76 @@
   --bg-footer: rgba(239, 242, 247, 0.95);
   --nested-card-bg: #f8fafd;
   
-  /* --accent-pink remains the same */
-  --neon-blue: #3182ce; /* Adjusted blue for better visibility on light theme */
+  --neon-blue: #3182ce;
+  --primary-hover-color: color-mix(in srgb, var(--primary-color) 80%, #333);
+  --danger-color: #dc3545;
   
-  --text-color: #05152a; /* Dark text for light theme */
+  --text-color: #05152a;
+  --text-primary: #05152a;
   --text-secondary: rgba(5, 21, 42, 0.7);
   
   --border-color: rgba(5, 21, 42, 0.1);
   --card-hover-border: rgba(0, 0, 0, 0.15);
   
   --input-bg: rgba(240, 244, 248, 0.8);
+  --input-border: #ced4da;
   --placeholder-color: rgba(5, 21, 42, 0.4);
   
   --grid-color: rgba(59, 131, 255, 0.1);
-  /* --bg-pattern updates automatically as --grid-color changes */
 
   --shadow-color: rgba(0, 0, 0, 0.1);
   --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   --shadow-glow: rgba(59, 131, 255, 0.1);
 
-  /* Button specific variables for light theme */
-  --button-bg: rgba(255, 59, 92, 0.15); /* Lighter semi-transparent pink */
+  --button-bg: rgba(255, 59, 92, 0.15);
   --button-hover-bg: rgba(255, 59, 92, 0.3);
-  --button-text-color: var(--accent-pink); /* Pink text for default button */
-  /* --button-border-color remains --accent-pink */
 
-  /* Emergency/Alert specific variables for light theme */
   --emergency-bg: rgba(255, 59, 92, 0.1);
   --emergency-border: rgba(255, 59, 92, 0.2);
-  --emergency-text: #d9304f; /* Darker red for better contrast on light theme */
+  --emergency-text: #d9304f;
   
   --doctor-avatar-bg: rgba(5, 21, 42, 0.05);
+
+  --navbar-bg-color: var(--bg-nav);
+  --navbar-hover-bg-color: #e9ecef;
+  --navbar-hover-text-color: var(--accent-pink);
+  --navbar-submenu-bg: rgba(0,0,0,0.03);
+  --card-bg-color: var(--bg-secondary);
+  --hover-bg-color: #f0f2f5; 
+  --secondary-bg-color: #e9ecef;
+
+  --navbar-dropdown-bg: var(--bg-secondary);
+  --navbar-dropdown-border-color: #dddddd; /* Fallback for light theme */
+  --navbar-dropdown-text-color: var(--text-primary);
+  --navbar-dropdown-hover-bg: var(--navbar-hover-bg-color);
+  --navbar-dropdown-hover-text-color: var(--navbar-hover-text-color);
 }
 
-/* Smooth scrolling behavior */
 html { scroll-behavior: smooth; }
 
-/* Body base styles */
 body {
   background-color: var(--bg-primary);
   color: var(--text-color);
   line-height: 1.6;
-  min-height: 100vh; /* Ensure body takes at least full viewport height */
-  background-image: var(--bg-pattern); /* Apply grid pattern */
-  background-size: 30px 30px; /* Size of the grid pattern */
-  padding-top: 70px; /* Fixed navbar height, content starts below navbar */
-  display: flex; /* Allow footer to stick to bottom */
-  flex-direction: column; /* Stack content and footer vertically */
+  min-height: 100vh;
+  background-image: var(--bg-pattern);
+  background-size: 30px 30px;
+  padding-top: 70px; 
+  display: flex;
+  flex-direction: column;
 }
 
-/* General container for main page content */
 .main-container {
-  flex-grow: 1; /* Allows container to expand and push footer down */
-  max-width: 1400px; /* Maximum width of content */
-  margin: 0 auto; /* Center content on the page */
-  padding: var(--spacing-lg) 5%; /* Padding around content (top/bottom by spacing-lg, left/right by 5%) */
-  width: 100%; /* Ensure it takes full available width up to max-width */
+  flex-grow: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) 5%;
+  width: 100%;
 }
-/* --- EXTRACTED AND ENHANCED NAVBAR & THEME TOGGLE STYLES --- */
 
 /* --- Navbar --- */
 .navbar {
-  background-color: var(--bg-nav); /* Changed from --bg-secondary to --bg-nav for clarity from base.css */
+  background-color: var(--navbar-bg-color);
   padding: 12px 5%;
   display: flex;
   justify-content: space-between;
@@ -158,121 +173,160 @@ body {
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: 1030;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px); /* From base.css */
-  /* Relies on global * transition for background-color, box-shadow */
-  /* Or add explicitly: transition: background-color 0.3s ease, box-shadow 0.3s ease; */
+  backdrop-filter: blur(8px);
 }
-
 .navbar:hover {
-  background-color: var(--bg-nav); /* Can be same or slightly different if desired */
-  /* Enhanced shadow from neuro.css, using a variable consistent with base.css if possible */
-  /* Ensure --neon-blue-rgb is defined, base.css has shadow-glow using (0, 240, 255, 0.15) */
-  /* Using --shadow-glow directly might be an option if its RGB components match expectations */
-  box-shadow: 0 4px 20px var(--shadow-glow); /* Using --shadow-glow from base.css */
+  box-shadow: 0 4px 20px var(--shadow-glow);
 }
-
 .nav-logo {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
   text-decoration: none;
 }
-
 .nav-logo h1, 
 .nav-logo span {
   font-size: 20px;
   font-weight: 600;
   color: var(--text-color);
   letter-spacing: 1px;
-  transition: color 0.3s ease; /* Added for smooth text color change */
+  transition: color 0.3s ease;
 }
-
 .nav-logo:hover h1,
 .nav-logo:hover span {
-  color: var(--accent-pink); /* Or var(--neon-blue) for a different highlight */
+  color: var(--accent-pink);
 }
-
 .nav-logo svg {
   width: 28px;
   height: 28px;
-  stroke: var(--accent-pink); /* Default logo icon color from base.css */
-  fill: none; /* Assuming stroke-based icon, adjust if it's fill-based */
-  transition: stroke 0.3s ease, filter 0.3s ease; /* Smooth transition for stroke and filter */
+  stroke: var(--accent-pink);
+  fill: none;
+  transition: stroke 0.3s ease, filter 0.3s ease;
 }
-
 .nav-logo:hover svg {
-  stroke: var(--neon-blue); /* Change stroke color on hover */
-  /* Glow effect from neuro.css concept, using neon-blue */
+  stroke: var(--neon-blue);
   filter: drop-shadow(0 0 4px var(--neon-blue));
 }
-
 .nav-links {
   display: flex;
+  align-items: center;
   gap: var(--spacing-lg);
   list-style: none;
 }
 
-.nav-links a, 
-.navbar ul li a, /* Retaining for broader compatibility if ul > li structure is used elsewhere */
-.navbar ul li button { /* For button-styled links */
+.nav-links a,
+.nav-links .dropbtn {
   color: var(--text-color);
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
+  font-family: inherit;
   position: relative;
-  padding: var(--spacing-xs) var(--spacing-sm); /* Adjusted padding for hover bg */
+  padding: var(--spacing-xs) var(--spacing-sm);
   background: none;
   border: none;
-  border-radius: 4px; /* Added for background hover */
+  border-radius: 4px;
   cursor: pointer;
-  /* Transitions for color, background-color, transform, box-shadow */
-  /* Global * transition covers color. Adding others here. */
   transition: color 0.3s ease, background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  display: flex; 
+  align-items: center;
+  text-align: left;
 }
-
 .nav-links a:after, 
-.navbar ul li a:after {
+.nav-links .dropbtn:after {
   content: '';
   position: absolute;
   width: 0;
   height: 2px;
-  bottom: -2px; /* Adjusted to not overlap padding */
-  left: 50%; /* Start animation from center */
-  transform: translateX(-50%); /* Center the underline */
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
   background: var(--section-title-gradient);
-  transition: width 0.3s ease; /* Smooth animation for underline */
+  transition: width 0.3s ease;
 }
-
 .nav-links a:hover, 
-.navbar ul li a:hover, 
-.navbar ul li button:hover {
-  color: var(--accent-pink);
-  /* neuro.css enhancements for hover */
-  background-color: var(--nav-hover-bg); /* Define --nav-hover-bg, e.g., rgba(255,255,255,0.05) or from neuro.css */
+.nav-links .dropbtn:hover {
+  color: var(--navbar-hover-text-color);
+  background-color: var(--navbar-hover-bg-color); 
   transform: translateY(-2px);
-  /* Using --shadow-glow from base.css for consistency */
   box-shadow: 0 4px 8px var(--shadow-glow); 
 }
-
 .nav-links a:hover:after, 
-.navbar ul li a:hover:after {
-  width: calc(100% - var(--spacing-sm) * 2); /* Underline respects padding */
+.nav-links .dropbtn:hover:after {
+  width: calc(100% - var(--spacing-sm) * 2);
 }
-
-.nav-links a.active {
+.nav-links a.active,
+.nav-links .dropbtn.active {
   color: var(--accent-pink);
-  /* Optionally, make active link background persistent */
-  /* background-color: var(--nav-hover-bg); */
+}
+.nav-links a.active::after,
+.nav-links .dropbtn.active::after {
+  width: calc(100% - var(--spacing-sm) * 2);
 }
 
-.nav-links a.active::after {
-  width: calc(100% - var(--spacing-sm) * 2); /* Underline respects padding */
+/* --- Navbar Dropdown Styles (Click-Only) --- */
+.navbar .nav-links .dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.navbar .nav-links .dropdown .dropdown-content {
+  display: none; /* Hidden by default, JS will toggle .is-open */
+  position: absolute;
+  top: 100%; 
+  left: 0;
+  background-color: var(--navbar-dropdown-bg);
+  min-width: 230px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1031;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+  padding: var(--spacing-sm) 0;
+  margin-top: 5px; 
+  border: 1px solid var(--navbar-dropdown-border-color);
+  border-top: none;
+}
+
+.navbar .nav-links .dropdown .dropdown-content.is-open {
+  display: block;
+}
+
+.navbar .nav-links .dropdown .dropdown-content a {
+  color: var(--navbar-dropdown-text-color);
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-decoration: none;
+  display: block;
+  text-align: left;
+  font-size: 0.95em;
+  font-weight: normal;
+  white-space: nowrap;
+  background-color: transparent; 
+  transform: none;
+  box-shadow: none;
+}
+.navbar .nav-links .dropdown .dropdown-content a::after {
+  display: none;
+}
+
+.navbar .nav-links .dropdown .dropdown-content a:hover {
+  background-color: var(--navbar-dropdown-hover-bg);
+  color: var(--navbar-dropdown-hover-text-color);
+  transform: none; 
+  box-shadow: none;
+}
+
+.navbar .nav-links .dropdown .dropbtn .fa-caret-down {
+  font-size: 0.8em;
+  margin-left: var(--spacing-xs);
+  transition: transform 0.2s ease-in-out;
+}
+.navbar .nav-links .dropdown .dropbtn.menu-is-open .fa-caret-down {
+   transform: rotate(180deg);
 }
 
 
-/* --- Theme Toggle Button --- */
+/* Theme Toggle Button */
 .theme-toggle {
   background: var(--input-bg);
   border: 1px solid var(--border-color);
@@ -286,424 +340,310 @@ body {
   border-radius: 50%;
   padding: var(--spacing-xs);
   margin-left: var(--spacing-md);
-  /* Global * transition covers background-color. Adding transform. */
   transition: background-color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
 }
-
 .theme-toggle:hover {
-  /* background-color: var(--card-bg); base.css has this, but --input-bg slightly darker is fine too */
-  background-color: color-mix(in srgb, var(--input-bg) 90%, var(--text-color) 5%); /* Slightly interactive bg */
+  background-color: color-mix(in srgb, var(--input-bg) 90%, var(--text-color) 5%);
   border-color: var(--neon-blue);
-  transform: rotate(30deg); /* From neuro.css */
+  transform: rotate(30deg);
 }
-
 .theme-toggle svg {
   width: 20px;
   height: 20px;
-  fill: var(--text-color); /* Use --text-color, was --text-primary in neuro which is same for dark */
+  fill: var(--text-color);
   transition: fill 0.3s ease;
 }
-
 .theme-toggle:hover svg {
-  fill: var(--neon-blue); /* Was --text-highlight in neuro.css, using --neon-blue from base.css for consistency */
+  fill: var(--neon-blue);
 }
-
-.sun-icon, .moon-icon {
-  width: 20px;
-  height: 20px;
-  /* Transition for display/opacity if you were to fade them in/out instead of display:none/block */
-  /* For now, display toggling is instant, which is fine */
-}
-
+.sun-icon, .moon-icon { width: 20px; height: 20px; }
 [data-theme="dark"] .sun-icon { display: block; }
 [data-theme="dark"] .moon-icon { display: none; }
 [data-theme="light"] .sun-icon { display: none; }
 [data-theme="light"] .moon-icon { display: block; }
 
 
-/* --- Mobile Menu (Hamburger Menu) --- */
+/* Mobile Menu */
 .mobile-menu-btn {
-  display: none; /* Hidden on larger screens by default */
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-color);
-  padding: var(--spacing-xs);
-  margin-left: var(--spacing-sm);
-  transition: color 0.3s ease; /* Smooth color transition for the button itself */
+  display: none;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-color); padding: var(--spacing-xs); margin-left: var(--spacing-sm);
+  transition: color 0.3s ease;
 }
-
-.mobile-menu-btn:hover {
-  color: var(--accent-pink);
-}
-
-.mobile-menu-btn svg {
-  width: 24px;
-  height: 24px;
-  stroke: currentColor; /* Inherit color from button, allows hover effect */
-}
-
+.mobile-menu-btn:hover { color: var(--accent-pink); }
+.mobile-menu-btn svg { width: 24px; height: 24px; stroke: currentColor; }
 .mobile-menu {
-  position: fixed;
-  top: 70px; /* Matches navbar height from base.css assumption */
-  left: -100%; /* Initially off-screen */
-  width: 80%;
-  max-width: 300px;
-  height: calc(100% - 70px);
-  background-color: var(--bg-secondary); /* Use a slightly more opaque bg for mobile menu if needed */
-  padding: var(--spacing-lg);
-  border-right: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-  z-index: 999;
-  box-shadow: 5px 0 15px var(--shadow-color); /* --shadow-color from base.css */
-  transition: left 0.4s ease-in-out; /* Smooth slide-in/out animation */
+  position: fixed; top: 70px; left: -100%;
+  width: 80%; max-width: 300px; height: calc(100% - 70px);
+  background-color: var(--bg-secondary);
+  padding: var(--spacing-lg); border-right: 1px solid var(--border-color);
+  display: flex; flex-direction: column; gap: var(--spacing-sm);
+  z-index: 1020;
+  box-shadow: 5px 0 15px var(--shadow-color);
+  transition: left 0.4s ease-in-out;
 }
-
-.mobile-menu.active {
-  left: 0;
-}
-
+.mobile-menu.active { left: 0; }
 .mobile-menu a {
-  color: var(--text-color);
-  text-decoration: none;
-  font-size: 16px;
+  color: var(--text-color); text-decoration: none; font-size: 16px;
   padding: var(--spacing-md) var(--spacing-xs);
   border-bottom: 1px solid var(--border-color);
-  text-align: left;
-  border-radius: 4px; /* For subtle hover */
+  text-align: left; border-radius: 4px;
   transition: color 0.3s ease, background-color 0.3s ease;
 }
-.mobile-menu a:hover {
-  color: var(--accent-pink);
-  background-color: rgba(255,255,255,0.03); /* Subtle hover for mobile links */
+.mobile-menu a:hover { color: var(--accent-pink); background-color: rgba(255,255,255,0.03); }
+.mobile-menu a:last-child { border-bottom: none; }
+.mobile-menu a.active { color: var(--accent-pink); font-weight: 600; }
+.mobile-menu hr { border: none; border-top: 1px solid var(--border-color); margin: var(--spacing-sm) 0; }
+
+.mobile-menu .dropdown-mobile-header {
+  /* Optional: specific styles for the "Departments (All)" header in mobile */
+}
+.mobile-menu .dropdown-mobile-item {
+  padding-left: calc(var(--spacing-xs) + 20px) !important;
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+.mobile-menu .dropdown-mobile-item.active {
+  color: var(--accent-pink) !important;
 }
 
-.mobile-menu a:last-child {
-  border-bottom: none;
-}
 
-.mobile-menu a.active {
-  color: var(--accent-pink);
-  font-weight: 600;
-}
-
-.mobile-menu hr {
-  border: none;
-  border-top: 1px solid var(--border-color);
-  margin: var(--spacing-sm) 0;
-}
-
-/* Responsive Adjustments from base.css for Navbar/Mobile Menu visibility */
-@media (max-width: 992px) {
-  .nav-links { display: none; }
-  .mobile-menu-btn { display: block; }
-  .navbar { padding: 12px var(--spacing-lg); } /* Keep vertical padding, adjust horizontal */
-}
-/* --- Footer --- */
+/* Footer */
 .site-footer {
   background-color: var(--bg-footer);
   padding: var(--spacing-xl) 5%;
-  margin-top: auto; /* Pushes footer to bottom if content is short */
+  margin-top: auto;
   border-top: 1px solid var(--border-color);
   text-align: center;
   color: var(--text-secondary);
   font-size: 14px;
 }
-.footer-content {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-.footer-content h2 { /* Optional heading in footer */
-  font-size: 24px;
-  margin-bottom: var(--spacing-md);
-  color: var(--text-color);
-}
+.footer-content { max-width: 1200px; margin: 0 auto; }
+.footer-content h2 { font-size: 24px; margin-bottom: var(--spacing-md); color: var(--text-color); }
 
-/* --- Common Page Elements --- */
-/* Style for main page titles (e.g., "Cardiology Department") */
+/* Common Page Elements */
 .page-title {
-  text-align: center;
-  margin-bottom: var(--spacing-xl);
-  font-size: 2.5em; /* Large font size */
-  color: var(--text-color);
-  font-weight: 600;
-  position: relative;
-  padding-bottom: var(--spacing-md);
+  text-align: center; margin-bottom: var(--spacing-xl); font-size: 2.5em;
+  color: var(--text-color); font-weight: 600; position: relative; padding-bottom: var(--spacing-md);
 }
-.page-title::after { /* Decorative underline for page titles */
- content: '';
- display: block;
- width: 70px;
- height: 3px;
- background: var(--section-title-gradient); /* Use consistent gradient */
- margin: var(--spacing-md) auto 0;
- border-radius: 2px;
+.page-title::after {
+ content: ''; display: block; width: 70px; height: 3px;
+ background: var(--section-title-gradient); margin: var(--spacing-md) auto 0; border-radius: 2px;
 }
-
-/* Style for titles of sections within a page (e.g., "Common Diseases") */
 .section-title {
-  font-size: 2em;
-  margin-bottom: var(--spacing-lg);
-  text-align: center;
-  position: relative;
-  color: var(--text-color);
-  font-weight: 600;
-  padding-bottom: var(--spacing-sm);
+  font-size: 2em; margin-bottom: var(--spacing-lg); text-align: center; position: relative;
+  color: var(--text-color); font-weight: 600; padding-bottom: var(--spacing-sm);
 }
-.section-title::after { /* Decorative underline for section titles */
-  content: '';
-  display: block;
-  width: 60px;
-  height: 3px;
-  background: var(--section-title-gradient);
-  margin: var(--spacing-sm) auto var(--spacing-lg); /* Adjusted margin */
+.section-title::after {
+  content: ''; display: block; width: 60px; height: 3px;
+  background: var(--section-title-gradient); margin: var(--spacing-sm) auto var(--spacing-lg);
   border-radius: 2px;
 }
 
-/* --- Generic Card Style --- */
+/* Generic Card Style */
 .card {
-  background-color: var(--bg-secondary); /* Use secondary background for cards */
-  border-radius: var(--border-radius); /* Consistent rounded corners */
-  overflow: hidden; /* Clip content that might overflow rounded corners */
-  border: 1px solid var(--border-color); /* Subtle border */
-  padding: var(--spacing-lg); /* Padding inside the card */
-  box-shadow: var(--card-shadow); /* Consistent shadow for depth */
-  transition: all 0.3s ease; /* Smooth transitions for hover effects */
+  background-color: var(--bg-secondary); border-radius: var(--border-radius);
+  overflow: hidden; border: 1px solid var(--border-color);
+  padding: var(--spacing-lg); box-shadow: var(--card-shadow);
+  transition: all 0.3s ease;
 }
 .card:hover {
-  transform: translateY(-5px); /* Slight lift effect on hover */
-  box-shadow: 0 10px 25px var(--shadow-glow); /* Enhanced shadow/glow on hover */
-  border-color: var(--card-hover-border); /* Change border color on hover */
+  transform: translateY(-5px); box-shadow: 0 10px 25px var(--shadow-glow);
+  border-color: var(--card-hover-border);
 }
-/* Light theme specific card hover, if different glow is needed */
 [data-theme="light"] .card:hover {
-  box-shadow: 0 10px 25px rgba(var(--neon-blue-rgb, 49, 130, 206), 0.15); /* Using neon-blue for glow in light */
+  box-shadow: 0 10px 25px rgba(var(--neon-blue-rgb, 49, 130, 206), 0.15);
 }
 
-
-/* --- Basic Button Styles --- */
-/* Targets .button class, <button> elements, and submit inputs */
+/* Basic Button Styles */
 .button, button, input[type="submit"] {
-    display: inline-block; /* Allows padding and margin */
-    padding: var(--spacing-sm) var(--spacing-lg); /* Default padding (10px 20px) */
-    border-radius: 5px; /* Slightly rounded corners */
-    font-size: 1rem; /* Standard font size */
-    font-weight: 500; /* Medium font weight */
-    text-align: center;
-    text-decoration: none; /* Remove underline from <a> styled as buttons */
-    cursor: pointer;
-    border: 1px solid var(--button-border-color); /* Use variable for border color */
-    background-color: var(--button-bg); /* Use variable for background */
-    color: var(--button-text-color); /* Use variable for text color */
-    transition: all 0.3s ease; /* Smooth transitions for hover effects */
+    display: inline-block; padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: 5px; font-size: 1rem; font-weight: 500;
+    text-align: center; text-decoration: none; cursor: pointer;
+    border: 1px solid var(--button-border-color);
+    background-color: var(--button-bg); color: var(--button-text-color);
+    transition: all 0.3s ease;
 }
 .button:hover, button:hover, input[type="submit"]:hover {
-    background-color: var(--button-hover-bg); /* Use variable for hover background */
-    color: white; /* Typically white text on darker hover background */
-    border-color: var(--button-hover-bg); /* Match border with hover background */
-    transform: translateY(-2px); /* Slight lift effect */
-    box-shadow: 0 4px 10px rgba(255, 59, 92, 0.2); /* Shadow for depth */
+    background-color: var(--button-hover-bg); color: white;
+    border-color: var(--button-hover-bg); transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(255, 59, 92, 0.2);
 }
-
-/* Light theme adjustments for default button */
 [data-theme="light"] .button, 
 [data-theme="light"] button, 
 [data-theme="light"] input[type="submit"] {
-    background-color: var(--button-bg); /* Uses light theme --button-bg */
-    color: var(--button-text-color); /* Uses light theme --button-text-color (still pink) */
-    border-color: var(--button-border-color); /* Uses light theme --button-border-color (still pink) */
+    background-color: var(--button-bg); color: var(--button-text-color);
+    border-color: var(--button-border-color);
 }
 [data-theme="light"] .button:hover, 
 [data-theme="light"] button:hover, 
 [data-theme="light"] input[type="submit"]:hover {
-    background-color: var(--button-hover-bg);
-    color: white; /* White text on solid pink hover */
+    background-color: var(--button-hover-bg); color: white;
     border-color: var(--button-hover-bg);
 }
 
+/* --- Styles for Chat Widget (Keep as is if not related to the problem) --- */
+#chat-widget-container {
+    position: fixed; bottom: 20px; right: 20px; z-index: 1050;
+}
+#chat-float-button {
+    background-color: var(--primary-color); color: white; border: none;
+    border-radius: 50%; width: 60px; height: 60px; font-size: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+#chat-float-button:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+.unread-badge {
+    position: absolute; top: -5px; right: -5px; background-color: var(--danger-color);
+    color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px;
+    font-weight: bold; min-width: 20px; height: 20px; display: flex;
+    align-items: center; justify-content: center; box-sizing: border-box;
+}
+#chat-overlay {
+    position: fixed; bottom: 90px; right: 20px; width: 370px;
+    max-height: calc(100vh - 110px); min-height: 300px;
+    background-color: var(--card-bg-color); border: 1px solid var(--border-color);
+    border-radius: 10px; box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    z-index: 1051; display: flex; flex-direction: column;
+    transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out, visibility 0s linear 0.25s; 
+}
+#chat-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    transition-delay: 0s; 
+}
+.chat-overlay-hidden {
+    opacity: 0;
+    transform: translateY(15px) scale(0.98);
+    pointer-events: none; 
+    visibility: hidden; 
+}
+.chat-overlay-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 18px; background-color: var(--navbar-bg-color);
+    border-bottom: 1px solid var(--border-color);
+    border-top-left-radius: 10px; border-top-right-radius: 10px;
+}
+.chat-overlay-header h3 { margin: 0; font-size: 1.15em; color: var(--text-primary); }
+#chat-overlay-close, #back-to-chat-list {
+    background: none; border: none; font-size: 22px; cursor: pointer;
+    color: var(--text-secondary); padding: 5px;
+}
+#chat-overlay-close:hover, #back-to-chat-list:hover { color: var(--text-primary); }
+#back-to-chat-list { font-size: 1.1em; margin-right: 10px; }
+#chat-overlay-body { flex-grow: 1; overflow-y: auto; padding: 0; }
+.loading-placeholder { text-align: center; padding: 30px 15px; color: var(--text-secondary); font-style: italic;}
 
-/* --- Button Variants --- */
-/* Primary Button (Solid Accent Color) */
-.button-primary {
-  background-color: var(--accent-pink);
-  color: white;
-  border-color: var(--accent-pink);
+#chat-list-view .chat-list-item {
+    display: flex; align-items: center; padding: 12px 18px;
+    border-bottom: 1px solid var(--border-color); cursor: pointer;
+    transition: background-color 0.2s;
 }
-.button-primary:hover {
-  background-color: color-mix(in srgb, var(--accent-pink) 85%, black); /* Darken pink on hover */
-  border-color: color-mix(in srgb, var(--accent-pink) 85%, black);
-  color: white;
+#chat-list-view .chat-list-item:last-child { border-bottom: none; }
+#chat-list-view .chat-list-item:hover { background-color: var(--hover-bg-color); }
+.chat-list-item-content { flex-grow: 1; overflow: hidden; }
+.chat-list-item .chat-subject { font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 2px; }
+.chat-list-item .chat-participant { font-size: 0.9em; color: var(--text-secondary); display: block; }
+.chat-list-item .last-message-snippet {
+    font-size: 0.85em; color: var(--text-secondary); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 90%; display: block; margin-top: 4px;
 }
-[data-theme="light"] .button-primary {
-  /* Light theme primary button can be the same or adjusted if needed */
-  background-color: var(--accent-pink);
-  color: white;
-  border-color: var(--accent-pink);
-}
-[data-theme="light"] .button-primary:hover {
-  background-color: color-mix(in srgb, var(--accent-pink) 85%, black);
-  border-color: color-mix(in srgb, var(--accent-pink) 85%, black);
-}
-
-/* Emergency Button (Solid Accent Color, distinct from default button) */
-.button-emergency {
-  background-color: var(--accent-pink); /* Solid pink */
-  color: white;
-  border: 1px solid var(--accent-pink);
-}
-.button-emergency:hover {
-   background-color: color-mix(in srgb, var(--accent-pink) 80%, black); /* Darker pink */
-   border-color: color-mix(in srgb, var(--accent-pink) 80%, black);
-   color: white;
-}
-[data-theme="light"] .button-emergency {
-  background-color: var(--accent-pink); /* Pink in light theme */
-  color: white;
-  border: 1px solid var(--accent-pink);
-}
-[data-theme="light"] .button-emergency:hover {
-  background-color: #e31b3d; /* Specific darker red for light theme emergency hover */
-  border-color: #e31b3d;
-}
-
-/* Secondary Button (Subtle, often for less critical actions) */
-.button-secondary {
-  background-color: transparent;
-  color: var(--text-secondary);
-  border-color: var(--border-color);
-}
-.button-secondary:hover {
-  background-color: var(--grid-color); /* Use grid color for subtle background */
-  color: var(--text-color);
-  border-color: var(--text-secondary);
-}
-
-/* Small and Extra Small Button Sizes */
-.button-small { padding: calc(var(--spacing-sm) * 0.6) calc(var(--spacing-lg) * 0.6); font-size: 0.9em; }
-.button-xsmall { padding: calc(var(--spacing-sm) * 0.4) calc(var(--spacing-lg) * 0.4); font-size: 0.8em; }
-
-
-/* --- Generic Content Section (alternative to .card if simpler box needed) --- */
-.content-section {
-    background-color: var(--bg-secondary);
-    padding: var(--spacing-lg) var(--spacing-xl); /* 25px 30px (adjust based on vars) */
-    border-radius: var(--border-radius);
-    margin-bottom: var(--spacing-xl); /* 30px (adjust based on vars) */
-    border: 1px solid var(--border-color);
-    box-shadow: var(--card-shadow);
-}
-
-/* --- Search Bar (Generic styling) --- */
-.search-bar {
-  background-color: rgba(255, 255, 255, 0.1); /* Default for dark theme */
-  border-radius: 20px; /* Rounded edges */
-  padding: var(--spacing-xs) var(--spacing-md); /* 8px 15px */
-  display: flex;
-  align-items: center;
-  border: 1px solid var(--border-color);
-  max-width: 250px; /* Or adjust as needed */
-}
-.search-bar input {
-  background: transparent;
-  border: none;
-  color: var(--text-color); /* Primary text color */
-  outline: none;
-  width: 100%; /* Take available width */
-  font-size: 14px;
-  padding-left: var(--spacing-xs);
-}
-.search-bar input::placeholder {
-  color: var(--placeholder-color); /* Use placeholder variable */
-}
-.search-bar .search-icon { /* Assumes an icon element with this class */
-  color: var(--text-secondary);
-  margin-right: var(--spacing-xs); /* 5px */
-  font-size: 1.1em; /* Adjust icon size if needed */
-}
-/* Light theme for search bar */
-[data-theme="light"] .search-bar {
-  background-color: rgba(0, 0, 0, 0.05); /* Darker, subtle background for light theme */
-}
-[data-theme="light"] .search-bar input {
-  color: var(--text-color); /* Uses light theme's primary text color */
-}
-[data-theme="light"] .search-bar input::placeholder {
-  color: var(--placeholder-color); /* Uses light theme's placeholder color */
-}
-[data-theme="light"] .search-bar .search-icon {
-  color: var(--text-secondary); /* Uses light theme's secondary text color */
+.chat-list-item .chat-timestamp { font-size: 0.75em; color: #999; margin-left: auto; white-space: nowrap; padding-left: 10px;}
+.chat-list-item.unread .chat-subject, .chat-list-item.unread .chat-participant { font-weight: bold; }
+.chat-list-item .unread-indicator {
+    width: 10px; height: 10px; background-color: var(--primary-color);
+    border-radius: 50%; margin-right: 10px; flex-shrink: 0;
 }
 
-/* --- Notice / Alert Blocks --- */
-/* Emergency Notice Block (e.g., for warnings or critical info) */
-.notice-emergency {
-  margin-top: var(--spacing-lg); /* 1.5rem equivalent */
-  padding: var(--spacing-md) var(--spacing-lg); /* 1rem 1.25rem equivalent */
-  border: 1px solid var(--emergency-border);
-  background-color: var(--emergency-bg);
-  border-radius: var(--border-radius);
-  color: var(--emergency-text); /* Text color inherits from variable */
-  font-size: 0.95rem;
+#chat-conversation-view { display: flex; flex-direction: column; height: 100%; }
+.conversation-header {
+    display: flex; align-items: center; padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color); background-color: var(--navbar-bg-color);
 }
-.notice-emergency h4 { /* Heading within the notice */
-  color: var(--emergency-text); /* Ensure heading also uses emergency text color */
-  margin-top: 0;
-  margin-bottom: var(--spacing-sm); /* 0.75rem equivalent */
-  font-size: 1.1em;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  /* Override general h4 styles if they exist, like underlines */
-  border-bottom: none; 
-  padding-bottom: 0;
+#conversation-with-name { font-weight: 600; color: var(--text-primary); }
+#messages-container { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;}
+.message-bubble {
+    max-width: 80%; padding: 10px 15px; border-radius: 18px; line-height: 1.45;
+    word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
-.notice-emergency h4::after { display: none; } /* Explicitly remove underlines if any base style adds them */
-.notice-emergency h4 i { margin-right: var(--spacing-xs); } /* Icon spacing */
-.notice-emergency ul, .notice-emergency p {
-  margin-bottom: 0;
-  color: var(--emergency-text); /* Ensure lists and paragraphs also use the color */
+.message-bubble.sent {
+    background-color: var(--primary-color); color: white; align-self: flex-end; border-bottom-right-radius: 6px;
 }
-.notice-emergency ul li::before { /* Bullet point color for lists inside */
-  color: var(--emergency-text);
-  /* Add other ::before styling if needed (e.g., content, position) */
+.message-bubble.received {
+    background-color: var(--secondary-bg-color); color: var(--text-primary); align-self: flex-start; border-bottom-left-radius: 6px;
+}
+.message-bubble .sender-name { font-size: 0.8em; font-weight: bold; margin-bottom: 3px; display:block; }
+.message-bubble .message-text { white-space: pre-wrap; }
+.message-bubble .timestamp { font-size: 0.7em; display: block; text-align: right; margin-top: 5px; opacity: 0.6; }
+.message-attachment { margin-top: 5px; padding: 5px 0; border-top: 1px dashed rgba(0,0,0,0.1); }
+.message-attachment a {
+    color: inherit; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center;
+}
+.message-attachment a i { margin-right: 5px; }
+.message-attachment a:hover { text-decoration: underline; }
+.message-bubble.sent .message-attachment a { color: white; }
+.message-bubble.received .message-attachment a { color: var(--primary-color); }
+
+#message-input-area {
+    display: flex; padding: 12px 15px; border-top: 1px solid var(--border-color); align-items: center;
+    background-color: var(--card-bg-color); border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
+}
+#chat-message-input {
+    flex-grow: 1; padding: 10px 15px; border: 1px solid var(--input-border); border-radius: 20px;
+    resize: none; min-height: 22px; max-height: 100px; overflow-y: auto; font-size: 0.95em;
+    line-height: 1.4;
+}
+#send-chat-message-btn, .attachment-label-btn {
+    background-color: transparent; color: var(--primary-color); border: none;
+    padding: 8px; margin-left: 8px; cursor: pointer; font-size: 1.3em; 
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s;
+}
+#send-chat-message-btn:hover, .attachment-label-btn:hover { color: var(--primary-hover-color); }
+#chat-attachment-preview-area { 
+    padding: 5px 15px; font-size:0.8em; color: var(--text-secondary);
+    display: none; align-items: center; min-height: 20px; 
+    background-color: var(--card-bg-color); 
+}
+#chat-attachment-filename {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: calc(100% - 30px); 
+}
+#chat-remove-attachment-btn {
+    display:none; margin-left: 5px; background:none; border:none;
+    color:var(--danger-color); cursor:pointer; font-size: 1.1em;
+    padding: 0 5px;
 }
 
 
-/* --- Status Badge Styles (Example, can be expanded) --- */
-.status-badge {
-  display: inline-block;
-  padding: .3em .6em;
-  font-size: .8em;
-  font-weight: 600;
-  line-height: 1;
-  text-align: center;
-  white-space: nowrap;
-  vertical-align: baseline;
-  border-radius: .375rem; /* Bootstrap-like radius */
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+  .nav-links { display: none; }
+  .mobile-menu-btn { display: block; }
+  .navbar { padding: 12px var(--spacing-lg); }
 }
-.status-success { color: #fff; background-color: #198754; } /* Green */
-.status-warning { color: #000; background-color: #ffc107; } /* Yellow */
-.status-danger { color: #fff; background-color: #dc3545; } /* Red */
-.status-info { color: #000; background-color: #0dcaf0; } /* Cyan */
-.status-secondary { color: #fff; background-color: #6c757d; } /* Grey */
-
-
-/* --- Responsive Adjustments --- */
-@media (max-width: 992px) { /* Tablet and smaller */
-    .nav-links { display: none; } /* Hide desktop nav links */
-    .mobile-menu-btn { display: block; } /* Show hamburger menu button */
-    .navbar { padding: 0 var(--spacing-lg); } /* Adjust navbar padding */
+@media (max-width: 768px) {
+  .main-container { padding: var(--spacing-lg); }
+  .page-title { font-size: 2em; }
+  .section-title { font-size: 1.6em; }
+  .button, button, input[type="submit"] {
+      padding: var(--spacing-sm) var(--spacing-md);
+      font-size: 0.95rem;
+  }
+  #chat-overlay {
+    width: calc(100% - 20px);
+    right: 10px;
+    bottom: 70px;
+    max-height: calc(100vh - 90px);
+  }
+  #chat-float-button {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    bottom: 15px;
+    right: 15px;
+  }
 }
-@media (max-width: 768px) { /* Mobile */
-    .main-container { padding: var(--spacing-lg); } /* Reduce padding for smaller screens */
-    .page-title { font-size: 2em; } /* Smaller page titles */
-    .section-title { font-size: 1.6em; } /* Smaller section titles */
-    .button, button, input[type="submit"] {
-        padding: var(--spacing-sm) var(--spacing-md); /* Adjust button padding */
-        font-size: 0.95rem;
-    }
-}
-
-/* --- END OF FILE base.css --- */

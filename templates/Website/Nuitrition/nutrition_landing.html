@@ -1,0 +1,101 @@
+{% extends "Nuitrition/base_with_bot.html" %}
+
+{% block title %}Nutrition - Healthy Inside Fresh Outside{% endblock %}
+
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='Website/nutrition.css') }}">
+  {# BMR specific styles are now IN nutrition.css, so the inline style block is removed #}
+{% endblock %}
+
+{% block content %}
+<script>
+    document.body.classList.add('nutrition-page-body');
+    document.body.dataset.pageType = 'nutrition'; // For bot visibility
+</script>
+
+<!-- Hero Section -->
+<section class="hero" id="home">
+    <div class="container">
+        <div class="hero-content">
+            <div class="hero-image">
+                <img src="{{ url_for('static', filename='images/5036deb7-bc1b-4c02-9d8b-913919468cb3.jpeg') }}" alt="Woman eating healthy food">
+                <div class="circle-overlay">
+                    <div class="subtitle">Nutrition</div>
+                    <h1>Healthy Inside Fresh Outside</h1>
+                    <p>Nutrition Services is dedicated to bringing you and your family healthy, delicious food options wherever you're. Enriched nutrition is one of the keys to a healthier life and we're passionate about helping you achieve that goal. We believe that proper nutrition is the foundation of overall wellness, helping to boost immunity, increase energy levels, and enhance mental clarity.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Nutrition Advice Section -->
+<section class="section">
+    <div class="container">
+        <div class="two-column">
+            <div class="column">
+                <h2 class="section-title">We advise you to prevent disease with nutrition</h2>
+                
+                <div class="cards-container">
+                    <div class="card">
+                        <h3>BMR Calculator</h3>
+                        <p>Discover your Basal Metabolic Rate to understand how many calories your body needs at rest. It will help you to determine your exact energy requirements.</p>
+                        {# Updated link to the new BMR calculator page #}
+                        <a href="{{ url_for('nutrition_bp.bmr_calculator_page') }}" class="view-more-btn">Calculate Now</a>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Diet Plans</h3>
+                        <p>Explore our customized diet plans designed by nutrition experts to meet your unique health goals, whether it's weight loss, muscle gain, or managing health conditions.</p>
+                        <a href="{{ url_for('nutrition_bp.list_diet_plans') }}" class="view-more-btn">View More</a>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Food Search</h3>
+                        <p>Access our comprehensive database of thousands of foods to learn about their nutritional values, health benefits, and how they can fit into your personalized diet plan.</p>
+                        <a href="{{ url_for('nutrition_bp.food_search_page') }}" class="view-more-btn">Search Foods</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <img src="{{ url_for('static', filename='images/The Smoothie Journey Begins Now.jpeg') }}" alt="Woman with green smoothie">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Feature Section (previously Green Section) -->
+<section class="green-section">
+    <div class="container">
+        <div class="two-column">
+            <div class="column">
+                <img src="{{ url_for('static', filename='images/Enjoy a healthy breakfast full of colors and flavors_.jpeg') }}" alt="Woman cooking healthy food">
+            </div>
+            <div class="column">
+                <h2 class="section-title">We care your health and fitness</h2>
+                
+                <div class="nutrition-services">
+                    <div class="nutrition-service">
+                        <h3>Weight loss program</h3>
+                        <p>Our personalized nutrition foods are right for you & supplements should be taking with diet plan.</p>
+                    </div>
+                    
+                    <div class="nutrition-service">
+                        <h3>Nutrition and lifestyle</h3>
+                        <p>We'll help propose stream measures to truly live make the eating practice healthy and fully enjoy.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# BMR Calculator Section has been MOVED to its own page #}
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {# BMR calculation script is now moved to bmr_calculator.html #}
+{% endblock %}

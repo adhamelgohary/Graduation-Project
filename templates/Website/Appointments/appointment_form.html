@@ -1,264 +1,76 @@
-{# templates/Website/schedule_appointment.html #}
+{# templates/Website/Appointments/appointment_form.html #}
 {% extends "Website/base.html" %}
 
 {% block title %}{{ page_title | default("Schedule Appointment") }}{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}">
-    {# Styles specifically adapted from your "new UI" example for this form #}
     <style>
         /* --- Variables (Assuming defined in base.css/theme) --- */
+        /* --neon-blue, --accent-pink, --bg-primary, --bg-secondary, --text-color, etc. */
 
-        /* --- Container for the form --- */
-        .appointment-form-container {
-            max-width: 900px;
-            margin: 2rem auto;
-            padding: 20px;
-        }
-
-        /* --- Form Section Styling --- */
-        .appointment-form-card.form-section-styled {
-            background-color: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 25px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        .appointment-form-card.form-section-styled:hover {
-            box-shadow: 0 15px 35px var(--shadow-glow); /* Use theme variable */
-            border-color: var(--neon-blue);
-        }
-
-        /* --- Page Header H1 --- */
-        .page-header h1 {
-            color: var(--text-color);
-            font-size: 28px;
-            font-weight: 600;
-            position: relative;
-            padding-bottom: 10px;
-        }
-        .page-header h1::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--neon-blue), var(--accent-pink));
-            border-radius: 2px;
-        }
-
-        /* --- Doctor Info Card --- */
-        .doctor-info-card {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            background-color: var(--input-bg);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 2.5rem;
-            border: 1px solid var(--border-color);
-        }
-        .doctor-info-card img {
-            width: 70px; height: 70px;
-            border-radius: 50%; object-fit: cover;
-            border: 3px solid var(--neon-blue);
-        }
-        .doctor-info-card h4 {
-            margin: 0 0 0.3rem 0; font-size: 1.25em; color: var(--text-color);
-            padding: 0; border: none;
-        }
-        .doctor-info-card h4::after { display: none; }
-        .doctor-info-card p { margin: 0; font-size: 0.9em; color: var(--text-secondary); }
-
-
-        /* --- Form Group and Input Styling --- */
-        .form-section-styled .form-group {
-            margin-bottom: 20px;
-        }
-        .form-section-styled .form-label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-color);
-            font-size: 14px;
-            font-weight: 500;
-        }
-        /* General form control styling from base.css should largely apply. */
-        /* Overrides for rounded inputs if base.css doesn't have it */
-        .form-section-styled input[type="text"],
-        .form-section-styled input[type="tel"],
-        .form-section-styled input[type="date"], /* Kept for general date inputs, but we use select */
-        .form-section-styled select.form-select, /* Target select with .form-select class */
-        .form-section-styled textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 25px !important; /* Ensure rounded inputs for this specific form */
-            font-size: 16px;
-            color: var(--text-color);
-            outline: none;
-            background-color: var(--input-bg);
-            transition: all 0.3s;
-        }
-        .form-section-styled input:focus,
-        .form-section-styled select.form-select:focus,
-        .form-section-styled textarea:focus {
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 10px var(--shadow-glow); /* Use theme variable */
-        }
-        .form-section-styled input::placeholder,
-        .form-section-styled textarea::placeholder {
-            color: var(--placeholder-color);
-        }
-        /* Specific to selects in this styled section */
-        .form-section-styled select.form-select {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            background-size: 16px;
-            padding-right: 40px;
-        }
-        [data-theme="light"] .form-section-styled select.form-select {
-             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233182ce' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); /* Adjusted blue for light theme arrow */
-        }
-        .form-section-styled .form-row {
-            display: flex;
-            gap: 20px;
-        }
-        .form-section-styled .form-row .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
+        .appointment-form-container { max-width: 900px; margin: 2rem auto; padding: 20px; }
+        .appointment-form-card.form-section-styled { background-color: var(--bg-secondary, #fff); border-radius: 12px; padding: 25px; border: 1px solid var(--border-color, #e0e0e0); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); transition: all 0.3s ease; }
+        [data-theme="dark"] .appointment-form-card.form-section-styled { background-color: var(--bg-secondary, #1e2732); border-color: var(--border-color, #3a4a5a); }
+        .appointment-form-card.form-section-styled:hover { box-shadow: 0 15px 35px var(--shadow-glow, rgba(0, 123, 255, 0.2)); border-color: var(--neon-blue, #007bff); }
         
-        /* Date Select Styling */
-        .form-section-styled .date-field-select {
-            position: relative;
-        }
-        .form-section-styled select#appointment_date_select:disabled {
-            background-color: var(--input-bg-disabled, #2a2a3a) !important; /* More specific disabled bg */
-            color: var(--placeholder-color) !important;
-            opacity: 0.6;
-            cursor: not-allowed;
-            border-color: var(--border-color) !important;
-        }
-        [data-theme="light"] .form-section-styled select#appointment_date_select:disabled {
-            background-color: var(--input-bg-disabled, #e9ecef) !important;
-            color: var(--placeholder-color) !important;
-        }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .page-header h1 { color: var(--text-color); font-size: 28px; font-weight: 600; position: relative; padding-bottom: 10px; margin-bottom:0; }
+        .page-header h1::after { content: ''; position: absolute; bottom: 0; left: 0; width: 60px; height: 3px; background: linear-gradient(90deg, var(--neon-blue, #007bff), var(--accent-pink, #ff007f)); border-radius: 2px; }
+        
+        .doctor-info-card { display: flex; align-items: center; gap: 1.5rem; background-color: var(--input-bg, #f8f9fa); padding: 1.5rem; border-radius: 8px; margin-bottom: 2.5rem; border: 1px solid var(--border-color, #e0e0e0); }
+        [data-theme="dark"] .doctor-info-card { background-color: var(--input-bg, #2a3b4e); border-color: var(--border-color, #3a4a5a); }
+        .doctor-info-card img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon-blue, #007bff); }
+        .doctor-info-card h4 { margin: 0 0 0.3rem 0; font-size: 1.25em; color: var(--text-color); padding: 0; border: none; }
+        .doctor-info-card h4::after { display: none; }
+        .doctor-info-card p { margin: 0; font-size: 0.9em; color: var(--text-secondary, #6c757d); }
 
+        .form-section-styled .form-group { margin-bottom: 20px; position: relative; }
+        .form-section-styled .form-label { display: block; margin-bottom: 8px; color: var(--text-color); font-size: 14px; font-weight: 500; }
+        .form-section-styled input[type="text"], .form-section-styled input[type="tel"], .form-section-styled input[type="url"], .form-section-styled select.form-select, .form-section-styled textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border-color, #ced4da); border-radius: 25px !important; font-size: 16px; color: var(--text-color); outline: none; background-color: var(--input-bg, #fff); transition: all 0.3s; }
+        [data-theme="dark"] .form-section-styled input[type="text"], [data-theme="dark"] .form-section-styled input[type="tel"], [data-theme="dark"] .form-section-styled input[type="url"], [data-theme="dark"] .form-section-styled select.form-select, [data-theme="dark"] .form-section-styled textarea { background-color: var(--input-bg, #2a3b4e); border-color: var(--border-color, #3a4a5a); color: var(--text-color, #e1e1e1); }
+        .form-section-styled input:focus, .form-section-styled select.form-select:focus, .form-section-styled textarea:focus { border-color: var(--neon-blue, #007bff); box-shadow: 0 0 10px var(--shadow-glow, rgba(0,123,255,0.25)); }
+        .form-section-styled input::placeholder, .form-section-styled textarea::placeholder { color: var(--placeholder-color, #6c757d); }
+        [data-theme="dark"] .form-section-styled input::placeholder, [data-theme="dark"] .form-section-styled textarea::placeholder { color: var(--placeholder-color, #8899aa); }
+        
+        .form-section-styled select.form-select { appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300f0ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 16px center; background-size: 16px; padding-right: 40px !important; }
+        [data-theme="light"] .form-section-styled select.form-select { background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233182ce' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); }
+        
+        .form-section-styled .form-row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .form-section-styled .form-row .form-group { flex: 1 1 200px; margin-bottom: 0; }
+        
+        .form-section-styled select:disabled { background-color: var(--input-bg-disabled, #e9ecef) !important; color: var(--placeholder-color, #6c757d) !important; opacity: 0.6; cursor: not-allowed; border-color: var(--border-color, #ced4da) !important; }
+        [data-theme="dark"] .form-section-styled select:disabled { background-color: var(--input-bg-disabled, #222c38) !important; color: var(--placeholder-color, #6a7b8c) !important; }
 
-        /* --- Error Styling --- */
-        .error-message {
-          color: var(--accent-pink);
-          font-size: 0.8rem;
-          margin-top: 4px;
-          display: none; /* Hidden by default, shown by JS */
-        }
-        .form-section-styled input.error,
-        .form-section-styled select.error,
-        .form-section-styled textarea.error {
-          border-color: var(--accent-pink) !important;
-        }
-        .form-section-styled .time-slots.error { /* For time slot container error */
-            border: 1px solid var(--accent-pink) !important;
-            box-shadow: 0 0 5px rgba(255, 59, 92, 0.3);
-        }
+        .error-message { color: var(--accent-pink, #ff007f); font-size: 0.8rem; margin-top: 4px; display: block; height: 1em; /* Reserve space */ }
+        .form-section-styled input.error, .form-section-styled select.error, .form-section-styled textarea.error { border-color: var(--accent-pink, #ff007f) !important; }
+        .form-section-styled .time-slots.error { border: 1px solid var(--accent-pink, #ff007f) !important; box-shadow: 0 0 5px rgba(255, 59, 92, 0.3); }
 
+        .time-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 0.5rem; margin-top: 0.5rem; max-height: 200px; overflow-y: auto; padding: 0.8rem; background-color: var(--bg-primary, #f0f2f5); border-radius: 8px; border: 1px solid var(--border-color, #e0e0e0); }
+        [data-theme="dark"] .time-slots { background-color: var(--bg-primary, #161d25); border-color: var(--border-color, #3a4a5a); }
+        .time-slot { padding: 0.6rem; border: 1px solid var(--border-color, #ced4da); border-radius: 25px; text-align: center; cursor: pointer; background-color: var(--input-bg, #fff); transition: all 0.3s ease; font-size: 0.9em; color: var(--text-color); }
+        [data-theme="dark"] .time-slot { background-color: var(--input-bg, #2a3b4e); border-color: var(--border-color, #3a4a5a); }
+        .time-slot:hover { border-color: var(--neon-blue, #007bff); background-color: rgba(0, 240, 255, 0.1); }
+        .time-slot.selected { background: linear-gradient(90deg, var(--neon-blue, #007bff), var(--accent-pink, #ff007f)); color: var(--bg-primary, #fff); border-color: var(--accent-pink, #ff007f); font-weight: 600; }
+        [data-theme="light"] .time-slot.selected { color: white; }
+        .loading-slots, .time-slots .initial-prompt { text-align: center; padding: 1rem; color: var(--placeholder-color, #6c757d); font-style: italic; grid-column: 1 / -1; }
+        
+        #appointment_time_display { font-weight: normal; margin-left: 8px; color: var(--neon-blue, #007bff); font-size: 0.9em; }
+        .slot-count-info { font-size: 0.85em; color: var(--text-secondary, #6c757d); margin-top: 5px; text-align: right; padding-right: 5px; height: 1em; /* Reserve space */ }
 
-        /* --- Time Slots --- */
-        .time-slots {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 0.8rem;
-            background-color: var(--bg-primary);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        .time-slot {
-            padding: 0.6rem;
-            border: 1px solid var(--border-color);
-            border-radius: 25px;
-            text-align: center;
-            cursor: pointer;
-            background-color: var(--input-bg);
-            transition: all 0.3s ease;
-            font-size: 0.9em;
-            color: var(--text-color);
-        }
-        .time-slot:hover {
-            border-color: var(--neon-blue);
-            background-color: rgba(0, 240, 255, 0.1);
-        }
-        .time-slot.selected {
-            background: linear-gradient(90deg, var(--neon-blue), var(--accent-pink));
-            color: var(--bg-primary);
-            border-color: var(--accent-pink);
-            font-weight: 600;
-        }
-        [data-theme="light"] .time-slot.selected {
-             color: white;
-        }
-        .loading-slots, .time-slots .initial-prompt {
-            text-align: center; padding: 1rem; color: var(--placeholder-color);
-            font-style: italic; grid-column: 1 / -1;
-        }
-        #appointment_time_display {
-            font-weight: normal;
-            margin-left: 8px;
-            color: var(--neon-blue);
-            font-size: 0.9em;
-        }
-
-        /* --- Submit Button Row & Button --- */
-        .form-section-styled .form-actions {
-             text-align: right;
-             margin-top: 30px;
-             padding-top: 20px;
-             border-top: 1px solid var(--border-color);
-        }
-        .btn-submit { /* Applied to the button tag directly */
-            background-color: rgba(255, 59, 92, 0.2);
-            color: var(--accent-pink);
-            border: 1px solid rgba(255, 59, 92, 0.3);
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-        }
-        .btn-submit:hover {
-            background-color: rgba(255, 59, 92, 0.3);
-            border-color: rgba(255, 59, 92, 0.5);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 59, 92, 0.2);
-        }
-        .btn-submit svg {
-            stroke: currentColor;
-        }
-        .btn-submit:disabled {
-            background-color: var(--border-color) !important;
-            border-color: var(--border-color) !important;
-            color: var(--placeholder-color) !important;
-            opacity: 0.7;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
-        [data-theme="dark"] .btn-submit:disabled {
-             background-color: rgba(255,255,255,0.1) !important;
-             border-color: rgba(255,255,255,0.1) !important;
-             color: rgba(255,255,255,0.3) !important;
-        }
+        .form-section-styled select#appointment_date_select option.has-slots { color: var(--green-500, #10B981); font-weight: 500; }
+        .form-section-styled select#appointment_date_select option.no-slots { color: var(--red-500, #EF4444); font-style: italic; /* text-decoration: line-through; */ }
+        .form-section-styled select#appointment_date_select option.is-today::after { content: " (Today)"; color: var(--blue-500, #3B82F6); font-weight: normal; }
+        [data-theme="dark"] .form-section-styled select#appointment_date_select option.has-slots { color: var(--green-400, #34D399); }
+        [data-theme="dark"] .form-section-styled select#appointment_date_select option.no-slots { color: var(--red-400, #F87171); }
+        [data-theme="dark"] .form-section-styled select#appointment_date_select option.is-today::after { color: var(--blue-400, #60A5FA); }
+        
+        .form-section-styled .form-actions { text-align: right; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color, #e0e0e0); }
+        [data-theme="dark"] .form-section-styled .form-actions { border-top-color: var(--border-color, #3a4a5a); }
+        .btn-submit { background-color: rgba(255, 59, 92, 0.2); color: var(--accent-pink, #ff007f); border: 1px solid rgba(255, 59, 92, 0.3); padding: 12px 24px; border-radius: 25px; font-size: 16px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .btn-submit:hover { background-color: rgba(255, 59, 92, 0.3); border-color: rgba(255, 59, 92, 0.5); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 59, 92, 0.2); }
+        .btn-submit svg { stroke: currentColor; }
+        .btn-submit:disabled { background-color: var(--border-color, #e0e0e0) !important; border-color: var(--border-color, #e0e0e0) !important; color: var(--placeholder-color, #6c757d) !important; opacity: 0.7; cursor: not-allowed; box-shadow: none; transform: none; }
+        [data-theme="dark"] .btn-submit:disabled { background-color: rgba(255,255,255,0.1) !important; border-color: rgba(255,255,255,0.1) !important; color: rgba(255,255,255,0.3) !important; }
     </style>
 {% endblock %}
 
@@ -280,11 +92,13 @@
     {% endif %}
 
     {% include '_flash_messages.html' %}
-    {% if errors %} {# Assuming errors is a list passed from backend on form validation fail #}
+    
+    {% set form_errors = form_data_initial.get('errors', []) %}
+    {% if form_errors %}
         <div class="alert alert-danger" role="alert">
             <strong>Please correct the following errors:</strong>
             <ul>
-                {% for error in errors %}
+                {% for error in form_errors %}
                     <li>{{ error }}</li>
                 {% endfor %}
             </ul>
@@ -295,7 +109,8 @@
         <div class="card-body">
             {% if doctor %}
             <div class="doctor-info-card">
-                <img src="{{ url_for('static', filename=doctor.profile_photo_url or 'images/default_doctor.png') }}" alt="Dr. {{ doctor.last_name }}">
+                {# *** UPDATED IMAGE SRC HERE *** #}
+                <img src="{{ doctor.profile_photo_display_url | default(url_for('static', filename='images/profile_pics/default_avatar.png')) }}" alt="Dr. {{ doctor.first_name }} {{ doctor.last_name }}">
                 <div>
                     <h4>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h4>
                     <p>{{ doctor.specialization_name | default('Doctor') }}{% if doctor.department_name %} | {{ doctor.department_name }}{% endif %}</p>
@@ -303,26 +118,31 @@
             </div>
 
             <form id="schedule-form" action="{{ url_for('appointment.schedule_appointment_datetime', doctor_id=doctor.user_id) }}" method="POST">
-                {{ form.csrf_token if form and form.csrf_token }} {# For WTForms CSRF, if used #}
                 <input type="hidden" name="doctor_id" value="{{ doctor.user_id }}">
                 {% if is_reschedule and original_appointment_id %}
                     <input type="hidden" name="original_appointment_id" value="{{ original_appointment_id }}">
                 {% endif %}
 
-                {# Row for Location and Day of Week #}
+                {% set current_location_id = form_data_initial.get('location_id', '') | string %}
+                {% set current_day_db = form_data_initial.get('day_of_week_db', '') | string %}
+                {% set current_date_val = form_data_initial.get('appointment_date', '') %}
+                {% set current_time_val = form_data_initial.get('appointment_time', '') %}
+                {% set current_type_id_val = form_data_initial.get('appointment_type_id', '') | string %}
+                {% set current_phone_val = form_data_initial.get('patient_phone', current_user.phone if current_user else '') %}
+                {% set current_reason_val = form_data_initial.get('reason', '') %}
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="location_id" class="form-label">Clinic Location *</label>
                         <select id="location_id" name="location_id" class="form-select" required>
-                            <option value="" {% if not selected_location_id %}selected{% endif %} disabled>-- Choose Clinic --</option>
-                            {% set current_location_str = selected_location_id | default('') | string %}
+                            <option value="" {% if not current_location_id %}selected{% endif %} disabled>-- Choose Clinic --</option>
                             {% for loc in scheduling_info.locations %}
-                            <option value="{{ loc.location_id }}" {% if current_location_str == loc.location_id|string %}selected{% endif %}>
+                            <option value="{{ loc.location_id }}" {% if current_location_id == loc.location_id|string %}selected{% endif %}>
                                 {{ loc.name }} {% if loc.address %} ({{ loc.address | truncate(30) }}) {% endif %}
                             </option>
                             {% endfor %}
                             {% if not scheduling_info.locations %}
-                            <option value="" disabled>No schedulable locations.</option>
+                            <option value="" disabled>No schedulable locations found.</option>
                             {% endif %}
                         </select>
                         <p class="error-message" id="location_id-error"></p>
@@ -336,16 +156,12 @@
                     </div>
                 </div>
 
-                {# Row for Date (Select) and Time Slots #}
                  <div class="form-row">
                     <div class="form-group">
                         <label for="appointment_date_select" class="form-label">Date *</label>
                         <div class="date-field-select">
                             <select id="appointment_date_select" name="appointment_date" class="form-select" required disabled>
                                 <option value="">Select day of week first</option>
-                                {% if selected_date %} {# For re-rendering with value from backend #}
-                                    <option value="{{ selected_date }}" selected>{{ selected_date_formatted if selected_date_formatted else selected_date }}</option>
-                                {% endif %}
                             </select>
                         </div>
                         <p class="error-message" id="appointment_date_select-error"></p>
@@ -355,21 +171,20 @@
                         <div id="time-slots-container" class="time-slots">
                             <p class="text-muted initial-prompt">Select location, day, and date.</p>
                         </div>
-                        <input type="hidden" id="appointment_time" name="appointment_time" required value="{{ selected_time | default('') }}">
+                        <input type="hidden" id="appointment_time" name="appointment_time" required value="{{ current_time_val }}">
+                        <div id="slot-count-display" class="slot-count-info"></div>
                         <p class="error-message" id="appointment_time-error"></p>
                     </div>
                 </div>
 
-                {# Row for Type and Phone #}
                 <div class="form-row">
                     <div class="form-group">
                         <label for="appointment_type_id" class="form-label">Appointment Type *</label>
                         <select id="appointment_type_id" name="appointment_type_id" class="form-select" required>
-                            <option value="" disabled {% if not selected_appointment_type_id %}selected{% endif %}>-- Select Type --</option>
-                            {% set current_type_id = selected_appointment_type_id | default('') | string %}
+                            <option value="" disabled {% if not current_type_id_val %}selected{% endif %}>-- Select Type --</option>
                             {% for type_obj in appointment_types %}
-                                <option value="{{ type_obj.type_id }}" {% if type_obj.type_id|string == current_type_id %}selected{% endif %}>
-                                    {{ type_obj.type_name }}
+                                <option value="{{ type_obj.type_id }}" {% if type_obj.type_id|string == current_type_id_val %}selected{% endif %}>
+                                    {{ type_obj.type_name }} ({{ type_obj.default_duration_minutes }} min)
                                 </option>
                             {% endfor %}
                         </select>
@@ -378,19 +193,19 @@
                     <div class="form-group">
                         <label for="patient_phone" class="form-label">Phone Number *</label>
                         <input type="tel" id="patient_phone" name="patient_phone" class="form-control"
-                               value="{{ phone_value | default(current_user.phone | default('')) }}" required placeholder="(123) 456-7890">
+                               value="{{ current_phone_val }}" required placeholder="(123) 456-7890">
                         <p class="error-message" id="patient_phone-error"></p>
                     </div>
                 </div>
 
                 <div class="form-group" style="margin-top: 20px;">
                     <label for="reason" class="form-label">Reason for Visit (Briefly)</label>
-                    <textarea id="reason" name="reason" class="form-control" rows="3" placeholder="Optional: State your reason...">{{ reason_value | default('') }}</textarea>
+                    <textarea id="reason" name="reason" class="form-control" rows="3" placeholder="Optional: State your reason...">{{ current_reason_val }}</textarea>
                 </div>
 
                 <div class="form-actions">
                     <button type="submit" class="btn-submit" id="submit-button" disabled>
-                        Submit Appointment
+                        {{ "Reschedule Now" if is_reschedule else "Submit Appointment" }}
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                 </div>
@@ -404,131 +219,158 @@
 {% endblock %}
 
 {% block scripts %}
-{# --- Same JavaScript as provided in the previous response --- #}
-{# It already handles the date select logic, ensure element IDs match #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const doctorId = '{{ doctor.user_id if doctor else "" }}';
     const locationSelect = document.getElementById('location_id');
     const daySelectContainer = document.getElementById('day-select-container');
-    const dateSelect = document.getElementById('appointment_date_select'); // Targets the new select
+    const dateSelect = document.getElementById('appointment_date_select');
     const timeSlotsContainer = document.getElementById('time-slots-container');
     const hiddenTimeInput = document.getElementById('appointment_time');
     const submitFormButton = document.getElementById('submit-button');
     const selectedTimeDisplay = document.getElementById('appointment_time_display');
+    const slotCountDisplay = document.getElementById('slot-count-display');
 
     const schedulingInfo = JSON.parse('{{ scheduling_info | tojson | safe if scheduling_info else "{}" }}');
     const displayDaysMap = JSON.parse('{{ display_days_map | tojson | safe if display_days_map else "{}" }}');
     
-    const initialSelectedDate = "{{ selected_date | default('', true) }}";
-    const initialSelectedDayDb = "{{ selected_day_db | default('', true) }}"; // Get this from backend too
-    const initialSelectedLocationId = "{{ selected_location_id | default('', true) }}"; // Get this from backend
+    const initialSelectedLocationId = "{{ form_data_initial.location_id | default('', true) | string }}";
+    const initialSelectedDayDb = "{{ form_data_initial.day_of_week_db | default('', true) | string }}";
+    const initialSelectedDate = "{{ form_data_initial.appointment_date | default('', true) }}";
+    const initialSelectedTime = "{{ form_data_initial.appointment_time | default('', true) }}";
+    const todayISO = "{{ today_date_iso | default('', true) }}";
+
 
     function clearHtml(el) { if (el) el.innerHTML = ''; }
     function setHtml(el, html) { if (el) el.innerHTML = html; }
     function enable(el) { if (el) el.disabled = false; }
     function disable(el) { if (el) el.disabled = true; }
 
-    function resetDaySelect() {
-        setHtml(daySelectContainer, '<select id="day_of_week_select_placeholder" class="form-select" disabled><option>Select location first</option></select>');
+    function resetDaySelect(showPlaceholder = true) {
+        const placeholder = showPlaceholder ? '<select id="day_of_week_select_placeholder" class="form-select" disabled><option>Select location first</option></select>' : '';
+        setHtml(daySelectContainer, placeholder);
     }
-    function resetDateSelect() {
+    function resetDateSelect(showPlaceholder = true) {
         if (dateSelect) {
-            setHtml(dateSelect, '<option value="">Select day of week first</option>');
+            const placeholder = showPlaceholder ? '<option value="">Select day of week first</option>' : '';
+            setHtml(dateSelect, placeholder);
             disable(dateSelect);
         }
     }
-    function resetTimeSlots() {
-        setHtml(timeSlotsContainer, '<p class="text-muted initial-prompt">Select location, day, and date.</p>');
+    function resetTimeSlots(showPlaceholder = true) {
+        const placeholder = showPlaceholder ? '<p class="text-muted initial-prompt">Select location, day, and date.</p>' : '';
+        setHtml(timeSlotsContainer, placeholder);
         if (hiddenTimeInput) hiddenTimeInput.value = '';
         if (selectedTimeDisplay) selectedTimeDisplay.textContent = '';
+        if (slotCountDisplay) slotCountDisplay.textContent = '';
         if (submitFormButton) disable(submitFormButton);
     }
 
     function populateDays(selectedLocationId) {
-        resetDaySelect(); resetDateSelect(); resetTimeSlots();
+        resetDaySelect(false); resetDateSelect(); resetTimeSlots(); 
         const locData = schedulingInfo.locations.find(loc => loc.location_id == selectedLocationId);
+        
         if (locData && locData.working_days_db && locData.working_days_db.length > 0) {
             const daySelectElement = document.createElement('select');
-            daySelectElement.id = 'day_of_week_select';
-            daySelectElement.name = 'day_of_week_db';
+            daySelectElement.id = 'day_of_week_select'; 
+            daySelectElement.name = 'day_of_week_db';   
             daySelectElement.classList.add('form-select');
             daySelectElement.required = true;
-            setHtml(daySelectElement, '<option value="" disabled>-- Select Day --</option>'); // Default selected disabled
-             
-            let daySelected = false;
+            
+            let defaultOption = '<option value="" disabled>-- Select Day --</option>';
+            daySelectElement.innerHTML = defaultOption;
+            
+            let dayWasSelected = false;
             locData.working_days_db.forEach(dbDow => {
                 const opt = document.createElement('option');
                 opt.value = dbDow;
-                opt.textContent = displayDaysMap[dbDow.toString()] || `Day ${dbDow}`;
+                opt.textContent = displayDaysMap[dbDow.toString()] || `Day ${dbDow}`; 
                 if (initialSelectedDayDb && dbDow.toString() === initialSelectedDayDb && selectedLocationId === initialSelectedLocationId) {
                     opt.selected = true;
-                    daySelected = true;
+                    dayWasSelected = true;
                 }
                 daySelectElement.appendChild(opt);
             });
-            // If no specific day was pre-selected, make the "-- Select Day --" option selected
-            if (!daySelected) {
+
+            if (!dayWasSelected && daySelectElement.options.length > 1) {
                 daySelectElement.querySelector('option[value=""]').selected = true;
             }
-
-
+            
             daySelectElement.addEventListener('change', function() {
-                this.value ? fetchDatesForDay(this.value) : resetDateSelect();
+                if (this.value) {
+                    fetchDatesForDay(this.value, selectedLocationId);
+                } else {
+                    resetDateSelect(); 
+                }
             });
-            clearHtml(daySelectContainer);
+            clearHtml(daySelectContainer); 
             daySelectContainer.appendChild(daySelectElement);
             
-            // If a day was pre-selected (e.g., on form re-render with errors), trigger date fetch
-            if (daySelectElement.value) {
-                fetchDatesForDay(daySelectElement.value);
+            if (daySelectElement.value) { 
+                fetchDatesForDay(daySelectElement.value, selectedLocationId);
+            } else {
+                resetDateSelect(); 
             }
 
         } else {
-            setHtml(daySelectContainer, '<p class="text-muted">No working days set for this location.</p>');
+            setHtml(daySelectContainer, '<select class="form-select" disabled><option>No working days for this location</option></select>');
+            resetDateSelect();
         }
     }
 
-    async function fetchDatesForDay(dbDayOfWeek) {
-        resetDateSelect(); resetTimeSlots(); disable(dateSelect);
-        if (!doctorId || dbDayOfWeek === "") return;
+    async function fetchDatesForDay(dbDayOfWeek, currentSelectedLocationId) {
+        resetDateSelect(false); resetTimeSlots(); disable(dateSelect);
+        if (!doctorId || dbDayOfWeek === "" || !currentSelectedLocationId) return;
         setHtml(dateSelect, '<option value="">Loading dates...</option>');
         try {
-            const url = `/appointments/dates-for-day/${doctorId}/${dbDayOfWeek}`;
+            const url = `/appointments/dates-for-day/${doctorId}/${dbDayOfWeek}?location_id=${currentSelectedLocationId}`;
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({ error: `HTTP error ${response.status}` }));
+                throw errData;
+            }
             const data = await response.json();
             clearHtml(dateSelect);
+
             if (data.error) {
                 setHtml(dateSelect, `<option value="">${data.error}</option>`);
-            } else if (data.available_dates && data.available_dates.length > 0) {
-                setHtml(dateSelect, '<option value="" disabled>-- Select Date --</option>'); // Default selected disabled
-                let dateSelected = false;
-                data.available_dates.forEach(dateStr => {
+            } else if (data.available_dates_with_status && data.available_dates_with_status.length > 0) {
+                setHtml(dateSelect, '<option value="" disabled>-- Select Date --</option>');
+                let dateWasSelected = false;
+                data.available_dates_with_status.forEach(dateObj => {
                     const opt = document.createElement('option');
-                    opt.value = dateStr;
-                    opt.textContent = formatDateForDisplay(dateStr);
-                    if (dateStr === initialSelectedDate && dbDayOfWeek === initialSelectedDayDb) { // Check day too
+                    opt.value = dateObj.date;
+                    let dateText = formatDateForDisplay(dateObj.date);
+                    if (dateObj.is_today) { opt.classList.add('is-today'); dateText += " (Today)"; }
+                    opt.textContent = dateText;
+                    
+                    if (dateObj.has_slots) { opt.classList.add('has-slots'); } 
+                    else { opt.classList.add('no-slots'); }
+                    
+                    if (dateObj.date === initialSelectedDate && dbDayOfWeek === initialSelectedDayDb && currentSelectedLocationId === initialSelectedLocationId) {
                         opt.selected = true;
-                        dateSelected = true;
+                        dateWasSelected = true;
                     }
                     dateSelect.appendChild(opt);
                 });
-                 if (!dateSelected) {
+                if (!dateWasSelected && dateSelect.options.length > 1) {
                     dateSelect.querySelector('option[value=""]').selected = true;
                 }
                 enable(dateSelect);
+
                 if (dateSelect.value && dateSelect.value === initialSelectedDate) {
-                    fetchAndDisplaySlots(initialSelectedDate, locationSelect.value);
+                    fetchAndDisplaySlots(initialSelectedDate, currentSelectedLocationId);
                 } else {
-                     setHtml(timeSlotsContainer, '<p class="text-muted">Select a date.</p>');
+                     setHtml(timeSlotsContainer, '<p class="text-muted initial-prompt">Select a date to view times.</p>');
+                     if (slotCountDisplay) slotCountDisplay.textContent = '';
                 }
             } else {
                 setHtml(dateSelect, '<option value="">No available dates</option>');
             }
         } catch (err) {
             console.error('Error fetching dates:', err);
-            setHtml(dateSelect, '<option value="">Could not load dates</option>');
+            const errorMsg = err.error || err.message || 'Could not load dates';
+            setHtml(dateSelect, `<option value="">${errorMsg}</option>`);
         }
     }
 
@@ -536,9 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dateSelect.addEventListener('change', function() {
             const dateVal = this.value;
             const locId = locationSelect ? locationSelect.value : null;
-            if (this.disabled || !dateVal) {
-                resetTimeSlots(); return;
-            }
+            if (this.disabled || !dateVal) { resetTimeSlots(); return; }
             if (locId) { fetchAndDisplaySlots(dateVal, locId); } 
             else { resetTimeSlots(); }
         });
@@ -549,22 +389,26 @@ document.addEventListener('DOMContentLoaded', function() {
         setHtml(timeSlotsContainer, '<div class="loading-slots"><i class="fas fa-spinner fa-spin"></i> Loading times...</div>');
         if(hiddenTimeInput) hiddenTimeInput.value = '';
         if(selectedTimeDisplay) selectedTimeDisplay.textContent = '';
+        if(slotCountDisplay) slotCountDisplay.textContent = '';
         if(submitFormButton) disable(submitFormButton);
         try {
             const url = `/appointments/availability/${doctorId}/${selectedDate}?location_id=${selectedLocationId}`;
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({ error: `HTTP error ${response.status}` }));
+                throw errData;
+            }
             const data = await response.json();
             clearHtml(timeSlotsContainer);
+
             if (data.error) {
                 setHtml(timeSlotsContainer, `<p class="text-danger">${data.error}</p>`);
+                if (slotCountDisplay) slotCountDisplay.textContent = '';
             } else if (data.available_slots && data.available_slots.length > 0) {
-                const initialTime = "{{ selected_time | default('', true) }}";
                 data.available_slots.forEach(slot => {
                     const el = document.createElement('div'); el.className = 'time-slot';
                     el.textContent = formatTime(slot); el.dataset.timeValue = slot;
-                    // Check if this slot matches the initial time, date, AND location for pre-selection
-                    if (slot === initialTime && selectedDate === initialSelectedDate && selectedLocationId === initialSelectedLocationId) {
+                    if (slot === initialSelectedTime && selectedDate === initialSelectedDate && selectedLocationId === initialSelectedLocationId) {
                         el.classList.add('selected');
                         if(hiddenTimeInput) hiddenTimeInput.value = slot;
                         if(selectedTimeDisplay) selectedTimeDisplay.textContent = `(${formatTime(slot)})`;
@@ -573,12 +417,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     el.addEventListener('click', handleSlotSelection);
                     timeSlotsContainer.appendChild(el);
                 });
+                if (slotCountDisplay) slotCountDisplay.textContent = `${data.slot_count || 0} slots available`;
             } else {
                 setHtml(timeSlotsContainer, '<p class="text-muted">No available slots for this date/location.</p>');
+                if (slotCountDisplay) slotCountDisplay.textContent = '0 slots available';
             }
         } catch (err) {
             console.error('Error fetching availability:', err);
-            setHtml(timeSlotsContainer, '<p class="text-danger">Could not load times.</p>');
+            const errorMsg = err.error || err.message || 'Could not load times';
+            setHtml(timeSlotsContainer, `<p class="text-danger">${errorMsg}</p>`);
+            if (slotCountDisplay) slotCountDisplay.textContent = '';
         }
     }
 
@@ -588,62 +436,48 @@ document.addEventListener('DOMContentLoaded', function() {
         selSlot.classList.add('selected');
         if(hiddenTimeInput) hiddenTimeInput.value = selSlot.dataset.timeValue;
         if(selectedTimeDisplay) selectedTimeDisplay.textContent = `(${selSlot.textContent})`;
-        if(submitFormButton) enable(submitFormButton);
+        if(submitFormButton) enable(submitFormButton); 
     }
 
-    function formatTime(timeStr24) {
+    function formatTime(timeStr24) { 
        try { const [h,m] = timeStr24.split(':').map(Number); const d=new Date(0); d.setUTCHours(h,m,0,0);
              return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-       } catch (e) { return timeStr24; }
+       } catch (e) { console.warn("formatTime error:", e); return timeStr24; }
     }
     function formatDateForDisplay(dateStrYYYYMMDD) {
         try {
             const [year, month, day] = dateStrYYYYMMDD.split('-');
-            const dateObj = new Date(Date.UTC(year, month - 1, day));
-            return dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
-        } catch (e) { return dateStrYYYYMMDD; }
+            const dateObj = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day))); 
+            return dateObj.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+        } catch (e) { console.warn("formatDateForDisplay error:", e); return dateStrYYYYMMDD; }
     }
 
-    // Initial setup on page load
     if (locationSelect && schedulingInfo.locations && schedulingInfo.locations.length > 0) {
         locationSelect.addEventListener('change', function() {
-             // When location changes, reset initialSelectedDayDb and initialSelectedDate
-             // so that subsequent fetches don't try to pre-select based on old values from a different location.
-            // However, if a form submission failed and we are re-rendering, we want to keep these if the location hasn't changed.
-            // This part of the logic is complex if we want to preserve selections across failed POSTs AND handle dynamic changes.
-            // For now, simpler: changing location clears subsequent selections.
-            // initialSelectedDayDb = ''; // No, don't clear these here, they are for page load state.
-            // initialSelectedDate = '';
-            this.value ? populateDays(this.value) : clearDaysAndSubsequent();
+            this.value ? populateDays(this.value) : resetDaySelect();
         });
 
         if (initialSelectedLocationId) {
             locationSelect.value = initialSelectedLocationId;
-            populateDays(initialSelectedLocationId); // This will internally check initialSelectedDayDb
+            populateDays(initialSelectedLocationId); 
         } else {
             resetDaySelect(); resetDateSelect(); resetTimeSlots();
         }
     } else {
         resetDaySelect(); resetDateSelect(); resetTimeSlots();
+        if (locationSelect) {
+             setHtml(locationSelect, '<option value="" disabled selected>No schedulable locations.</option>');
+             disable(locationSelect);
+        }
     }
     
-    // --- Client-Side Validation ---
     const form = document.getElementById('schedule-form');
     const patientPhoneInput = document.getElementById('patient_phone');
     const appointmentTypeSelect = document.getElementById('appointment_type_id');
-    // const reasonTextarea = document.getElementById('reason'); // Not strictly validated here
-
-    const validationPatterns = { phone: /^\+?[0-9\s\-\(\)]{7,20}$/ };
+    const validationPatterns = { phone: /^\+?[0-9\s\-()]{7,20}$/ };
 
     function displayError(inputElement, message) {
         let errorElement = document.getElementById(inputElement.id + '-error');
-        if (!errorElement && inputElement.parentNode) {
-            errorElement = document.createElement('p');
-            errorElement.className = 'error-message';
-            errorElement.id = inputElement.id + '-error';
-            const wrapper = inputElement.closest('.date-field-select') || inputElement.closest('.time-field') || inputElement;
-            wrapper.parentNode.insertBefore(errorElement, wrapper.nextSibling);
-        }
         if (errorElement) { errorElement.textContent = message; errorElement.style.display = 'block'; }
         inputElement.classList.add('error');
     }
@@ -653,7 +487,9 @@ document.addEventListener('DOMContentLoaded', function() {
         inputElement.classList.remove('error');
     }
     function validateField(inputElement, pattern, errorMessage, isRequired = true) {
-        clearError(inputElement); const value = inputElement.value.trim();
+        if (!inputElement) return true; 
+        clearError(inputElement); 
+        const value = inputElement.value ? inputElement.value.trim() : '';
         if (isRequired && !value) {
             const label = document.querySelector(`label[for='${inputElement.id}']`);
             const fieldName = label ? label.textContent.replace('*','').trim() : "This field";
@@ -663,27 +499,30 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
-    if (patientPhoneInput) patientPhoneInput.addEventListener('input', () => validateField(patientPhoneInput, validationPatterns.phone, 'Valid phone number required.'));
-    
     if (form) {
         form.addEventListener('submit', function(event) {
             let isFormValid = true;
+            const dynamicDaySelect = document.getElementById('day_of_week_select'); 
+
             if (!validateField(locationSelect, null, 'Clinic Location is required.')) isFormValid = false;
-            const daySelectDynamic = document.getElementById('day_of_week_select');
-            if (!daySelectDynamic || !validateField(daySelectDynamic, null, 'Day of Week is required.')) isFormValid = false;
-            if (!validateField(dateSelect, null, 'Date is required.')) isFormValid = false; // Use dateSelect
+            if (!validateField(dynamicDaySelect, null, 'Day of Week is required.')) isFormValid = false;
+            if (!validateField(dateSelect, null, 'Date is required.')) isFormValid = false;
+            
             if (!hiddenTimeInput.value) {
                 displayError(timeSlotsContainer, 'Please select an available time slot.'); isFormValid = false;
             } else { clearError(timeSlotsContainer); }
+            
             if (!validateField(appointmentTypeSelect, null, 'Appointment Type is required.')) isFormValid = false;
             if (!validateField(patientPhoneInput, validationPatterns.phone, 'Valid phone number required.')) isFormValid = false;
 
             if (!isFormValid) {
                 event.preventDefault();
-                const firstErrorField = form.querySelector('.error, .error-message:not([style*="display: none"])');
+                const firstErrorField = form.querySelector('.error, .error-message[style*="display: block"]');
                 if (firstErrorField) {
-                    const fieldToFocus = firstErrorField.classList.contains('error-message') ? document.getElementById(firstErrorField.id.replace('-error','')) : firstErrorField;
-                    if(fieldToFocus) fieldToFocus.focus();
+                    const fieldToFocus = firstErrorField.classList.contains('error-message') 
+                                         ? document.getElementById(firstErrorField.id.replace('-error','')) 
+                                         : firstErrorField;
+                    if(fieldToFocus && typeof fieldToFocus.focus === 'function') fieldToFocus.focus();
                 }
             } else {
                 if(submitFormButton) {

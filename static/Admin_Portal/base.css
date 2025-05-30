@@ -1,544 +1,378 @@
-/* static/Admin_Portal/base.css */
+/* Admin_Portal/base.css */
 
-/* ==========================================================================
-   Base Theme & Variables
-   ========================================================================== */
-   :root {
-    --primary-color: #0d6efd;          /* Bootstrap Blue (Example) */
-    --primary-color-darker: #0b5ed7;  /* Darker Bootstrap Blue */
-    --primary-color-lighter: #cfe2ff; /* Lighter shade for backgrounds */
-    --success-color: #198754;          /* Bootstrap Green */
-    --warning-color: #ffc107;          /* Bootstrap Yellow */
-    --danger-color: #dc3545;           /* Bootstrap Red */
-    --info-color: #0dcaf0;             /* Bootstrap Teal */
-    --dark-color: #212529;           /* Bootstrap Dark (Used for sidebar) */
-    --secondary-color: #6c757d;        /* Bootstrap Secondary */
-    --light-color: #f8f9fa;           /* Very Light Gray (Main BG) */
-    --white-color: #ffffff;
-    --text-color: #495057;             /* Default Text */
-    --heading-color: #343a40;          /* Heading Text */
-    --grey-color: #adb5bd;             /* Medium Gray */
-    --border-color: #dee2e6;          /* Default Border */
-    --border-radius: 0.375rem;         /* Bootstrap's default */
-    --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.075); /* Softer shadow */
-    --box-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    --transition: all 0.25s ease-in-out;
+/* --- Global Variables --- */
+:root {
+    --admin-font-family: 'Nunito', sans-serif;
+    --primary-accent: #007bff; /* Clean blue */
+    --primary-accent-hover: #0056b3;
+    --text-color-dark: #212529;   /* Bootstrap's default text color */
+    --text-color-light: #f8f9fa;
+    --text-color-medium: #6c757d; /* Bootstrap's secondary text color */
+    --bg-light: #ffffff;
+    --bg-medium: #f4f6f9;         /* Light grey for content area/hovers */
+    --border-color-light: #dee2e6; /* Bootstrap's default border color */
+    --border-color-medium: #ced4da;
 
-    --sidebar-width: 280px;
-    /* --- UPDATED Sidebar Variables for New Style --- */
-    --sidebar-bg: #007bff; /* Bootstrap primary blue for sidebar background */
-    --sidebar-link-color: #f8f9fa; /* Light text for links */
-    --sidebar-link-hover-color: #ffffff; /* White on hover */
-    --sidebar-link-active-color: #ffffff; /* White for active */
-    --sidebar-link-hover-bg: #0056b3; /* Darker blue for hover/active parent */
-    --sidebar-link-active-bg: #0056b3; /* Darker blue for active parent */
-    --sidebar-submenu-bg: rgba(0, 0, 0, 0.1); /* Slightly darker transparent black for submenu bg */
-    --sidebar-submenu-link-active-bg: #0d6efd; /* Bootstrap primary for active sub-items (can be same as parent active) */
-    --sidebar-icon-color: #f8f9fa; /* Light icons to match link color */
-    --sidebar-icon-active-color: #ffffff; /* White icons on active/hover */
-    --sidebar-title-color: #f8f9fa; /* Lighter color for sidebar title */
+    --sidebar-width: 260px;
+    --sidebar-width-collapsed: 0px; /* Set to e.g. 60px for icon-only sidebar */
+    --sidebar-bg: var(--bg-light);
+    --sidebar-link-color: #333; /* Darker for better readability */
+    --sidebar-link-hover-bg: var(--bg-medium);
+    --sidebar-link-hover-color: var(--primary-accent);
+    --sidebar-link-active-bg: var(--primary-accent);
+    --sidebar-link-active-color: var(--text-color-light);
+    --sidebar-icon-color: var(--text-color-medium);
+    --sidebar-icon-active-color: var(--text-color-light);
+    --sidebar-border-color: var(--border-color-light);
+
+    --header-height: 65px;
+    --header-bg: var(--bg-light);
+    --header-border-color: var(--border-color-light);
+    --header-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+    --content-padding: 1.5rem; /* 24px */
+    --content-bg: var(--bg-medium);
+
+    --transition-speed: 0.25s;
 }
 
-/* ==========================================================================
-   Base Styles & Reset
-   ========================================================================== */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-html {
-    scroll-behavior: smooth;
+/* --- BASE --- */
+body {
+    font-family: var(--admin-font-family);
+    background-color: var(--content-bg);
+    color: var(--text-color-dark);
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
-body {
-    background-color: var(--light-color);
-    color: var(--text-color);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    line-height: 1.6;
-    display: flex;
-    min-height: 100vh;
-    font-size: 1rem; /* 16px */
-    margin: 0;
-}
-
 a {
-    color: var(--primary-color);
+    color: var(--primary-accent);
     text-decoration: none;
-    transition: var(--transition);
 }
 a:hover {
-    color: var(--primary-color-darker);
-    text-decoration: none;
+    color: var(--primary-accent-hover);
+    text-decoration: underline;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-    margin-top: 0;
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--heading-color);
-}
-h1 { font-size: 1.875rem; } /* 30px */
-h2 { font-size: 1.625rem; } /* 26px */
-h3 { font-size: 1.375rem; } /* 22px */
-h4 { font-size: 1.125rem; } /* 18px */
-
-p {
-    margin-top: 0;
-    margin-bottom: 1rem;
-}
-
-ul {
-    list-style: none;
-    padding-left: 0;
-    margin-bottom: 0;
-}
-
-img {
-    max-width: 100%;
-    height: auto;
-    vertical-align: middle;
-}
-
-/* ==========================================================================
-   Sidebar Styles
-   ========================================================================== */
+/* --- SIDEBAR --- */
 .sidebar {
-    width: var(--sidebar-width);
-    background-color: var(--sidebar-bg); /* Updated */
-    color: var(--sidebar-link-color); /* Updated for general text */
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
-    padding: 0; /* Remove default padding, handle with h2 and ul */
+    bottom: 0;
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border-color);
+    z-index: 1020;
     overflow-y: auto;
-    transition: left 0.3s ease-in-out;
-    z-index: 1030;
-    box-shadow: 0.125rem 0 0.5rem rgba(0, 0, 0, 0.1);
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
+    overflow-x: hidden;
+    transform: translateX(0); /* Default open on desktop */
+    transition: width var(--transition-speed) ease-in-out, transform var(--transition-speed) ease-in-out;
 }
 
-/* Sidebar Scrollbar */
-.sidebar::-webkit-scrollbar { width: 5px; }
-.sidebar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); } /* Adjust track based on new BG */
-.sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 3px; }
-.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.5); }
-
-.sidebar h2 { /* Portal Title */
-    padding: 1rem 1.25rem; /* Match Bootstrap ps-3 pt-3 roughly */
-    margin-bottom: 1rem; /* Space below title */
-    font-size: 1.5rem; /* Updated size */
-    font-weight: 700;
-    color: var(--sidebar-title-color); /* Updated */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* Lighter border for contrast */
-    flex-shrink: 0;
-}
-.sidebar h2 i {
-    margin-right: 10px;
-    color: var(--sidebar-title-color); /* Match title color or slightly different */
-    opacity: 0.9;
-}
-
-.sidebar ul.components { /* Target the main ul directly if it has this class */
-    padding: 0 10px 20px 10px; /* Horizontal padding and bottom padding */
-    flex-grow: 1;
-    overflow-y: auto;
-}
-
-.sidebar ul li {
-    margin-bottom: 5px; /* Space between items */
-}
-
-/* All Links in Sidebar */
-.sidebar ul li a {
-    color: var(--sidebar-link-color);
-    font-size: 0.95rem;
+.sidebar-logo-section {
+    padding: 0 1.25rem;
+    border-bottom: 1px solid var(--sidebar-border-color);
     display: flex;
     align-items: center;
-    padding: 10px 15px; /* Main link padding */
-    transition: background-color 0.2s ease, color 0.2s ease;
-    position: relative;
-    border-radius: var(--border-radius);
+    height: var(--header-height);
+    box-sizing: border-box;
+}
+.sidebar-logo-section h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary-accent);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidebar-logo-section i {
+    margin-right: 0.75rem;
+    font-size: 1.4rem;
+    color: var(--primary-accent);
+    flex-shrink: 0; /* Prevent icon from shrinking */
 }
 
-/* Icons */
-.sidebar ul li a i.fa-fw {
-    width: 20px;
-    text-align: center;
-    font-size: 1.1em;
-    color: var(--sidebar-icon-color); /* Updated */
-    transition: color 0.2s ease;
-    /* me-2 class provides margin */
+.sidebar-nav {
+    padding-top: 0.75rem;
 }
-
-/* Link Hover State (General) */
-.sidebar ul li a:hover {
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.sidebar-nav li a {
+    display: flex;
+    align-items: center;
+    padding: 0.7rem 1.25rem; /* Slightly less vertical padding */
+    color: var(--sidebar-link-color);
+    text-decoration: none;
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+    white-space: nowrap;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.sidebar-nav li a:hover {
+    background-color: var(--sidebar-link-hover-bg);
     color: var(--sidebar-link-hover-color);
-    background-color: var(--sidebar-link-hover-bg); /* Applied to all hovers */
     text-decoration: none;
 }
-.sidebar ul li a:hover i {
-    color: var(--sidebar-icon-active-color); /* Applied to all icon hovers */
+.sidebar-nav li a .fa-fw {
+    width: 1.25em;
+    margin-right: 0.85rem;
+    font-size: 1rem;
+    color: var(--sidebar-icon-color);
+    transition: color var(--transition-speed) ease;
+    text-align: center; /* Ensure icons are centered in their fixed width */
+}
+.sidebar-nav li a:hover .fa-fw {
+    color: var(--sidebar-link-hover-color);
 }
 
-/* Active State for Top-Level Links & Parent Toggles (when their section is active) */
-.sidebar ul > li.active > a {
-    color: var(--sidebar-link-active-color);
-    font-weight: 500;
+/* Active states for nav items */
+.sidebar-nav li.active > a,
+.sidebar-nav li a.active-parent {
     background-color: var(--sidebar-link-active-bg);
-}
-.sidebar ul > li.active > a i {
-    color: var(--sidebar-icon-active-color);
-}
-
-/* Dropdown Arrow */
-.sidebar ul a.dropdown-toggle::after {
-    display: block;
-    position: absolute;
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-    content: "\f078"; /* Font Awesome chevron-down */
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
-    font-size: 0.7em;
-    transition: transform .2s ease-in-out;
-    color: var(--sidebar-link-color); /* Match link color */
-}
-.sidebar ul li.active > a.dropdown-toggle::after,
-.sidebar ul li a.dropdown-toggle:hover::after {
-    color: var(--sidebar-link-active-color); /* Brighter arrow on active/hover parent */
-}
-.sidebar ul a.dropdown-toggle[aria-expanded="true"]::after {
-     transform: translateY(-50%) rotate(180deg);
-}
-
-/* Submenu UL */
-.sidebar ul ul.collapse {
-    padding-left: 0; /* Reset padding */
-    margin: 5px 0 8px 0; /* Vertical margin, no horizontal indent needed for full bg */
-    background-color: var(--sidebar-submenu-bg);
-    border-radius: var(--border-radius);
-}
-
-/* Submenu Links (1st Level Deep) */
-.sidebar ul ul li a {
-    font-size: 0.9rem;
-    padding: 8px 15px 8px 25px; /* Indent text, keep icon aligned with ps-3 */
-    color: var(--sidebar-link-color); /* Submenu links same color initially */
-    border-radius: var(--border-radius);
-    margin: 0; /* No inner margin for links if submenu ul has full bg */
-}
-.sidebar ul ul li a:hover {
-     color: var(--sidebar-link-hover-color);
-     background-color: rgba(0,0,0,0.15); /* Slightly different hover for submenu items */
-}
-
-/* Active Submenu Link */
-.sidebar ul ul > li a.active, /* Applied by Bootstrap's JS for active sub-item */
-.sidebar ul ul > li.active > a { /* Manually set active class */
-    color: var(--sidebar-link-active-color); /* Bright text for active sub-item */
-    font-weight: bold; /* Make active sub-item bold */
-    background-color: var(--sidebar-submenu-link-active-bg) !important; /* Ensure it overrides general hover */
-}
-.sidebar ul ul > li a.active i,
-.sidebar ul ul > li.active > a i {
-    color: var(--sidebar-icon-active-color);
-}
-
-/* Ensure icons in submenus maintain alignment (ps-3 will provide left padding for text) */
-.sidebar ul ul li a i.fa-fw {
-    color: var(--sidebar-icon-color); /* Icons in submenu initially same color */
-    opacity: 0.8; /* Slightly less prominent */
-}
-.sidebar ul ul li a:hover i,
-.sidebar ul ul li.active > a i {
-    color: var(--sidebar-icon-active-color); /* Active/hover icons in submenu */
-    opacity: 1;
-}
-
-
-/* ==========================================================================
-   Main Content & Header Styles
-   ========================================================================== */
-.main-content {
-    margin-left: var(--sidebar-width);
-    padding: 0;
-    transition: margin-left 0.3s ease-in-out;
-    flex-grow: 1;
-    background-color: var(--light-color);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-}
-
-.header {
-    background-color: var(--white-color);
-    padding: 1rem 1.875rem; /* 16px 30px */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--border-color);
-    position: sticky;
-    top: 0;
-    z-index: 1020;
-}
-
-.header h1 {
-    font-size: 1.5rem; /* 24px */
+    color: var(--sidebar-link-active-color);
     font-weight: 600;
+}
+.sidebar-nav li.active > a .fa-fw,
+.sidebar-nav li a.active-parent .fa-fw {
+    color: var(--sidebar-icon-active-color);
+}
+
+/* Submenu (using Bootstrap .collapse) */
+.sidebar-nav ul.collapse {
+    background-color: rgba(0,0,0,0.02); /* Very subtle distinction */
+    padding-left: 0.5rem; /* Slight indent for the whole block */
+}
+.sidebar-nav ul.collapse li a {
+    padding-left: 2.25rem; /* Further indent submenu items */
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+.sidebar-nav li a.dropdown-toggle::after {
+    margin-left: auto;
+    transition: transform var(--transition-speed) ease;
+}
+.sidebar-nav li a.dropdown-toggle[aria-expanded="true"]::after {
+    transform: rotate(90deg);
+}
+
+.sidebar-separator hr {
+    margin: 1rem 1.25rem;
+    border: 0;
+    border-top: 1px solid var(--sidebar-border-color);
+}
+
+/* --- HEADER --- */
+.header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: var(--sidebar-width);
+    height: var(--header-height);
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--header-border-color);
+    box-shadow: var(--header-shadow);
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--content-padding);
+    z-index: 1010;
+    transition: left var(--transition-speed) ease-in-out;
+}
+
+.sidebar-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-color-medium);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem; /* Smaller padding */
+    margin-right: 0.75rem;
+    line-height: 1; /* Ensure icon is vertically centered */
+    display: none; /* Hidden by default, shown in media query */
+}
+.sidebar-toggle-btn:hover {
+    color: var(--primary-accent);
+}
+
+.page-title-container {
+    display: flex;
+    align-items: center;
+}
+.page-title {
+    font-size: 1.3rem;
+    font-weight: 600;
     margin: 0;
-    color: var(--heading-color);
+    color: var(--text-color-dark);
 }
-.header h1 i {
-    margin-right: 10px;
-    color: var(--primary-color);
-    font-size: 1.1em;
+.page-title .fa-fw,
+.page-title i { /* Icon before title in block header_icon */
+    margin-right: 0.6rem;
+    color: var(--text-color-medium);
+    font-size: 1.2em;
 }
 
-.user-info {
+.user-profile {
     display: flex;
     align-items: center;
-    gap: 12px;
 }
-.user-info span {
-    font-weight: 500;
-    color: var(--dark-color);
-    font-size: 0.95rem;
+.user-profile .profile-name {
+    margin-right: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-color-medium);
 }
-
-.profile-img {
-    width: 38px;
-    height: 38px;
+.user-profile .profile-image {
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--primary-color-lighter);
-    background-color: var(--light-color);
+    border: 1px solid var(--border-color-light);
 }
 
+/* --- MAIN CONTENT AREA --- */
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding-top: var(--header-height);
+    min-height: 100vh;
+    box-sizing: border-box;
+    transition: margin-left var(--transition-speed) ease-in-out;
+}
 .content-wrapper {
-    padding: 1.875rem; /* 30px */
-    flex-grow: 1;
+    padding: var(--content-padding);
 }
 
-
-/* ==========================================================================
-   Flash Messages Container
-   ========================================================================== */
+/* --- FLASH MESSAGES --- */
 .flash-container {
-    padding: 0 1.875rem;
-    margin-top: 1rem;
-    margin-bottom: 0;
-    width: 100%;
-    z-index: 1025;
+    position: fixed;
+    top: calc(var(--header-height) + 1rem);
+    right: 1rem;
+    z-index: 1055; /* High z-index for toasts/alerts */
+    width: 350px;
+    max-width: calc(100% - 2rem);
 }
-.flash-container .alert {
-    box-shadow: var(--box-shadow-sm);
-    margin-bottom: 1rem;
-    border: none;
-    border-left: 5px solid;
-    border-radius: var(--border-radius);
-    font-size: 0.95rem;
-    padding: 0.8rem 1rem;
-}
-.flash-container .alert-success { border-left-color: var(--success-color); }
-.flash-container .alert-danger { border-left-color: var(--danger-color); }
-.flash-container .alert-warning { border-left-color: var(--warning-color); color: #664d03; background-color: #fff3cd; }
-.flash-container .alert-info { border-left-color: var(--info-color); }
-.flash-container .alert-secondary { border-left-color: var(--secondary-color); }
-
-
-/* ==========================================================================
-   Generic Component Styles (Enhanced)
-   ========================================================================== */
-.btn {
-    border-radius: var(--border-radius);
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: var(--transition);
-    box-shadow: none;
-    border-width: 1px;
-    font-size: 0.95rem;
-}
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08);
-}
-.btn i.fa-fw, .btn i:not(.fa-fw) {
-    margin-right: 0.5em;
-    line-height: 1;
-    vertical-align: middle;
-}
-.btn > i:only-child { margin-right: 0; }
-.btn-sm { padding: 0.35rem 0.75rem; font-size: 0.875rem; }
-.btn-lg { padding: 0.65rem 1.25rem; font-size: 1.1rem; }
-
-.card {
-    background-color: var(--white-color);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow-sm);
-    margin-bottom: 1.5rem;
-    overflow: hidden;
-}
-.card-header {
-    padding: 1rem 1.25rem;
-    background-color: var(--white-color);
-    border-bottom: 1px solid var(--border-color);
-    font-weight: 600;
-    color: var(--heading-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.card-header h5, .card-header h6 { margin-bottom: 0; font-size: 1.1rem; }
-.card-body { padding: 1.25rem; }
-.card-footer {
-    padding: 0.75rem 1.25rem;
-    background-color: var(--light-color);
-    border-top: 1px solid var(--border-color);
-    color: var(--secondary-color);
-    font-size: 0.9rem;
+/* Optional: Basic styling if not using Bootstrap Toasts exclusively */
+.flash-container .alert { /* Assuming Bootstrap .alert class */
+    box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.1);
 }
 
-.table-responsive {
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
-    margin-bottom: 1rem;
-    box-shadow: var(--box-shadow-sm); /* Added shadow to responsive wrapper */
-}
-.table-responsive > .table {
-    border: none;
-    margin-bottom: 0;
-    border-radius: 0;
-    box-shadow: none; /* Removed from inner table if wrapped */
-}
-.table { /* If table is not in .table-responsive */
-    border: 1px solid var(--border-color);
-    margin-bottom: 1rem;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    box-shadow: var(--box-shadow-sm);
-}
-.table thead th {
-    background-color: var(--light-color);
-    border-bottom-width: 1px;
-    border-color: var(--border-color);
-    font-weight: 600;
-    color: var(--heading-color);
-    vertical-align: middle;
-    padding: 0.8rem 1rem;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.table tbody td {
-    vertical-align: middle;
-    padding: 0.8rem 1rem;
-    border-color: var(--border-color);
-    font-size: 0.95rem;
-}
-.table-striped tbody tr:nth-of-type(odd) { background-color: #f8f9fa; }
-.table-hover tbody tr:hover {
-    background-color: var(--primary-color-lighter);
-    cursor: default;
-}
-.table .actions { white-space: nowrap; text-align: right; }
-.table .actions .btn, .table .actions form { margin-left: 0.3rem; }
-.table .badge { font-size: 0.8em; padding: 0.35em 0.6em; }
+/* --- RESPONSIVE & TOGGLE BEHAVIOR --- */
 
-.form-label {
-    font-weight: 500;
-    margin-bottom: 0.3rem;
-    font-size: 0.9rem;
-    color: var(--heading-color);
-}
-.form-control, .form-select {
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 0.5rem 0.75rem;
-    font-size: 0.95rem;
-    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-}
-.form-control:focus, .form-select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem var(--primary-color-lighter); /* Use lighter for focus ring */
-    outline: 0;
-}
-.form-control.is-invalid, .form-select.is-invalid { border-color: var(--danger-color); }
-.form-control.is-invalid:focus, .form-select.is-invalid:focus {
-     box-shadow: 0 0 0 0.2rem rgba(var(--danger-color), 0.25);
-}
-.invalid-feedback { font-size: 0.85rem; }
-.form-text { font-size: 0.85rem; color: var(--secondary-color); }
-.form-check-label { font-size: 0.95rem; }
-.form-check-input:checked {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-.form-control-sm, .form-select-sm { padding: 0.35rem 0.6rem; font-size: 0.875rem; }
-.input-group-sm > .form-control, .input-group-sm > .form-select, .input-group-sm > .input-group-text, .input-group-sm > .btn {
-     padding: 0.35rem 0.6rem;
-     font-size: 0.875rem;
-}
-
-.breadcrumb {
-    background-color: transparent;
-    padding: 0.5rem 0;
-    margin-bottom: 1rem;
-    font-size: 0.9em;
-}
-.breadcrumb-item a { text-decoration: none; color: var(--primary-color); }
-.breadcrumb-item a:hover { color: var(--primary-color-darker); }
-.breadcrumb-item.active { color: var(--secondary-color); }
-
-/* ==========================================================================
-   Responsive Adjustments
-   ========================================================================== */
-@media (max-width: 992px) {
-    .sidebar { left: calc(-1 * var(--sidebar-width)); }
-    .sidebar.sidebar-active { left: 0; box-shadow: 0.25rem 0 1rem rgba(0,0,0,0.15); }
-    body.sidebar-overlay-active::before {
-        content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1029; display: block;
+/* MOBILE & TABLET (< 992px) */
+@media (max-width: 991.98px) {
+    .sidebar {
+        transform: translateX(-100%); /* Hidden by default */
     }
-    .main-content { margin-left: 0; }
+    .sidebar.sidebar-active {
+        transform: translateX(0);
+        box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+    .header {
+        left: 0;
+    }
+    .sidebar-toggle-btn {
+      display: inline-flex; /* Show toggle button */
+    }
+
+    /* Mobile overlay, controlled by body.sidebar-overlay-active */
+    body.sidebar-overlay-active::before {
+        content: "";
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(0, 0, 0, 0.4);
+        z-index: 1019; /* Below sidebar */
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity var(--transition-speed) ease-in-out, visibility 0s var(--transition-speed) linear;
+    }
+    body.sidebar-overlay-active.sidebar-overlay-active::before { /* When class is actually present */
+        opacity: 1;
+        visibility: visible;
+        transition-delay: 0s;
+    }
 }
 
-@media (max-width: 768px) {
-    .content-wrapper { padding: 1.25rem; }
-    .header { padding: 0.8rem 1.25rem; }
-    .header h1 { font-size: 1.25rem; }
-    .flash-container { padding: 0 1.25rem; margin-top: 0.75rem; }
-    .table thead { display: none; }
-    .table tbody tr { display: block; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: var(--border-radius); box-shadow: var(--box-shadow-sm); }
-    .table tbody td { display: block; text-align: right; padding-left: 50%; position: relative; border: none; border-bottom: 1px dashed var(--border-color); }
-    .table tbody td:last-child { border-bottom: none; }
-    .table tbody td::before { content: attr(data-label); position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: calc(50% - 20px); text-align: left; font-weight: 600; color: var(--heading-color); font-size: 0.85rem; text-transform: uppercase; }
-    .table .actions { text-align: right; padding-top: 0.5rem; }
-    .table .actions .btn { margin-left: 5px; display: inline-block; width: auto; }
+/* DESKTOP (>= 992px) - Sidebar Collapsing Logic */
+/* This interprets body.sidebar-overlay-active (toggled by JS) as the "collapsed" state on desktop */
+@media (min-width: 992px) {
+    .sidebar-toggle-btn {
+      display: inline-flex; /* Also show toggle button on desktop */
+    }
+
+    body.sidebar-overlay-active .sidebar {
+        width: var(--sidebar-width-collapsed);
+        /* If --sidebar-width-collapsed is > 0 (e.g., for an icon-only sidebar),
+           you'd add styles here to hide text and only show icons.
+           For 0px, everything inside effectively disappears. */
+    }
+    body.sidebar-overlay-active .sidebar .sidebar-logo-section h2,
+    body.sidebar-overlay-active .sidebar .sidebar-nav li a span:not([class*="fa-"]) { /* Hide text spans */
+        /* Example for icon-only sidebar if width > 0: */
+        /* display: none; opacity: 0; visibility: hidden; */
+        /* For width 0px, this is not strictly necessary as overflow:hidden handles it */
+    }
+
+    body.sidebar-overlay-active .main-content {
+        margin-left: var(--sidebar-width-collapsed);
+    }
+    body.sidebar-overlay-active .header {
+        left: var(--sidebar-width-collapsed);
+    }
+
+    /* Ensure mobile overlay is not active on desktop */
+    body.sidebar-overlay-active::before {
+        background-color: transparent;
+        visibility: hidden;
+        opacity: 0;
+    }
 }
 
-@media (max-width: 576px) {
-    .content-wrapper { padding: 1rem; }
-    .header { padding: 0.75rem 1rem; }
-    .header h1 { font-size: 1.125rem; }
-    .user-info span { display: none; }
-    .profile-img { width: 34px; height: 34px; }
-    .flash-container { padding: 0 1rem; margin-top: 0.5rem; }
-    .table tbody td { padding-left: 45%; }
-    .table tbody td::before { width: calc(45% - 15px); left: 5px; }
+/* --- SCROLLBAR STYLING (Webkit) --- */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar::-webkit-scrollbar-track {
+    background: transparent; /* Or var(--sidebar-bg) */
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: var(--border-color-medium);
+    border-radius: 3px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--text-color-medium);
+}
+
+/* --- UTILITY CLASSES (Example) --- */
+.admin-card { /* Simple card styling */
+    background-color: var(--bg-light);
+    border: 1px solid var(--border-color-light);
+    border-radius: 0.375rem; /* Bootstrap's default */
+    margin-bottom: var(--content-padding);
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.04);
+}
+.admin-card-header {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 0;
+    background-color: rgba(0,0,0,.03);
+    border-bottom: 1px solid var(--border-color-light);
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+.admin-card-body {
+    padding: 1.25rem;
+}
+
+/* Minimal button styling to complement Bootstrap */
+.btn { /* General button enhancements */
+    font-weight: 500;
 }

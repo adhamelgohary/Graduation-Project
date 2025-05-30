@@ -1,0 +1,124 @@
+{% extends "Website/base.html" %}
+
+{% block title %}{{ page_title }} - Vaccination Info{% endblock %}
+
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='Website/vaccine-cond.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="disease-detail-page">
+    <div class="header">
+        <h1>{{ page_title }}</h1>
+    </div>
+
+    <div class="top-content">
+        <div class="centered-gif">
+            {% set detail_img_path = 'images/vaccine_page/general_vaccine_info.png' %} {# Default #}
+            {% if data_type == 'category' and data.image_filename %}
+                {% set detail_img_path = 'uploads/vaccine_category_images/' + data.image_filename %}
+            {% elif data_type == 'vaccine' %}
+                {# Add logic here if vaccines have specific images, e.g., data.vaccine_image_filename #}
+                {# {% if data.vaccine_image_filename %}
+                    {% set detail_img_path = 'uploads/vaccine_images/' + data.vaccine_image_filename %}
+                {% endif %} #}
+            {% endif %}
+            <img src="{{ url_for('static', filename=detail_img_path) }}" alt="{{ page_title }} Illustration">
+        </div>
+
+        <div class="overview-container">
+            <h2>Overview</h2>
+            {% if data.description %}
+                <p>{{ data.description | safe }}</p>
+            {% elif data_type == 'vaccine' and data.diseases_prevented %}
+                 <p>This vaccine helps protect against: <strong>{{ data.diseases_prevented }}</strong>.</p>
+            {% else %}
+                <p>Information about {{ page_title }}.</p>
+            {% endif %}
+
+            {% if data_type == 'vaccine' and data.benefits %}
+                <h3 class="details-subtitle">Key Benefits</h3>
+                <p>{{ data.benefits | safe }}</p>
+            {% endif %}
+
+            {% if data_type == 'category' and data.target_group %}
+                <hr style="margin: 10px 0;">
+                <p><strong>Primary Target Group:</strong> {{ data.target_group }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="main-content-details">
+        <div class="left-panel-details">
+            <div class="card-details">
+                <h2>Detailed Information</h2>
+                <div class="emergency-signs card-details" style="margin-top: 20px;">
+                    <h4><i class="fas fa-exclamation-triangle"></i> When to Seek Medical Attention Post-Vaccination</h4>
+                    <p>While serious side effects are rare, seek immediate medical attention if you or your child experiences any of the following after a vaccination:</p>
+                    <ul>
+                        <li>Signs of a severe allergic reaction: difficulty breathing, swelling of the face or throat, a fast heartbeat, dizziness, weakness, or hives appearing within minutes to hours.</li>
+                        <li>Very high fever (e.g., over 104°F or 40°C that doesn't come down with medication).</li>
+                        <li>Seizures (convulsions).</li>
+                        <li>Behavior changes such as being inconsolable for many hours, extreme sleepiness or unresponsiveness.</li>
+                        <li>Any other symptom that concerns you or seems severe.</li>
+                    </ul>
+                    <p>For common, mild reactions like low-grade fever or soreness, follow your healthcare provider's advice. If unsure, always err on the side of caution and seek medical advice.</p>
+                </div>
+
+                {% if data_type == 'vaccine' %}
+                    <dl class="details-list">
+                        {% if data.vaccine_name %}<dt>Vaccine Name</dt><dd>{{ data.vaccine_name }}</dd>{% endif %}
+                        {% if data.category_name %}<dt>Category</dt><dd>{{ data.category_name }}</dd>{% endif %}
+                        {% if data.abbreviation %}<dt>Abbreviation</dt><dd>{{ data.abbreviation }}</dd>{% endif %}
+                        {% if data.diseases_prevented %}<dt>Protects Against</dt><dd>{{ data.diseases_prevented }}</dd>{% endif %}
+                        {% if data.vaccine_type %}<dt>Vaccine Type</dt><dd>{{ data.vaccine_type }}</dd>{% endif %}
+                        {% if data.manufacturer %}<dt>Manufacturer</dt><dd>{{ data.manufacturer }}</dd>{% endif %}
+                        {% if data.recommended_for %}<dt>Recommended For</dt><dd>{{ data.recommended_for | safe }}</dd>{% endif %}
+
+                        <dt class="details-section-header">Dosing & Schedule</dt>
+                        {% if data.number_of_doses %}<dt>Number of Doses</dt><dd>{{ data.number_of_doses }}</dd>{% endif %}
+                        {% if data.timing_schedule %}<dt>Timing/Schedule</dt><dd>{{ data.timing_schedule | safe }}</dd>{% endif %}
+                        {% if data.booster_information %}<dt>Booster Information</dt><dd>{{ data.booster_information | safe }}</dd>{% endif %}
+                        {% if data.administration_route %}<dt>Administration Route</dt><dd>{{ data.administration_route }}</dd>{% endif %}
+
+                        <dt class="details-section-header">Safety & Storage</dt>
+                        {% if data.common_side_effects %}<dt>Common Side Effects</dt><dd>{{ data.common_side_effects | safe }}</dd>{% endif %}
+                        {% if data.contraindications_precautions %}<dt>Contraindications & Precautions</dt><dd>{{ data.contraindications_precautions | safe }}</dd>{% endif %}
+                        {% if data.storage_requirements %}<dt>Storage Requirements</dt><dd>{{ data.storage_requirements }}</dd>{% endif %}
+
+                        {% if data.notes %}<dt class="details-section-header">Additional Notes</dt><dd>{{ data.notes | safe }}</dd>{% endif %}
+                    </dl>
+
+                {% elif data_type == 'category' %}
+                    <p>This category, <strong>{{ page_title }}</strong>, covers vaccines typically recommended for: <strong>{{ data.target_group | lower if data.target_group else 'specific populations based on age, health conditions, or lifestyle factors' }}</strong>.</p>
+
+                    {% if data.vaccines_in_category_list and data.vaccines_in_category_list|length > 0 %}
+                        <h3 class="details-subtitle" style="margin-top:20px;">Vaccines in this Category:</h3>
+                        <ul class="related-items-list">
+                            {% for vac_item in data.vaccines_in_category_list %}
+                                <li>
+                                    {# UPDATED LINK: Point to vaccine_detail_page with vac_item.vaccine_id #}
+                                    <a href="{{ url_for('vaccines_bp.vaccine_detail_page', vaccine_id=vac_item.vaccine_id) }}">{{ vac_item.vaccine_name }}</a>
+                                    {% if vac_item.abbreviation %}({{ vac_item.abbreviation }}){% endif %}
+                                    <p class="item-description-small">Protects against: {{ vac_item.diseases_prevented }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p style="margin-top:15px;">No specific vaccines are currently listed under the <em>{{ page_title }}</em> category, or consult with our healthcare providers for more information.</p>
+                    {% endif %}
+                {% else %}
+                    <p>No detailed information available for this item.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    console.log("Vaccine/Condition detail page script loaded. Data type: {{ data_type }}");
+  </script>
+{% endblock %}

@@ -1,277 +1,167 @@
 {% extends "Admin_Portal/base_admin.html" %}
 
-{% block title %}Edit Doctor: {{ doctor.first_name }} {{ doctor.last_name }}{% endblock %}
+{% block title %}Edit Doctor: {{ doctor.first_name }} {{ doctor.last_name }} - Pro Health Admin Portal{% endblock %}
 
-{% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_management.css') }}"> {# Ensure this CSS exists #}
-{% endblock %}
+{% block header_icon %}<i class="fas fa-user-edit fa-fw me-2"></i>{% endblock %}
+{% block header_title %}Edit Doctor: Dr. {{ doctor.first_name }} {{ doctor.last_name }} ({{doctor.username}}){% endblock %}
 
 {% block content %}
-<h1>Edit Doctor: {{ doctor.first_name }} {{ doctor.last_name }} ({{ doctor.username }})</h1>
-<nav aria-label="breadcrumb">
-  <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.index') }}">Manage Doctors</a></li>
-    <li class="breadcrumb-item"><a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=doctor.user_id) }}">Doctor Details</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Edit Doctor</li>
-  </ol>
-</nav>
-<hr>
-
 <div class="card shadow-sm">
-<div class="card-body">
-<form method="POST" action="{{ url_for('Doctors_Management.edit_doctor', doctor_id=doctor.user_id) }}" class="edit-doctor-form needs-validation" novalidate>
-
-    <h5 class="mb-3 border-bottom pb-2">Account Information</h5>
-    <div class="row g-3">
-        <div class="col-md-6 mb-3">
-            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="first_name" name="first_name" value="{{ form_data.first_name }}" required>
-            <div class="invalid-feedback">First name is required.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="last_name" name="last_name" value="{{ form_data.last_name }}" required>
-            <div class="invalid-feedback">Last name is required.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-            <input type="email" class="form-control" id="email" name="email" value="{{ form_data.email }}" required>
-            <div class="invalid-feedback">A valid email is required.</div>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="phone" class="form-label">Phone Number (Optional)</label>
-            <input type="tel" class="form-control" id="phone" name="phone" value="{{ form_data.phone or '' }}">
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="account_status" class="form-label">Account Status <span class="text-danger">*</span></label>
-            <select class="form-select" id="account_status" name="account_status" required>
-                 <option value="" disabled {% if not form_data.account_status %}selected{% endif %}>-- Select Status --</option>
-                 {% for status_val in account_statuses %} {# Use account_statuses passed from backend #}
-                 <option value="{{ status_val }}" {% if form_data.account_status == status_val %}selected{% endif %}>
-                     {{ status_val.replace('_', ' ') | title }}
-                 </option>
-                 {% endfor %}
-            </select>
-            <div class="invalid-feedback">Account status is required.</div>
-        </div>
-         <div class="col-md-6 mb-3">
-            <label for="verification_status" class="form-label">Verification Status <span class="text-danger">*</span></label>
-            <select class="form-select" id="verification_status" name="verification_status" required>
-                <option value="" disabled {% if not form_data.verification_status %}selected{% endif %}>-- Select Status --</option>
-                {% for status_val in verification_statuses %} {# Use verification_statuses passed from backend #}
-                <option value="{{ status_val }}" {% if form_data.verification_status == status_val %}selected{% endif %}>
-                    {{ status_val.replace('_', ' ') | title }}
-                </option>
-                {% endfor %}
-            </select>
-            <div class="invalid-feedback">Verification status is required.</div>
-        </div>
+    <div class="card-header">
+        <h5>Update Doctor Information</h5>
     </div>
+    <div class="card-body">
+        {# Use doctor directly as it's passed after GET, form_data for re-population on POST error #}
+        {% set data = form_data if form_data and request.method == 'POST' else doctor %}
+        <form method="POST" action="{{ url_for('Doctors_Management.edit_doctor', doctor_id=data.user_id) }}">
+            <h6 class="text-primary">User Account Details</h6>
+            <p class="small text-muted">Username: {{ data.username }} (cannot be changed). User ID: {{ data.user_id }}</p>
+            <hr>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ data.email or '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="phone" class="form-label">Phone (Optional)</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ data.phone or '' }}">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="account_status" class="form-label">Account Status <span class="text-danger">*</span></label>
+                    <select class="form-select" id="account_status" name="account_status" required>
+                        {% for status in account_statuses %}
+                        <option value="{{ status }}" {% if data.account_status == status %}selected{% endif %}>{{ status|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                     {# Profile picture upload could be added here if desired #}
+                </div>
+            </div>
 
-    <h5 class="mt-4 mb-3 border-bottom pb-2">Professional Details</h5>
-     <div class="row g-3">
-         <div class="col-md-6 mb-3">
-            <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
-            <select class="form-select" id="department_id" name="department_id" required>
-                <option value="" disabled {% if not form_data.department_id %}selected{% endif %}>-- Select Department --</option>
-                {% for dept in departments %} {# Use departments passed from backend #}
-                <option value="{{ dept.department_id }}" {% if form_data.department_id|string == dept.department_id|string %}selected{% endif %}>
-                    {{ dept.name }}
-                </option>
-                {% endfor %}
-            </select>
-            <div class="invalid-feedback">Department is required.</div>
-         </div>
-         <div class="col-md-6 mb-3">
-            <label for="specialization_id" class="form-label">Specialization <span class="text-danger">*</span></label>
-            <select class="form-select" id="specialization_id" name="specialization_id" required
-                {% if form_data.specialization_id %}data-persisted-value="{{ form_data.specialization_id }}"{% endif %}>
-                <option value="" disabled selected>
-                    {% if form_data.department_id %}-- Select Specialization --{% else %}-- Select Department First --{% endif %}
-                </option>
-                {# Options loaded by JS or pre-filled on error if department_id was set #}
-                 {% if form_data.department_id and specializations_for_selected_dept_on_error %}
-                    {% for spec_item in specializations_for_selected_dept_on_error %}
-                        <option value="{{ spec_item.specialization_id }}" {% if form_data.specialization_id|string == spec_item.specialization_id|string %}selected{% endif %}>
-                            {{ spec_item.name }}
+            <h6 class="mt-4 text-primary">Personal Information</h6>
+            <hr>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ data.first_name or '' }}" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ data.last_name or '' }}" required>
+                </div>
+            </div>
+
+            <h6 class="mt-4 text-primary">Professional Details</h6>
+            <hr>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
+                    <select class="form-select" id="department_id" name="department_id" required>
+                        <option value="" disabled>Select Department...</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.department_id }}" {% if data.department_id|int == dept.department_id %}selected{% endif %}>
+                            {{ dept.name }}
                         </option>
-                    {% endfor %}
-                {% elif form_data.specialization_id and specializations %} {# Fallback if initial specializations list is available #}
-                     {% for spec_item in specializations %}
-                         {% if spec_item.department_id|string == form_data.department_id|string %}
-                            <option value="{{ spec_item.specialization_id }}" {% if form_data.specialization_id|string == spec_item.specialization_id|string %}selected{% endif %}>
-                                {{ spec_item.name }}
-                            </option>
-                         {% endif %}
-                    {% endfor %}
-                {% endif %}
-            </select>
-            <div class="invalid-feedback">Specialization is required.</div>
-         </div>
-    </div>
-     <div class="row g-3">
-        <div class="col-md-4 mb-3">
-            <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="license_number" name="license_number" value="{{ form_data.license_number }}" required>
-            <div class="invalid-feedback">License number is required.</div>
-        </div>
-        <div class="col-md-4 mb-3">
-            <label for="license_state" class="form-label">License State <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="license_state" name="license_state" value="{{ form_data.license_state or '' }}" required>
-            <div class="invalid-feedback">License state is required.</div>
-        </div>
-         <div class="col-md-4 mb-3">
-            <label for="license_expiration" class="form-label">License Expiration <span class="text-danger">*</span></label>
-            <input type="date" class="form-control" id="license_expiration" name="license_expiration" value="{{ form_data.license_expiration_formatted }}" required>
-            <div class="invalid-feedback">License expiration date is required.</div>
-        </div>
-     </div>
-      <div class="row g-3">
-        <div class="col-md-8 mb-3">
-            <label for="medical_school" class="form-label">Medical School (Optional)</label>
-            <input type="text" class="form-control" id="medical_school" name="medical_school" value="{{ form_data.medical_school or '' }}">
-        </div>
-        <div class="col-md-4 mb-3">
-             <label for="graduation_year" class="form-label">Graduation Year (Optional)</label>
-            <input type="number" class="form-control" id="graduation_year" name="graduation_year" value="{{ form_data.graduation_year or '' }}" min="1900" max="{{ current_year }}">
-        </div>
-         <div class="col-12 mb-3">
-            <label for="certifications" class="form-label">Certifications (Optional, comma-separated)</label>
-            <input type="text" class="form-control" id="certifications" name="certifications" value="{{ form_data.certifications or '' }}">
-        </div>
-        <div class="col-12 mb-3">
-             <label for="biography" class="form-label">Biography (Optional)</label>
-            <textarea class="form-control" id="biography" name="biography" rows="4">{{ form_data.biography or '' }}</textarea>
-        </div>
-    </div>
-     <div class="row g-3">
-        <div class="col-md-9 mb-3">
-            <label for="clinic_address" class="form-label">Clinic Address (Optional)</label>
-            <input type="text" class="form-control" id="clinic_address" name="clinic_address" value="{{ form_data.clinic_address or '' }}">
-        </div>
-         <div class="col-md-3 mb-3 align-self-center">
-             <div class="form-check form-switch mt-3">
-                <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" {% if form_data.accepting_new_patients %}checked{% endif %}>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="specialization_id" class="form-label">Specialization <span class="text-danger">*</span></label>
+                    <select class="form-select" id="specialization_id" name="specialization_id" required>
+                        <option value="" disabled>Select Specialization...</option>
+                        {% for spec in specializations %}
+                        <option value="{{ spec.specialization_id }}" {% if data.specialization_id|int == spec.specialization_id %}selected{% endif %}>
+                            {{ spec.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="license_number" name="license_number" value="{{ data.license_number or '' }}" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="license_state" class="form-label">License State <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="license_state" name="license_state" value="{{ data.license_state or '' }}" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="license_expiration" class="form-label">License Expiration <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="license_expiration" name="license_expiration" value="{{ data.license_expiration_formatted or '' }}" required>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="npi_number" class="form-label">NPI Number (Optional)</label>
+                    <input type="text" class="form-control" id="npi_number" name="npi_number" value="{{ data.npi_number or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="verification_status" class="form-label">Verification Status <span class="text-danger">*</span></label>
+                    <select class="form-select" id="verification_status" name="verification_status" required>
+                        {% for status in verification_statuses %}
+                        <option value="{{ status }}" {% if data.verification_status == status %}selected{% endif %}>{{ status|replace('_', ' ')|capitalize }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+             <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="medical_school" class="form-label">Medical School (Optional)</label>
+                    <input type="text" class="form-control" id="medical_school" name="medical_school" value="{{ data.medical_school or '' }}">
+                </div>
+                 <div class="col-md-6 mb-3">
+                    <label for="graduation_year" class="form-label">Graduation Year (Optional)</label>
+                    <input type="number" class="form-control" id="graduation_year" name="graduation_year" value="{{ data.graduation_year or '' }}" min="1900" max="{{ current_year }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="certifications" class="form-label">Certifications (Optional, comma-separated)</label>
+                <input type="text" class="form-control" id="certifications" name="certifications" value="{{ data.certifications or '' }}">
+            </div>
+            <div class="mb-3">
+                <label for="clinic_address" class="form-label">Clinic Address (Optional)</label>
+                <textarea class="form-control" id="clinic_address" name="clinic_address" rows="2">{{ data.clinic_address or '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="biography" class="form-label">Biography (Optional)</label>
+                <textarea class="form-control" id="biography" name="biography" rows="3">{{ data.biography or '' }}</textarea>
+            </div>
+             <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" value="1" {% if data.accepting_new_patients == 1 or data.accepting_new_patients == '1' %}checked{% endif %}>
                 <label class="form-check-label" for="accepting_new_patients">
-                    Accepting New Patients?
+                    Accepting New Patients
                 </label>
             </div>
-        </div>
-     </div>
 
-    <h5 class="mt-4 mb-3 border-bottom pb-2">Reset Password (Optional)</h5>
-    <div class="alert alert-info small">
-        Leave fields blank to keep current password. If setting a new password, it will be securely hashed.
+            <h6 class="mt-4 text-primary">Change Password (Optional)</h6>
+            <hr>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="new_password" class="form-label">New Password</label>
+                    <input type="password" class="form-control" id="new_password" name="new_password" placeholder="Leave blank to keep current">
+                     <div class="form-text">Must be at least 8 characters if changing.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="confirm_password" class="form-label">Confirm New Password</label>
+                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Confirm if changing">
+                </div>
+            </div>
+            
+            <p class="text-muted small mt-3"><span class="text-danger">*</span> Required fields.</p>
+
+            <div class="d-flex justify-content-end mt-4">
+                <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=data.user_id) }}" class="btn btn-secondary me-2">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
     </div>
-     <div class="row">
-        <div class="col-md-6 mb-3">
-            <label for="new_password" class="form-label">New Password</label>
-            <input type="password" class="form-control" id="new_password" name="new_password" autocomplete="new-password" minlength="8">
-             <small class="form-text text-muted">Min. 8 characters if changing.</small>
-        </div>
-        <div class="col-md-6 mb-3">
-            <label for="confirm_password" class="form-label">Confirm New Password</label>
-            <input type="password" class="form-control" id="confirm_password" name="confirm_password" autocomplete="new-password">
-        </div>
-    </div>
-
-    <hr class="my-4">
-    <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Changes</button>
-    <a href="{{ url_for('Doctors_Management.view_doctor', doctor_id=doctor.user_id) }}" class="btn btn-secondary">Cancel</a>
-</form>
 </div>
-</div>
-{% endblock %}
-
-{% block scripts_extra %}
-<script>
-// Bootstrap 5 form validation (same as add_doctor_step2.html)
-(function () {
-  'use strict'
-  var forms = document.querySelectorAll('.needs-validation')
-  Array.prototype.slice.call(forms)
-    .forEach(function (form) {
-      form.addEventListener('submit', function (event) {
-        if (!form.checkValidity()) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-        form.classList.add('was-validated')
-      }, false)
-    })
-})();
-
-// --- Department and Specialization Cascading Dropdowns Script ---
-// (Use the same fetchSpecializationsForAddDoctor function, or a generic one)
-async function fetchSpecializationsForEditDoctor(departmentId, specializationSelectElement, persistedSpecializationId) {
-    // This function is identical to fetchSpecializationsForAddDoctor
-    // You can reuse it or rename it to be more generic if used in multiple places
-    if (!specializationSelectElement) return;
-    specializationSelectElement.innerHTML = '<option value="" selected disabled>Loading specializations...</option>';
-    specializationSelectElement.disabled = true;
-    if (!departmentId) {
-        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
-        specializationSelectElement.disabled = false;
-        return;
-    }
-    try {
-        const response = await fetch(`/get_specializations_for_department/${departmentId}`); // Same endpoint
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({detail: "Unknown server error"}));
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.detail || response.statusText}`);
-        }
-        const specializations = await response.json();
-        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Select Specialization --</option>';
-        if (specializations && specializations.length > 0) {
-            specializations.forEach(spec => {
-                const option = document.createElement('option');
-                option.value = spec.specialization_id;
-                option.textContent = spec.name;
-                // Check if this option should be selected based on persistedSpecializationId
-                if (persistedSpecializationId && spec.specialization_id.toString() === persistedSpecializationId) {
-                    option.selected = true;
-                }
-                specializationSelectElement.appendChild(option);
-            });
-             // If after populating, persistedSpecializationId was found and set, it's fine.
-             // If not, ensure the placeholder is correctly selected if no valid option was matched.
-            if (persistedSpecializationId && !specializationSelectElement.value && specializations.length > 0) {
-                // This case means persistedSpecId was not in the fetched list, ensure placeholder is shown as selected.
-                specializationSelectElement.value = ""; // Select the "-- Select Specialization --" option
-            } else if (!persistedSpecializationId && specializations.length > 0) {
-                 specializationSelectElement.value = ""; // Default to placeholder if no persisted
-            }
-
-
-        } else {
-            specializationSelectElement.innerHTML = '<option value="" selected disabled>-- No specializations found --</option>';
-        }
-    } catch (error) {
-        console.error('Error fetching specializations for edit doctor:', error);
-        specializationSelectElement.innerHTML = '<option value="" selected disabled>-- Error loading specializations --</option>';
-    } finally {
-        specializationSelectElement.disabled = false;
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const departmentSelect = document.getElementById('department_id');
-    const specializationSelect = document.getElementById('specialization_id');
-
-    if (departmentSelect && specializationSelect) {
-        const persistedSpecId = specializationSelect.getAttribute('data-persisted-value');
-        
-        departmentSelect.addEventListener('change', function() {
-            fetchSpecializationsForEditDoctor(this.value, specializationSelect, null); // Don't pass persisted on user change
-        });
-
-        // Initial load if department is already selected (e.g. pre-filled form data)
-        if (departmentSelect.value) {
-            fetchSpecializationsForEditDoctor(departmentSelect.value, specializationSelect, persistedSpecId);
-        } else {
-             specializationSelect.innerHTML = '<option value="" selected disabled>-- Select Department First --</option>';
-        }
-    }
-});
-</script>
 {% endblock %}

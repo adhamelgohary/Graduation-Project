@@ -6,17 +6,6 @@ from math import ceil
 import mysql.connector
 from functools import wraps # Added wraps
 
-# Import helpers if they exist in other modules
-try:
-    # Example: Use setting helper if defined elsewhere
-    from .Appointments import get_int_setting
-except ImportError:
-    # Fallback
-    def get_int_setting(key, default=0):
-        try: return int(request.args.get(key, default)) # Simple fallback using request args
-        except (ValueError, TypeError): return default
-    current_app.logger.warning("Could not import get_int_setting helper in search_users.")
-
 
 search_users_bp = Blueprint('search_users', __name__, url_prefix='/admin/search')
 
@@ -55,7 +44,7 @@ def search_users():
         search_clause = ""
 
         if executed_search:
-            search_clause = " AND (first_name LIKE %s OR last_name LIKE %s OR email LIKE %s OR username LIKE %s OR phone LIKE %s OR user_type LIKE %s OR account_status LIKE %s) " # Added status search
+            search_clause = " AND (first_name LIKE %s OR last_name LIKE %s OR email LIKE %s OR username LIKE %s OR phone LIKE %s OR user_type LIKE %s OR account_status LIKE %s) " 
             like_term = f"%{search_term}%"; params.extend([like_term] * 7) # Match fields
 
         count_query = f"SELECT COUNT(user_id) as total {base_query} {search_clause}"

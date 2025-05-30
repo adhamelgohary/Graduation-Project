@@ -142,14 +142,12 @@ def is_safe_url(target):
 # --- Routes ---
 @login_bp.route('/login', methods=['GET', 'POST'])
 def login_route():
-    # If user is already authenticated, redirect them appropriately
+
     if current_user.is_authenticated:
-        # Admin and Doctor always go to their dashboards
         if current_user.is_admin():
             return redirect(url_for('admin_main.dashboard'))
         elif current_user.is_doctor():
             return redirect(url_for('doctor_main.dashboard'))
-        # Patient can try to go to 'next' page or their profile
         elif current_user.is_patient():
             next_page = request.args.get('next')
             if is_safe_url(next_page):
@@ -157,19 +155,16 @@ def login_route():
             return redirect(url_for('patient_profile.manage_profile')) # Default for patient
         else: # Fallback for other user types or if type not set
             return redirect(url_for('home.index')) # Ensure 'home.index' exists
-
     # --- POST Request ---
     if request.method == 'POST':
         identifier = request.form.get('identifier', '').strip()
         password_attempt = request.form.get('password', '').strip()
         remember = 'remember' in request.form
-        
+
         # Get 'next' from form first, then from query args
         next_page_from_form = request.form.get('next')
         next_page_from_query = request.args.get('next')
         
-        # Prioritize 'next' from the form if present and valid, otherwise from query
-        # This helps persist 'next' across the POST request if it was in the form's hidden field
         final_next_page_attempt = None
         if next_page_from_form:
             final_next_page_attempt = next_page_from_form
@@ -281,4 +276,7 @@ def logout_route():
     
     logout_user()
     flash('You have been successfully logged out.', 'info')
-    return redirect(url_for('login.login_route'))
+    # --- MODIFIED REDIRECT ---
+    # Assuming your website's main homepage route is defined in a blueprint named 'home'
+    # and the function is 'index'. Adjust if your naming is different.
+    return redirect(url_for('home.index'))

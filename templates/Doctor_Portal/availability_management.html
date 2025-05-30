@@ -1,596 +1,563 @@
 {% extends "Doctor_Portal/base.html" %}
 
-{% block title %}Manage Availability{% endblock %}
+{% block title %}Manage My Availability{% endblock %}
 
 {% block head_extra %}
-    {# Bootstrap CSS for grid and tabs - base.css might not fully cover them #}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    {{ super() if super }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
     <style>
-        .nav-tabs .nav-link {
-            color: var(--color-secondary);
-            border-bottom-color: transparent;
+        /* Keep general section styling, or move to external CSS */
+        .availability-section-content { /* Content within each tab pane */
+            padding-top: 1.5rem;
         }
         .nav-tabs .nav-link.active {
-            color: var(--color-primary);
-            background-color: var(--color-surface);
-            border-color: var(--color-border) var(--color-border) var(--color-surface);
+            color: var(--primary-color, #007bff);
+            border-color: var(--primary-color, #007bff) var(--primary-color, #007bff) #fff;
             font-weight: 600;
         }
-        #daily-caps .table .button {
-            margin-bottom: 0;
+        .nav-tabs .nav-link {
+            color: #495057;
         }
-        .day-cap-input {
-            width: 90px !important;
-            text-align: center;
+        .nav-tabs .nav-link:hover {
+            border-color: #e9ecef #e9ecef #dee2e6;
+            isolation: isolate;
         }
-        .input-group-sm > .button-small {
-            padding: 0.25rem 0.5rem;
+
+        /* Styles from previous version (keep relevant ones) */
+        .list-group-item { display: flex; justify-content: space-between; align-items: center; }
+        .list-group-item small { color: #6c757d; }
+        .time-input { width: 120px !important; }
+        .day-select { width: 150px !important; }
+        .location-select { min-width: 200px !important; }
+        .cap-input { width: 80px !important; text-align: center;}
+        .days-of-week-caps th { text-align: center; }
+        .days-of-week-caps td { vertical-align: middle; text-align: center;}
+        .override-reason { font-style: italic; color: #555; font-size: 0.9em; }
+        .override-unavailable { background-color: #ffe0e0; border-left: 3px solid #dc3545; }
+        .override-available { background-color: #e0ffe0; border-left: 3px solid #198754; }
+        .cap-table-row .form-select, .cap-table-row .form-control {
+            height: calc(1.5em + .5rem + 2px);
+            padding: .25rem .5rem;
+            font-size: .875rem;
         }
-        #alert-container { /* Ensure it's above Bootstrap modals if any are used elsewhere */
-            z-index: 1060; 
-        }
-        .table th, .table td {
-            vertical-align: middle;
+        .cap-table-row button { padding: .25rem .5rem; font-size: .875rem; }
+        .days-of-week-map th { background-color: #f8f9fa; font-weight: 600; }
+        .days-of-week-map input[type="number"] { max-width: 70px; }
+        .tab-pane {
+            border: 1px solid #dee2e6;
+            border-top: none;
+            padding: 1.5rem;
+            border-radius: 0 0 0.25rem 0.25rem;
+            background-color: #fff;
+             box-shadow: 0 1px 5px rgba(0,0,0,0.05);
         }
     </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Manage Availability</h1>
-</div>
-
-<div id="alert-container" style="position: fixed; top: calc(var(--header-height) + 20px); right: 20px; min-width: 300px; max-width: 90vw;">
-    {# Alerts injected by JS #}
-</div>
-
-<!-- Nav Tabs -->
-<ul class="nav nav-tabs mb-3" id="availabilityTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="weekly-schedule-tab" data-bs-toggle="tab" data-bs-target="#weekly-schedule" type="button" role="tab" aria-controls="weekly-schedule" aria-selected="true">Weekly Recurring Schedule</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="overrides-tab" data-bs-toggle="tab" data-bs-target="#overrides" type="button" role="tab" aria-controls="overrides" aria-selected="false">Availability Overrides</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="daily-caps-tab" data-bs-toggle="tab" data-bs-target="#daily-caps" type="button" role="tab" aria-controls="daily-caps" aria-selected="false">Daily Appointment Caps</button>
-    </li>
-</ul>
-
-<!-- Tab Content -->
-<div class="tab-content" id="availabilityTabContent">
-
-    <!-- Weekly Recurring Schedule Pane -->
-    <div class="tab-pane fade show active" id="weekly-schedule" role="tabpanel" aria-labelledby="weekly-schedule-tab">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3>Add New Weekly Slot</h3>
-            </div>
-            <div class="card-body">
-                <form id="addWeeklySlotForm">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-4">
-                            <label for="weeklyLocation" class="form-label">Location</label>
-                            <select id="weeklyLocation" name="doctor_location_id" class="form-select form-select-sm" required>
-                                <option value="" selected disabled>Select Location</option>
-                                {% for loc in locations %}
-                                <option value="{{ loc.doctor_location_id }}">{{ loc.location_name }}</option>
-                                {% endfor %}
-                                {% if not locations %}
-                                <option value="" disabled>No locations available</option>
-                                {% endif %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="weeklyDayOfWeek" class="form-label">Day of Week</label>
-                            <select id="weeklyDayOfWeek" name="day_of_week" class="form-select form-select-sm" required>
-                                <option value="" selected disabled>Select Day</option>
-                                {% for day_idx, day_name in days_of_week_map.items() %}
-                                <option value="{{ day_idx }}">{{ day_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="weeklyStartTime" class="form-label">Start Time</label>
-                            <input type="time" id="weeklyStartTime" name="start_time" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="weeklyEndTime" class="form-label">End Time</label>
-                            <input type="time" id="weeklyEndTime" name="end_time" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-md-1">
-                            <button type="submit" class="button button-primary button-small w-100">Add</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3>Current Weekly Slots</h3>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="weeklySlotsTable">
-                        <thead>
-                            <tr>
-                                <th>Location</th>
-                                <th>Day</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for slot in weekly_slots %}
-                            <tr data-slot-id="{{ slot.location_availability_id }}">
-                                <td>{{ slot.location_name }}</td>
-                                <td>{{ days_of_week_map[slot.day_of_week] }}</td>
-                                <td>{{ slot.start_time }}</td>
-                                <td>{{ slot.end_time }}</td>
-                                <td class="text-end action-buttons">
-                                    <button class="button button-danger button-small delete-weekly-slot" data-id="{{ slot.location_availability_id }}" title="Delete weekly slot">
-                                        <i class="fas fa-trash fa-fw"></i> <span class="d-none d-md-inline">Delete</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="5" class="text-center p-3">No weekly slots defined.</td></tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+<div class="container mt-4">
+    <div class="page-header mb-3"> {# Reduced bottom margin as tabs will have padding #}
+        <h1 class="h3">Manage My Availability</h1>
     </div>
 
-    <!-- Availability Overrides Pane -->
-    <div class="tab-pane fade" id="overrides" role="tabpanel" aria-labelledby="overrides-tab">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h3>Add New Availability Override</h3>
-            </div>
-            <div class="card-body">
-                <form id="addOverrideForm">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label for="overrideDate" class="form-label">Date</label>
-                            <input type="date" id="overrideDate" name="override_date" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="overrideLocation" class="form-label">Location</label>
-                            <select id="overrideLocation" name="doctor_location_id" class="form-select form-select-sm">
-                                <option value="" selected>All Locations (General)</option>
-                                {% for loc in locations %}
-                                <option value="{{ loc.doctor_location_id }}">{{ loc.location_name }}</option>
-                                {% endfor %}
-                                 {% if not locations %}
-                                <option value="" disabled>No specific locations available</option>
-                                {% endif %}
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="overrideStartTime" class="form-label">Start Time</label>
-                            <input type="time" id="overrideStartTime" name="start_time" class="form-control form-control-sm" title="Leave blank for full day">
-                        </div>
-                        <div class="col-md-2">
-                            <label for="overrideEndTime" class="form-label">End Time</label>
-                            <input type="time" id="overrideEndTime" name="end_time" class="form-control form-control-sm" title="Leave blank for full day">
-                        </div>
-                         <div class="col-md-2">
-                            <label for="overrideIsUnavailable" class="form-label">Status</label>
-                            <select id="overrideIsUnavailable" name="is_unavailable" class="form-select form-select-sm">
-                                <option value="true" selected>Unavailable</option>
-                                <option value="false">Available</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row g-3 mt-2 align-items-end">
-                        <div class="col-md-10">
-                            <label for="overrideReason" class="form-label">Reason (Optional)</label>
-                            <input type="text" id="overrideReason" name="reason" class="form-control form-control-sm">
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="button button-primary button-small w-100">Add Override</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
+    {% include '_flash_messages.html' %} {# General flash messages outside tabs #}
 
-        <div class="card">
-            <div class="card-header">
-                <h3>Current Overrides</h3>
-            </div>
-            <div class="card-body p-0">
-                 <div class="table-responsive">
-                    <table class="table table-hover mb-0" id="overridesTable">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Location</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Status</th>
-                                <th>Reason</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for override in overrides %}
-                            <tr data-override-id="{{ override.override_id }}">
-                                <td>{{ override.override_date }}</td>
-                                <td>{{ override.location_name | default('All Locations (General)', true) }}</td>
-                                <td>{{ override.start_time | default('Full Day', true) }}</td>
-                                <td>{{ override.end_time | default('', true) }}</td>
-                                <td>
-                                    {% if override.is_unavailable %}
-                                    <span class="badge badge-warning" style="color: var(--color-text); font-weight: normal;">Unavailable</span>
-                                    {% else %}
-                                    <span class="badge badge-success" style="font-weight: normal;">Available</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ override.reason | default('-', true) }}</td>
-                                <td class="text-end action-buttons">
-                                    <button class="button button-danger button-small delete-override" data-id="{{ override.override_id }}" title="Delete override">
-                                        <i class="fas fa-trash fa-fw"></i> <span class="d-none d-md-inline">Delete</span>
-                                    </button>
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr><td colspan="7" class="text-center p-3">No overrides defined.</td></tr>
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" id="availabilityTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="weekly-tab" data-bs-toggle="tab" data-bs-target="#weekly-availability-pane" type="button" role="tab" aria-controls="weekly-availability-pane" aria-selected="true">
+                <i class="fas fa-calendar-week me-1"></i> Weekly Schedule
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="caps-tab" data-bs-toggle="tab" data-bs-target="#daily-caps-pane" type="button" role="tab" aria-controls="daily-caps-pane" aria-selected="false">
+                <i class="fas fa-tasks me-1"></i> Daily Caps
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="overrides-tab" data-bs-toggle="tab" data-bs-target="#date-overrides-pane" type="button" role="tab" aria-controls="date-overrides-pane" aria-selected="false">
+                <i class="fas fa-calendar-day me-1"></i> Date Overrides
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content" id="availabilityTabContent">
+        <!-- Weekly Availability Pane -->
+        <div class="tab-pane fade show active availability-section-content" id="weekly-availability-pane" role="tabpanel" aria-labelledby="weekly-tab" tabindex="0">
+            {# This is where flash messages specific to this tab's actions will go via JS #}
+            <div id="weekly-flash-container"></div> 
+            <h4>Recurring Weekly Slots</h4>
+            <form id="addWeeklySlotForm" class="mb-4 p-3 border rounded bg-light">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="weekly_doctor_location_id" class="form-label">Location <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-sm location-select" id="weekly_doctor_location_id" name="doctor_location_id" required>
+                            <option value="" selected disabled>Select Location...</option>
+                            {% for loc in locations %}
+                            <option value="{{ loc.doctor_location_id }}">{{ loc.location_name }}</option>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="weekly_day_of_week" class="form-label">Day <span class="text-danger">*</span></label>
+                        <select class="form-select form-select-sm day-select" id="weekly_day_of_week" name="day_of_week" required>
+                            <option value="" selected disabled>Select Day...</option>
+                            {% for day_val, day_name in days_of_week_map.items() %}
+                            <option value="{{ day_val }}">{{ day_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="weekly_start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control form-control-sm time-input" id="weekly_start_time" name="start_time" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="weekly_end_time" class="form-label">End Time <span class="text-danger">*</span></label>
+                        <input type="time" class="form-control form-control-sm time-input" id="weekly_end_time" name="end_time" required>
+                    </div>
+                    <div class="col-md-auto">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Slot</button>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </form>
 
-    <!-- Daily Appointment Caps Pane -->
-    <div class="tab-pane fade" id="daily-caps" role="tabpanel" aria-labelledby="daily-caps-tab">
-        <div class="card">
-            <div class="card-header">
-                <h3>Recurring Daily Appointment Caps</h3>
-            </div>
-            <div class="card-body">
-                {% if not locations %}
-                    <div class="alert alert-info" role="alert">Please add locations first to set daily caps. Daily caps can only be set for active locations.</div>
-                {% elif not daily_caps_data %}
-                     <div class="alert alert-info" role="alert">No active locations found to set caps for, or an error occurred fetching location data.</div>
-                {% else %}
+            {% if locations %}
+                {% for location in locations %}
+                    <div class="mb-3">
+                        <h5>{{ location.location_name }} <small class="text-muted">({{ location.address }}, {{ location.city }})</small></h5>
+                        <ul class="list-group list-group-flush" id="weeklySlotsList_{{ location.doctor_location_id }}">
+                            {% set has_slots_for_location = false %}
+                            {% for slot in weekly_slots if slot.doctor_location_id == location.doctor_location_id %}
+                                {% set has_slots_for_location = true %}
+                                <li class="list-group-item" data-slot-id="{{ slot.location_availability_id }}">
+                                    <span><strong>{{ days_of_week_map.get(slot.day_of_week, 'Unknown Day') }}</strong>: {{ slot.start_time }} - {{ slot.end_time }}</span>
+                                    <button class="btn btn-sm btn-outline-danger delete-weekly-slot-btn" data-slot-id="{{ slot.location_availability_id }}"><i class="fas fa-trash-alt"></i></button>
+                                </li>
+                            {% endfor %}
+                            {% if not has_slots_for_location %}
+                                <li class="list-group-item text-muted no-slots-message">No weekly slots defined for this location.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">You have no active locations defined. Please add locations in your profile settings to set availability.</p>
+            {% endif %}
+        </div>
+
+        <!-- Daily Caps Pane -->
+        <div class="tab-pane fade availability-section-content" id="daily-caps-pane" role="tabpanel" aria-labelledby="caps-tab" tabindex="0">
+            <div id="caps-flash-container"></div>
+            <h4>Daily Appointment Caps <small class="text-muted">(per location)</small></h4>
+            <p class="small text-muted">Set the maximum number of appointments for specific days at each location. Leave blank or '0' to remove/have no cap.</p>
+            
+            {% if locations %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light days-of-week-map">
+                        <tr>
+                            <th style="width: 25%;">Location</th>
+                            {% for day_idx in range(7) %}
+                            <th>{{ days_of_week_map.get(day_idx) }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
                     {% for loc_cap_data in daily_caps_data %}
-                    <div class="mb-4">
-                        <h4>{{ loc_cap_data.location_name }} <small class="text-muted" style="font-size:0.8em;">(ID: {{ loc_cap_data.doctor_location_id }})</small></h4>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered" style="margin-bottom:0;">
-                                <thead style="font-size: 0.85rem;">
-                                    <tr>
-                                        {% for i in range(7) %}
-                                        <th class="text-center" style="width: 14.28%;">{{ days_of_week_map[i][:3] }}</th> {# Short day names #}
-                                        {% endfor %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        {% for day_idx in range(7) %}
-                                        <td class="text-center">
-                                            {% set cap_info = loc_cap_data.caps[day_idx] %}
-                                            <div class="input-group input-group-sm justify-content-center">
-                                                <input type="number" class="form-control form-control-sm daily-cap-input"
-                                                       min="0" step="1" pattern="\d*"
-                                                       placeholder="N/A"
-                                                       value="{{ cap_info.max_appointments if cap_info is not none and cap_info.max_appointments is not none else '' }}"
-                                                       data-location-id="{{ loc_cap_data.doctor_location_id }}"
-                                                       data-day-of-week="{{ day_idx }}"
-                                                       data-cap-id="{{ cap_info.cap_id if cap_info else '' }}"
-                                                       title="Enter max appointments. Leave blank to clear.">
-                                                <button class="button button-primary button-small save-daily-cap" type="button" title="Save Cap">
-                                                    <i class="fas fa-save"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                        {% endfor %}
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <tr class="cap-table-row" data-location-id="{{ loc_cap_data.doctor_location_id }}">
+                            <td><strong>{{ loc_cap_data.location_name }}</strong></td>
+                            {% for day_idx in range(7) %}
+                            <td>
+                                <input type="number" class="form-control form-control-sm cap-input"
+                                       name="cap_{{ loc_cap_data.doctor_location_id }}_{{ day_idx }}"
+                                       data-location-id="{{ loc_cap_data.doctor_location_id }}"
+                                       data-day-of-week="{{ day_idx }}"
+                                       value="{{ loc_cap_data.caps[day_idx].max_appointments if loc_cap_data.caps[day_idx] and loc_cap_data.caps[day_idx].max_appointments is not none else '' }}"
+                                       min="0" placeholder="-"
+                                       title="Max appointments for {{ days_of_week_map.get(day_idx) }} at {{ loc_cap_data.location_name }}. Leave blank/0 for no cap.">
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+             <div class="text-end mt-2">
+                <button type="button" id="saveAllCapsBtn" class="btn btn-success btn-sm"><i class="fas fa-save"></i> Save All Caps</button>
+            </div>
+            {% else %}
+                <p class="text-muted">No locations available to set caps for.</p>
+            {% endif %}
+        </div>
+
+        <!-- Date Overrides Pane -->
+        <div class="tab-pane fade availability-section-content" id="date-overrides-pane" role="tabpanel" aria-labelledby="overrides-tab" tabindex="0">
+            <div id="overrides-flash-container"></div>
+            <h4>Date-Specific Overrides/Unavailability</h4>
+            <form id="addOverrideForm" class="mb-4 p-3 border rounded bg-light">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="override_date" class="form-label">Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control form-control-sm" id="override_date" name="override_date" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="override_doctor_location_id" class="form-label">Location</label>
+                        <select class="form-select form-select-sm location-select" id="override_doctor_location_id" name="doctor_location_id">
+                            <option value="">All Locations (General)</option>
+                            {% for loc in locations %}
+                            <option value="{{ loc.doctor_location_id }}">{{ loc.location_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="override_start_time" class="form-label">Start Time</label>
+                        <input type="time" class="form-control form-control-sm time-input" id="override_start_time" name="start_time">
+                         <small class="form-text text-muted">Leave blank for full day.</small>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="override_end_time" class="form-label">End Time</label>
+                        <input type="time" class="form-control form-control-sm time-input" id="override_end_time" name="end_time">
+                    </div>
+                </div>
+                <div class="row g-3 mt-1 align-items-end">
+                     <div class="col-md-4">
+                        <label for="override_reason" class="form-label">Reason/Note</label>
+                        <input type="text" class="form-control form-control-sm" id="override_reason" name="reason" placeholder="e.g., Holiday, Conference">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-center pt-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="override_is_unavailable" name="is_unavailable" value="true" checked>
+                            <label class="form-check-label" for="override_is_unavailable">Mark as Unavailable</label>
                         </div>
                     </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
+                    <div class="col-md-auto">
+                        <button type="submit" class="btn btn-info btn-sm"><i class="fas fa-calendar-plus"></i> Add Override</button>
+                    </div>
+                </div>
+            </form>
+
+            <h5>Existing Overrides</h5>
+            <ul class="list-group list-group-flush" id="overridesList">
+                {% for override in overrides %}
+                <li class="list-group-item {% if override.is_unavailable %}override-unavailable{% else %}override-available{% endif %}" data-override-id="{{ override.override_id }}">
+                    <div>
+                        <strong>{{ override.override_date }}</strong>
+                        {% if override.start_time and override.end_time %}
+                            ({{ override.start_time }} - {{ override.end_time }})
+                        {% else %}
+                            (Full Day)
+                        {% endif %}
+                        <br>
+                        <small>Location: {{ override.location_name or 'All Locations' }}</small>
+                        {% if override.is_unavailable %}<span class="badge bg-danger ms-2">Unavailable</span>{% else %}<span class="badge bg-success ms-2">Available</span>{% endif %}
+                        {% if override.reason %}<br><span class="override-reason">{{ override.reason }}</span>{% endif %}
+                    </div>
+                    <button class="btn btn-sm btn-outline-danger delete-override-btn" data-override-id="{{ override.override_id }}"><i class="fas fa-trash-alt"></i></button>
+                </li>
+                {% else %}
+                <li class="list-group-item text-muted no-overrides-message">No specific date overrides found.</li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
-
-</div> <!-- End Tab Content -->
+</div>
 {% endblock %}
 
 {% block scripts %}
-    <!-- jQuery (ensure it's loaded if not already in base.html or if base.html loads it after this block) -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    {# Bootstrap JS is already included in base.html's head, so Popper and Bootstrap's JS components are available #}
+{{ super() if super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const csrfToken = "{{ csrf_token() if csrf_token else '' }}"; 
 
-    <script>
-        $(document).ready(function() {
-            const daysOfWeekMap = {{ days_of_week_map | tojson }};
+    async function makeApiCall(url, method, body = null) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        };
+        if (csrfToken && (method === 'POST' || method === 'DELETE' || method === 'PUT')) {
+            headers['X-CSRFToken'] = csrfToken;
+        }
+        const config = { method: method, headers: headers };
+        if (body && (method === 'POST' || method === 'PUT')) {
+            config.body = JSON.stringify(body);
+        }
+        try {
+            const response = await fetch(url, config);
+            const data = await response.json();
+            return { success: response.ok, data: data, status: response.status };
+        } catch (error) {
+            console.error('API Call Error:', error);
+            return { success: false, data: { message: "Network or server error." }, status: 500 };
+        }
+    }
 
-            function showAlert(message, type = 'success', duration = 5000) {
-                let alertClass = 'alert-info'; // Default base.css alert
-                let iconClass = 'fas fa-info-circle';
-                let title = 'Info';
+    // --- Flash Message Helper (targets specific containers per tab) ---
+    let flashTimeouts = {}; // Store timeouts per container
+    function flashMessage(message, category = 'info', containerSelector = '.page-header', clearExisting = true, persistent = false) {
+        const container = document.querySelector(containerSelector);
+        if (!container) {
+            console.warn("Flash message container not found:", containerSelector);
+            // Fallback to general flash if specific one not found
+            const generalContainer = document.querySelector('.page-header + .alert, .page-header + div > .alert'); // Try to find main flash
+            if (generalContainer && generalContainer.parentElement) {
+                 flashMessage(message, category, generalContainer.parentElement.id ? '#' + generalContainer.parentElement.id : '.page-header', clearExisting, persistent);
+            }
+            return;
+        }
 
-                if (type === 'success') {
-                    alertClass = 'alert-success';
-                    iconClass = 'fas fa-check-circle';
-                    title = 'Success';
-                } else if (type === 'danger' || type === 'error') {
-                    alertClass = 'alert-danger';
-                    iconClass = 'fas fa-exclamation-triangle';
-                    title = 'Error';
-                } else if (type === 'warning') {
-                    alertClass = 'alert-warning';
-                    iconClass = 'fas fa-exclamation-circle';
-                    title = 'Warning';
-                }
+        if (clearExisting) {
+            clearFlashMessages(containerSelector);
+        }
 
-                // Using Bootstrap alert structure for better compatibility with Bootstrap JS for dismissal
-                const alertHtml = `
-                    <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="border-left-width: 5px;">
-                        <div class="d-flex align-items-center">
-                            <i class="${iconClass} fa-lg me-2"></i>
-                            <div>
-                                <strong class="d-block">${title}</strong>
-                                ${message}
-                            </div>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="font-size: 0.8rem; padding: 1.05rem 1rem;"></button>
-                    </div>`;
-                $('#alert-container').prepend(alertHtml);
-                
-                const newAlert = $('#alert-container .alert').first();
-                if (duration > 0) {
-                    setTimeout(() => {
-                        if (newAlert.length && newAlert.is(':visible')) { // Check if still exists and visible
-                            newAlert.fadeOut(500, function() { $(this).remove(); });
-                        }
-                    }, duration);
-                }
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${category} alert-dismissible fade show dynamic-flash`;
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.innerHTML = `${message} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+        
+        // Prepend within the specific container
+        container.insertBefore(alertDiv, container.firstChild);
+
+        if (!persistent) {
+            if (flashTimeouts[containerSelector]) clearTimeout(flashTimeouts[containerSelector]);
+            flashTimeouts[containerSelector] = setTimeout(() => {
+                const bsAlert = bootstrap.Alert.getInstance(alertDiv);
+                if (bsAlert) bsAlert.close();
+                else if (alertDiv.parentNode) alertDiv.remove();
+            }, 5000);
+        }
+    }
+    function clearFlashMessages(containerSelector = '.page-header') {
+         const container = document.querySelector(containerSelector);
+         if (!container) return;
+         container.querySelectorAll('.dynamic-flash').forEach(flash => {
+            const bsAlert = bootstrap.Alert.getInstance(flash);
+            if (bsAlert) bsAlert.close();
+            else if (flash.parentNode) flash.remove();
+         });
+         if (flashTimeouts[containerSelector]) clearTimeout(flashTimeouts[containerSelector]);
+    }
+
+
+    // --- Weekly Slot Management ---
+    const addWeeklySlotForm = document.getElementById('addWeeklySlotForm');
+    const weeklyFlashContainer = '#weekly-flash-container'; // Specific container for this form
+    if (addWeeklySlotForm) {
+        addWeeklySlotForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            if (!data.start_time || !data.end_time || data.start_time >= data.end_time) {
+                flashMessage("Start time must be before end time.", "danger", weeklyFlashContainer); return;
+            }
+            if (!data.doctor_location_id || data.day_of_week === null || data.day_of_week === "") { // Check for empty day_of_week
+                flashMessage("Location and Day of Week are required.", "danger", weeklyFlashContainer); return;
             }
 
-            // --- Weekly Slot Management ---
-            $('#addWeeklySlotForm').submit(function(e) {
-                e.preventDefault();
-                const $form = $(this);
-                const $submitButton = $form.find('button[type="submit"]');
-                const originalButtonText = $submitButton.html();
-                $submitButton.html('<i class="fas fa-spinner fa-spin"></i> Adding...').prop('disabled', true);
-
-                const formData = $form.serialize();
-                $.ajax({
-                    url: '{{ url_for("availability.add_weekly_slot_route") }}',
-                    type: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        showAlert(response.message, 'success');
-                        const slot = response.slot;
-                        const newRow = `
-                            <tr data-slot-id="${slot.location_availability_id}">
-                                <td>${slot.location_name}</td>
-                                <td>${daysOfWeekMap[slot.day_of_week]}</td>
-                                <td>${slot.start_time}</td>
-                                <td>${slot.end_time}</td>
-                                <td class="text-end action-buttons">
-                                    <button class="button button-danger button-small delete-weekly-slot" data-id="${slot.location_availability_id}" title="Delete weekly slot">
-                                        <i class="fas fa-trash fa-fw"></i> <span class="d-none d-md-inline">Delete</span>
-                                    </button>
-                                </td>
-                            </tr>`;
-                        if ($('#weeklySlotsTable tbody tr td[colspan="5"]').length) {
-                            $('#weeklySlotsTable tbody').html(newRow);
-                        } else {
-                            $('#weeklySlotsTable tbody').append(newRow);
-                        }
-                        $form[0].reset();
-                    },
-                    error: function(xhr) {
-                        const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "An error occurred while adding the slot.";
-                        showAlert(errorMsg, 'danger');
-                    },
-                    complete: function() {
-                        $submitButton.html(originalButtonText).prop('disabled', false);
-                    }
-                });
-            });
-
-            $('#weeklySlotsTable').on('click', '.delete-weekly-slot', function() {
-                if (!confirm('Are you sure you want to delete this weekly slot?')) return;
-                const $button = $(this);
-                const slotId = $button.data('id');
-                const row = $button.closest('tr');
-                const originalButtonHTML = $button.html();
-                $button.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-
-                $.ajax({
-                    url: `{{ url_for("availability.delete_weekly_slot_route", location_availability_id=0) }}`.slice(0,-1) + slotId,
-                    type: 'DELETE',
-                    success: function(response) {
-                        showAlert(response.message, 'success');
-                        row.fadeOut(300, function() { 
-                            $(this).remove();
-                            if ($('#weeklySlotsTable tbody tr').length === 0) {
-                                 $('#weeklySlotsTable tbody').html('<tr><td colspan="5" class="text-center p-3">No weekly slots defined.</td></tr>');
-                            }
-                        });
-                    },
-                    error: function(xhr) {
-                        const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Error deleting slot.";
-                        showAlert(errorMsg, 'danger');
-                        $button.html(originalButtonHTML).prop('disabled', false);
-                    }
-                });
-            });
-
-            // --- Availability Override Management ---
-            $('#addOverrideForm').submit(function(e) {
-                e.preventDefault();
-                const $form = $(this);
-                const $submitButton = $form.find('button[type="submit"]');
-                const originalButtonText = $submitButton.html();
-                $submitButton.html('<i class="fas fa-spinner fa-spin"></i> Adding...').prop('disabled', true);
-                const formData = $form.serialize();
-
-                $.ajax({
-                    url: '{{ url_for("availability.add_override_route") }}',
-                    type: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        showAlert(response.message, 'success');
-                        const override = response.override;
-                        const statusBadge = override.is_unavailable 
-                            ? `<span class="badge badge-warning" style="color: var(--color-text); font-weight: normal;">Unavailable</span>`
-                            : `<span class="badge badge-success" style="font-weight: normal;">Available</span>`;
-                        const newRow = `
-                            <tr data-override-id="${override.override_id}">
-                                <td>${override.override_date}</td>
-                                <td>${override.location_name || 'All Locations (General)'}</td>
-                                <td>${override.start_time || 'Full Day'}</td>
-                                <td>${override.end_time || ''}</td>
-                                <td>${statusBadge}</td>
-                                <td>${override.reason || '-'}</td>
-                                <td class="text-end action-buttons">
-                                    <button class="button button-danger button-small delete-override" data-id="${override.override_id}" title="Delete override">
-                                        <i class="fas fa-trash fa-fw"></i> <span class="d-none d-md-inline">Delete</span>
-                                    </button>
-                                </td>
-                            </tr>`;
-                        if ($('#overridesTable tbody tr td[colspan="7"]').length) {
-                            $('#overridesTable tbody').html(newRow);
-                        } else {
-                            $('#overridesTable tbody').append(newRow);
-                        }
-                        $form[0].reset();
-                    },
-                    error: function(xhr) {
-                        const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "An error occurred adding the override.";
-                        showAlert(errorMsg, 'danger');
-                    },
-                    complete: function() {
-                         $submitButton.html(originalButtonText).prop('disabled', false);
-                    }
-                });
-            });
-
-            $('#overridesTable').on('click', '.delete-override', function() {
-                if (!confirm('Are you sure you want to delete this override?')) return;
-                const $button = $(this);
-                const overrideId = $button.data('id');
-                const row = $button.closest('tr');
-                const originalButtonHTML = $button.html();
-                $button.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-
-                 $.ajax({
-                    url: `{{ url_for("availability.delete_override_route", override_id=0) }}`.slice(0,-1) + overrideId,
-                    type: 'DELETE',
-                    success: function(response) {
-                        showAlert(response.message, 'success');
-                        row.fadeOut(300, function() { 
-                            $(this).remove(); 
-                            if ($('#overridesTable tbody tr').length === 0) {
-                                 $('#overridesTable tbody').html('<tr><td colspan="7" class="text-center p-3">No overrides defined.</td></tr>');
-                            }
-                        });
-                    },
-                    error: function(xhr) {
-                        const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "Error deleting override.";
-                        showAlert(errorMsg, 'danger');
-                        $button.html(originalButtonHTML).prop('disabled', false);
-                    }
-                });
-            });
-
-            // --- Daily Appointment Cap Management ---
-            function debounce(func, delay) {
-                let timeout;
-                return function(...args) {
-                    const context = this;
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(context, args), delay);
-                };
+            const result = await makeApiCall("{{ url_for('availability.add_weekly_slot_route') }}", 'POST', data);
+            if (result.success && result.data.slot) {
+                addWeeklySlotToDOM(result.data.slot);
+                flashMessage(result.data.message || "Slot added.", "success", weeklyFlashContainer);
+                this.reset();
+            } else {
+                flashMessage(result.data.message || "Error adding slot.", "danger", weeklyFlashContainer);
             }
-
-            const debouncedSaveCap = debounce(function(button, inputField, locationId, dayOfWeek, maxAppointments) {
-                const payload = {
-                    doctor_location_id: locationId.toString(), // Ensure string for consistency
-                    day_of_week: dayOfWeek.toString(),
-                    max_appointments: maxAppointments // Can be empty string for delete
-                };
-                const originalIcon = button.html();
-                button.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-                inputField.prop('readonly', true);
-
-
-                $.ajax({
-                    url: '{{ url_for("availability.save_location_daily_cap_route") }}',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(payload),
-                    success: function(response) {
-                        showAlert(response.message, 'success');
-                        if (response.success && response.cap) {
-                            inputField.data('cap-id', response.cap.cap_id);
-                            inputField.val(response.cap.max_appointments);
-                        } else if (response.success && response.deleted) {
-                            inputField.data('cap-id', '');
-                            inputField.val(''); // Clear display on successful deletion
-                        } else if (!response.success && maxAppointments === '') { // Failed to delete
-                             // Potentially revert input value if backend indicates no change or error
-                        } else if (!response.success) {
-                            // Potentially revert input value
-                        }
-                    },
-                    error: function(xhr) {
-                        const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : "An error occurred saving the cap.";
-                        showAlert(errorMsg, 'danger');
-                        // Optionally revert inputField value to previous state on error
-                    },
-                    complete: function() {
-                        button.html(originalIcon).prop('disabled', false);
-                        inputField.prop('readonly', false);
-                    }
-                });
-            }, 750);
-
-            $('#daily-caps').on('click', '.save-daily-cap', function() {
-                const $button = $(this);
-                const $inputField = $button.closest('.input-group').find('.daily-cap-input');
-                const locationId = $inputField.data('location-id');
-                const dayOfWeek = $inputField.data('day-of-week');
-                let maxAppointments = $inputField.val().trim();
-
-                if (maxAppointments !== "" ) {
-                    if (!/^\d+$/.test(maxAppointments)) {
-                        showAlert("Max appointments must be a whole non-negative number.", "warning");
-                        $inputField.focus();
-                        return;
-                    }
-                    if (parseInt(maxAppointments) < 0) { // Should be caught by pattern, but good check
-                        showAlert("Max appointments cannot be negative.", "warning");
-                        $inputField.focus();
-                        return;
-                    }
-                }
-                // If maxAppointments is empty string, it means clear/delete the cap.
-
-                debouncedSaveCap($button, $inputField, locationId, dayOfWeek, maxAppointments);
-            });
-
-            $('#daily-caps').on('keypress', '.daily-cap-input', function(e) {
-                if (e.which === 13) { // Enter key
-                    e.preventDefault();
-                    $(this).closest('.input-group').find('.save-daily-cap').click();
-                }
-            });
         });
-    </script>
+    }
+
+    document.getElementById('weekly-availability-pane').addEventListener('click', async function(event) { // Listen on tab pane
+        if (event.target.closest('.delete-weekly-slot-btn')) {
+            const button = event.target.closest('.delete-weekly-slot-btn');
+            const slotId = button.dataset.slotId;
+            if (confirm('Are you sure you want to delete this weekly slot?')) {
+                const result = await makeApiCall(`{{ url_for('availability.delete_weekly_slot_route', location_availability_id=0) }}`.replace('/0', `/${slotId}`), 'DELETE');
+                if (result.success) {
+                    const listItem = button.closest('li.list-group-item');
+                    const listULElement = listItem.parentElement;
+                    listItem.remove();
+                    flashMessage(result.data.message || "Slot deleted.", "info", weeklyFlashContainer);
+                    
+                    if (listULElement && listULElement.children.length === 0) {
+                        const noSlotsMsg = document.createElement('li');
+                        noSlotsMsg.classList.add('list-group-item', 'text-muted', 'no-slots-message');
+                        noSlotsMsg.textContent = 'No weekly slots defined for this location.';
+                        listULElement.appendChild(noSlotsMsg);
+                    }
+                } else {
+                    flashMessage(result.data.message || "Error deleting slot.", "danger", weeklyFlashContainer);
+                }
+            }
+        }
+    });
+
+    function addWeeklySlotToDOM(slot) {
+        const listElement = document.getElementById(`weeklySlotsList_${slot.doctor_location_id}`);
+        if (!listElement) return;
+        const noSlotsMsg = listElement.querySelector('.no-slots-message');
+        if (noSlotsMsg) noSlotsMsg.remove();
+        const daysMap = {{ days_of_week_map | tojson }};
+        const listItem = document.createElement('li');
+        listItem.classList.add('list-group-item');
+        listItem.dataset.slotId = slot.location_availability_id;
+        listItem.innerHTML = `
+            <span><strong>${daysMap[slot.day_of_week.toString()] || 'Unknown Day'}</strong>: ${slot.start_time} - ${slot.end_time}</span>
+            <button class="btn btn-sm btn-outline-danger delete-weekly-slot-btn" data-slot-id="${slot.location_availability_id}"><i class="fas fa-trash-alt"></i></button>
+        `;
+        listElement.appendChild(listItem); // Consider sorting logic here if needed
+    }
+
+    // --- Daily Caps Management ---
+    const saveAllCapsBtn = document.getElementById('saveAllCapsBtn');
+    const capsFlashContainer = '#caps-flash-container';
+    if (saveAllCapsBtn) {
+        saveAllCapsBtn.addEventListener('click', async function() {
+            const capInputs = document.querySelectorAll('#daily-caps-pane .cap-input');
+            let allOpsSuccessful = true;
+            let messages = [];
+            flashMessage('Saving all caps...', 'info', capsFlashContainer, true, true); // Persistent "saving"
+
+            for (const input of capInputs) {
+                const payload = {
+                    doctor_location_id: input.dataset.locationId,
+                    day_of_week: input.dataset.dayOfWeek,
+                    max_appointments: input.value.trim()
+                };
+                const result = await makeApiCall("{{ url_for('availability.save_location_daily_cap_route') }}", 'POST', payload);
+                if (!result.success) {
+                    allOpsSuccessful = false;
+                    messages.push(`Location ID ${payload.doctor_location_id}, Day ${payload.day_of_week}: ${result.data.message || 'Failed'}`);
+                    input.classList.add('is-invalid');
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.classList.add('is-valid');
+                    if (result.data.deleted) input.value = '';
+                    else if (result.data.cap && result.data.cap.max_appointments !== undefined) input.value = result.data.cap.max_appointments;
+                }
+            }
+            clearFlashMessages(capsFlashContainer); // Clear "saving..."
+            if (allOpsSuccessful) {
+                flashMessage("All daily caps processed successfully.", "success", capsFlashContainer);
+            } else {
+                flashMessage("Some errors occurred saving daily caps: <br>" + messages.join('<br>'), "danger", capsFlashContainer);
+            }
+            setTimeout(() => {
+                document.querySelectorAll('#daily-caps-pane .cap-input.is-valid').forEach(el => el.classList.remove('is-valid'));
+            }, 3000);
+        });
+    }
+
+    // --- Date Override Management ---
+    const addOverrideForm = document.getElementById('addOverrideForm');
+    const overridesFlashContainer = '#overrides-flash-container';
+    if (addOverrideForm) {
+        addOverrideForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const data = {
+                override_date: formData.get('override_date'),
+                doctor_location_id: formData.get('doctor_location_id') || null,
+                start_time: formData.get('start_time') || null,
+                end_time: formData.get('end_time') || null,
+                is_unavailable: formData.get('is_unavailable') === 'true',
+                reason: formData.get('reason') || null
+            };
+            if (data.start_time && !data.end_time || !data.start_time && data.end_time) {
+                 flashMessage("If providing start/end time, both are required.", "warning", overridesFlashContainer); return;
+            }
+            if (data.start_time && data.end_time && data.start_time >= data.end_time) {
+                 flashMessage("Start time must be before end time.", "danger", overridesFlashContainer); return;
+            }
+            const result = await makeApiCall("{{ url_for('availability.add_override_route') }}", 'POST', data);
+            if (result.success && result.data.override) {
+                addOverrideToDOM(result.data.override);
+                flashMessage(result.data.message || "Override added.", "success", overridesFlashContainer);
+                this.reset();
+                document.getElementById('override_is_unavailable').checked = true;
+            } else {
+                flashMessage(result.data.message || "Error adding override.", "danger", overridesFlashContainer);
+            }
+        });
+    }
+
+    document.getElementById('date-overrides-pane').addEventListener('click', async function(event) { // Listen on tab pane
+        if (event.target.closest('.delete-override-btn')) {
+            const button = event.target.closest('.delete-override-btn');
+            const overrideId = button.dataset.overrideId;
+            if (confirm('Are you sure you want to delete this date override?')) {
+                const result = await makeApiCall(`{{ url_for('availability.delete_override_route', override_id=0) }}`.replace('/0', `/${overrideId}`), 'DELETE');
+                if (result.success) {
+                    const listItem = button.closest('li.list-group-item');
+                    const listULElement = listItem.parentElement;
+                    listItem.remove();
+                    flashMessage(result.data.message || "Override deleted.", "info", overridesFlashContainer);
+                    if (listULElement && listULElement.children.length === 0) {
+                        const noOverridesMsg = document.createElement('li');
+                        noOverridesMsg.classList.add('list-group-item', 'text-muted', 'no-overrides-message');
+                        noOverridesMsg.textContent = 'No specific date overrides found.';
+                        listULElement.appendChild(noOverridesMsg);
+                    }
+                } else {
+                    flashMessage(result.data.message || "Error deleting override.", "danger", overridesFlashContainer);
+                }
+            }
+        }
+    });
+
+    function addOverrideToDOM(override) {
+        const listElement = document.getElementById('overridesList');
+        if (!listElement) return;
+        const noOverridesMsg = listElement.querySelector('.no-overrides-message');
+        if (noOverridesMsg) noOverridesMsg.remove();
+        const listItem = document.createElement('li');
+        listItem.classList.add('list-group-item');
+        listItem.dataset.overrideId = override.override_id;
+        if (override.is_unavailable) listItem.classList.add('override-unavailable');
+        else listItem.classList.add('override-available');
+        let timeString = '(Full Day)';
+        if (override.start_time && override.end_time) {
+            timeString = `(${override.start_time} - ${override.end_time})`;
+        }
+        const availabilityBadge = override.is_unavailable ? 
+            '<span class="badge bg-danger ms-2">Unavailable</span>' : 
+            '<span class="badge bg-success ms-2">Available</span>';
+        const reasonHtml = override.reason ? `<br><span class="override-reason">${escapeHtml(override.reason)}</span>` : '';
+        listItem.innerHTML = `
+            <div>
+                <strong>${override.override_date}</strong> ${timeString}<br>
+                <small>Location: ${escapeHtml(override.location_name || 'All Locations')}</small>
+                ${availabilityBadge} ${reasonHtml}
+            </div>
+            <button class="btn btn-sm btn-outline-danger delete-override-btn" data-override-id="${override.override_id}"><i class="fas fa-trash-alt"></i></button>
+        `;
+        listElement.appendChild(listItem); // Consider sorting
+    }
+    
+    function escapeHtml(unsafe) {
+        if (unsafe === null || unsafe === undefined) return '';
+        return unsafe.toString().replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, """).replace(/'/g, "'");
+    }
+
+    // Activate tab from URL hash if present
+    const hash = window.location.hash;
+    if (hash) {
+        const triggerEl = document.querySelector('#availabilityTabs button[data-bs-target="' + hash + '-pane"]');
+        if (triggerEl) {
+            const tab = new bootstrap.Tab(triggerEl);
+            tab.show();
+        }
+    }
+    // Update hash on tab change for bookmarking/linking
+    const availabilityTabs = document.querySelectorAll('#availabilityTabs button[data-bs-toggle="tab"]');
+    availabilityTabs.forEach(tabEl => {
+        tabEl.addEventListener('shown.bs.tab', event => {
+            const newHash = event.target.dataset.bsTarget.replace('-pane', '');
+            // Only update hash if it's different to avoid an extra history entry on initial load
+            if (window.location.hash !== newHash) {
+                 history.replaceState(null, null, ' ' + newHash); // Use replaceState to avoid cluttering history
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

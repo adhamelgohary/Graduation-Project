@@ -1,0 +1,389 @@
+/* static/Website/Departments/generic_department_landing.css */
+/* Applies the GENERIC (neutral blue) color palette for department landing pages */
+
+/* --- Root Variables - GENERIC PALETTE --- */
+:root {
+    /* Dark Theme - Generic Palette */
+    --bg-primary: #0a101f; /* Base background from generic theme */
+    --bg-secondary: rgba(8, 16, 36, 0.95); /* Header/secondary BG from generic theme */
+    --text-primary: white; /* Text color from generic theme */
+    --text-secondary: rgba(255, 255, 255, 0.75); /* Secondary text from generic theme */
+    
+    /* Generic Accents (Calm Blue and Lighter Slate Blue) */
+    --primary-accent-generic: #5D8BBA;    /* Calm Blue */
+    --rgb-primary-accent-generic: 93, 139, 186;
+    --secondary-accent-generic: #8FAFD2;  /* Lighter Slate Blue / Cool Grayish Blue */
+    --rgb-secondary-accent-generic: 143, 175, 210;
+
+    /* Mapped variables for this specific CSS file */
+    --text-highlight: var(--primary-accent-generic); 
+    --accent-color: var(--primary-accent-generic);   
+    --border-color: rgba(255, 255, 255, 0.12);    
+    
+    --particle-bg: rgba(var(--rgb-secondary-accent-generic), 0.08); 
+    --neon-blue: var(--secondary-accent-generic); /* Re-purposed for neon effects */
+    
+    --hero-bg: rgba(var(--rgb-primary-accent-generic), 0.05); 
+    --card-bg: rgba(12, 22, 44, 0.8); /* Card BG from generic theme */
+    
+    --section-title-gradient: linear-gradient(90deg, var(--primary-accent-generic), var(--secondary-accent-generic));
+
+    /* For specific department elements (e.g., abstract visuals) */
+    --dept-specific-color-1: var(--primary-accent-generic);
+    --dept-specific-color-2: var(--secondary-accent-generic);
+    --dept-neon-color: var(--secondary-accent-generic); 
+
+    /* Button colors */
+    --button-bg: rgba(var(--rgb-primary-accent-generic), 0.7); 
+    --button-hover: var(--primary-accent-generic);
+    --accent-pink: var(--primary-accent-generic); /* Mapping 'pink' to generic primary */
+    --accent-white: #ffffff;
+
+    /* Shadows - can be more neutral */
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --blue-glow: rgba(var(--rgb-secondary-accent-generic), 0.15); 
+    --card-hover: rgba(var(--rgb-secondary-accent-generic), 0.3);
+}
+
+/* Light Theme - Generic Palette */
+[data-theme="light"] {
+    --bg-primary: #f0f4f8; /* Light Cool Gray/Off-white */
+    --bg-secondary: rgba(255, 255, 255, 0.98); /* Almost solid white header */
+    --text-primary: #1a2b42; /* Dark Blue/Gray */
+    --text-secondary: rgba(26, 43, 66, 0.75);
+    --border-color: rgba(26, 43, 66, 0.15);
+
+    /* Generic Light Accents (Brighter Sky Blue and Pale Cornflower Blue) */
+    --primary-accent-generic: #79A6DC;    /* Brighter Sky Blue */
+    --rgb-primary-accent-generic: 121, 166, 220;
+    --secondary-accent-generic: #B8CCE4;  /* Pale Cornflower Blue */
+    --rgb-secondary-accent-generic: 184, 204, 228;
+    
+    /* Mapped variables for light theme */
+    --text-highlight: var(--primary-accent-generic);
+    --accent-color: var(--primary-accent-generic);
+    --particle-bg: rgba(var(--rgb-secondary-accent-generic), 0.1);
+    --neon-blue: var(--secondary-accent-generic);
+    --hero-bg: rgba(var(--rgb-primary-accent-generic), 0.1);
+    --card-bg: rgba(255, 255, 255, 0.95); 
+    --section-title-gradient: linear-gradient(90deg, var(--primary-accent-generic), var(--secondary-accent-generic));
+
+    --dept-specific-color-1: var(--primary-accent-generic);
+    --dept-specific-color-2: var(--secondary-accent-generic);
+    --dept-neon-color: var(--secondary-accent-generic);
+
+    /* Button colors for light theme */
+    --button-bg: rgba(var(--rgb-primary-accent-generic), 0.8);
+    --button-hover: var(--primary-accent-generic);
+    --accent-pink: var(--primary-accent-generic);
+    
+    --shadow-color: rgba(26, 43, 66, 0.08);
+    --blue-glow: rgba(var(--rgb-secondary-accent-generic), 0.1);
+    --card-hover: rgba(var(--rgb-secondary-accent-generic), 0.25);
+}
+
+/* --- Hero Section Specifics (Identical structure to derma one, uses generic vars) --- */
+.hero-section { 
+    width: 100%;
+    background-color: var(--hero-bg); 
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border-color); 
+}
+
+.hero-particle {
+    position: absolute;
+    border-radius: 50%;
+    background-color: var(--particle-bg); 
+    z-index: 0;
+}
+
+.hero-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 80px 5% 60px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+}
+
+.text-content {
+    flex: 1;
+    padding-right: 40px;
+    z-index: 5;
+}
+
+.visual-content {
+    flex: 1;
+    position: relative;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.hero-content h1 {
+    color: var(--text-primary);
+    font-size: 42px;
+    margin-bottom: 20px;
+    line-height: 1.2;
+    font-weight: bold;
+}
+
+/* Styles for hero_highlight and hero_main from Python */
+.hero-highlight-text { 
+    color: var(--text-highlight); /* Generic primary accent */
+    display: block; 
+    font-size: 1.1em; 
+}
+.hero-main-text {  
+    color: var(--text-primary); 
+    font-weight: 300; 
+}
+
+.hero-content p {
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+    max-width: 600px;
+}
+
+/* Search Bar */
+.search-bar {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    max-width: 250px; 
+    margin-top: 20px; 
+}
+.search-bar input {
+    background: transparent; border: none; color: var(--text-primary);
+    outline: none; width: 100%; font-size: 14px;
+}
+.search-bar input::placeholder { color: var(--text-secondary); }
+.search-icon { color: var(--text-secondary); margin-right: 8px; }
+
+[data-theme="light"] .search-bar { background-color: rgba(var(--rgb-primary-accent-generic), 0.08); border-color: rgba(var(--rgb-primary-accent-generic), 0.3); }
+[data-theme="light"] .search-bar input { color: var(--text-primary); }
+[data-theme="light"] .search-bar input::placeholder { color: var(--text-secondary); }
+[data-theme="light"] .search-icon { color: var(--text-secondary); }
+
+
+/* --- Visual Elements (Abstract patterns for Generic Department) --- */
+.animated-pattern-container { /* Renamed from ecg for generic use */
+    position: absolute; bottom: 10%; left: 0; width: 100%; height: 100px;
+    overflow: hidden; z-index: 2;
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+}
+.animated-pattern-line { 
+    width: 200%; height: 100%; position: absolute; left: 0; top: 0; 
+}
+.animated-pattern-line .pattern-segment { 
+    fill: none; stroke: var(--dept-neon-color); /* Uses generic secondary accent */
+    stroke-width: 2px;
+    stroke-linecap: round; stroke-linejoin: round;
+    filter: drop-shadow(0 0 5px var(--dept-neon-color)); /* Glow with generic secondary */
+    animation: scroll-pattern 10s linear infinite; 
+    opacity: 0; transition: opacity 0.4s ease-in-out;
+}
+.animated-pattern-line .pattern-segment.visible-pattern { opacity: 1; } /* Ensure class matches JS if used */
+@keyframes scroll-pattern { 0% { transform: translateX(0); } 100% { transform: translateX(-800px); } } /* Adjust value based on SVG width */
+
+.abstract-shape { /* Renamed from cell */
+    position: absolute; 
+    /* Example: width: 30px; height: 30px; border-radius: 50%; */
+    border: 1px solid var(--dept-neon-color); /* Generic secondary accent */
+    background-color: rgba(var(--rgb-secondary-accent-generic), 0.1); /* Tint of generic secondary */
+    box-shadow: 0 0 10px rgba(var(--rgb-secondary-accent-generic), 0.5); /* Glow with generic secondary */
+    z-index: 2;
+    /* Add random sizes/shapes/positions via JS for better effect */
+}
+[data-theme="light"] .abstract-shape {
+    border-color: var(--dept-neon-color); 
+    background-color: rgba(var(--rgb-secondary-accent-generic), 0.15);
+    box-shadow: 0 0 10px rgba(var(--rgb-secondary-accent-generic), 0.4);
+}
+
+.department-visual-element { /* Generic name for hero image elements */
+    position: absolute; width: 50px; height: 50px; object-fit: contain;
+    z-index: -1; opacity: 0.8; pointer-events: none;
+    /* Could use an SVG icon related to 'general medicine' or an abstract shape */
+}
+.visual-content .department-visual-element { z-index: 3; width: 40px; height: 40px; }
+.main-content .department-visual-element { z-index: -1; }
+
+
+/* --- Main Content & Condition Cards (Structure same, uses generic vars) --- */
+.main-content {
+    padding: 40px 5%; position: relative; overflow: hidden;
+    margin-top: 0px; 
+}
+
+.section-title { 
+    font-size: 32px; margin-bottom: 20px; text-align: center; position: relative;
+    color: var(--text-primary); font-weight: bold;
+}
+.section-title::after {
+    content: ''; display: block; width: 60px; height: 3px;
+    background: var(--section-title-gradient); /* Uses generic gradient */
+    margin: 15px auto 30px; border-radius: 2px;
+}
+
+.conditions-section { margin: 60px 0; } /* Renamed from diseases-section for clarity */
+.conditions-grid { /* Renamed from diseases for clarity */
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;
+}
+
+/* Card styling for conditions */
+.card { 
+    background-color: var(--card-bg); 
+    border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);
+    display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease;
+    box-shadow: var(--shadow-color); 
+}
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 35px var(--blue-glow); /* Uses generic accent glow */
+    border-color: var(--card-hover); /* Uses generic accent hover border */
+}
+[data-theme="light"] .card {
+    background-color: var(--card-bg); 
+}
+[data-theme="light"] .card:hover {
+    box-shadow: 0 15px 35px var(--blue-glow);
+    border-color: var(--card-hover);
+}
+
+.card .content { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+.card h3 { 
+    font-size: 22px; margin-bottom: 15px; color: var(--text-primary);
+    position: relative; padding-bottom: 10px; line-height: 1.3; font-weight: bold;
+}
+.card h3::after { 
+    content: ''; position: absolute; bottom: 0; left: 0; width: 40px; height: 2px;
+    background: var(--section-title-gradient); /* Generic gradient for card titles */
+}
+
+.image-text-container {
+    display: flex; flex-direction: column; align-items: center; gap: 15px;
+    margin-bottom: 20px; flex-grow: 1;
+}
+.image-text-container img { 
+    width: 100%; 
+    max-width: 150px; 
+    height: auto; 
+    aspect-ratio: 1 / 1; 
+    object-fit: cover; 
+    border-radius: 8px;
+    background-color: rgba(var(--rgb-secondary-accent-generic), 0.05); 
+    display: block;
+}
+[data-theme="light"] .image-text-container img { background-color: rgba(var(--rgb-secondary-accent-generic), 0.08); }
+
+.image-text-container p { 
+    font-size: 14px; color: var(--text-secondary); line-height: 1.5;
+    margin-bottom: 0; text-align: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; 
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-height: calc(1.5em * 3); 
+}
+
+/* Button Styling */
+.btn {
+    background-color: var(--button-bg); 
+    color: var(--accent-white); 
+    border: 1px solid var(--accent-pink); /* Mapped to generic primary */
+    padding: 10px 20px; 
+    border-radius: 5px; text-decoration: none;
+    font-size: 14px; transition: all 0.3s; display: block; cursor: pointer;
+    text-align: center; font-weight: 500; 
+    box-sizing: border-box;
+    width: auto; 
+    margin: 0 auto; 
+}
+.btn:hover {
+    background-color: var(--button-hover); 
+    color: white; transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--shadow-color); 
+}
+.card .btn { 
+    width: auto; 
+    max-width: 85%; 
+    margin: 20px auto 0; 
+    padding: 12px 25px;
+}
+
+/* Emergency button (uses global emergency colors) */
+.emergency-btn { 
+    background-color: var(--emergency-bg, #D32F2F); 
+    color: var(--emergency-text-color, white);
+    border: 1px solid var(--emergency-border-color, #D32F2F);
+    display: inline-block; width: auto; margin: 0;
+}
+.emergency-btn:hover {
+     background-color: color-mix(in srgb, var(--emergency-bg, #D32F2F) 80%, black); 
+     border-color: color-mix(in srgb, var(--emergency-border-color, #D32F2F) 80%, black);
+}
+/* Light theme emergency button might need slight adjustments if global emergency colors don't contrast well */
+[data-theme="light"] .emergency-btn { 
+    /* Use specific light theme emergency vars if defined, or adjust global ones */
+    background-color: var(--light-emergency-bg, var(--emergency-bg, #e53935)); 
+    color: var(--light-emergency-text-color, var(--emergency-text-color, white));
+    border: 1px solid var(--light-emergency-border-color, var(--emergency-border-color, #e53935));
+}
+[data-theme="light"] .emergency-btn:hover { 
+    background-color: color-mix(in srgb, var(--light-emergency-bg, var(--emergency-bg, #e53935)) 70%, black);
+    border-color: color-mix(in srgb, var(--light-emergency-border-color, var(--emergency-border-color, #e53935)) 70%, black);
+}
+
+/* Light mode general button */
+[data-theme="light"] .btn:not(.emergency-btn) {
+    background-color: var(--button-bg);
+    color: var(--text-primary); border-color: var(--accent-pink); /* Generic primary */
+}
+[data-theme="light"] .btn:not(.emergency-btn):hover {
+     background-color: var(--button-hover); color: white;
+     box-shadow: 0 5px 15px var(--shadow-color);
+}
+
+/* --- Media Queries (Structure same, uses generic vars) --- */
+@media (max-width: 992px) {
+    .hero-content { flex-direction: column; text-align: center; padding-top: 60px; padding-bottom: 40px; }
+    .text-content { padding-right: 0; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .hero-content p { max-width: 100%; }
+    .visual-content { min-height: 300px; width: 80%; margin-top: 30px; }
+    .search-bar { margin-left: auto; margin-right: auto; }
+    .animated-pattern-container { height: 80px; bottom: 5%; }
+}
+@media (max-width: 768px) {
+    .hero-section { padding-top: 40px; padding-bottom: 40px; }
+    .hero-content h1 { font-size: 32px; }
+    .conditions-grid { grid-template-columns: 1fr; }
+    .search-bar { width: 90%; max-width: none; }
+    .main-content { padding: 20px 5%; }
+    .section-title { font-size: 28px; }
+    .animated-pattern-container { height: 60px; }
+    .card h3 { font-size: 20px; } 
+}
+@media (max-width: 480px) {
+    .hero-section { padding-top: 30px; padding-bottom: 30px; }
+    .hero-content h1 { font-size: 28px; }
+    .hero-content p { font-size: 15px; }
+    .btn, .card .btn { padding: 10px 20px; font-size: 13px; }
+    .card h3 { font-size: 18px; }
+    .image-text-container img { max-width: 120px; }
+    .image-text-container p { font-size: 13px; -webkit-line-clamp: 2; min-height: calc(1.5em * 2); }
+    .section-title { font-size: 24px; }
+    .animated-pattern-container { display: none; } 
+}
+/* --- END OF GENERIC DEPARTMENT LANDING CSS --- */

@@ -1,0 +1,96 @@
+{% extends "Doctor_Portal/base.html" %}
+
+{% block title %}Vaccine Categories{% endblock %}
+
+{% block head_extra %}
+<style>
+    .category-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+    }
+    .category-card img.category-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-bottom: 1px solid var(--color-border-light, #eee); /* Fallback color */
+        margin-bottom: var(--spacing-md);
+    }
+    .category-card .card-body {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+    .category-card .card-text {
+        flex-grow: 1;
+        margin-bottom: var(--spacing-md);
+    }
+    .vaccine-count {
+        font-size: 0.85rem;
+        color: var(--color-text-muted, #6c757d); /* Fallback color */
+        margin-top: var(--spacing-sm);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-tags fa-fw"></i> Vaccine Categories</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('vaccine_management.add_vaccine_category') }}" class="button button-success">
+            <i class="fas fa-plus fa-fw"></i> Add New Category
+        </a>
+        <a href="{{ url_for('vaccine_management.list_vaccines') }}" class="button button-info ms-2">
+            <i class="fas fa-syringe fa-fw"></i> All Vaccines
+        </a>
+    </div>
+</div>
+
+{% if categories %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for category in categories %}
+    <div class="col">
+        <div class="card h-100 category-card">
+            {% if category.image_filename %}
+                <img src="{{ url_for('static', filename='uploads/vaccine_category_images/' + category.image_filename) }}" 
+                     class="card-img-top category-image" alt="{{ category.category_name }}"> {# Use category_name #}
+            {% else %}
+                <img src="{{ url_for('static', filename='images/placeholder_vaccine_cat.png') }}"
+                     class="card-img-top category-image" alt="Placeholder">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ category.category_name }}</h5> {# Use category_name #}
+                <p class="card-text small text-muted">{{ category.description | truncate(100) if category.description else 'No description available.' }}</p>
+                <p class="card-text vaccine-count">Target: {{ category.target_group or 'General' }} <br>
+                   Active Vaccines: {{ category.vaccine_count }}
+                </p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <a href="{{ url_for('vaccine_management.list_vaccines', category_id_filter=category.category_id) }}" class="button button-primary button-small w-100 mb-1">
+                    <i class="fas fa-eye fa-fw"></i> View Vaccines in Category
+                </a>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('vaccine_management.edit_vaccine_category', category_id=category.category_id) }}" class="button button-outline button-warning button-xsmall flex-grow-1 me-1">
+                        <i class="fas fa-edit fa-fw"></i> Edit
+                    </a>
+                    <form method="POST" action="{{ url_for('vaccine_management.delete_vaccine_category', category_id=category.category_id) }}" class="flex-grow-1 ms-1" onsubmit="return confirm('Are you sure you want to deactivate this category? This action cannot be undone if there are no active vaccines linked to it.');">
+                        <button type="submit" class="button button-outline button-danger button-xsmall w-100">
+                            <i class="fas fa-trash-alt fa-fw"></i> Deactivate
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center">
+        <p class="text-muted">No vaccine categories found. <a href="{{ url_for('vaccine_management.add_vaccine_category') }}">Add the first one!</a></p>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -2,7 +2,6 @@
 
 {% block title %}Doctor Dashboard{% endblock %}
 
-{# === Add the link to the external CSS file === #}
 {% block head_extra %}
     <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/dashboard.css') }}">
 {% endblock %}
@@ -17,35 +16,43 @@
         {% endif %}
     </div>
 
-    {# --- Dashboard Summary Stats --- #}
+    {# --- Flash Messages --- #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div id="flashMessages" class="mb-3">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> {# Assumes Bootstrap 5 for btn-close #}
+          </div>
+        {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
     <div class="dashboard-summary-grid">
         <div class="card summary-card">
             <h3>Patient Count</h3>
             <p class="summary-value">{{ patient_count | default('0') }}</p>
-            {# Placeholder link - update when route exists #}
-            <a href="{{ url_for('doctor_main.patients_list') if false else '#' }}" class="card-link">View Patients →</a>
+            <a href="{{ url_for('patients_bp.list_patients') if 'patients_bp.list_patients' in config['URL_RULES'] else '#' }}" class="card-link">View Patients →</a>
         </div>
         <div class="card summary-card">
             <h3>Unread Messages</h3>
             <p class="summary-value">
                 {{ unread_messages | default('0') }}
-                {% if unread_messages is defined and unread_messages > 0 %}
-                    <span class="badge">{{ unread_messages }}</span>
+                {% if unread_messages and unread_messages > 0 %}
+                    <span class="badge bg-danger">{{ unread_messages }}</span> {# Example using Bootstrap badge #}
                 {% endif %}
             </p>
-             {# Placeholder link - update when route exists #}
-            <a href="{{ url_for('doctor_main.messages_list') if false else '#' }}" class="card-link">Go to Messages →</a>
+            <a href="{{ url_for('chat_bp.list_chats') if 'chat_bp.list_chats' in config['URL_RULES'] else '#' }}" class="card-link">Go to Messages →</a>
         </div>
         <div class="card summary-card">
             <h3>Appointments Today</h3>
-            {# TODO: Add backend logic to calculate and pass appointments_today_count #}
-            <p class="summary-value">{{ appointments_today_count | default('?') }}</p>
-             {# Placeholder link - update when route exists #}
-            <a href="{{ url_for('doctor_main.appointments_list') if false else '#' }}#today" class="card-link">View Schedule →</a>
+            <p class="summary-value">{{ appointments_today_count | default('0') }}</p>
+            <a href="{{ url_for('appointments_bp.manage_appointments_page') if 'appointments_bp.manage_appointments_page' in config['URL_RULES'] else '#' }}#today" class="card-link">View Schedule →</a>
         </div>
     </div>
 
-    {# --- Upcoming Appointments Section --- #}
     <div class="card mt-3">
         <div class="card-header">
             Upcoming Appointments (Next 5)
@@ -68,18 +75,18 @@
                         <tr>
                             <td>{{ appt.appointment_date.strftime('%Y-%m-%d') if appt.appointment_date else 'N/A' }}</td>
                             <td>
-                                {# CORRECT: Already using the filter #}
                                 {{ appt.start_time | timedelta_to_time if appt.start_time else '--:--' }} -
                                 {{ appt.end_time | timedelta_to_time if appt.end_time else '--:--' }}
                             </td>
                              <td>
-                                {{ appt.patient_first_name | default('') }} {{ appt.patient_last_name | default('') }}
+                                <a href="{{ url_for('patients_bp.view_patient_profile', patient_id=appt.patient_user_id) if 'patients_bp.view_patient_profile' in config['URL_RULES'] else '#' }}">
+                                    {{ appt.patient_first_name | default('') }} {{ appt.patient_last_name | default('') }}
+                                </a>
                              </td>
-                            <td>{{ appt.appointment_type | capitalize | default('N/A') }}</td>
-                            <td><span class="status-badge status-{{ appt.status | lower | replace(' ', '-') }}">{{ appt.status | replace('_', ' ') | title | default('N/A') }}</span></td>
+                            <td>{{ appt.appointment_type | default('N/A') | replace('_', ' ') | title }}</td>
+                            <td><span class="status-badge status-{{ appt.status | lower | replace(' ', '-') }}">{{ appt.status | default('N/A') | replace('_', ' ') | title }}</span></td>
                             <td>
-                                 {# Placeholder link - update when route exists #}
-                                <a href="{{ url_for('appointments.view_appointment', appointment_id=appt.appointment_id) if false else '#' }}" class="button button-outline button-small">View</a>
+                                <a href="{{ url_for('appointments_bp.view_appointment_details', appointment_id=appt.appointment_id) if 'appointments_bp.view_appointment_details' in config['URL_RULES'] else '#' }}" class="button button-outline button-small">View</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -87,38 +94,39 @@
                 </table>
             </div>
             <div class="card-footer text-center mt-2">
-                 {# Placeholder link - update when route exists #}
-                 <a href="{{ url_for('doctor_main.appointments_list') if false else '#' }}" class="button button-secondary">View All Appointments</a>
+                 <a href="{{ url_for('appointments_bp.manage_appointments_page') if 'appointments_bp.manage_appointments_page' in config['URL_RULES'] else '#' }}" class="button button-secondary">View All Appointments</a>
             </div>
         {% else %}
             <p class="text-muted p-3">No upcoming appointments found.</p>
         {% endif %}
     </div>
 
-    {# --- Other Dashboard Sections (Placeholders) --- #}
-    <div class="dashboard-actions-grid mt-3">
-         <div class="card action-card">
-             <h3>Find Patient</h3>
-             {# Placeholder form - update when route exists #}
-             <form action="{{ url_for('doctor_main.patients_list') if false else '#' }}" method="GET">
-                <div class="form-group mb-2">
-                    <input type="search" name="search" class="form-control" placeholder="Enter patient name or ID...">
-                </div>
-                <button type="submit" class="button button-primary">Search</button>
-             </form>
-         </div>
-          <div class="card action-card">
-             <h3>Quick Actions</h3>
-             <ul class="quick-links">
-                 {# Placeholder links - update when routes exist #}
-                 <li><a href="{{ url_for('doctor_main.create_appointment') if false else '#' }}">Schedule New Appointment</a></li>
-                 <li><a href="#">Review Pending Lab Results</a></li>
-                 <li><a href="{{ url_for('doctor_main.profile') if false else '#' }}">Update Availability</a></li>
-             </ul>
-         </div>
-    </div>
-
 {% endblock %}
 
-{# The {% block head_extra %} above handles the CSS link #}
-{# NO style block needed here anymore #}
+{% block scripts %}
+<script>
+    // Auto-dismiss flash messages after a delay (optional)
+    setTimeout(function() {
+        let flashMessages = document.getElementById('flashMessages');
+        if (flashMessages) {
+            let alerts = flashMessages.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                // If Bootstrap JS is loaded, it will handle the data-bs-dismiss.
+                // Otherwise, you might need to implement manual dismissal.
+                if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                    var alertInstance = bootstrap.Alert.getInstance(alert);
+                    if (alertInstance) {
+                        alertInstance.close();
+                    } else { // Fallback if instance not found but bootstrap loaded
+                        new bootstrap.Alert(alert).close();
+                    }
+                } else { // Manual removal if Bootstrap JS not present
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }
+            });
+        }
+    }, 7000); // 7 seconds
+</script>
+{% endblock %}

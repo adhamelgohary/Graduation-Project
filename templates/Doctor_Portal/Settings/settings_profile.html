@@ -1,0 +1,257 @@
+{% extends "Doctor_Portal/Settings/settings_layout.html" %} {# Adjusted path for clarity if needed #}
+
+{% block settings_head_extra %}
+    <style>
+        .locked-field-note {
+            font-size: 0.75rem;
+            color: #6c757d; /* Bootstrap's text-muted color */
+        }
+        .form-control[readonly].locked-active {
+            background-color: #e9ecef; /* Bootstrap's default readonly background */
+            cursor: not-allowed;
+        }
+    </style>
+{% endblock %}
+
+{% block settings_content %}
+<h3>Profile Information</h3>
+<hr>
+<form method="POST" action="{{ url_for('settings.profile_settings') }}">
+    {# Basic User Info - Generally Editable #}
+    <h5>Basic Information</h5>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="first_name" name="first_name" value="{{ doctor_info.first_name | default('') }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="last_name" name="last_name" value="{{ doctor_info.last_name | default('') }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+            <input type="email" class="form-control form-control-sm" id="email" name="email" value="{{ doctor_info.email | default('') }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="phone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control form-control-sm" id="phone" name="phone" value="{{ doctor_info.phone | default('') }}">
+        </div>
+    </div>
+
+    {# Professional Details #}
+    <h5 class="mt-4">Professional Details</h5>
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <label for="department_id" class="form-label">Department</label>
+            <select class="form-select form-select-sm {% if doctor_info.department_id and 'department_id' in locked_db_cols %}locked-active{% endif %}"
+                    id="department_id" name="department_id"
+                    {% if doctor_info.department_id and 'department_id' in locked_db_cols %}readonly title="This field cannot be changed. Contact admin."{% endif %}>
+                <option value="">Select Department</option>
+                {% for dept in all_departments %}
+                <option value="{{ dept.department_id }}" {% if doctor_info.department_id == dept.department_id %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+                {% endfor %}
+            </select>
+            {% if doctor_info.department_id and 'department_id' in locked_db_cols %}
+                <small class="locked-field-note">To change, contact administration.</small>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <label for="specialization_id" class="form-label">Specialization <span class="text-danger">*</span></label>
+            <select class="form-select form-select-sm {% if doctor_info.specialization_id and 'specialization_id' in locked_db_cols %}locked-active{% endif %}"
+                    id="specialization_id" name="specialization_id" required
+                    {% if doctor_info.specialization_id and 'specialization_id' in locked_db_cols %}readonly title="This field cannot be changed. Contact admin."{% endif %}>
+                <option value="">Select Specialization</option>
+                {% for spec in all_specializations %}
+                    <option value="{{ spec.specialization_id }}" data-department-id="{{ spec.department_id | default('') }}"
+                            {% if doctor_info.specialization_id == spec.specialization_id %}selected{% endif %}>
+                        {{ spec.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            {% if doctor_info.specialization_id and 'specialization_id' in locked_db_cols %}
+                <small class="locked-field-note">To change, contact administration.</small>
+            {% elif not doctor_info.specialization_id %}
+                <small class="form-text text-muted">Required. Select your primary specialization.</small>
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <label for="npi_number" class="form-label">NPI Number</label>
+            <input type="text" class="form-control form-control-sm {% if doctor_info.npi_number and 'npi_number' in locked_db_cols %}locked-active{% endif %}"
+                   id="npi_number" name="npi_number" value="{{ doctor_info.npi_number | default('') }}"
+                   pattern="\d{10}" title="NPI must be 10 digits"
+                   {% if doctor_info.npi_number and 'npi_number' in locked_db_cols %}readonly{% endif %}>
+            {% if doctor_info.npi_number and 'npi_number' in locked_db_cols %}
+                <small class="locked-field-note">To change, contact administration.</small>
+            {% endif %}
+        </div>
+         <div class="col-md-6">
+            <label for="clinic_address" class="form-label">Primary Clinic Address (General)</label>
+            <input type="text" class="form-control form-control-sm" id="clinic_address" name="clinic_address" value="{{ doctor_info.clinic_address | default('') }}">
+            <small class="form-text text-muted">This is a general address. Manage specific practice locations separately.</small>
+        </div>
+    </div>
+
+    {# Licensing #}
+    <h5 class="mt-4">Licensing & Education</h5>
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <label for="license_number" class="form-label">License Number <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm {% if doctor_info.license_number and 'license_number' in locked_db_cols %}locked-active{% endif %}"
+                   id="license_number" name="license_number" value="{{ doctor_info.license_number | default('') }}" required
+                   {% if doctor_info.license_number and 'license_number' in locked_db_cols %}readonly{% endif %}>
+            {% if doctor_info.license_number and 'license_number' in locked_db_cols %}
+                <small class="locked-field-note">To change, contact administration.</small>
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            <label for="license_state" class="form-label">License State <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm {% if doctor_info.license_state and 'license_state' in locked_db_cols %}locked-active{% endif %}"
+                   id="license_state" name="license_state" value="{{ doctor_info.license_state | default('') }}" required
+                   {% if doctor_info.license_state and 'license_state' in locked_db_cols %}readonly{% endif %}>
+            {% if doctor_info.license_state and 'license_state' in locked_db_cols %}
+                <small class="locked-field-note">To change, contact administration.</small>
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            <label for="license_expiration" class="form-label">License Expiration <span class="text-danger">*</span></label>
+            <input type="date" class="form-control form-control-sm" id="license_expiration" name="license_expiration" value="{{ doctor_info.license_expiration_str | default('') }}" required>
+            {# License expiration is typically updatable by doctor #}
+        </div>
+        <div class="col-md-8">
+            <label for="medical_school" class="form-label">Medical School</label>
+            <input type="text" class="form-control form-control-sm {% if doctor_info.medical_school and 'medical_school' in locked_db_cols %}locked-active{% endif %}"
+                   id="medical_school" name="medical_school" value="{{ doctor_info.medical_school | default('') }}"
+                   {% if doctor_info.medical_school and 'medical_school' in locked_db_cols %}readonly{% endif %}>
+            {% if doctor_info.medical_school and 'medical_school' in locked_db_cols %}
+                <small class="locked-field-note">To change, contact administration.</small>
+            {% endif %}
+        </div>
+        <div class="col-md-4">
+            <label for="graduation_year" class="form-label">Graduation Year</label>
+            <input type="number" class="form-control form-control-sm {% if doctor_info.graduation_year and 'graduation_year' in locked_db_cols %}locked-active{% endif %}"
+                   id="graduation_year" name="graduation_year" value="{{ doctor_info.graduation_year | default('') }}"
+                   min="1900" max="{{ current_year + 5 }}"
+                   {% if doctor_info.graduation_year and 'graduation_year' in locked_db_cols %}readonly{% endif %}>
+            {% if doctor_info.graduation_year and 'graduation_year' in locked_db_cols %}
+                <small class="locked-field-note">To change, contact administration.</small>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Other Details - Generally Editable #}
+    <h5 class="mt-4">Additional Information</h5>
+    <div class="mb-3">
+        <label for="certifications" class="form-label">Certifications/Affiliations</label>
+        <textarea class="form-control form-control-sm" id="certifications" name="certifications" rows="2">{{ doctor_info.certifications | default('') }}</textarea>
+    </div>
+    <div class="mb-3">
+        <label for="biography" class="form-label">Biography/Professional Statement</label>
+        <textarea class="form-control form-control-sm" id="biography" name="biography" rows="4">{{ doctor_info.biography | default('') }}</textarea>
+    </div>
+    <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="accepting_new_patients" name="accepting_new_patients" {% if doctor_info.accepting_new_patients %}checked{% endif %}>
+        <label class="form-check-label" for="accepting_new_patients">
+            Accepting New Patients
+        </label>
+    </div>
+
+    <hr>
+    <button type="submit" class="button button-success">Save Profile Changes</button>
+</form>
+{% endblock %}
+
+{% block settings_scripts %}
+<script>
+$(document).ready(function() {
+    const allSpecializations = {{ all_specializations_json | safe }};
+    const departmentSelect = $('#department_id');
+    const specializationSelect = $('#specialization_id');
+    const currentSpecId = '{{ doctor_info.specialization_id | default("", true) | string }}'; // Ensure string for comparison
+
+    const isDepartmentLocked = departmentSelect.is('[readonly]');
+    const isSpecializationLocked = specializationSelect.is('[readonly]');
+
+    // If department is locked, make the specialization dropdown also behave as if locked
+    // related to department selection, even if not directly locked itself.
+    // This is because changing a locked department would normally filter specializations.
+    if (isDepartmentLocked && !isSpecializationLocked) {
+        // If dept is locked, we shouldn't allow specialization change based on department filtering
+        // However, the current JS logic might re-populate based on the *selected* locked department.
+        // For simplicity, if department is locked, the specialization list will be populated once
+        // based on that locked department, and then it will also be readonly.
+        // If both are locked, their existing values are just displayed.
+    }
+
+
+    function populateSpecializations(selectedDepartmentId) {
+        const currentSelectedSpecVal = specializationSelect.val();
+        specializationSelect.empty().append('<option value="">Select Specialization</option>');
+
+        allSpecializations.forEach(function(spec) {
+            // If department is locked, selectedDepartmentId will be the locked department's ID.
+            // If department is not locked, selectedDepartmentId is from the dropdown.
+            let departmentMatches = false;
+            if (selectedDepartmentId === null || selectedDepartmentId === "") { // No department selected (or field empty)
+                 departmentMatches = true; // Show all specializations or those without department
+            } else if (spec.department_id === null && selectedDepartmentId !== null && selectedDepartmentId !== ""){
+                departmentMatches = false; // Specialization has no department, but a department is selected.
+            }
+            else if (spec.department_id == selectedDepartmentId) {
+                 departmentMatches = true;
+            }
+
+
+            // If department is NOT locked, show specializations matching selected department (or all if no dept selected)
+            // If department IS locked, only show specializations matching the *locked* department.
+            // This is implicitly handled if selectedDepartmentId is the locked department's ID.
+            if (departmentMatches) {
+                let option = $('<option></option>')
+                    .val(spec.specialization_id)
+                    .text(spec.name)
+                    .attr('data-department-id', spec.department_id || '');
+
+                // Select if it's the current doctor's spec OR if it was the previously selected value before re-populating
+                if (String(spec.specialization_id) === currentSpecId || String(spec.specialization_id) === currentSelectedSpecVal) {
+                    option.prop('selected', true);
+                }
+                specializationSelect.append(option);
+            }
+        });
+    }
+
+    departmentSelect.on('change', function() {
+        if (!isDepartmentLocked) { // Only allow change if not locked
+            const selectedDepartmentId = $(this).val() ? parseInt($(this).val()) : null;
+            populateSpecializations(selectedDepartmentId);
+        }
+    });
+
+    // Initial population:
+    // If department is locked, pass its ID. Otherwise, pass current selection or null.
+    let initialDeptId = null;
+    if (isDepartmentLocked) {
+        initialDeptId = departmentSelect.val() ? parseInt(departmentSelect.val()) : null;
+    } else {
+        initialDeptId = departmentSelect.val() ? parseInt(departmentSelect.val()) : null;
+    }
+    populateSpecializations(initialDeptId);
+
+    // If specialization itself is locked, disable its interaction regardless of department
+    if (isSpecializationLocked) {
+        specializationSelect.prop('disabled', true); // More effective than readonly for select
+        specializationSelect.addClass('locked-active');
+    }
+    if (isDepartmentLocked) {
+        departmentSelect.prop('disabled', true);
+        departmentSelect.addClass('locked-active');
+    }
+
+
+    // For input fields that are readonly, add a class for consistent styling if needed
+    $('input[readonly]').addClass('locked-active');
+
+});
+</script>
+{% endblock %}

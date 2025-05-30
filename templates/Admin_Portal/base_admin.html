@@ -3,189 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Hospital Admin Portal{% endblock %}</title>
-    {# Font Awesome for Icons #}
+    <title>{% block title %}Pro Health Admin Portal{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    {# Bootstrap 5.1.3 CSS #}
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    {# Chart.js (Optional, if used on dashboard/reports) #}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    {# --- Your Custom Base Admin CSS --- #}
+
     <link rel="stylesheet" href="{{ url_for('static', filename='Admin_Portal/base.css') }}">
-    {# --- Placeholder for Page-Specific CSS --- #}
+
     {% block extra_css %}{% endblock %}
-    <style>
-        /* Enhanced active state styling */
-        .sidebar .list-unstyled li.active > a,
-        .sidebar .list-unstyled li.active > a:hover,
-        .sidebar .list-unstyled li.active > a:focus {
-            color: #fff;
-            background: #0056b3; /* Darker blue for active items */
-        }
-        .sidebar .list-unstyled ul a.active {
-             font-weight: bold;
-             color: #0d6efd; /* Bootstrap primary blue for sub-active items */
-        }
-        .sidebar .list-unstyled a:hover {
-            background: #e9ecef; /* Light grey hover for non-active items */
-            color: #0056b3;
-        }
-        .sidebar h2 {
-            font-size: 1.5rem;
-            color: #f8f9fa; /* Lighter color for sidebar title */
-            margin-bottom: 1.5rem;
-        }
-        .sidebar {
-            background: #007bff; /* Bootstrap primary blue */
-            color: #adb5bd; /* Lighter text color for contrast */
-        }
-        .sidebar .list-unstyled a {
-            color: #f8f9fa; /* Light text for links */
-        }
-        .sidebar .dropdown-toggle::after { /* Style Bootstrap's dropdown arrow */
-            color: #f8f9fa;
-        }
-    </style>
 </head>
 <body>
-    {# --- Sidebar Navigation --- #}
-    <div class="sidebar">
-        <h2 class="ps-3 pt-3"><i class="fas fa-hospital-user me-2"></i>Admin Portal</h2>
-        <ul class="list-unstyled components">
-            {# Dashboard Link #}
-            <li class="{% if request.endpoint == 'admin_main.dashboard' %}active{% endif %}">
-                <a href="{{ url_for('admin_main.dashboard') }}">
-                    <i class="fas fa-tachometer-alt fa-fw me-2"></i> Dashboard
-                </a>
-            </li>
+    <div class="sidebar" id="adminSidebar">
+        <div class="sidebar-logo-section">
+            <h2><i class="fas fa-adjust"></i>Pro Health Portal</h2>
+        </div>
+        <nav class="sidebar-nav">
+            <ul class="list-unstyled">
+                <li class="{% if request.endpoint == 'admin_main.dashboard' %}active{% endif %}">
+                    <a href="{{ url_for('admin_main.dashboard') }}">
+                        <i class="fas fa-tachometer-alt fa-fw"></i> Dashboard
+                    </a>
+                </li>
 
-            {# --- User Management Section (Collapsible) --- #}
-            {% set is_user_mgmt_active = request.endpoint.startswith('admin_management.') or
-                                         request.endpoint.startswith('Doctors_Management.') or
-                                         request.endpoint.startswith('patient_management.') or
-                                         request.endpoint.startswith('search_users.') or
-                                         request.endpoint.startswith('registration_approval.') %}
-            <li>
-                 <a href="#userMgmtSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_user_mgmt_active else 'false' }}" class="dropdown-toggle {% if is_user_mgmt_active %}active{% endif %}">
-                     <i class="fas fa-users-cog fa-fw me-2"></i> User Management
-                 </a>
-                 <ul class="collapse list-unstyled {% if is_user_mgmt_active %}show{% endif %}" id="userMgmtSubmenu">
-                      <li class="{% if request.endpoint == 'admin_management.index' %}active{% endif %}">
-                         <a class="ps-3" href="{{ url_for('admin_management.index') }}"><i class="fas fa-user-shield fa-fw me-2"></i>Admins</a>
-                     </li>
-                      <li class="{% if request.endpoint == 'admin_management.manage_roles' %}active{% endif %}">
-                         <a class="ps-3" href="{{ url_for('admin_management.manage_roles') }}"><i class="fas fa-user-tag fa-fw me-2"></i>Roles</a>
-                     </li>
-                      <li class="{% if request.endpoint.startswith('Doctors_Management.') %}active{% endif %}">
-                          <a class="ps-3" href="{{ url_for('Doctors_Management.index') }}">
-                              <i class="fas fa-user-md fa-fw me-2"></i> Doctors
-                          </a>
-                      </li>
-                       <li class="{% if request.endpoint.startswith('registration_approval.') %}active{% endif %}">
-                            <a class="ps-3" href="{{ url_for('registration_approval.index') }}">
-                                <i class="fas fa-user-check fa-fw me-2"></i> Doctor Approvals
+                {% set user_mgmt_endpoints = ['admin_management.index', 'Doctors_Management.index', 'registration_approval.index', 'patient_management.index', 'search_users.search_users'] %}
+                {% set is_user_mgmt_active = request.endpoint in user_mgmt_endpoints or request.endpoint.split('.')[0] in ['admin_management', 'Doctors_Management', 'registration_approval', 'patient_management', 'search_users'] %}
+                <li>
+                     <a href="#userMgmtSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_user_mgmt_active else 'false' }}" class="dropdown-toggle {% if is_user_mgmt_active %}active-parent{% endif %}">
+                         <i class="fas fa-users-cog fa-fw"></i> User Management
+                     </a>
+                     <ul class="collapse list-unstyled {% if is_user_mgmt_active %}show{% endif %}" id="userMgmtSubmenu">
+                          <li class="{% if request.endpoint == 'admin_management.index' %}active{% endif %}">
+                             <a href="{{ url_for('admin_management.index') }}"><i class="fas fa-user-shield fa-fw"></i>Admins</a>
+                         </li>
+                          <li class="{% if request.endpoint.startswith('Doctors_Management.') %}active{% endif %}">
+                              <a href="{{ url_for('Doctors_Management.index') }}">
+                                  <i class="fas fa-user-md fa-fw"></i> Doctors
+                              </a>
+                          </li>
+                           <li class="{% if request.endpoint.startswith('registration_approval.') %}active{% endif %}">
+                                <a href="{{ url_for('registration_approval.index') }}">
+                                    <i class="fas fa-user-check fa-fw"></i> Doctor Approvals
+                                </a>
+                            </li>
+                          <li class="{% if request.endpoint.startswith('patient_management.') %}active{% endif %}">
+                              <a href="{{ url_for('patient_management.index') }}">
+                                  <i class="fas fa-procedures fa-fw"></i> Patients
+                              </a>
+                          </li>
+                          <li class="{% if request.endpoint.startswith('search_users.') %}active{% endif %}">
+                              <a href="{{ url_for('search_users.search_users') }}">
+                                  <i class="fas fa-search fa-fw"></i> Search All Users
+                              </a>
+                          </li>
+                     </ul>
+                </li>
+
+                {% set appt_mgmt_endpoints = ['admin_appointments.list_appointments', 'admin_appointments.add_appointment', 'admin_appointments.edit_appointment', 'admin_appointments.configure_appointment_types', 'admin_appointments.view_reports', 'admin_appointments.pending_followups'] %}
+                {% set is_appt_mgmt_active = request.endpoint in appt_mgmt_endpoints %}
+                <li>
+                     <a href="#appointmentsSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_appt_mgmt_active else 'false' }}" class="dropdown-toggle {% if is_appt_mgmt_active %}active-parent{% endif %}">
+                         <i class="fas fa-calendar-alt fa-fw"></i> Appointments
+                     </a>
+                     <ul class="collapse list-unstyled {% if is_appt_mgmt_active %}show{% endif %}" id="appointmentsSubmenu">
+                          <li class="{% if request.endpoint == 'admin_appointments.configure_appointment_types' %}active{% endif %}">
+                             <a href="{{ url_for('admin_appointments.configure_appointment_types') }}"><i class="fas fa-tags fa-fw"></i>Appointment Types</a>
+                          </li>
+                          <li class="{% if request.endpoint == 'admin_appointments.view_reports' %}active{% endif %}">
+                              <a href="{{ url_for('admin_appointments.view_reports') }}">
+                                  <i class="fas fa-chart-pie fa-fw"></i> Reports
+                              </a>
+                          </li>
+                     </ul>
+                </li>
+
+                {% set site_config_endpoints = ['admin_structure.manage_structure'] %}
+                {% set is_site_config_active = request.endpoint in site_config_endpoints %}
+                <li>
+                    <a href="#siteConfigSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_site_config_active else 'false' }}" class="dropdown-toggle {% if is_site_config_active %}active-parent{% endif %}">
+                        <i class="fas fa-cogs fa-fw"></i> Site Configuration
+                    </a>
+                    <ul class="collapse list-unstyled {% if is_site_config_active %}show{% endif %}" id="siteConfigSubmenu">
+                        <li class="{% if request.endpoint == 'admin_structure.manage_structure' %}active{% endif %}">
+                            <a href="{{ url_for('admin_structure.manage_structure') }}">
+                                <i class="fas fa-sitemap fa-fw"></i> Departments & Specs
                             </a>
                         </li>
-                      <li class="{% if request.endpoint.startswith('patient_management.') %}active{% endif %}">
-                          <a class="ps-3" href="{{ url_for('patient_management.index') }}">
-                              <i class="fas fa-procedures fa-fw me-2"></i> Patients
-                          </a>
-                      </li>
-                      <li class="{% if request.endpoint.startswith('search_users.') %}active{% endif %}">
-                          <a class="ps-3" href="{{ url_for('search_users.search_users') }}">
-                              <i class="fas fa-search fa-fw me-2"></i> Search All Users
-                          </a>
-                      </li>
-                 </ul>
-            </li>
-            {# --- End User Management --- #}
+                    </ul>
+                </li>
 
-            {# --- Appointments Section (Collapsible) --- #}
-            {% set is_appt_mgmt_active = request.endpoint.startswith('admin_appointments.') %}
-            <li>
-                 <a href="#appointmentsSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_appt_mgmt_active else 'false' }}" class="dropdown-toggle {% if is_appt_mgmt_active %}active{% endif %}">
-                     <i class="fas fa-calendar-check fa-fw me-2"></i> Appointment System
-                 </a>
-                 <ul class="collapse list-unstyled {% if is_appt_mgmt_active %}show{% endif %}" id="appointmentsSubmenu">
-                      <li class="{% if request.endpoint == 'admin_appointments.configure_appointment_types' %}active{% endif %}">
-                         <a class="ps-3" href="{{ url_for('admin_appointments.configure_appointment_types') }}"><i class="fas fa-tags fa-fw me-2"></i>Manage Types</a>
-                      </li>
-                       <li class="{% if request.endpoint == 'admin_appointments.configure_scheduling_rules' %}active{% endif %}">
-                         <a class="ps-3" href="{{ url_for('admin_appointments.configure_scheduling_rules') }}"><i class="fas fa-clipboard-list fa-fw me-2"></i>Scheduling Rules</a>
-                      </li>
-                      <li class="{% if request.endpoint == 'admin_appointments.view_reports' %}active{% endif %}">
-                          <a class="ps-3" href="{{ url_for('admin_appointments.view_reports') }}">
-                              <i class="fas fa-chart-line fa-fw me-2"></i> Reports
-                          </a>
-                      </li>
-                 </ul>
-            </li>
-            {# --- End Appointments Section --- #}
+                <li class="sidebar-separator"><hr></li>
 
-            {# --- Site Configuration Section (Collapsible) --- #}
-            {% set is_site_config_active = request.endpoint.startswith('admin_structure.') %}
-            <li>
-                <a href="#siteConfigSubmenu" data-bs-toggle="collapse" aria-expanded="{{ 'true' if is_site_config_active else 'false' }}" class="dropdown-toggle {% if is_site_config_active %}active{% endif %}">
-                    <i class="fas fa-cogs fa-fw me-2"></i> Site Configuration
-                </a>
-                <ul class="collapse list-unstyled {% if is_site_config_active %}show{% endif %}" id="siteConfigSubmenu">
-                    <li class="{% if request.endpoint == 'admin_structure.manage_structure' %}active{% endif %}">
-                        <a class="ps-3" href="{{ url_for('admin_structure.manage_structure') }}">
-                            <i class="fas fa-sitemap fa-fw me-2"></i> Departments & Specs
-                        </a>
-                    </li>
-                    {# Add other general site configurations here if needed #}
-                </ul>
-            </li>
-            {# --- End Site Configuration Section --- #}
+                <li>
+                    <a href="{{ url_for('home.index') }}" target="_blank">
+                        <i class="fas fa-external-link-alt fa-fw"></i> View Website
+                    </a>
+                </li>
 
-            {# View Website Link #}
-            <li>
-                <a href="{{ url_for('home.index') }}" target="_blank"> {# Assumes '/' is your main website homepage. Adjust if needed. #}
-                    <i class="fas fa-eye fa-fw me-2"></i> View Website
-                </a>
-            </li>
-
-            {# Logout Link #}
-            <li>
-                <a href="{{ url_for('login.logout_route') }}"> {# Ensure 'login.logout_route' is correct #}
-                    <i class="fas fa-sign-out-alt fa-fw me-2"></i> Logout
-                </a>
-            </li>
-        </ul>
+                <li>
+                    <a href="{{ url_for('login.logout_route') }}">
+                        <i class="fas fa-sign-out-alt fa-fw"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
 
-    {# --- Main Content Area --- #}
-    <div class="main-content">
-        {# --- Header --- #}
-        <div class="header">
-            <h1>{% block header_title %}{% endblock %}</h1>
-            <div class="user-info">
-                <span>Welcome, {{ current_user.first_name if current_user and current_user.is_authenticated else 'Admin' }}</span>
+    <div class="main-content" id="mainContent">
+        <header class="header">
+            <div class="page-title-container">
+                <button class="sidebar-toggle-btn" type="button" id="sidebarToggleBtn" aria-label="Toggle sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">
+                    {% block header_icon %}{% endblock %}
+                    {% block header_title %}Admin Dashboard{% endblock %}
+                </h1>
+            </div>
+            <div class="user-profile">
+                <span class="profile-name d-none d-md-inline">Welcome, {{ current_user.first_name if current_user and current_user.is_authenticated else 'Admin' }}</span>
                  {% set admin_profile_pic = url_for('static', filename='Admin_Portal/images/default_admin_avatar.png') %}
                  {% if current_user and current_user.is_authenticated and current_user.profile_picture %}
-                     {# Construct path assuming profile_picture stores a path relative to a base uploads dir #}
-                     {# e.g., if profile_picture is 'admins/uuid_admin.jpg' and it's in 'static/uploads/profile_pics/' #}
                      {% set admin_profile_pic = url_for('static', filename='uploads/profile_pics/' + current_user.profile_picture) %}
                  {% endif %}
-                <img src="{{ admin_profile_pic }}" alt="Profile" class="profile-img rounded-circle">
+                <img src="{{ admin_profile_pic }}" alt="Profile" class="profile-image">
             </div>
+        </header>
+
+        <div class="flash-container">
+            {% include '_flash_messages.html' ignore missing %}
         </div>
 
-        {# --- Flash Messages --- #}
-        <div class="flash-container container-fluid py-2">
-            {% include '_flash_messages.html' %}
-        </div>
-
-        {# --- Main Content Block --- #}
-        <div class="content-wrapper p-3 p-md-4">
+        <main class="content-wrapper">
              {% block content %}{% endblock %}
-        </div>
+        </main>
 
     </div>
 
-    {# --- JavaScript --- #}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+    const sidebar = document.getElementById('adminSidebar');
+    const body = document.body;
+    const sidebarStateKey = 'adminSidebarState'; // 'open', 'closed' (for desktop), or 'mobile-open'
+
+    function applySidebarState() {
+        const savedState = localStorage.getItem(sidebarStateKey);
+        const isDesktop = window.innerWidth >= 992; // Or your breakpoint
+
+        if (sidebar && body) {
+            // Reset classes first
+            sidebar.classList.remove('sidebar-active');
+            body.classList.remove('sidebar-overlay-active');
+            body.classList.remove('admin-sidebar-collapsed'); // Desktop specific
+
+            if (isDesktop) {
+                if (savedState === 'closed') {
+                    body.classList.add('admin-sidebar-collapsed');
+                } else {
+                    // Sidebar is "open" by default on desktop, no extra class needed for sidebar itself
+                    // unless your default CSS hides it, then add sidebar.classList.add('sidebar-active');
+                }
+            } else { // Mobile
+                if (savedState === 'open') { // Or a more specific 'mobile-open'
+                    sidebar.classList.add('sidebar-active');
+                    body.classList.add('sidebar-overlay-active');
+                }
+            }
+        }
+    }
+
+    applySidebarState(); // Apply on load
+
+    if (sidebarToggleBtn && sidebar && body) {
+        sidebarToggleBtn.addEventListener('click', function() {
+            const isDesktop = window.innerWidth >= 992;
+
+            if (isDesktop) {
+                body.classList.toggle('admin-sidebar-collapsed');
+                if (body.classList.contains('admin-sidebar-collapsed')) {
+                    localStorage.setItem(sidebarStateKey, 'closed');
+                } else {
+                    localStorage.setItem(sidebarStateKey, 'open');
+                }
+            } else { // Mobile
+                sidebar.classList.toggle('sidebar-active');
+                body.classList.toggle('sidebar-overlay-active');
+                if (sidebar.classList.contains('sidebar-active')) {
+                    localStorage.setItem(sidebarStateKey, 'open'); // Could be 'mobile-open'
+                } else {
+                    localStorage.setItem(sidebarStateKey, 'closed'); // Could be 'mobile-closed'
+                }
+            }
+        });
+    }
+
+    // Mobile overlay click to close
+    if (body && sidebar && sidebarToggleBtn) { // Added sidebarToggleBtn check
+        body.addEventListener('click', function(e) {
+            const isDesktop = window.innerWidth >= 992;
+            if (!isDesktop && body.classList.contains('sidebar-overlay-active') && sidebar.classList.contains('sidebar-active')) {
+                if (!sidebar.contains(e.target) && !sidebarToggleBtn.contains(e.target)) {
+                    sidebar.classList.remove('sidebar-active');
+                    body.classList.remove('sidebar-overlay-active');
+                    localStorage.setItem(sidebarStateKey, 'closed'); // Or 'mobile-closed'
+                }
+            }
+        });
+    }
+
+    // Optional: Re-apply state on window resize if behavior changes significantly
+    window.addEventListener('resize', function() {
+        applySidebarState(); // This might be too aggressive, test its behavior
+    });
+});
+    </script>
+
     {% block scripts %}{% endblock %}
+    {% block scripts_extra %}{% endblock %}
 </body>
 </html>

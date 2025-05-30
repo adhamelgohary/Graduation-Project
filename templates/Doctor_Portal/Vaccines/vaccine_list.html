@@ -39,14 +39,40 @@
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="fas fa-syringe fa-fw"></i> Vaccine Management</h1>
-    <div class="header-actions">
-        <a href="{{ url_for('vaccine_management.add_vaccine') }}" class="button button-success">
-            <i class="fas fa-plus fa-fw"></i> Add New Vaccine
+
+{% if current_category_info %}
+    <div class="page-subheader mb-3">
+        <a href="{{ url_for('.list_vaccine_categories') }}" class="text-muted small">
+            <i class="fas fa-tags fa-fw"></i> Back to Categories
         </a>
+        <h2 style="font-size: 1.5em; margin-top: 0.5rem; color: var(--color-secondary);">
+            Vaccines in: {{ current_category_info.name }}
+        </h2>
+        {% if current_category_info.description %}
+            <p class="small text-muted">{{ current_category_info.description }}</p>
+        {% endif %}
     </div>
-</div>
+    {# Modify Add New Vaccine button link #}
+    <div class="page-header">
+        <h1><i class="fas fa-syringe fa-fw"></i> Vaccines for {{ current_category_info.name }}</h1>
+        <div class="header-actions">
+            <a href="{{ url_for('vaccine_management.add_vaccine', category_id_context=current_category_info.category_id) }}" class="button button-success">
+                <i class="fas fa-plus fa-fw"></i> Add Vaccine to this Category
+            </a>
+        </div>
+    </div>
+{% else %}
+    {# Original page header for all vaccines #}
+    <div class="page-header">
+        <h1><i class="fas fa-syringe fa-fw"></i> Vaccine Management</h1>
+        <div class="header-actions">
+            <a href="{{ url_for('vaccine_management.add_vaccine') }}" class="button button-success">
+                <i class="fas fa-plus fa-fw"></i> Add New Vaccine
+            </a>
+        </div>
+    </div>
+{% endif %}
+
 
 <!-- Filter and Search Section -->
 <div class="card filter-section mb-3">

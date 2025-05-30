@@ -1,0 +1,364 @@
+/* General Styles for vaccine_condition_details.html
+   Adapted to use the provided theme variables.
+*/
+
+/* Ensure your root variables from the main CSS are available or redefine them here if this is standalone */
+/* Using the variables you provided, assuming they are globally available or defined in a base CSS file */
+
+.disease-detail-page {
+    max-width: 1100px; /* You can adjust this to match .top-content, .main-content from your main css if needed */
+    margin: 2rem auto; /* Provides top/bottom margin */
+    padding: 1rem 1.5rem;
+    font-family: 'Arial', sans-serif; /* Or your website's font */
+    color: var(--text-color);
+    /* background-color: var(--background-color); No need if body has it and this is a sub-section */
+    border-radius: 12px; /* Consistent with your .overview-container */
+    /* box-shadow: var(--card-shadow); Consider if this page itself should have a shadow or just its internal cards */
+}
+
+/* Header section on the detail page */
+.disease-detail-page .header { /* This refers to the h1 title container within the detail page */
+    text-align: center;
+    margin-bottom: 2.5rem; /* Increased margin */
+    padding-bottom: 1.5rem; /* Increased padding */
+    border-bottom: 2px solid var(--neon-blue); /* Using neon-blue for a distinct header underline */
+}
+
+.disease-detail-page .header h1 {
+    font-size: 2.8rem; /* Slightly larger */
+    color: var(--text-color); /* Main text color */
+    font-weight: 600;
+    margin-top: 0; /* Reset margin if coming from global .header */
+}
+
+.top-content { /* This is the flex container for image and overview */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2.5rem; /* Increased gap */
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    /* Removed max-width and margin-left/right auto as .disease-detail-page handles it */
+}
+
+.centered-gif {
+    flex: 1 1 320px; /* Flex basis, can grow and shrink */
+    max-width: 420px;
+    display: flex; /* For centering if image is smaller */
+    justify-content: center;
+    align-items: center;
+}
+
+.centered-gif img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px; /* Consistent with your card styling */
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.overview-container { /* This specific overview container, not the global one */
+    flex: 2 1 400px;
+    line-height: 1.7;
+    padding: 1.5rem; /* Add some padding if it's not a full card itself */
+    background-color: var(--card-bg-color); /* Making it a card */
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+.overview-container h2 { /* For the "Overview" title within this section */
+    font-size: 1.8rem;
+    color: var(--text-color);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.overview-container h2::after { /* Apply the theme's h2 underline style */
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--accent-color));
+}
+
+
+.overview-container p {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.overview-container strong {
+    color: var(--neon-blue); /* Highlight with neon blue */
+}
+
+.overview-container .details-subtitle { /* For "Key Benefits" */
+    font-size: 1.5rem; /* Slightly larger */
+    color: var(--text-color);
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    position: relative; /* For the ::after pseudo-element */
+    padding-bottom: 0.5rem; /* Space for the underline */
+}
+.overview-container .details-subtitle::after { /* Underline for this subtitle */
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px; /* Shorter underline */
+    height: 2px;
+    background: var(--accent-color); /* Use accent color */
+}
+
+
+.main-content-details {
+    /* Container for the main detailed info card */
+}
+
+.left-panel-details .card-details { /* This is the main card for detailed info */
+    padding: 2rem; /* Increased padding */
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 2rem;
+}
+
+.left-panel-details .card-details > h2 { /* "Detailed Information" title */
+    font-size: 2rem; /* Prominent title */
+    color: var(--text-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+.left-panel-details .card-details > h2::after { /* Apply theme's h2 underline */
+    content: '';
+    position: absolute;
+    bottom: 0; /* Position relative to the padding bottom of h2 */
+    left: 0;
+    width: 50px; /* Wider underline */
+    height: 2px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--accent-color));
+}
+
+
+/* Emergency Signs Section - Adopting theme variables */
+.emergency-signs {
+    background-color: var(--emergency-bg);
+    border: 1px solid var(--emergency-border);
+    color: var(--emergency-text); /* Main text color for emergency section */
+    border-radius: 8px; /* Consistent radius */
+    padding: 1.5rem; /* Good padding */
+    margin-top: 20px; /* Space from content above */
+}
+
+.emergency-signs h4 {
+    font-size: 1.4rem; /* Slightly larger */
+    color: var(--emergency-text); /* Use the strong emergency text color */
+    margin-bottom: 1rem;
+    font-weight: 600; /* Make it bolder */
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+.emergency-signs h4::after { /* Optional underline for emphasis */
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30px;
+    height: 2px;
+    background: var(--emergency-text);
+}
+
+
+.emergency-signs h4 .fas.fa-exclamation-triangle {
+    margin-right: 0.75rem; /* More space */
+    /* Color will be inherited from h4's color: var(--emergency-text) */
+}
+
+.emergency-signs ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.emergency-signs ul li {
+    margin-bottom: 0.85rem; /* Slightly more space */
+    padding-left: 1.75rem; /* More indent for icon */
+    position: relative;
+    line-height: 1.6;
+    color: var(--text-secondary); /* Use secondary text for list items if emergency-text is too strong */
+    /* If var(--emergency-text) is already a light/subtle color, you can use it directly:
+    color: var(--emergency-text);
+    */
+}
+
+.emergency-signs ul li::before {
+    content: "\f071"; /* FontAwesome warning icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    color: var(--emergency-text); /* Icon color matches the heading */
+    position: absolute;
+    left: 0;
+    top: 3px; /* Adjust vertical alignment */
+    font-size: 1.1em; /* Slightly larger icon */
+}
+
+/* Details List (for vaccine specifics) */
+.details-list {
+    margin-top: 2rem; /* More space before the list */
+    line-height: 1.8;
+}
+
+.details-list dt {
+    font-weight: 600;
+    color: var(--text-secondary); /* Use secondary text for definition terms */
+    margin-top: 1.25rem; /* More space between items */
+    font-size: 0.9rem; /* Slightly smaller for a classic definition list feel */
+    text-transform: uppercase;
+    letter-spacing: 0.5px; /* Slight letter spacing */
+}
+
+.details-list dd {
+    margin-left: 0;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0 0.5rem 1rem; /* Add some vertical padding and indent */
+    border-left: 3px solid var(--neon-blue); /* Use neon-blue for emphasis */
+    color: var(--text-color); /* Main text color for definitions */
+    background-color: var(--nested-card-bg); /* Subtle background for dd */
+    border-radius: 0 4px 4px 0; /* Rounded corners on the right */
+}
+
+.details-list dt.details-section-header {
+    font-size: 1.4rem; /* More prominent section header */
+    color: var(--neon-blue);
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--border-color);
+    text-transform: none;
+    letter-spacing: 0;
+    position: relative;
+}
+.details-list dt.details-section-header::after { /* Add theme's underline */
+    content: '';
+    position: absolute;
+    bottom: -1px; /* Align with the dashed border */
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--neon-blue); /* Match the text color */
+}
+
+
+/* Category Specifics - List of Vaccines */
+.main-content-details .card-details > p:first-of-type {
+    font-style: italic;
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.details-subtitle { /* For "Vaccines in this Category" */
+    font-size: 1.6rem; /* Consistent sizing */
+    color: var(--text-color);
+    margin-top: 2.5rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+.details-subtitle::after { /* Theme's underline style */
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--accent-color));
+}
+
+
+ul.related-items-list {
+    list-style: none;
+    padding: 0;
+}
+
+ul.related-items-list li {
+    background-color: var(--nested-card-bg); /* Use nested card background */
+    padding: 1.25rem 1.5rem; /* More padding */
+    margin-bottom: 1rem;
+    border-radius: 8px; /* Consistent radius */
+    border: 1px solid var(--border-color);
+    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out; /* Added transform */
+}
+
+ul.related-items-list li:hover {
+    box-shadow: 0 5px 15px rgba(0, 120, 255, 0.15); /* Brighter shadow on hover */
+    transform: translateY(-3px); /* Slight lift effect */
+    border-color: var(--neon-blue); /* Highlight border on hover */
+}
+
+ul.related-items-list li a {
+    font-size: 1.25rem; /* Larger link text */
+    font-weight: 600;
+    color: var(--neon-blue); /* Use neon-blue for links */
+    text-decoration: none;
+    display: block;
+    margin-bottom: 0.35rem; /* More space below link */
+}
+
+ul.related-items-list li a:hover {
+    text-decoration: none; /* Remove underline, rely on color change or other effects */
+    color: var(--accent-color); /* Change to accent color on hover */
+}
+
+ul.related-items-list li .item-description-small {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Responsive adjustments from your main CSS might apply here too */
+/* Add specific overrides for .disease-detail-page if needed */
+@media (max-width: 768px) {
+    .disease-detail-page {
+        margin: 1rem;
+        padding: 1rem;
+    }
+
+    .disease-detail-page .header h1 {
+        font-size: 2rem; /* Adjust based on your global .header h1 responsive */
+    }
+
+    /* .top-content stacking is already handled by flex-wrap */
+
+    .overview-container h2, /* Match global h2 responsive */
+    .left-panel-details .card-details > h2,
+    .details-subtitle {
+        font-size: 1.6rem; /* Or your global responsive h2/h3 size */
+    }
+    .details-list dt.details-section-header {
+        font-size: 1.2rem;
+    }
+
+    .left-panel-details .card-details {
+        padding: 1.5rem; /* Adjust padding for smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .disease-detail-page .header h1 {
+        font-size: 1.8rem;
+    }
+    .overview-container h2,
+    .left-panel-details .card-details > h2,
+    .details-subtitle {
+        font-size: 1.4rem;
+    }
+    .emergency-signs h4 {
+        font-size: 1.2rem;
+    }
+    ul.related-items-list li a {
+        font-size: 1.1rem;
+    }
+}

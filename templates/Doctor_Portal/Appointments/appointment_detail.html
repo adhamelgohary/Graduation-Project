@@ -1,325 +1,267 @@
-{% extends "Doctor_Portal/base.html" %} {# Make sure this base includes necessary CSS/JS and base.css #}
+{% extends "Doctor_Portal/base.html" %}
 
-{% block title %}Appointment Details - {{ appointment.patient_first_name }} {{ appointment.patient_last_name }}{% endblock %}
+{% block title %}Appointment Details{% endblock %}
 
 {% block head_extra %}
-{{ super() if super }} {# Include base head extras #}
 <style>
-    .container-portal {
-        background-color: var(--color-surface, #ffffff);
-        padding: var(--spacing-lg, 1.5rem) var(--spacing-xl, 2rem);
-        border-radius: var(--border-radius, 0.3rem);
-        box-shadow: var(--box-shadow-lg, 0 4px 12px rgba(0,0,0,0.1));
-        margin-top: var(--spacing-lg, 1.5rem);
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
     }
-    .detail-header {
-        border-bottom: 1px solid var(--color-border, #e3e6f0);
-        padding-bottom: var(--spacing-md, 1rem);
-        margin-bottom: var(--spacing-xl, 2rem);
+    .detail-section {
+        background-color: #fdfdfd;
+        padding: 1.25rem;
+        border-radius: var(--border-radius);
+        border: 1px solid #e9ecef;
     }
-    .detail-label {
-        font-weight: 600;
-        color: var(--color-text-muted, #5a5c69);
-        font-size: 0.85rem;
-        padding-top: 0.4rem; /* For vertical alignment in dl */
+    .detail-section h3 {
+        font-size: 1.1rem;
+        color: var(--color-primary);
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--color-border);
+        padding-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
-    .detail-value {
-        color: var(--color-text, #333);
-        font-size: 0.9rem;
+    .detail-item {
+        margin-bottom: 0.75rem;
+        display: flex;
+        flex-wrap: wrap;
     }
-    /* Use base.css .card and .card-header, custom styles below are for minor tweaks if needed */
-    .card { /* Ensure alignment with base.css card */
-        border: 1px solid var(--color-border, #e3e6f0);
-        border-radius: var(--border-radius, 0.3rem); /* base.css has .card */
-    }
-    .card-header { /* Ensure alignment with base.css card-header */
-        background-color: #eef2f7; /* Lighter header for detail cards */
-        font-weight: 600;
-        color: var(--color-text, #495057);
-        padding: var(--spacing-sm, 0.75rem) var(--spacing-md, 1.25rem);
-        border-bottom: 1px solid var(--color-border, #e3e6f0);
-    }
-    .status-badge {
-        padding: 0.4em 0.7em;
-        font-size: 0.9em;
-        font-weight: 600;
-        border-radius: var(--border-radius, 0.3rem);
+    .detail-item strong {
         display: inline-block;
-        text-transform: capitalize;
-        border-width: 1px;
-        border-style: solid;
-    }
-    .status-scheduled    { background-color: #cfe2ff; color: #084298; border-color: #b6d4fe;}
-    .status-confirmed    { background-color: #d1e7dd; color: #0f5132; border-color: #badbcc;}
-    .status-completed    { background-color: #e2e3e5; color: #41464b; border-color: #d3d6d8;}
-    .status-canceled     { background-color: #f8d7da; color: #58151c; border-color: #f1c6cb;}
-    .status-no-show      { background-color: #fff3cd; color: #664d03; border-color: #ffe69c;}
-    .status-rescheduled  { background-color: #ffe5d0; color: #803A00; border-color: #fedec6;}
-
-    #notesTextarea { font-size: 0.9rem; }
-    .text-muted small { font-size: 0.8em; }
-
-    /* Modal Styling */
-    .modal-content { border-radius: var(--border-radius, 0.3rem); }
-    .modal-header {
-        border-bottom: 1px solid var(--color-border, #e3e6f0);
-        padding: var(--spacing-sm, 0.8rem) var(--spacing-md, 1rem);
-    }
-    .modal-title.h6 { font-size: 1.05rem; }
-    .modal-body {
-        font-size: 0.9rem;
-        padding: var(--spacing-md, 1rem);
-    }
-    .modal-footer {
-        border-top: 1px solid var(--color-border, #e3e6f0);
-        padding: var(--spacing-sm, 0.7rem) var(--spacing-md, 1rem);
-    }
-    .btn-link {
+        width: 140px; /* Adjust as needed */
+        color: var(--color-text-muted);
         font-weight: 500;
+        flex-shrink: 0;
     }
+    .detail-item span {
+        flex-grow: 1;
+    }
+    .notes-section textarea {
+        min-height: 120px;
+    }
+    .status-badge-large {
+        font-size: 1.1em;
+        padding: 0.5em 0.8em;
+        font-weight: 600;
+    }
+    /* Status specific colors for badges */
+    .status-confirmed { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc;}
+    .status-completed { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da;}
+    .status-canceled { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7;}
+    .status-noshow { background-color: #fff3cd; color: #664d03; border: 1px solid #ffecb5;}
+    .status-rescheduled { background-color: #ffe5d0; color: #a35200; border: 1px solid #ffc99e;}
+    .status-pending, .status-scheduled { background-color: #cff4fc; color: #055160; border: 1px solid #b6effb;}
+
+    #statusUpdateMessage, #notesUpdateMessage {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+    }
+    .success-message { color: var(--color-success); }
+    .error-message { color: var(--color-danger); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid container-portal">
-    <div class="detail-header d-flex justify-content-between align-items-center">
-        <h1 class="h3 mb-0 text-dark">Appointment Details</h1>
-        <a href="{{ url_for('appointments.list_appointments') }}" class="button button-small button-outline button-secondary">
-            <i class="fas fa-arrow-left fa-sm me-1"></i> Back to List
+<div class="page-header">
+    <h1><i class="fas fa-calendar-day fa-fw"></i> Appointment Details</h1>
+    <div class="header-actions">
+        <a href="{{ url_for('.list_appointments', view='custom', start_date=appointment.appointment_date_str, end_date=appointment.appointment_date_str) }}" class="button button-outline button-secondary">
+            <i class="fas fa-arrow-left fa-fw"></i> Back to List
         </a>
-    </div>
-
-    {% include '_flash_messages.html' %}
-
-    <div class="row">
-        <div class="col-lg-5 mb-4">
-            <div class="card h-100"> {# Using base.css .card #}
-                <div class="card-header"> {# Using base.css .card-header #}
-                    Patient Information
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4 detail-label">Name:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.patient_first_name }} {{ appointment.patient_last_name }}</dd>
-
-                        <dt class="col-sm-4 detail-label">Patient ID:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.patient_id }}</dd>
-
-                        <dt class="col-sm-4 detail-label">DOB / Age:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.date_of_birth.strftime('%b %d, %Y') if appointment.date_of_birth else 'N/A' }} {% if appointment.patient_age is not none %}({{ appointment.patient_age }} years){% endif %}</dd>
-
-                        <dt class="col-sm-4 detail-label">Gender:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.gender|capitalize if appointment.gender else 'N/A' }}</dd>
-
-                        <dt class="col-sm-4 detail-label">Email:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.patient_email or 'N/A' }}</dd>
-
-                        <dt class="col-sm-4 detail-label">Phone:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.patient_phone or 'N/A' }}</dd>
-
-                        <dt class="col-sm-4 detail-label">Insurance:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.insurance_provider_name or 'N/A' }}</dd>
-                    </dl>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-7 mb-4">
-            <div class="card h-100 d-flex flex-column"> {# Using base.css .card #}
-                <div class="card-header d-flex justify-content-between align-items-center"> {# Using base.css .card-header #}
-                    <span>Appointment #{{ appointment.appointment_id }}</span>
-                    <span class="status-badge status-{{ appointment.status|lower|replace(' ', '-') }}">{{ appointment.status }}</span>
-                </div>
-                <div class="card-body">
-                    <dl class="row">
-                        <dt class="col-sm-4 detail-label">Date:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.appointment_date_str }}</dd>
-
-                        <dt class="col-sm-4 detail-label">Time:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.start_time_str }} - {{ appointment.end_time_str }} ({{ appointment.default_duration_minutes }} min)</dd>
-
-                        <dt class="col-sm-4 detail-label">Type:</dt>
-                        <dd class="col-sm-8 detail-value">{{ appointment.type_name }}</dd>
-
-                        <dt class="col-sm-4 detail-label">Location:</dt>
-                        <dd class="col-sm-8 detail-value">
-                            {{ appointment.location_name or 'N/A' }}
-                            {% if appointment.location_address %}
-                            <br><small class="text-muted">{{ appointment.location_address }}</small>
-                            {% endif %}
-                        </dd>
-
-                        <dt class="col-sm-4 detail-label">Reason:</dt>
-                        <dd class="col-sm-8 detail-value" style="white-space: pre-wrap;">{{ appointment.reason or 'N/A' }}</dd>
-
-                        <dt class="col-sm-4 detail-label">Notes:</dt>
-                        <dd class="col-sm-8 detail-value">
-                            <div id="notesDisplay" style="white-space: pre-wrap;">{{ appointment.notes or 'No notes provided.' }}</div>
-                            {% if is_editable %}
-                            <button id="editNotesBtn" class="btn btn-sm btn-link p-0 mt-1" style="font-size:0.8rem;">Edit Notes</button>
-                            <div id="notesEditForm" style="display:none;">
-                                <textarea id="notesTextarea" class="form-control form-control-sm mt-1" rows="3">{{ appointment.notes or '' }}</textarea>
-                                <button id="saveNotesBtn" class="button button-small button-success mt-2">Save</button>
-                                <button id="cancelNotesBtn" type="button" class="button button-small button-outline button-secondary mt-2 ms-1">Cancel</button>
-                            </div>
-                            {% endif %}
-                        </dd>
-
-                        <dt class="col-sm-4 detail-label">Status Update:</dt>
-                        <dd class="col-sm-8 detail-value">
-                            {% if is_editable %}
-                            <div class="input-group input-group-sm">
-                                <select id="statusSelect" class="form-select form-select-sm">
-                                    {% for status_val in appointment_statuses %}
-                                    <option value="{{ status_val }}" {% if status_val == appointment.status %}selected{% endif %}>
-                                        {{ status_val|capitalize }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                                <button id="updateStatusBtn" class="button button-small button-outline button-primary" type="button">Update</button> {# Bootstrap input-group needs btn class #}
-                            </div>
-                            {% else %}
-                            {{ appointment.status|capitalize }}
-                            {% endif %}
-                        </dd>
-                    </dl>
-                    <hr class="my-3">
-                     <p class="mb-1"><small class="text-muted">Created by: {{ appointment.created_by_username or 'System' }} on {{ appointment.created_at.strftime('%Y-%m-%d %H:%M') if appointment.created_at else 'N/A' }}</small></p>
-                    {% if appointment.updated_by_username and appointment.updated_at %}
-                    <p class="mb-0"><small class="text-muted">Last updated by: {{ appointment.updated_by_username }} on {{ appointment.updated_at.strftime('%Y-%m-%d %H:%M') }}</small></p>
-                    {% endif %}
-                </div>
-                {% if is_editable %}
-                <div class="card-footer bg-light text-end py-2 mt-auto"> {# Using base.css .card-footer or Bootstrap will style this #}
-                    <a href="{{ url_for('appointments.reschedule_appointment', appointment_id=appointment.appointment_id) }}" class="button button-small button-primary me-2">
-                        <i class="fas fa-calendar-alt fa-sm me-1"></i> Reschedule
-                    </a>
-                    <button type="button" class="button button-small button-danger" data-bs-toggle="modal" data-bs-target="#cancelAppointmentModal">
-                        <i class="fas fa-times-circle fa-sm me-1"></i> Cancel Appointment
-                    </button>
-                </div>
-                {% endif %}
-            </div>
-        </div>
     </div>
 </div>
 
-<!-- Cancel Appointment Modal -->
-<div class="modal fade" id="cancelAppointmentModal" tabindex="-1" aria-labelledby="cancelAppointmentModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title h6" id="cancelAppointmentModalLabel">Confirm Cancellation</h5>
-        <button type="button" class="btn-close btn-sm" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to cancel this appointment for <strong>{{ appointment.patient_first_name }} {{ appointment.patient_last_name }}</strong> on {{ appointment.appointment_date_str }} at {{ appointment.start_time_str }}? This action cannot be undone.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="button button-small button-outline button-secondary" data-bs-dismiss="modal">Close</button>
-        <form action="{{ url_for('appointments.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST" style="display: inline;">
-            <button type="submit" class="button button-small button-danger">Yes, Cancel Appointment</button>
-        </form>
-      </div>
+<div class="card">
+    <div class="card-header">
+        <h3>
+            {{ appointment.type_name }} with {{ appointment.patient_first_name }} {{ appointment.patient_last_name }}
+            <span class="badge ms-auto status-badge-large status-{{ appointment.status|lower|replace(' ', '')|replace('-', '') }}">
+                {{ appointment.status|replace('-', ' ')|title }}
+            </span>
+        </h3>
     </div>
-  </div>
+    <div class="card-body">
+        <div class="detail-grid">
+            <!-- Appointment Information -->
+            <div class="detail-section">
+                <h3><i class="fas fa-calendar-alt fa-fw"></i> Appointment Info</h3>
+                <div class="detail-item"><strong>Date:</strong> <span>{{ appointment.appointment_date_str }}</span></div>
+                <div class="detail-item"><strong>Time:</strong> <span>{{ appointment.start_time_str }} - {{ appointment.end_time_str }} ({{ appointment.default_duration_minutes }} mins)</span></div>
+                <div class="detail-item"><strong>Type:</strong> <span>{{ appointment.type_name }}</span></div>
+                <div class="detail-item"><strong>Location:</strong> <span>{{ appointment.location_name }}</span></div>
+                {% if appointment.location_address %}<div class="detail-item"><strong>Address:</strong> <span>{{ appointment.location_address }}</span></div>{% endif %}
+                {% if appointment.reason %}<div class="detail-item"><strong>Reason:</strong> <span>{{ appointment.reason }}</span></div>{% endif %}
+                {% if appointment.reschedule_count > 0 %}
+                <div class="detail-item"><strong>Rescheduled:</strong> <span class="text-warning">{{ appointment.reschedule_count }} time(s)</span></div>
+                {% endif %}
+            </div>
+
+            <!-- Patient Information -->
+            <div class="detail-section">
+                <h3><i class="fas fa-user-injured fa-fw"></i> Patient Info</h3>
+                <div class="detail-item"><strong>Name:</strong> <span>{{ appointment.patient_first_name }} {{ appointment.patient_last_name }}</span></div>
+                {% if appointment.patient_age is not none %}<div class="detail-item"><strong>Age:</strong> <span>{{ appointment.patient_age }} years</span></div>{% endif %}
+                {% if appointment.gender %}<div class="detail-item"><strong>Gender:</strong> <span>{{ appointment.gender|title }}</span></div>{% endif %}
+                {% if appointment.patient_email %}<div class="detail-item"><strong>Email:</strong> <span>{{ appointment.patient_email }}</span></div>{% endif %}
+                {% if appointment.patient_phone %}<div class="detail-item"><strong>Phone:</strong> <span>{{ appointment.patient_phone }}</span></div>{% endif %}
+                {% if appointment.insurance_provider_name %}<div class="detail-item"><strong>Insurance:</strong> <span>{{ appointment.insurance_provider_name }}</span></div>{% endif %}
+            </div>
+        </div>
+
+        <!-- Actions: Status Update and Notes -->
+        <div class="detail-grid mt-4">
+            {% if is_editable or appointment_statuses %}
+            <div class="detail-section">
+                <h3><i class="fas fa-edit fa-fw"></i> Update Status</h3>
+                {% if appointment.status in ['completed', 'canceled', 'no-show', 'rescheduled'] and not is_editable %}
+                     <p class="text-muted">This appointment is in a terminal state ({{ appointment.status|replace('-', ' ')|title }}) and its status cannot be directly changed from here. Some terminal states might be editable by administrators or under specific conditions not met here.</p>
+                     {% if appointment.status == 'canceled' %}
+                         <form action="{{ url_for('.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST" onsubmit="return confirm('This will un-cancel the appointment, are you sure? This feature may not be fully implemented.');" style="display:none;">
+                             <button type="submit" class="button button-warning button-small">Re-open (Test)</button>
+                         </form>
+                     {% endif %}
+                {% else %}
+                <form id="updateStatusForm">
+                    <div class="form-group">
+                        <label for="new_status" class="form-label">Change Status To:</label>
+                        <select id="new_status" name="new_status" class="form-select">
+                            {% for status_val in appointment_statuses %}
+                                <option value="{{ status_val }}" {% if status_val == appointment.status %}selected{% endif %}>
+                                    {{ status_val|replace('-', ' ')|title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="button button-primary"><i class="fas fa-save fa-fw"></i> Update Status</button>
+                    <div id="statusUpdateMessage" class="mt-2"></div>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="detail-section notes-section">
+                <h3><i class="fas fa-file-alt fa-fw"></i> Doctor's Notes</h3>
+                <form id="updateNotesForm">
+                    <div class="form-group">
+                        <label for="notes" class="form-label">Notes (confidential):</label>
+                        <textarea id="notes" name="notes" class="form-control" rows="5" placeholder="Enter any notes for this appointment...">{{ appointment.notes or '' }}</textarea>
+                    </div>
+                    <button type="submit" class="button button-primary"><i class="fas fa-save fa-fw"></i> Save Notes</button>
+                     <div id="notesUpdateMessage" class="mt-2"></div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Action Buttons for Reschedule/Cancel if applicable -->
+        <div class="mt-4 pt-3 border-top">
+            {% if appointment.status not in ['completed', 'canceled', 'no-show', 'rescheduled'] %}
+                <a href="{{ url_for('.reschedule_appointment', appointment_id=appointment.appointment_id) }}" class="button button-warning">
+                    <i class="fas fa-calendar-alt fa-fw"></i> Reschedule Appointment
+                </a>
+                <form action="{{ url_for('.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST" class="d-inline-block ms-2" onsubmit="return confirm('Are you sure you want to cancel this appointment? This action cannot be undone easily.');">
+                    <button type="submit" class="button button-danger">
+                        <i class="fas fa-times-circle fa-fw"></i> Cancel Appointment
+                    </button>
+                </form>
+            {% elif appointment.status == 'canceled' and current_user.role == 'admin' %} {# Example admin-only action #}
+                 <p class="text-muted mt-2">This appointment is canceled. An admin might have options to reactivate it.</p>
+            {% endif %}
+        </div>
+
+
+        <!-- Audit Information -->
+        <div class="mt-4 text-muted small">
+            <hr>
+            <p class="mb-0">
+                Created: {{ appointment.created_at.strftime('%Y-%m-%d %H:%M') if appointment.created_at else 'N/A' }}
+                {% if appointment.created_by_username %} by {{ appointment.created_by_username }}{% endif %}.
+            </p>
+            <p class="mb-0">
+                Last Updated: {{ appointment.updated_at.strftime('%Y-%m-%d %H:%M') if appointment.updated_at else 'N/A' }}
+                {% if appointment.updated_by_username %} by {{ appointment.updated_by_username }}{% endif %}.
+            </p>
+        </div>
+
+    </div>
 </div>
 {% endblock %}
 
-
 {% block scripts %}
-{{ super() if super }}
 <script>
-// Attempt to get CSRF token if provided in meta tag by base template
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || "";
-
 document.addEventListener('DOMContentLoaded', function() {
-    const appointmentId = {{ appointment.appointment_id }};
+    const statusForm = document.getElementById('updateStatusForm');
+    const notesForm = document.getElementById('updateNotesForm');
+    const statusUpdateMessage = document.getElementById('statusUpdateMessage');
+    const notesUpdateMessage = document.getElementById('notesUpdateMessage');
 
-    const editNotesBtn = document.getElementById('editNotesBtn');
-    const notesDisplay = document.getElementById('notesDisplay');
-    const notesEditForm = document.getElementById('notesEditForm');
-    const notesTextarea = document.getElementById('notesTextarea');
-    const saveNotesBtn = document.getElementById('saveNotesBtn');
-    const cancelNotesBtn = document.getElementById('cancelNotesBtn');
+    if (statusForm) {
+        statusForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const newStatus = document.getElementById('new_status').value;
+            statusUpdateMessage.textContent = '';
+            statusUpdateMessage.className = 'mt-2';
 
-    if (editNotesBtn && notesDisplay && notesEditForm && notesTextarea && saveNotesBtn && cancelNotesBtn) {
-        editNotesBtn.addEventListener('click', function() {
-            notesDisplay.style.display = 'none';
-            editNotesBtn.style.display = 'none';
-            notesEditForm.style.display = 'block';
-            notesTextarea.focus();
-        });
-
-        cancelNotesBtn.addEventListener('click', function() {
-            notesDisplay.style.display = 'block';
-            editNotesBtn.style.display = 'inline';
-            notesEditForm.style.display = 'none';
-            notesTextarea.value = notesDisplay.textContent === 'No notes provided.' ? '' : notesDisplay.textContent;
-        });
-
-        saveNotesBtn.addEventListener('click', function() {
-            const newNotes = notesTextarea.value;
-            saveNotesBtn.disabled = true;
-            saveNotesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-            fetch(`/portal/appointments/${appointmentId}/update_notes`, {
+            fetch("{{ url_for('.update_appointment_status', appointment_id=appointment.appointment_id) }}", {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                body: JSON.stringify({ notes: newNotes })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error updating notes: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error saving notes:', error);
-                alert('An unexpected network or server error occurred while saving notes.');
-            })
-            .finally(() => {
-                saveNotesBtn.disabled = false;
-                saveNotesBtn.innerHTML = 'Save';
-            });
-        });
-    }
-
-    const updateStatusBtn = document.getElementById('updateStatusBtn');
-    const statusSelect = document.getElementById('statusSelect');
-
-    if (updateStatusBtn && statusSelect) {
-        updateStatusBtn.addEventListener('click', function() {
-            const newStatus = statusSelect.value;
-            const currentStatus = "{{ appointment.status }}";
-
-            if (newStatus === currentStatus) return;
-
-            updateStatusBtn.disabled = true;
-            updateStatusBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
-
-            fetch(`/portal/appointments/${appointmentId}/update_status`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}' // If you use CSRF tokens
+                },
                 body: JSON.stringify({ status: newStatus })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    statusUpdateMessage.textContent = data.message || 'Status updated successfully!';
+                    statusUpdateMessage.classList.add('success-message');
+                    // Optionally, update the badge on the page or reload
+                    setTimeout(() => window.location.reload(), 1500);
                 } else {
-                    alert('Error updating status: ' + data.message);
-                    updateStatusBtn.disabled = false;
-                    updateStatusBtn.innerHTML = 'Update';
+                    statusUpdateMessage.textContent = data.message || 'Failed to update status.';
+                    statusUpdateMessage.classList.add('error-message');
                 }
             })
             .catch(error => {
-                console.error('Error updating status:', error);
-                alert('An unexpected network or server error occurred while updating status.');
-                updateStatusBtn.disabled = false;
-                updateStatusBtn.innerHTML = 'Update';
+                console.error('Error:', error);
+                statusUpdateMessage.textContent = 'An unexpected error occurred.';
+                statusUpdateMessage.classList.add('error-message');
+            });
+        });
+    }
+
+    if (notesForm) {
+        notesForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const notes = document.getElementById('notes').value;
+            notesUpdateMessage.textContent = '';
+            notesUpdateMessage.className = 'mt-2';
+
+            fetch("{{ url_for('.update_appointment_notes', appointment_id=appointment.appointment_id) }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() if csrf_token else "" }}'
+                },
+                body: JSON.stringify({ notes: notes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    notesUpdateMessage.textContent = data.message || 'Notes updated successfully!';
+                    notesUpdateMessage.classList.add('success-message');
+                } else {
+                    notesUpdateMessage.textContent = data.message || 'Failed to update notes.';
+                    notesUpdateMessage.classList.add('error-message');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                notesUpdateMessage.textContent = 'An unexpected error occurred.';
+                notesUpdateMessage.classList.add('error-message');
             });
         });
     }

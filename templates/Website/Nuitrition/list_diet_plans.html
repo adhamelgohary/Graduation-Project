@@ -1,0 +1,139 @@
+{% extends "Nuitrition/base_with_bot.html" %}
+{% block title %}Diet Plans - Pro Health Center{% endblock %}
+
+{% block head_extra %}
+<style>
+    /* Grid container for the diet plans */
+    .plans-grid-container {
+        display: grid;
+        /* Default to 1 column on small screens */
+        grid-template-columns: 1fr;
+        gap: var(--spacing-lg, 25px); /* Consistent gap from base.css */
+        margin-top: var(--spacing-lg, 25px);
+    }
+
+    /* Plan Card Styling */
+    /* It leverages the .card class from base.css for base styling (bg, border, shadow, padding) */
+    .plan-card {
+        display: flex; /* Allows an inner content div to grow and push meta to bottom */
+        flex-direction: column;
+        height: 100%; /* Ensures cards in the same row stretch to the same height */
+    }
+
+    /* Inner content wrapper for flex layout */
+    .plan-card-content {
+        flex-grow: 1; /* Takes up available space, pushing .plan-meta to the bottom */
+        display: flex;
+        flex-direction: column;
+        padding: var(--spacing-lg, 25px); /* Padding is now on content, not the .plan-card directly if using base .card */
+    }
+     /* If .card from base.css already has padding, you might not need it on .plan-card-content
+        or you might want to override .plan-card's padding to 0 and put it here.
+        Assuming .card from base.css has padding: var(--spacing-lg); this is fine.
+     */
+
+
+    .plan-card h3 { /* Changed from h2 for better semantics if page title is H1 */
+        font-size: 1.4em; /* Adjust as needed for card titles */
+        margin-top: 0; /* Remove default margin */
+        margin-bottom: var(--spacing-sm, 10px);
+    }
+    .plan-card h3 a {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+    .plan-card h3 a:hover {
+        text-decoration: underline;
+    }
+
+    .plan-card p.plan-description {
+        font-size: 0.9em;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-bottom: var(--spacing-md, 15px);
+        flex-grow: 1; /* This allows the description to push the meta info down */
+        /* For consistent card heights, you might want to limit lines of text here */
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 4; /* Show about 4 lines, adjust as needed */
+        -webkit-box-orient: vertical;
+    }
+
+    .plan-card .plan-meta {
+        font-size: 0.8em;
+        color: var(--text-secondary);
+        margin-top: auto; /* Pushes meta to the bottom of the card-content */
+        padding-top: var(--spacing-sm, 10px);
+        border-top: 1px solid var(--border-color);
+    }
+    .plan-card .plan-meta span {
+        display: block;
+        margin-bottom: var(--spacing-xs, 5px);
+    }
+    .plan-card .plan-meta span:last-child {
+        margin-bottom: 0;
+    }
+    .plan-card .plan-meta strong {
+        color: var(--text-primary); /* Make labels in meta slightly more prominent */
+    }
+
+    /* Responsive grid columns */
+    /* Small devices (phones, up to 767px) - 1 column (default) */
+
+    /* Medium devices (tablets, 768px and up) - 2 columns */
+    @media (min-width: 768px) {
+        .plans-grid-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Large devices (desktops, 992px and up) - 3 columns */
+    @media (min-width: 992px) {
+        .plans-grid-container {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .plan-card p.plan-description {
+             -webkit-line-clamp: 3; /* Slightly less text for 3 columns */
+        }
+    }
+
+    /* Extra large devices (large desktops, 1200px and up) - 4 columns */
+    @media (min-width: 1200px) {
+        .plans-grid-container {
+            grid-template-columns: repeat(4, 1fr);
+        }
+         .plan-card p.plan-description {
+             -webkit-line-clamp: 3; /* Adjust as needed for 4 columns */
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>document.body.dataset.pageType = 'nutrition';</script>
+<div class="main-container">
+    <h1 class="page-title">Explore Our Diet Plans</h1>
+
+    {% if plans %}
+        <div class="plans-grid-container">
+            {% for plan in plans %}
+            <div class="plan-card card"> {# Added base .card class from base.css #}
+                {# The padding is handled by the .card class from base.css #}
+                {# The .plan-card-content div is for flex layout within the card's padding area #}
+                <div class="plan-card-content">
+                    <h3><a href="{{ plan.details_url }}">{{ plan.plan_name }}</a></h3>
+                    <p class="plan-description">{{ plan.description | striptags | truncate(150, True, '...') if plan.description else 'No description available.' }}</p>
+                    <div class="plan-meta">
+                        <span><strong>Type:</strong> {{ plan.plan_type|replace('_', ' ')|title }}</span>
+                        <span><strong>Calories:</strong> ~{{ plan.calories or 'Varies' }}</span>
+                        {% if plan.target_conditions %}<span><strong>Targets:</strong> {{ plan.target_conditions }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center" style="margin-top: var(--spacing-lg, 25px);">No diet plans are currently available. Please check back soon!</p>
+    {% endif %}
+</div>
+{% endblock %}

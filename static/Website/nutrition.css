@@ -1,0 +1,462 @@
+/* static/nutrition/nutrition.css */
+
+/* Apply height 100% only when .nutrition-page-body class is present on body */
+html, body.nutrition-page-body {
+    height: 100%;
+}
+
+/* Theme Variables specific to or overriding for nutrition pages */
+:root {
+    /* Dark theme overrides and additions */
+    --background-color: #05152a; /* Specific for nutrition page body, base dark --bg-primary is the same */
+    --card-bg-color: rgba(8, 28, 56, 0.8); /* Specific for nutrition sections, base dark --bg-secondary is the same */
+    --nested-card-bg: rgba(17, 25, 34, 0.8); /* OVERRIDE: base.css --nested-card-bg is rgba(5, 21, 42, 0.8) */
+    
+    --neon-blue: #00f0ff; /* OVERRIDE: base.css dark --neon-blue is the same, but light themes differ. Nutrition pages use this specific shade. */
+    
+    /* Variables for a search component within the nutrition page content */
+    --search-bg: rgba(255, 255, 255, 0.1); 
+    --search-placeholder: rgba(255, 255, 255, 0.5);
+
+    --btn-bg: rgba(0, 240, 255, 0.2); /* New button style for nutrition */
+    --btn-hover-bg: rgba(0, 240, 255, 0.3); /* New button style for nutrition */
+    --btn-text: #00f0ff; /* New button style for nutrition */
+
+    /* Variables for BMR Form, using nutrition.css theme vars */
+    --input-border-bmr: var(--border-color); /* Uses base.css --border-color */
+    --input-bg-bmr: var(--nested-card-bg); 
+    --primary-color-bmr: var(--neon-blue); /* Uses nutrition's --neon-blue */
+    --button-border-color-bmr: var(--neon-blue);
+    --button-bg-bmr: var(--btn-bg);
+    --button-text-color-bmr: var(--btn-text);
+    --button-hover-bg-bmr: var(--btn-hover-bg);
+    --text-on-primary-bmr: white; 
+    --primary-color-bmr-rgb: 0, 240, 255; /* RGB for nutrition's --neon-blue */
+}
+
+[data-theme="light"] {
+    /* Light theme overrides and additions */
+    --background-color: #f0f8ff; /* OVERRIDE: base.css light --bg-primary is #f0f4f8 */
+    --card-bg-color: rgba(255, 255, 255, 0.9); /* OVERRIDE: base.css light --bg-secondary is #ffffff */
+    --nested-card-bg: rgba(240, 248, 255, 0.9); /* OVERRIDE: base.css light --nested-card-bg is #f8fafd */
+
+    --neon-blue: #0078ff; /* OVERRIDE: base.css light --neon-blue is #3182ce */
+    
+    /* Variables for a search component within the nutrition page content */
+    --search-bg: rgba(5, 21, 42, 0.1); 
+    --search-placeholder: rgba(5, 21, 42, 0.5);
+
+    --btn-bg: rgba(0, 120, 255, 0.1); /* New button style for nutrition */
+    --btn-hover-bg: rgba(0, 120, 255, 0.2); /* New button style for nutrition */
+    --btn-text: #0078ff; /* New button style for nutrition */
+
+    /* BMR vars for light theme */
+    --input-border-bmr: var(--border-color); /* Uses base.css --border-color */
+    --input-bg-bmr: var(--nested-card-bg);
+    --primary-color-bmr: var(--neon-blue); /* Uses nutrition's --neon-blue */
+    --button-border-color-bmr: var(--neon-blue);
+    --button-bg-bmr: var(--btn-bg);
+    --button-text-color-bmr: var(--btn-text);
+    --button-hover-bg-bmr: var(--btn-hover-bg);
+    --text-on-primary-bmr: white;
+    --primary-color-bmr-rgb: 0, 120, 255; /* RGB for nutrition light theme --neon-blue */
+}
+
+/* Body styling specific to pages that load nutrition.css */
+body.nutrition-page-body {
+    background-color: var(--background-color); /* Uses nutrition-specific background */
+    color: var(--text-color); /* Inherits from base.css */
+    /* Specific background pattern for nutrition pages, overrides base.css body pattern */
+    background-image: radial-gradient(circle, rgba(0, 120, 255, 0.1) 1px, transparent 1px); 
+    background-size: 30px 30px;
+    overflow-x: hidden;
+}
+
+/* In nutrition.css */
+.hero {
+    padding-top: 2px; /* Was 30px, changed to match var(--spacing-lg) */
+    padding-bottom: 50px;
+    position: relative;
+}
+/* .container class for use within nutrition page sections if specific padding is needed */
+.container {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 5%; /* Different from base.css .main-container's top/bottom padding */
+}
+.hero-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+.hero-image {
+    position: relative;
+    width: 100%;
+    height: 60vh;
+    max-height: 600px;
+    overflow: hidden;
+    border-radius: 20px; /* Consider var(--border-radius) from base.css */
+    box-shadow: var(--card-shadow); /* Inherits from base.css */
+}
+.hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+}
+.circle-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0 20%;
+    background: rgba(5, 21, 42, 0.6); 
+    backdrop-filter: blur(5px);
+}
+.subtitle {
+    color: var(--neon-blue); /* Uses nutrition's --neon-blue */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+    margin-bottom: 10px; /* Consider var(--spacing-sm) */
+}
+
+/* Global h1 for nutrition pages - overrides base.css h1 if more specific or loaded later */
+.hero .circle-overlay h1 {
+    font-size: 3rem;
+    margin-bottom: 20px; /* Consider var(--spacing-md) or var(--spacing-lg) */
+    color: var(--text-color); /* Inherits from base.css */
+}
+
+/* Main Section Styling */
+.section {
+    padding: 50px 0;
+}
+/* .section-title specifically for nutrition pages */
+.section-title { 
+    font-size: 2rem;
+    margin-bottom: 30px; /* Consider var(--spacing-lg) */
+    position: relative;
+    padding-bottom: 15px; /* Consider var(--spacing-md) */
+    color: var(--text-color); /* Inherits from base.css */
+}
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0; /* Default left alignment for nutrition page section titles */
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--accent-pink)); /* Uses nutrition --neon-blue & base --accent-pink */
+}
+
+.two-column {
+    display: flex;
+    gap: 40px; /* Consider var(--spacing-xl) */
+    align-items: center;
+}
+.column {
+    flex: 1;
+}
+.column img {
+    width: 100%;
+    height: auto;
+    border-radius: 15px; /* Consider var(--border-radius) */
+    box-shadow: var(--card-shadow); /* Inherits from base.css */
+}
+
+/* Global p for nutrition pages - more specific than base.css body line-height */
+p {
+    color: var(--text-secondary); /* Inherits from base.css */
+    line-height: 1.6;
+    margin-bottom: 20px; /* Consider var(--spacing-md) */
+}
+
+/* Cards Section specifically for nutrition pages */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px; /* Consider var(--spacing-lg) */
+    margin-top: 40px; /* Consider var(--spacing-xl) */
+}
+/* .card style override for nutrition pages */
+.card { 
+    background-color: var(--nested-card-bg); /* Uses nutrition's specific --nested-card-bg */
+    border-radius: 15px; /* Consider var(--border-radius) from base.css. This is slightly different. */
+    padding: 25px; /* Consider var(--spacing-lg) from base.css. This is the same. */
+    border: 1px solid var(--border-color); /* Inherits from base.css */
+    box-shadow: var(--card-shadow); /* Inherits from base.css */
+    transition: all 0.3s; /* base.css card also has transition */
+}
+/* base.css .card:hover already has transform and box-shadow. This adds a different glow. */
+.card:hover {
+    transform: translateY(-10px); /* base.css card has -5px. This is a stronger lift. */
+    box-shadow: 0 15px 35px rgba(0, 140, 255, 0.15); /* Specific glow, consider theming this color */
+    /* border-color from base.css .card:hover will also apply: var(--card-hover-border) */
+}
+.card h3 {
+    color: var(--text-color); /* Inherits from base.css */
+    margin-bottom: 15px; /* Consider var(--spacing-md) */
+    position: relative;
+    padding-bottom: 10px; /* Consider var(--spacing-sm) */
+}
+.card h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--accent-pink)); /* Uses nutrition --neon-blue & base --accent-pink */
+}
+/* .view-more-btn specific to nutrition page cards/sections */
+.view-more-btn { 
+    display: inline-block;
+    background-color: var(--btn-bg); /* Uses nutrition's button vars */
+    color: var(--btn-text);
+    border: 1px solid var(--border-color); /* Could use a specific btn-border-color or inherit */
+    padding: 10px 20px; /* Consider var(--spacing-sm) var(--spacing-md) */
+    border-radius: 30px; /* Pill shape */
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: 15px; /* Consider var(--spacing-md) */
+    transition: all 0.3s;
+}
+.view-more-btn:hover {
+    background-color: var(--btn-hover-bg);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 140, 255, 0.2); /* Specific glow, consider theming */
+}
+
+/* Feature Section (previously Green Section) */
+.green-section { /* This class name might be too generic, consider "feature-band" or similar */
+    padding: 70px 0;
+    background-color: var(--card-bg-color); /* Uses nutrition's --card-bg-color */
+    margin: 50px 0;
+    position: relative;
+    overflow: hidden; 
+}
+/* The ::before and ::after create a fade effect if the section is not edge-to-edge with body background */
+.green-section::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, var(--card-bg-color));
+}
+.green-section::after {
+    content: '';
+    position: absolute;
+    bottom: -50px;
+    left: 0;
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(to top, transparent, var(--card-bg-color));
+}
+.nutrition-services {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px; /* Consider var(--spacing-lg) */
+    margin-top: 30px; /* Consider var(--spacing-lg) */
+}
+.nutrition-service { /* This is styled very similarly to .card above */
+    background-color: var(--nested-card-bg); /* Uses nutrition's specific --nested-card-bg */
+    border-radius: 15px; /* Consider var(--border-radius) */
+    padding: 25px; /* Consider var(--spacing-lg) */
+    border: 1px solid var(--border-color); /* Inherits from base.css */
+    box-shadow: var(--card-shadow); /* Inherits from base.css */
+    transition: all 0.3s;
+}
+.nutrition-service:hover {
+    transform: translateY(-5px); /* Standard hover lift */
+    box-shadow: 0 15px 35px rgba(0, 140, 255, 0.15); /* Specific glow, same as .card:hover */
+}
+.nutrition-service h3 { /* Same as .card h3 */
+    color: var(--text-color);
+    margin-bottom: 15px;
+    position: relative;
+    padding-bottom: 10px;
+}
+.nutrition-service h3::after { /* Same as .card h3::after */
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--neon-blue), var(--accent-pink));
+}
+
+/* BMR Calculator Section Styles */
+.calculator-section {
+    padding: 60px 0;
+    background-color: var(--card-bg-color); /* Uses nutrition's --card-bg-color */
+    border-radius: 15px; /* Consider var(--border-radius) */
+    margin: 40px 0; /* Consider var(--spacing-xl) */
+    box-shadow: var(--card-shadow); /* Inherits from base.css */
+}
+/* Ensure .section-title within .calculator-section is centered */
+.calculator-section .section-title {
+    text-align: center !important; /* Overrides the left-align from nutrition's .section-title */
+}
+.calculator-section .section-title::after {
+    left: 50%;
+    transform: translateX(-50%);
+}
+.calculator-container { 
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 30px; /* Consider var(--spacing-lg) or var(--spacing-xl) */
+    background-color: var(--nested-card-bg); /* Uses nutrition's --nested-card-bg for the form area */
+    border-radius: var(--border-radius, 12px); 
+    border: 1px solid var(--border-color); /* Inherits from base.css */
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.2); 
+}
+.calculator-title { 
+    text-align: center;
+    color: var(--text-color); /* Inherits from base.css */
+    margin-bottom: 25px; /* Consider var(--spacing-lg) */
+    font-size: 1.8em;
+}
+
+#bmr-form .form-group {
+    margin-bottom: 20px; /* Consider var(--spacing-md) */
+}
+#bmr-form .form-group label {
+    display: block;
+    margin-bottom: 8px; /* Consider var(--spacing-xs) or var(--spacing-sm) */
+    color: var(--text-color); /* Inherits from base.css */
+    font-weight: 500;
+}
+#bmr-form input[type="number"],
+#bmr-form select {
+    width: 100%;
+    padding: 10px 12px; /* Consider var(--spacing-sm) */
+    border: 1px solid var(--input-border-bmr); /* Uses BMR specific var, which uses base --border-color */
+    border-radius: 5px; /* Consider var(--border-radius-sm) or a new var */
+    background-color: var(--input-bg-bmr); /* Uses BMR specific var */
+    color: var(--text-color); /* Inherits from base.css */
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+#bmr-form input[type="number"]:focus,
+#bmr-form select:focus {
+    outline: none;
+    border-color: var(--primary-color-bmr); /* Uses BMR specific var */
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-bmr-rgb), 0.25); /* Uses BMR specific var */
+}
+#bmr-form .radio-group {
+    display: flex;
+    gap: 25px; 
+    margin-top: 5px; /* Consider var(--spacing-xs) */
+    align-items: center;
+}
+#bmr-form .radio-option {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Consider var(--spacing-xs) */
+}
+#bmr-form .radio-option input[type="radio"] {
+    accent-color: var(--primary-color-bmr); /* Uses BMR specific var */
+    width: 18px; 
+    height: 18px;
+    cursor: pointer;
+}
+#bmr-form .radio-option label {
+    cursor: pointer; 
+    margin-bottom: 0; /* Override default label margin-bottom if any */
+}
+#bmr-form .calculate-btn { 
+    display: block;
+    width: auto;
+    min-width: 200px;
+    margin: 35px auto 0;
+    padding: 12px 30px;
+    border-radius: 30px; 
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    border: none; 
+    /* Uses BMR specific gradient, but could use nutrition button vars if desired for consistency */
+    background: linear-gradient(45deg, var(--neon-blue), var(--accent-pink)); /* Uses nutrition --neon-blue & base --accent-pink */
+    color: var(--text-on-primary-bmr); 
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+#bmr-form .calculate-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px rgba(var(--primary-color-bmr-rgb), 0.25); 
+}
+.result { 
+    margin-top: 30px; /* Consider var(--spacing-lg) */
+    padding: 25px; /* Consider var(--spacing-lg) */
+    background-color: var(--nested-card-bg); /* Uses nutrition's --nested-card-bg */
+    border-radius: 10px; /* Consider var(--border-radius) */
+    border: 1px solid var(--border-color); /* Inherits from base.css */
+    text-align: center;
+    display: none; 
+}
+.result h3 {
+    color: var(--text-color); /* Inherits from base.css */
+    margin-bottom: 15px; /* Consider var(--spacing-md) */
+    font-size: 1.6em;
+}
+.result p {
+    margin-bottom: 12px; /* Consider var(--spacing-sm) */
+    font-size: 1.15em;
+    color: var(--text-secondary); /* Inherits from base.css */
+    line-height: 1.5;
+}
+.result p strong {
+    color: var(--text-color); /* Inherits from base.css */
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    h1 { /* Nutrition page h1 on mobile */
+        font-size: 2rem;
+    }
+    .two-column {
+        flex-direction: column;
+    }
+    .circle-overlay {
+        padding: 0 10%;
+    }
+    .hero-image {
+        height: 50vh;
+    }
+    .calculator-section { 
+        padding: 40px 15px; 
+        margin: 30px 0;
+    }
+    .calculator-container { 
+        padding: 25px; 
+    }
+    #bmr-form .calculate-btn {
+        padding: 10px 25px;
+        font-size: 1rem;
+    }
+    .result {
+        padding: 20px;
+    }
+    .result h3 {
+        font-size: 1.4em;
+    }
+    .result p {
+        font-size: 1.05em;
+    }
+}

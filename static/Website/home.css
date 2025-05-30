@@ -57,7 +57,6 @@ body {
 /* About Us Section */
 .about-us {
   width: 100%;
-  padding: 150px 0 80px;
   background-color: var(--bg-color);
   position: relative;
   overflow: hidden;
@@ -254,23 +253,18 @@ body {
 }
 
 .learn-more {
-  display: inline-block;
-  background-color: var(--button-bg);
-  color: var(--text-color);
-  border: 1px solid var(--accent-color);
-  padding: 10px 20px;
-  border-radius: 5px;
-  text-decoration: none;
-  font-size: 14px;
-  transition: all 0.3s;
-  text-align: center;
-  align-self: flex-start;
+  background-color: var(--button-bg, rgba(255, 59, 92, 0.3)); /* Use base vars */
+    color: var(--accent-white, #ffffff); /* Use base accent */
+    border: 1px solid var(--accent-pink, var(--accent-color));
+    padding: 12px 25px; border-radius: 5px; text-decoration: none;
+    font-size: 14px; transition: all 0.3s; display: block; cursor: pointer;
+    text-align: center; font-weight: bold; box-sizing: border-box;
 }
 
 .learn-more:hover {
-  background-color: var(--button-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px var(--shadow-color);
+  background-color: var(--button-hover, var(--accent-color)); /* Use base hover */
+    color: white; transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--shadow-color); /* Use base shadow */
 }
 
 /* Footer */
@@ -317,18 +311,6 @@ footer {
 }
 
 @media screen and (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    padding: 15px 5%;
-  }
-  
-  .navbar ul {
-    margin-top: 15px;
-    width: 100%;
-    justify-content: space-around;
-    gap: 10px;
-  }
-  
   .about-us {
     padding-top: 200px;
   }
@@ -343,9 +325,6 @@ footer {
 }
 
 @media screen and (max-width: 480px) {
-  .navbar ul {
-    flex-wrap: wrap;
-  }
   
   .about-us-text h1 {
     font-size: 28px;
