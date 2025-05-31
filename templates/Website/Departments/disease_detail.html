@@ -310,14 +310,36 @@
         {% endif %}
     </div>
 
-    {# --- Tracker Promo (Unchanged) --- #}
-     {% if condition.name in ['Migraine Headaches', 'Cluster Headaches', 'Epilepsy'] %}
-     <div class="tracker-promo">
-        <h3><i class="fas fa-clipboard-list"></i> Track Your {{ condition.name | escape }}</h3>
-        <p>Keeping a diary can help identify triggers and improve treatment management.</p>
-        <a href="#" class="tracker-button">Download Diary Template</a> {# Link to actual template #}
-     </div>
-     {% endif %}
+    {# --- Associated Tracker Section --- #}
+    {% if condition.associated_tracker %}
+    <div class="card tracker-promo-card mt-4">
+        <div class="card-body text-center">
+            <h4 class="card-title"><i class="fas fa-notes-medical"></i> Manage Your Condition</h4>
+            <p>Use our <strong>{{ condition.associated_tracker.display_name }}</strong> to help monitor your symptoms and progress.</p>
+            
+            {% if current_user.is_authenticated and current_user.user_type == 'patient' %}
+                {# *** UPDATED HREF *** #}
+                <a href="{{ url_for('patient_tracker_bp.view_tracker_page', tracker_url_name=condition.associated_tracker.url_name) }}" class="button button-primary">
+                    <i class="fas fa-arrow-right"></i> Go to {{ condition.associated_tracker.display_name }}
+                </a>
+            {# ... (rest of the conditions for logged out / non-patient users) ... #}
+            {% elif current_user.is_authenticated %}
+                 <button class="button button-secondary" disabled title="Trackers are for patient use.">
+                    <i class="fas fa-lock"></i> {{ condition.associated_tracker.display_name }} (Patients Only)
+                 </button>
+            {% else %}
+                <p class="text-muted mb-2">
+                    <i class="fas fa-info-circle"></i> You need to be logged in as a patient to use this tracker.
+                </p>
+                {# Point login 'next' URL to the tracker page after login #}
+                <a href="{{ url_for('login.login_route', next=url_for('patient_tracker_bp.view_tracker_page', tracker_url_name=condition.associated_tracker.url_name, _external=True)) }}" class="button button-outline">
+                    <i class="fas fa-sign-in-alt"></i> Login to Use Tracker
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {# --- End Associated Tracker Section --- #}
 
 </div>
 {% endblock %}

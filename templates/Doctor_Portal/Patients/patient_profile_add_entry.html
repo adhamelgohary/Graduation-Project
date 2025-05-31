@@ -1,0 +1,349 @@
+{# templates/Doctor_Portal/Patients/patient_profile_add_entry.html #}
+{% extends "Doctor_Portal/Patients/patient_profile_layout.html" %}
+
+{% block patient_profile_section_head_specific %}
+    <style>
+        /* Styles for forms within this tab, using .content-section-card as a base for each form block */
+        .add-entry-form-block { /* Replaces .form-section if you want different styling from settings.css */
+            background-color: var(--card-bg-color); /* Use card background for each form section */
+            padding: var(--spacing-lg, 20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            margin-bottom: var(--spacing-xl, 30px);
+            box-shadow: var(--box-shadow-sm); 
+        }
+        .add-entry-form-block:last-child { margin-bottom: 0; }
+        .add-entry-form-block h5 {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-lg, 20px);
+            padding-bottom: var(--spacing-sm, 10px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+        .add-entry-form-block h5 i { margin-right: 0.5em; }
+        
+        /* Condition Search (same as before) */
+        .condition-search-container { position: relative; }
+        .condition-search-results { position: absolute; top: 100%; left: 0; right: 0; z-index: 1050; border: 1px solid var(--border-color); background-color: var(--color-surface); max-height: 250px; overflow-y: auto; display: none; box-shadow: var(--box-shadow); }
+        .condition-search-results .list-group-item { cursor: pointer; font-size: 0.9em; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--color-border-light); }
+        .condition-search-results .list-group-item:last-child { border-bottom: none; }
+        .condition-search-results .list-group-item:hover { background-color: var(--color-primary-light); color: var(--color-primary-dark); }
+        
+        /* Form controls styling - these should ideally come from your Doctor_Portal/base.css or a shared forms.css */
+        .form-label-sm { font-size: 0.85rem; margin-bottom: 0.25rem; color: var(--text-secondary); }
+        .form-control-sm { font-size: .9rem; padding: .4rem .75rem; }
+        .form-select-sm { font-size: .9rem; padding: .4rem 1.75rem .4rem .75rem; background-position: right .75rem center; }
+        .form-check-label { font-size: 0.9rem; }
+        .text-end .button-small { padding: 0.4rem 0.8rem; font-size: 0.9rem; }
+    </style>
+{% endblock %}
+
+{% block patient_profile_section_content %}
+    <div id="add-entry-content-section">
+        <h3 class="content-section-card-header d-none">Add Clinical Entry</h3> {# Hidden, title from tab #}
+        
+        <div class="add-entry-form-block" id="form-diagnosis-anchor">
+            <h5><i class="fas fa-stethoscope fa-fw"></i> Add New Diagnosis</h5>
+            <form action="{{ url_for('patients.add_diagnosis', patient_id=patient.user_info.user_id) }}" method="POST">
+                {# ... Diagnosis form fields from your previous version ... #}
+                 <div class="row g-3 mb-3">
+                     <div class="col-md-4">
+                         <label for="diag-date" class="form-label form-label-sm">Diagnosis Date <span class="text-danger">*</span></label>
+                         <input type="date" id="diag-date" name="diagnosis_date" class="form-control form-control-sm" required value="{{ today_date.isoformat() if today_date else ''}}">
+                     </div>
+                     <div class="col-md-8">
+                         <label for="diag-name-input" class="form-label form-label-sm">Diagnosis Name <span class="text-danger">*</span></label>
+                         <div class="condition-search-container">
+                             <input type="text" id="diag-name-input" name="diagnosis_name" class="form-control form-control-sm condition-name-input" required placeholder="Type to search or enter new..." autocomplete="off">
+                             <div class="condition-search-results list-group"></div>
+                         </div>
+                     </div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label for="diag-code-input" class="form-label form-label-sm">Diagnosis Code</label>
+                        <input type="text" id="diag-code-input" name="diagnosis_code" class="form-control form-control-sm condition-code-input" placeholder="e.g., ICD-10 (auto-fills)">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="diag-type-select" class="form-label form-label-sm">Diagnosis Type</label>
+                        <select id="diag-type-select" name="diagnosis_type" class="form-select form-select-sm condition-type-input">
+                            {% for type_val in diagnosis_types %}<option value="{{ type_val }}" {% if type_val == 'final' %}selected{% endif %}>{{ type_val | title }}</option>{% else %}<option value="final" selected>Final</option>{% endfor %}
+                        </select>
+                    </div>
+                     <div class="col-md-4">
+                         <label for="diag-severity-select" class="form-label form-label-sm">Severity</label>
+                         <select id="diag-severity-select" name="severity" class="form-select form-select-sm condition-severity-input">
+                            {% for sev_val in diagnosis_severities %}<option value="{{ sev_val }}" {% if sev_val == 'unknown' %}selected{% endif %}>{{ sev_val | title }}</option>{% else %}<option value="unknown" selected>Unknown</option>{% endfor %}
+                         </select>
+                     </div>
+                </div>
+                <div class="mb-3">
+                    <label for="diag-desc-input" class="form-label form-label-sm">Description / Clinical Notes</label>
+                    <textarea id="diag-desc-input" name="description" class="form-control form-control-sm condition-description-input" rows="2" placeholder="Clinical details (auto-fills if selected from search)"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="diag-treat-input" class="form-label form-label-sm">Treatment Plan</label>
+                    <textarea id="diag-treat-input" name="treatment_plan" class="form-control form-control-sm" rows="3" placeholder="Medications, lifestyle changes, referrals..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="diag-notes-input" class="form-label form-label-sm">Internal Notes (Provider only)</label>
+                    <textarea id="diag-notes-input" name="notes" class="form-control form-control-sm" rows="2" placeholder="Confidential notes for provider record"></textarea>
+                </div>
+                <div class="row g-3 mb-3 align-items-center">
+                     <div class="col-auto form-check form-switch">
+                         <input class="form-check-input" type="checkbox" role="switch" id="diag-chronic-check" name="is_chronic">
+                         <label class="form-check-label" for="diag-chronic-check">Is Chronic</label>
+                     </div>
+                     <div class="col-auto form-check form-switch">
+                         <input class="form-check-input" type="checkbox" role="switch" id="diag-resolved-check" name="is_resolved">
+                         <label class="form-check-label" for="diag-resolved-check">Is Resolved</label>
+                     </div>
+                     <div class="col" id="diag-resolved-date-group" style="display: none;">
+                         <label for="diag-resolved-date-input" class="form-label form-label-sm">Resolved Date</label>
+                         <input type="date" id="diag-resolved-date-input" name="resolved_date" class="form-control form-control-sm">
+                     </div>
+                </div>
+                <div class="row g-3 mb-3 align-items-end">
+                    <div class="col-auto form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="diag-followup-check" name="follow_up_required">
+                        <label class="form-check-label" for="diag-followup-check">Follow-up Required</label>
+                    </div>
+                     <div class="col row gx-2" id="diag-followup-details-group" style="display: none;">
+                        <div class="col-md-6">
+                            <label for="diag-followup-date-input" class="form-label form-label-sm">Follow-up Date</label>
+                            <input type="date" id="diag-followup-date-input" name="follow_up_date" class="form-control form-control-sm">
+                        </div>
+                         <div class="col-md-6">
+                            <label for="diag-followup-type-input" class="form-label form-label-sm">Follow-up Type</label>
+                            <input type="text" id="diag-followup-type-input" name="follow_up_type" class="form-control form-control-sm" placeholder="e.g., 3-month Check">
+                         </div>
+                     </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="button button-success button-small"><i class="fas fa-save fa-fw"></i> Add Diagnosis</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="add-entry-form-block" id="form-symptom-anchor">
+             <h5><i class="fas fa-head-side-cough fa-fw"></i> Record New Symptom</h5>
+             <form action="{{ url_for('patients.add_symptom', patient_id=patient.user_info.user_id) }}" method="POST">
+                {# ... symptom form fields from previous version ... #}
+                 <div class="row g-3 mb-3">
+                     <div class="col-md-6">
+                         <label for="symptom-name-input" class="form-label form-label-sm">Symptom <span class="text-danger">*</span></label>
+                         <input type="text" list="symptomsDataList" id="symptom-name-input" name="symptom_name_or_id" class="form-control form-control-sm" required placeholder="Type or select symptom">
+                         <datalist id="symptomsDataList">
+                             {% for sym_catalog_item in symptoms_catalog %}<option value="{{ sym_catalog_item.id }}">{{ sym_catalog_item.name }}</option>{% else %}<option value="" disabled>(No symptoms in catalog)</option>{% endfor %}
+                         </datalist>
+                         <input type="hidden" name="symptom_id" id="symptom-id-hidden">
+                     </div>
+                     <div class="col-md-3">
+                         <label for="symptom-reported-date" class="form-label form-label-sm">Reported Date <span class="text-danger">*</span></label>
+                         <input type="date" id="symptom-reported-date" name="reported_date" class="form-control form-control-sm" required value="{{ today_date.isoformat() if today_date else ''}}">
+                     </div>
+                     <div class="col-md-3">
+                         <label for="symptom-onset-date" class="form-label form-label-sm">Onset Date</label>
+                         <input type="date" id="symptom-onset-date" name="onset_date" class="form-control form-control-sm">
+                     </div>
+                </div>
+                <div class="row g-3 mb-3">
+                     <div class="col-md-4">
+                         <label for="symptom-severity" class="form-label form-label-sm">Severity</label>
+                         <input type="text" id="symptom-severity" name="severity" class="form-control form-control-sm" placeholder="e.g., Mild, 5/10">
+                     </div>
+                     <div class="col-md-4">
+                         <label for="symptom-duration" class="form-label form-label-sm">Duration</label>
+                         <input type="text" id="symptom-duration" name="duration" class="form-control form-control-sm" placeholder="e.g., 3 days, Constant">
+                     </div>
+                     <div class="col-md-4">
+                         <label for="symptom-frequency" class="form-label form-label-sm">Frequency</label>
+                         <select id="symptom-frequency" name="frequency" class="form-select form-select-sm">
+                             <option value="" selected>-- Optional --</option>
+                             {% for freq_val in symptom_frequencies %}<option value="{{ freq_val }}">{{ freq_val | title }}</option>{% else %}<option value="constant">Constant</option><option value="intermittent">Intermittent</option>{% endfor %}
+                         </select>
+                     </div>
+                </div>
+                <div class="mb-3">
+                     <label for="symptom-notes" class="form-label form-label-sm">Notes / Description</label>
+                     <textarea id="symptom-notes" name="notes" class="form-control form-control-sm" rows="3" placeholder="e.g., Context, triggers, relievers..."></textarea>
+                </div>
+                <div class="text-end">
+                     <button type="submit" class="button button-success button-small"><i class="fas fa-save fa-fw"></i> Record Symptom</button>
+                </div>
+            </form>
+         </div>
+
+        <div class="add-entry-form-block" id="form-vaccination-anchor">
+            <h5><i class="fas fa-syringe fa-fw"></i> Record Vaccination</h5>
+            <form action="{{ url_for('patients.add_vaccination', patient_id=patient.user_info.user_id) }}" method="POST">
+                {# ... vaccination form fields from previous version ... #}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-5">
+                        <label for="vaccine-id-select" class="form-label form-label-sm">Vaccine Name <span class="text-danger">*</span></label>
+                        <select id="vaccine-id-select" name="vaccine_id" class="form-select form-select-sm" required>
+                            <option value="" selected disabled>-- Select Vaccine --</option>
+                            {% for vacc in vaccines_catalog %}
+                                <option value="{{ vacc.id }}">{{ vacc.name }}</option> 
+                            {% else %}
+                                <option value="" disabled>(No vaccines in catalog)</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="vaccine-admin-date-input" class="form-label form-label-sm">Administration Date <span class="text-danger">*</span></label>
+                        <input type="date" id="vaccine-admin-date-input" name="administration_date" class="form-control form-control-sm" required value="{{ today_date.isoformat() if today_date else ''}}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="vaccine-dose-input" class="form-label form-label-sm">Dose #</label>
+                        <input type="text" id="vaccine-dose-input" name="dose_number" class="form-control form-control-sm" placeholder="e.g., 1, Booster">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="vaccine-lot-input" class="form-label form-label-sm">Lot #</label>
+                        <input type="text" id="vaccine-lot-input" name="lot_number" class="form-control form-control-sm" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="vaccination-notes-input" class="form-label form-label-sm">Vaccination Notes</label>
+                    <textarea id="vaccination-notes-input" name="vaccination_notes" class="form-control form-control-sm" rows="2" placeholder="e.g., Site of administration, any reactions..."></textarea>
+                </div>
+                <div class="text-end">
+                    <button type="submit" class="button button-success button-small"><i class="fas fa-save fa-fw"></i> Record Vaccination</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block patient_profile_section_scripts_specific %}
+    {# JavaScript specific to the forms (condition search, datalist, conditional visibility) #}
+    <script>
+        // ... (JS for diagnosis search, symptom datalist, conditional field visibility - from previous correct version) ...
+    document.addEventListener('DOMContentLoaded', function() {
+        const diagFollowupCheckbox = document.getElementById('diag-followup-check');
+        const diagFollowupDetailsGroup = document.getElementById('diag-followup-details-group');
+        if (diagFollowupCheckbox && diagFollowupDetailsGroup) {
+            const diagFollowupDateInput = diagFollowupDetailsGroup.querySelector('#diag-followup-date-input');
+            const diagFollowupTypeInput = diagFollowupDetailsGroup.querySelector('#diag-followup-type-input');
+            function toggleDiagFollowup() {
+                const isChecked = diagFollowupCheckbox.checked;
+                diagFollowupDetailsGroup.style.display = isChecked ? 'flex' : 'none';
+                if(diagFollowupDateInput) diagFollowupDateInput.required = isChecked;
+                if(diagFollowupTypeInput) diagFollowupTypeInput.required = isChecked;
+                if (!isChecked) {
+                     if(diagFollowupDateInput) diagFollowupDateInput.value = '';
+                     if(diagFollowupTypeInput) diagFollowupTypeInput.value = '';
+                }
+            }
+            diagFollowupCheckbox.addEventListener('change', toggleDiagFollowup);
+            toggleDiagFollowup();
+        }
+
+        const diagResolvedCheckbox = document.getElementById('diag-resolved-check');
+        const diagResolvedDateGroup = document.getElementById('diag-resolved-date-group');
+        if (diagResolvedCheckbox && diagResolvedDateGroup) {
+            const diagResolvedDateInput = diagResolvedDateGroup.querySelector('#diag-resolved-date-input');
+            function toggleDiagResolved() {
+                const isChecked = diagResolvedCheckbox.checked;
+                 diagResolvedDateGroup.style.display = isChecked ? 'block' : 'none';
+                 if(diagResolvedDateInput) diagResolvedDateInput.required = isChecked;
+                 if (!isChecked && diagResolvedDateInput) diagResolvedDateInput.value = '';
+            }
+            diagResolvedCheckbox.addEventListener('change', toggleDiagResolved);
+            toggleDiagResolved();
+        }
+
+         const sympNameInput = document.getElementById('symptom-name-input'); 
+         const sympIdHidden = document.getElementById('symptom-id-hidden');   
+         const sympDatalist = document.getElementById('symptomsDataList');
+         if (sympNameInput && sympIdHidden && sympDatalist) {
+             sympNameInput.addEventListener('input', function (e) {
+                const inputValue = e.target.value.trim();
+                 sympIdHidden.value = '';
+                 for (const option of sympDatalist.options) {
+                     if (option.value === inputValue || option.textContent.trim().toLowerCase() === inputValue.toLowerCase()) {
+                         sympIdHidden.value = option.value; break;
+                     }
+                 }
+             });
+             sympNameInput.addEventListener('change', function(e){
+                if(e.target.value.trim() === '') { sympIdHidden.value = ''; }
+                else {
+                    let foundMatch = false;
+                     for (const option of sympDatalist.options) {
+                        if (option.value === e.target.value.trim() || option.textContent.trim().toLowerCase() === e.target.value.trim().toLowerCase()) {
+                            sympIdHidden.value = option.value; foundMatch = true; break;
+                        }
+                    }
+                    if (!foundMatch) { sympIdHidden.value = ''; }
+                }
+             });
+         }
+
+        const diagNameField = document.getElementById('diag-name-input'); 
+        if (diagNameField) {
+            const conditionSearchContainer = diagNameField.closest('.condition-search-container');
+            const conditionResultsEl = conditionSearchContainer ? conditionSearchContainer.querySelector('.condition-search-results') : null;
+            const diagCodeField = document.getElementById('diag-code-input'); 
+            const diagDescField = document.getElementById('diag-desc-input'); 
+
+            function debounce(func, wait) { 
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => { clearTimeout(timeout); func(...args); };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            diagNameField.addEventListener('input', debounce(async function(event) {
+                const query = event.target.value.trim();
+                if (!conditionResultsEl) return;
+                if (query.length < 2) {
+                    conditionResultsEl.innerHTML = ''; conditionResultsEl.style.display = 'none'; return;
+                }
+                try {
+                    const searchUrl = "{{ url_for('patients.search_conditions_json') }}"; 
+                    const response = await fetch(`${searchUrl}?q=${encodeURIComponent(query)}&limit=7`);
+                    if (!response.ok) throw new Error(`Search failed: ${response.status}`);
+                    const conditions = await response.json();
+                    conditionResultsEl.innerHTML = '';
+                    if (conditions && conditions.length > 0) {
+                        conditions.forEach(condition => {
+                            const itemDiv = document.createElement('a');
+                            itemDiv.href = '#'; itemDiv.classList.add('list-group-item', 'list-group-item-action');
+                            itemDiv.innerHTML = `<strong>${condition.condition_name}</strong> ${condition.icd_code ? `<span class="text-muted ms-2">(${condition.icd_code})</span>` : ''} <small class="d-block text-muted">${(condition.overview || condition.description || '').substring(0,70)}...</small>`;
+                            itemDiv.dataset.condition = JSON.stringify(condition);
+                            itemDiv.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const selectedCond = JSON.parse(this.dataset.condition);
+                                diagNameField.value = selectedCond.condition_name;
+                                if (diagCodeField) diagCodeField.value = selectedCond.icd_code || '';
+                                if (diagDescField) diagDescField.value = selectedCond.overview || selectedCond.description || '';
+                                conditionResultsEl.innerHTML = ''; conditionResultsEl.style.display = 'none';
+                            });
+                            conditionResultsEl.appendChild(itemDiv);
+                        });
+                        conditionResultsEl.style.display = 'block';
+                    } else {
+                        conditionResultsEl.innerHTML = '<div class="list-group-item text-muted small fst-italic">No matches. Enter new diagnosis.</div>';
+                        conditionResultsEl.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error("Fetching conditions error:", error);
+                    if(conditionResultsEl) { conditionResultsEl.innerHTML = '<div class="list-group-item text-danger small">Error loading.</div>'; conditionResultsEl.style.display = 'block';}
+                }
+            }, 350));
+
+            document.addEventListener('click', function(event) {
+                if (conditionSearchContainer && !conditionSearchContainer.contains(event.target)) {
+                    if (conditionResultsEl) conditionResultsEl.style.display = 'none';
+                }
+            });
+        }
+    });
+    </script>
+{% endblock %}

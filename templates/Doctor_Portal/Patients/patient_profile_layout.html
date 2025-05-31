@@ -1,0 +1,230 @@
+{# templates/Doctor_Portal/Patients/patient_profile_layout.html #}
+{% extends "Doctor_Portal/base.html" %}
+
+{% block title %}
+    Patient: {% if patient and patient.user_info %}{{ patient.user_info.first_name }} {{ patient.user_info.last_name }}{% else %}Profile{% endif %} - {{ super() }}
+{% endblock %}
+
+{% block head_extra %}
+    {{ super() }}
+    {# Main Doctor Portal CSS is inherited from Doctor_Portal/base.html #}
+    {# Link to settings.css if its styles are general enough to be reused here #}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/settings.css') }}"> #}
+    <style>
+        /* --- Patient Profile Layout Specific Styles --- */
+        .patient-profile-container {
+            padding-top: 1.5rem; /* Consistent with settings.css .page-header equivalent */
+            padding-bottom: 3rem;
+        }
+
+        /* Header (Patient Name, ID, Actions) - Similar to settings.css .page-header */
+        .patient-profile-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--color-border); /* Match settings.css page-header border */
+        }
+        .patient-profile-header .info h1 {
+            font-size: 1.8rem; /* Match settings.css page-header h1 */
+            color: var(--color-text-headings, #333);
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+        .patient-profile-header .info .meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem 0.75rem;
+        }
+        .patient-profile-header .actions .button { /* Assuming .button styles from base.css */
+            margin-left: 0.5rem;
+        }
+
+        /* --- Modern Tab Bar (as requested) --- */
+        .patient-profile-tab-bar {
+            display: flex;
+            gap: 0.25rem; /* Slightly reduced gap between buttons */
+            margin-bottom: 2rem;
+            padding-bottom: 0; /* Remove padding if border handles spacing */
+            border-bottom: 1px solid var(--border-color); /* Lighter line under tabs */
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .patient-profile-tab-bar::-webkit-scrollbar { display: none; }
+
+        .patient-profile-tab-bar .tab-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.75rem 1.25rem; /* Adjusted padding */
+            font-size: 0.9rem; /* Slightly smaller for more tabs */
+            font-weight: 500;
+            color: var(--text-secondary);
+            background-color: transparent;
+            border: none; 
+            border-bottom: 3px solid transparent;
+            border-top-left-radius: var(--border-radius-sm); /* Top rounding */
+            border-top-right-radius: var(--border-radius-sm);
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: color 0.2s ease, border-bottom-color 0.2s ease, background-color 0.2s ease;
+            margin-bottom: -1px; /* To make active tab border align with nav border */
+        }
+        .patient-profile-tab-bar .tab-button i.fa-fw {
+            margin-right: 0.5em;
+        }
+        .patient-profile-tab-bar .tab-button:hover {
+            color: var(--primary-color);
+            background-color: var(--hover-bg-color); /* Using a general hover color */
+        }
+        .patient-profile-tab-bar .tab-button.active {
+            color: var(--primary-color);
+            font-weight: 600;
+            border-bottom-color: var(--primary-color);
+            background-color: var(--card-bg-color); /* Make active tab look like it's part of content area */
+        }
+        /* --- End Modern Tab Bar --- */
+
+        .profile-content-area {
+            margin-top: 0; /* Content starts right after tab bar */
+            /* The content inside this will now be styled by the individual section templates,
+               potentially using classes from settings.css if applicable. */
+        }
+        
+        /* Modal Styling for tracker reports (from settings.css example if similar) */
+        #doctorViewReportContentModal .modal-content { background-color: var(--card-bg-color); border-color: var(--border-color);}
+        #doctorViewReportContentModal .modal-header { border-bottom-color: var(--border-color); }
+        #doctorViewReportContentModal .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+        [data-theme="light"] #doctorViewReportContentModal .modal-header .btn-close { filter: none; }
+        #doctorViewReportContentModal .modal-body pre {
+            background-color: var(--input-bg); color: var(--text-color); padding: 1rem;
+            border-radius: var(--border-radius-sm); max-height: 70vh; overflow-y:auto;
+            font-size: 0.85rem; border: 1px solid var(--border-color);
+        }
+        [data-theme="light"] #doctorViewReportContentModal .modal-body pre { background-color: #f8f9fa; color: #212529; border: 1px solid #dee2e6;}
+
+    </style>
+    {% block patient_profile_section_head_specific %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid patient-profile-container">
+    {% if patient and patient.user_info %}
+        <div class="patient-profile-header">
+            <div class="info">
+                <h1>{{ patient.user_info.first_name }} {{ patient.user_info.last_name }}</h1>
+                <div class="meta">
+                    <span>Patient ID: {{ patient.user_info.user_id }}</span>
+                    <span>Age: {{ patient.patient_info.age if patient.patient_info.age is not none else 'N/A' }}</span>
+                    <span>Gender: {{ patient.patient_info.gender | title | replace('_', ' ') if patient.patient_info.gender else 'N/A' }}</span>
+                </div>
+            </div>
+            <div class="actions">
+                <a href="{{ url_for('messaging.start_chat', patient_user_id=patient.user_info.user_id) }}" class="button button-outline button-secondary button-small">
+                    <i class="fas fa-comments"></i> Message
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="patient-profile-header"><div class="info"><h1>Patient Profile</h1></div></div>
+    {% endif %}
+
+    {% include '_flash_messages.html' %}
+
+    {% if patient and patient.user_info %}
+        <nav class="patient-profile-tab-bar" aria-label="Patient Profile Sections">
+            <a class="tab-button {% if current_section == 'details' %}active{% endif %}" 
+               href="{{ url_for('.view_patient_details_tab', patient_id=patient_id) }}">
+               <i class="fas fa-user-circle fa-fw"></i> Details
+            </a>
+            <a class="tab-button {% if current_section == 'records' %}active{% endif %}" 
+               href="{{ url_for('.view_patient_records_tab', patient_id=patient_id) }}">
+               <i class="fas fa-file-medical-alt fa-fw"></i> Records
+            </a>
+            <a class="tab-button {% if current_section == 'addentry' %}active{% endif %}" 
+               href="{{ url_for('.view_patient_add_entry_tab', patient_id=patient_id) }}">
+               <i class="fas fa-edit fa-fw"></i> Add Entry
+            </a>
+            <a class="tab-button {% if current_section == 'trackers' %}active{% endif %}" 
+               href="{{ url_for('.view_patient_tracker_reports_tab', patient_id=patient_id) }}">
+               <i class="fas fa-chart-line fa-fw"></i> Tracker Reports
+            </a>
+        </nav>
+
+        <div class="profile-content-area card"> {# ADDED .card class here for a general wrapper #}
+            <div class="card-body"> {# Added .card-body for padding if needed by content #}
+                 {% block patient_profile_section_content %}{% endblock %}
+            </div>
+        </div>
+        
+    {% else %}
+        <div class="alert alert-warning text-center">Patient data could not be fully loaded or found.</div>
+    {% endif %}
+
+    {# Common Modal for viewing tracker reports #}
+    <div class="modal fade" id="doctorViewReportContentModal" tabindex="-1" aria-labelledby="doctorViewReportContentModalLabel" aria-hidden="true">
+        {# ... (modal content as before) ... #}
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="doctorViewReportContentModalLabel">Report Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="doctorViewReportJsonContent"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    {# JavaScript for the "View Report JSON" modal - kept from previous #}
+    <script>
+    // ... (existing modal JS from previous response) ...
+    document.addEventListener('DOMContentLoaded', function () {
+        const reportModalElement = document.getElementById('doctorViewReportContentModal');
+        let reportModalInstance = null;
+        if (reportModalElement && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            reportModalInstance = new bootstrap.Modal(reportModalElement);
+        }
+        const modalJsonContentEl = document.getElementById('doctorViewReportJsonContent');
+        document.body.addEventListener('click', async function(event) {
+            const viewButton = event.target.closest('.doctor-view-report-btn');
+            if (viewButton) {
+                event.preventDefault();
+                const reportId = viewButton.dataset.reportId;
+                const patientIdForUrl = viewButton.dataset.patientId; 
+                if (!reportId || !modalJsonContentEl || !reportModalInstance || !patientIdForUrl) {
+                    console.error("Modal, report ID, patient ID, or content element missing for doctor view.");
+                    return;
+                }
+                modalJsonContentEl.textContent = 'Loading report data...';
+                reportModalInstance.show();
+                try {
+                    const viewUrl = `{{ url_for('patients.view_patient_report_json_content', patient_id=0, report_id=0) }}`
+                                    .replace('/0/reports/0/view-json', `/${patientIdForUrl}/reports/${reportId}/view-json`);
+                    const response = await fetch(viewUrl);
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        modalJsonContentEl.textContent = JSON.stringify(result.content, null, 2);
+                    } else {
+                        modalJsonContentEl.textContent = `Error: ${result.message || 'Could not load report content.'}`;
+                    }
+                } catch (err) {
+                    console.error('Error fetching report content for modal (doctor view):', err);
+                    modalJsonContentEl.textContent = 'Failed to load report details due to a network or server error.';
+                }
+            }
+        });
+    });
+    </script>
+    {% block patient_profile_section_scripts_specific %}{% endblock %}
+{% endblock %}

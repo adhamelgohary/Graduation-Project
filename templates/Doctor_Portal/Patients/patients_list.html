@@ -53,7 +53,7 @@
                              </div>
                              <div>
                                  <h5 class="card-title mb-0"> {# Removed nested link, title itself is linkable #}
-                                    <a href="{{ url_for('.view_patient_profile', patient_id=patient.user_id) }}" title="View {{ patient.first_name }} {{ patient.last_name }}'s Profile">
+                                    <a href="{{ url_for('patients.view_patient_details_tab', patient_id=patient.user_id) }}" title="View {{ patient.first_name }} {{ patient.last_name }}'s Profile">
                                         {{ patient.last_name }}, {{ patient.first_name }}
                                     </a>
                                 </h5>
@@ -75,7 +75,7 @@
                         </div>
                     </div>
                     <div class="card-footer"> {# Styled by CSS #}
-                         <a href="{{ url_for('.view_patient_profile', patient_id=patient.user_id) }}" class="btn btn-outline-primary btn-sm w-100"> {# Bootstrap full-width button #}
+                         <a href="{{ url_for('patients.view_patient_details_tab', patient_id=patient.user_id) }}" class="btn btn-outline-primary btn-sm w-100"> {# Bootstrap full-width button #}
                              View Profile <i class="fas fa-angle-right fa-fw ms-1"></i>
                          </a>
                     </div>

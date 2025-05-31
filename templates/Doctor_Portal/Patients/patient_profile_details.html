@@ -1,0 +1,123 @@
+{# templates/Doctor_Portal/Patients/patient_profile_details.html #}
+{% extends "Doctor_Portal/Patients/patient_profile_layout.html" %}
+
+{% block patient_profile_section_head_specific %}
+    <style>
+        /* Styles specific to the details view content */
+        .patient-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Adjust minmax for optimal spacing */
+            gap: var(--spacing-lg, 25px); /* Consistent gap */
+        }
+        .info-card { /* This class is for logical grouping within the grid */
+            /* No specific background or border needed here if the outer .content-section-card provides it */
+        }
+        .info-card h4 { /* Styling for sub-headings like "Demographics & Contact" */
+            font-size: 1.2rem; /* Slightly larger */
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md, 15px);
+            padding-bottom: var(--spacing-sm, 10px);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 500; /* Less heavy than main section headers */
+        }
+        /* The .patient-detail-row styles are in patient_profile_layout.html */
+        
+        .allergies-list .list-group-item { 
+            padding: var(--spacing-sm, 10px) 0; 
+            border-bottom: 1px solid var(--border-color); 
+            background:transparent; 
+            color: var(--text-color); 
+        }
+        .allergies-list .list-group-item:last-child { border-bottom: none; }
+        .allergies-list strong { color: var(--primary-color); font-weight: 500; }
+        .allergies-list .badge { font-size: 0.75em; padding: 0.3em 0.5em; }
+        .allergies-list .text-muted { font-size: 0.9em; }
+    </style>
+{% endblock %}
+
+{% block patient_profile_section_content %}
+    {# The outer .card and .card-body are provided by patient_profile_layout.html #}
+    <h3 class="content-section-card-header d-none">Patient Information</h3> {# Hidden, implied by active tab #}
+    
+    <div class="patient-info-grid">
+        <div class="info-card">
+            <h4>Demographics & Contact</h4>
+            <div class="patient-detail-row">
+                <div class="label-col">Full Name: {{ patient.user_info.first_name }} {{ patient.user_info.last_name }} </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Date of Birth:{{ patient.patient_info.date_of_birth.strftime('%B %d, %Y') if patient.patient_info.date_of_birth else 'N/A' }} </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Age:{{ patient.patient_info.age if patient.patient_info.age is not none else 'N/A' }} </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Gender:{{ patient.patient_info.gender | title | replace('_', ' ') if patient.patient_info.gender else 'N/A' }} </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Email: <a href="mailto:{{ patient.user_info.email }}">{{ patient.user_info.email | default('N/A') }}</a> </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Phone:<a href="tel:{{ patient.user_info.phone }}">{{ patient.user_info.phone | default('N/A') }}</a> </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Country:{{ patient.user_info.country | default('N/A') }} </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Marital Status:{{ patient.patient_info.marital_status | title if patient.patient_info.marital_status else 'N/A' }} </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Occupation:{{ patient.patient_info.occupation | default('N/A') }} </div>
+            </div> <br>
+        </div>
+
+        <div class="info-card">
+            <h4>Medical Overview</h4>
+            <div class="patient-detail-row">
+                <div class="label-col">Blood Type:{{ patient.patient_info.blood_type | default('N/A') }} </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Height:{{ ('%g'|format(patient.patient_info.height_cm) + ' cm') if patient.patient_info.height_cm else 'N/A' }} </div>
+            </div> <br>
+            <div class="patient-detail-row">
+                <div class="label-col">Weight:{{ ('%g'|format(patient.patient_info.weight_kg) + ' kg') if patient.patient_info.weight_kg else 'N/A' }} </div>
+            </div> <br>
+            
+            <h4 class="mt-4">Insurance</h4>
+             {% if patient.insurance_info or patient.patient_info.insurance_policy_number %}
+                {% if patient.insurance_info %}
+                <div class="patient-detail-row"><div class="label-col">Provider: {{ patient.insurance_info.provider_name }}</div></div>
+                {% endif %}
+                <div class="patient-detail-row"><div class="label-col">Policy #: {{ patient.patient_info.insurance_policy_number | default('N/A') }} </div></div> <br>
+                <div class="patient-detail-row"><div class="label-col">Group #: {{ patient.patient_info.insurance_group_number | default('N/A') }} </div></div> <br>
+                <div class="patient-detail-row"><div class="label-col">Expiration: {{ patient.patient_info.insurance_expiration.strftime('%Y-%m-%d') if patient.patient_info.insurance_expiration else 'N/A' }} </div></div> <br>
+             {% else %}
+                <p class="text-muted mt-2">No insurance information on file.</p>
+             {% endif %}
+        </div>
+    </div>
+
+    {# Allergies section can be full width below the grid #}
+    <div class="info-card mt-4"> 
+        <h4>Allergies & Adverse Reactions</h4>
+        {% if patient.allergies %}
+           <ul class="list-group list-group-flush allergies-list">
+               {% for allergy in patient.allergies %}
+                   <li class="list-group-item">
+                       <strong>{{ allergy.allergy_name }}</strong>
+                       {% if allergy.allergy_type %}<small class="text-muted"> ({{ allergy.allergy_type | title }})</small>{% endif %}
+                       {% if allergy.severity and allergy.severity != 'unknown' %}<span class="badge bg-warning text-dark ms-2">{{ allergy.severity | title }}</span>{% endif %}
+                       {% if allergy.reaction_description %}<small class="d-block text-muted mt-1">Reaction: {{ allergy.reaction_description }}</small>{% endif %}
+                       {% if allergy.notes %}<small class="d-block text-muted mt-1">Notes: {{ allergy.notes }}</small>{% endif %}
+                   </li>
+               {% endfor %}
+           </ul>
+        {% else %}
+           <p class="text-muted">No known allergies recorded.</p>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block patient_profile_section_scripts_specific %}
+    {# No specific JS for this details tab currently #}
+{% endblock %}

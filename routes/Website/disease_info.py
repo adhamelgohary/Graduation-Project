@@ -50,29 +50,32 @@ def create_snippet(text, max_length=250, indicator="..."):
 
 
 def get_condition_details_for_website(condition_id):
-    conn = None; cursor = None; details = {'condition': None} # conn for condition details
+    conn = None; cursor = None;
+    details_wrapper = {'condition': None} # Use a wrapper dictionary
     logger = current_app.logger if current_app else print
+
     try:
-        conn = get_db_connection() # conn for condition details
+        conn = get_db_connection()
         if not conn: 
             getattr(logger, 'error', print)(f"DB Connection failed for condition_details_for_website ID {condition_id}")
-            return None
+            return None # Return None if DB connection fails
             
-        cursor = conn.cursor(dictionary=True, buffered=True) # cursor for condition details
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
         query_cond = """
-            SELECT c.*, dept.name AS department_name, dept.department_id
+            SELECT c.*, c.condition_name AS name, dept.name AS department_name, dept.department_id
             FROM conditions c
             LEFT JOIN departments dept ON c.department_id = dept.department_id
             WHERE c.condition_id = %s AND c.is_active = TRUE
         """
         cursor.execute(query_cond, (condition_id,))
-        condition_data = cursor.fetchone()
+        condition_data = cursor.fetchone() # Main condition data
+        
         if not condition_data:
             getattr(logger, 'warning', print)(f"Condition ID {condition_id} not found or not active for website.")
             return None
-        
-        details['condition'] = condition_data
 
+        # --- Process Text Fields into LISTS ---
         text_fields_to_split = {
             'regular_symptoms_list': 'regular_symptoms_text', 
             'emergency_symptoms_list': 'emergency_symptoms_text',
@@ -80,22 +83,24 @@ def get_condition_details_for_website(condition_id):
             'complications_list': 'complications_text',
             'risk_factors_list': 'risk_factors_text', 
             'treatment_protocols_list': 'treatment_protocols_text',
-            'diagnosis_list': 'diagnosis_details', 
-            'testing_list': 'testing_details',
+            'diagnosis_list': 'diagnosis_details',      
+            'testing_list': 'testing_details',        
         }
         for list_key, db_col in text_fields_to_split.items():
-            condition_data[list_key] = split_text_to_list(condition_data.get(db_col))
+            original_text = condition_data.get(db_col)
+            condition_data[list_key] = split_text_to_list(original_text)
 
+        # --- Generate Snippets for TEXT fields needing "Read More" ---
         SNIPPET_LENGTH_DETAIL = 250
         text_fields_for_snippets = {
-            'causes': 'causes_text', 
-            'risk_factors': 'risk_factors_text', 
-            'complications': 'complications_text',
-            'diagnosis': 'diagnosis_details', 
-            'testing': 'testing_details',
+            'overview': 'overview', # Make sure 'overview' itself is a text field in DB
+            'causes': 'causes_text',                    
+            'risk_factors': 'risk_factors_text',        
+            'complications': 'complications_text',      
+            'diagnosis': 'diagnosis_details',           
+            'testing': 'testing_details',             
             'treatment_protocols': 'treatment_protocols_text', 
-            'education': 'educational_content',
-            'overview': 'overview'
+            'education': 'educational_content'          
         }
         for display_key, db_col in text_fields_for_snippets.items():
             full_text = condition_data.get(db_col)
@@ -104,9 +109,10 @@ def get_condition_details_for_website(condition_id):
             condition_data[f"{display_key}_has_more"] = has_more
             condition_data[f"{display_key}_full"] = full_text 
 
-        img_file_from_db = condition_data.get('condition_image_filename')
-        if img_file_from_db and current_app and 'UPLOAD_FOLDER_CONDITIONS' in current_app.config and get_relative_path_for_db:
-            actual_filename = os.path.basename(img_file_from_db) 
+        # --- Image URL (using get_relative_path_for_db) ---
+        img_file = condition_data.get('condition_image_filename')
+        if img_file and current_app and 'UPLOAD_FOLDER_CONDITIONS' in current_app.config and get_relative_path_for_db:
+            actual_filename = os.path.basename(img_file) # In case img_file contains a path
             full_image_path = os.path.join(current_app.config['UPLOAD_FOLDER_CONDITIONS'], actual_filename)
             relative_image_path = get_relative_path_for_db(full_image_path)
             if relative_image_path:
@@ -116,22 +122,30 @@ def get_condition_details_for_website(condition_id):
         else:
             condition_data['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
 
+        # --- Department-specific CSS ---
         dept_name = condition_data.get('department_name')
         if dept_name == 'Cardiology': condition_data['specific_css'] = 'Website/Conditions/cardiodisease.css'
         elif dept_name == 'Neurology': condition_data['specific_css'] = 'Website/Conditions/neurodisease.css'
         elif dept_name == 'Orthopedics': condition_data['specific_css'] = 'Website/Conditions/orthodisease.css'
         elif dept_name == 'Dermatology': condition_data['specific_css'] = 'Website/Conditions/dermadisease.css'
         else: condition_data['specific_css'] = 'Website/Conditions/generic_disease.css'
-        condition_data['self_treatable_display'] = 'Yes' if condition_data.get('self_treatable') else 'No'
+
+        # --- Boolean Display ---
+        condition_data['self_treatable_display'] = 'Yes' if condition_data.get('self_treatable') else ('No' if condition_data.get('self_treatable') is not None else 'N/A')
+
+        # --- Removed Associated Tracker Info section ---
+        condition_data['associated_tracker'] = None # Ensure the key exists but is None
+
+        details_wrapper['condition'] = condition_data # Put processed data into the wrapper
 
     except Exception as e:
         getattr(logger, 'error', print)(f"Error processing condition details for website ID {condition_id}: {e}", exc_info=True)
-        return None
+        return None # Important to return None on error
     finally:
-        if cursor: cursor.close() # cursor for condition details
-        if conn and conn.is_connected(): conn.close() # conn for condition details
-    return details
+        if cursor: cursor.close()
+        if conn and conn.is_connected(): conn.close()
 
+    return details_wrapper # Return the wrapper
 
 disease_info_bp = Blueprint(
     'disease_info',

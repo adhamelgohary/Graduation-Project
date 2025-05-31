@@ -1,0 +1,258 @@
+{# templates/Doctor_Portal/Patients/patient_profile_records.html #}
+{% extends "Doctor_Portal/Patients/patient_profile_layout.html" %}
+
+{% block patient_profile_section_head_specific %}
+    <style>
+        /* Styles for this specific section's content */
+        .accordion-item {
+            background-color: var(--input-bg); 
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            margin-bottom: 1rem; 
+            box-shadow: var(--box-shadow-sm);
+        }
+        .accordion-header { 
+            margin-bottom: 0;
+        }
+        .accordion-button {
+            font-weight: 500;
+            color: var(--text-primary);
+            background-color: var(--input-bg); 
+            border-radius: calc(var(--border-radius-sm) - 1px) calc(var(--border-radius-sm) - 1px) 0 0;
+            padding: 0.85rem 1.25rem; 
+            border-bottom: 1px solid var(--border-color); 
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: color-mix(in srgb, var(--primary-color) 15%, var(--input-bg));
+            color: var(--primary-color);
+            box-shadow: inset 0 -1px 0 var(--border-color); 
+            border-bottom-color: transparent; 
+        }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--primary-color) 25%, transparent);
+            z-index: 1; 
+        }
+        .accordion-button i.fa-fw {
+            margin-right: 0.75em;
+            font-size: 1.1em;
+            width: 20px; 
+            text-align: center;
+        }
+        
+        /* Corrected SVG arrow colors - hardcoded */
+        .accordion-button::after { 
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236c757d'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+            /* fill is #6c757d (Bootstrap text-muted gray) */
+        }
+        .accordion-button:not(.collapsed)::after {
+             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%230d6efd'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+             /* fill is #0d6efd (Bootstrap primary blue) for active state */
+        }
+        .accordion-body {
+            padding: 0; 
+            background-color: var(--card-bg-color); 
+        }
+        .history-table { margin-bottom: 0; }
+        .history-table th {
+            background-color: var(--hover-bg-color); 
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom-width: 1px; 
+        }
+        .history-table td {
+            font-size: 0.9rem;
+            vertical-align: middle;
+            border-top: 1px solid var(--border-color); 
+        }
+         .history-table tbody tr:first-child td {
+            border-top: none; 
+         }
+        .accordion-body .table-responsive { 
+            border-radius: 0 0 var(--border-radius-sm) var(--border-radius-sm); 
+            overflow:hidden; 
+        }
+         .accordion-body .text-muted.p-3 {
+            background-color: var(--card-bg-color);
+            border-top: 1px solid var(--border-color);
+         }
+    </style>
+{% endblock %}
+
+{% block patient_profile_section_content %}
+    <div class="content-section-card p-0" id="medical-records-content-section">
+        <h3 class="content-section-card-header d-none">Medical Records</h3>
+        <div class="accordion" id="medicalRecordsAccordion">
+            {# Appointments Accordion Item #}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="appointmentsAccordionHeader">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#appointmentsAccordionCollapse" aria-expanded="false" aria-controls="appointmentsAccordionCollapse">
+                        <i class="fas fa-calendar-check fa-fw"></i>Appointments History
+                    </button>
+                </h2>
+                <div id="appointmentsAccordionCollapse" class="accordion-collapse collapse" aria-labelledby="appointmentsAccordionHeader" data-bs-parent="#medicalRecordsAccordion">
+                    <div class="accordion-body p-0">
+                        {% if patient.appointments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm history-table mb-0">
+                                    <thead><tr><th>Date</th><th>Time</th><th>Type</th><th>Status</th><th>With Dr.</th><th>Reason</th></tr></thead>
+                                    <tbody>
+                                    {% for appt in patient.appointments %}
+                                        <tr>
+                                            <td>{{ appt.appointment_date.strftime('%Y-%m-%d') if appt.appointment_date else 'N/A'}}</td>
+                                            <td>{{ appt.start_time_str | default('--:--') }}</td>
+                                            <td>{{ appt.appointment_type_name | default('N/A') | title }}</td>
+                                            <td><span class="badge status-{{ appt.status | lower | replace(' ', '-') }}">{{ appt.status | title | replace('-', ' ') }}</span></td>
+                                            <td>Dr. {{ appt.doctor_last_name | default('N/A') }}{{ ', ' ~ appt.doctor_first_name[0] if appt.doctor_first_name else '' }}.</td>
+                                            <td>{{ appt.reason | truncate(45) if appt.reason else 'N/A' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %} <p class="text-muted p-3 fst-italic mb-0">No appointment history found.</p> {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# Diagnoses Accordion Item #}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="diagnosesAccordionHeader">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#diagnosesAccordionCollapse" aria-expanded="false" aria-controls="diagnosesAccordionCollapse">
+                        <i class="fas fa-stethoscope fa-fw"></i>Diagnoses History
+                    </button>
+                </h2>
+                <div id="diagnosesAccordionCollapse" class="accordion-collapse collapse" aria-labelledby="diagnosesAccordionHeader" data-bs-parent="#medicalRecordsAccordion">
+                    <div class="accordion-body p-0">
+                         {% if patient.diagnoses %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm history-table mb-0">
+                                    <thead><tr><th>Date</th><th>Diagnosis</th><th>Type</th><th>Status</th><th>By Dr.</th><th>Notes</th></tr></thead>
+                                    <tbody>
+                                    {% for dx in patient.diagnoses %}
+                                        <tr>
+                                            <td>{{ dx.diagnosis_date.strftime('%Y-%m-%d') if dx.diagnosis_date else 'N/A' }}</td>
+                                            <td>{{ dx.diagnosis_name }} {% if dx.diagnosis_code %}<small class="text-muted">({{ dx.diagnosis_code }})</small>{% endif %}</td>
+                                            <td>{{ dx.diagnosis_type | title }}</td>
+                                            <td>
+                                                {% if dx.is_resolved %}Resolved <small class="text-muted">({{ dx.resolved_date.strftime('%Y-%m-%d') if dx.resolved_date else 'N/A' }})</small>
+                                                {% elif dx.is_chronic %}Chronic
+                                                {% else %}Active
+                                                {% endif %}
+                                                {% if dx.severity and dx.severity != 'unknown' %}<small class="text-muted"> ({{ dx.severity | title }})</small>{% endif %}
+                                            </td>
+                                            <td>Dr. {{ dx.doctor_last_name | default('N/A') }}{{ ', ' ~ dx.doctor_first_name[0] if dx.doctor_first_name else '' }}.</td>
+                                            <td>{{ dx.notes | truncate(45) if dx.notes else 'N/A' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %} <p class="text-muted p-3 fst-italic mb-0">No diagnosis history found.</p> {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# Symptoms Accordion Item #}
+             <div class="accordion-item">
+                <h2 class="accordion-header" id="symptomsAccordionHeader">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#symptomsAccordionCollapse" aria-expanded="false" aria-controls="symptomsAccordionCollapse">
+                        <i class="fas fa-head-side-cough fa-fw"></i>Reported Symptoms History
+                    </button>
+                </h2>
+                <div id="symptomsAccordionCollapse" class="accordion-collapse collapse" aria-labelledby="symptomsAccordionHeader" data-bs-parent="#medicalRecordsAccordion">
+                    <div class="accordion-body p-0">
+                         {% if patient.symptoms %}
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm history-table mb-0">
+                                    <thead><tr><th>Reported</th><th>Symptom</th><th>Onset</th><th>Severity</th><th>Frequency</th><th>Reported By</th><th>Notes</th></tr></thead>
+                                    <tbody>
+                                    {% for sym in patient.symptoms %}
+                                        <tr>
+                                            <td>{{ sym.reported_date.strftime('%Y-%m-%d') if sym.reported_date else 'N/A' }}</td>
+                                            <td>{{ sym.symptom_name }}</td>
+                                            <td>{{ sym.onset_date.strftime('%Y-%m-%d') if sym.onset_date else 'N/A' }}</td>
+                                            <td>{{ sym.severity | default('N/A') }}</td>
+                                            <td>{{ sym.frequency | title if sym.frequency else 'N/A' }}</td>
+                                            <td>{{ sym.reporter_name | default('N/A') }}</td> 
+                                            <td>{{ sym.notes | truncate(45) if sym.notes else 'N/A' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %} <p class="text-muted p-3 fst-italic mb-0">No symptom history found.</p> {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# Vaccinations Accordion Item #}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="vaccinationsAccordionHeader">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#vaccinationsAccordionCollapse" aria-expanded="false" aria-controls="vaccinationsAccordionCollapse">
+                        <i class="fas fa-syringe fa-fw"></i>Immunization History
+                    </button>
+                </h2>
+                <div id="vaccinationsAccordionCollapse" class="accordion-collapse collapse" aria-labelledby="vaccinationsAccordionHeader" data-bs-parent="#medicalRecordsAccordion">
+                    <div class="accordion-body p-0">
+                         {% if patient.vaccinations %} 
+                            <div class="table-responsive">
+                                <table class="table table-hover table-sm history-table mb-0">
+                                    <thead><tr><th>Date</th><th>Vaccine</th><th>Dose #</th><th>Lot #</th><th>Administered By</th><th>Notes</th></tr></thead>
+                                    <tbody>
+                                    {% for pv in patient.vaccinations %}
+                                        <tr>
+                                            <td>{{ pv.administration_date.strftime('%Y-%m-%d') if pv.administration_date else 'N/A' }}</td>
+                                            <td>{{ pv.vaccine_name }} {% if pv.vaccine_abbreviation %}({{pv.vaccine_abbreviation}}){% endif %}</td>
+                                            <td>{{ pv.dose_number | default('N/A') }}</td>
+                                            <td>{{ pv.lot_number | default('N/A') }}</td>
+                                            <td>{{ pv.administered_by_id | default('N/A') }}</td> 
+                                            <td>{{ pv.notes | truncate(45) if pv.notes else 'N/A' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %} <p class="text-muted p-3 fst-italic mb-0">No immunization history recorded.</p> {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block patient_profile_section_scripts_specific %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Logic to open accordion item if URL hash matches its ID
+            if (window.location.hash) {
+                var accordionTargetId = window.location.hash.substring(1); // Remove #
+                // Find button that targets this ID for collapse
+                var buttonForCollapse = document.querySelector('.accordion-button[data-bs-target="#' + accordionTargetId + '"]');
+                
+                if (buttonForCollapse) {
+                    // This is the header of the accordion item. We want to show its corresponding collapse pane.
+                    var collapseElement = document.getElementById(accordionTargetId);
+                    if (collapseElement && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+                        var bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {
+                            toggle: false // Don't toggle, just ensure it's shown
+                        });
+                        bsCollapse.show();
+                        
+                        // Optional: Scroll to the opened item after a short delay
+                        setTimeout(function() {
+                             const headerElement = document.getElementById(buttonForCollapse.closest('.accordion-item').querySelector('.accordion-header').id);
+                             if (headerElement) {
+                                 const navbarHeight = document.querySelector('.app-header')?.offsetHeight || 60; // Your fixed navbar height
+                                 const elementTop = headerElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight - 10; // 10px offset
+                                 window.scrollTo({ top: elementTop, behavior: 'smooth' });
+                             }
+                        }, 300); // Adjust delay if needed for collapse animation
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

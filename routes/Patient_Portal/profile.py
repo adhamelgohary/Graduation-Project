@@ -425,29 +425,3 @@ def upload_photo():
          if cursor: cursor.close()
          if conn and conn.is_connected(): conn.close()
     return redirect(url_for('.manage_profile'))
-
-@patient_profile_bp.route('/notifications', methods=['GET', 'POST'])
-@login_required
-def manage_notifications():
-    if not check_patient_authorization(current_user): abort(403)
-    # user_id = current_user.id # Not used yet
-    if request.method == 'POST':
-        # TODO:
-        # 1. Get notification preferences from request.form (e.g., email_reminders, sms_updates)
-        # 2. Validate these preferences.
-        # 3. Store them in the database. This might involve:
-        #    - Adding new columns to the 'users' or 'patients' table (e.g., allow_email_reminders BOOLEAN).
-        #    - Creating a new table 'user_notification_settings (user_id, setting_key, setting_value)'.
-        #    - Storing as a JSON object in a TEXT column in 'users' or 'patients'.
-        flash("Notification preferences updated (Functionality Not Implemented Yet).", "info")
-        return redirect(url_for('.manage_notifications'))
-
-    # GET Request
-    # TODO:
-    # 1. Fetch current notification settings for current_user.id from the database.
-    current_settings = { # Placeholder data
-        'email_appointment_reminders': True,
-        'sms_prescription_updates': False,
-        'newsletter_opt_in': True
-    }
-    return render_template('Patient_Portal/Profile/manage_notifications.html', settings=current_settings)

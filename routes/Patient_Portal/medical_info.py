@@ -11,6 +11,7 @@ from datetime import datetime, date # Ensure date is imported if used
 import math
 import mysql.connector # Import for specific error handling
 
+
 # Define Blueprint
 patient_medical_info_bp = Blueprint(
     'patient_medical_info',

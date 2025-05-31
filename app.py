@@ -34,7 +34,6 @@ from routes.Admin_Portal.structure_management import structure_bp
 from routes.Patient_Portal.profile import patient_profile_bp
 from routes.Patient_Portal.medical_info import patient_medical_info_bp
 from routes.Patient_Portal.patient_messaging import patient_messaging_bp
-from routes.Patient_Portal.patient_trackers import patient_tracker_bp
 from routes.Website.vaccines import vaccines_bp
 from routes.Website.nutrition import nutrition_bp
 # routes of doctor portal
@@ -105,7 +104,6 @@ app.register_blueprint(vaccine_management_bp)
 app.register_blueprint(patient_profile_bp)
 app.register_blueprint(patient_medical_info_bp)
 app.register_blueprint(patient_messaging_bp)
-app.register_blueprint(patient_tracker_bp)
 app.register_blueprint(vaccines_bp, url_prefix='/vaccination-center') # Or your desired prefix
 app.register_blueprint(user_alerts_bp)
 # In your app.py or wherever you create the app

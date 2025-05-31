@@ -150,6 +150,13 @@
             <p>View your recorded medical conditions and history.</p>
             <a href="{{ url_for('patient_medical_info.view_history') }}" class="button">View History</a>
         </div>
+        {# Card for My Tracker Reports #}
+        <div class="account-card">
+            <i class="fas fa-chart-line"></i> {# Or a more relevant icon #}
+            <h4>My Tracker Reports</h4>
+            <p>View and manage your submitted health tracker entries.</p>
+            <a href="{{ url_for('patient_medical_info.view_my_tracker_reports') }}" class="button">View Reports</a>
+        </div>
 
     </div>
 </div>
