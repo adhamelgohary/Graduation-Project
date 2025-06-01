@@ -18,33 +18,42 @@
         flex-direction: column;
         height: 100%;
     }
-    .conditions-section .conditions .card .image-container { /* Added for image styling */
+    .conditions-section .conditions .card .image-container {
         width: 100%;
-        height: 200px; /* Or your desired fixed height */
+        height: 200px; 
         overflow: hidden;
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #f0f0f0; /* Placeholder background */
+        background-color: #f0f0f0; 
         margin-bottom: 15px;
         border-radius: var(--border-radius-md, 0.3rem) var(--border-radius-md, 0.3rem) 0 0;
     }
     .conditions-section .conditions .card .image-container img {
         width: 100%;
         height: 100%;
-        object-fit: cover; /* Or 'contain' if you prefer */
+        object-fit: cover; 
     }
     .conditions-section .conditions .card .content {
         flex-grow: 1;
         display: flex;
         flex-direction: column;
-        padding: 15px; /* Add padding to content if image is separate */
+        padding: 15px; 
     }
     .conditions-section .conditions .card .btn {
         margin-top: auto;
-        margin-left: 15px; /* Align with padding */
+        margin-left: 15px; 
         margin-right: 15px;
         margin-bottom: 15px;
+    }
+    .condition-specialization { /* New style for specialization */
+        font-size: 0.85em;
+        color: var(--text-muted, #6c757d);
+        margin-bottom: 0.5rem;
+        display: block; /* Ensures it takes its own line if needed */
+    }
+    .condition-specialization .fa-tags {
+        margin-right: 0.3em;
     }
     @media (max-width: 992px) {
         .conditions-section .conditions {
@@ -66,8 +75,6 @@
          border: 1px dashed var(--border-color);
      }
   </style>
-
-
 {% endblock %}
 
 {% block content %}
@@ -243,7 +250,6 @@
          {% endfor %}
      {% endif %}
      
-
 <div class="conditions-section">
     <h2 class="section-title">{{ department.name }} Conditions</h2>
     <div class="conditions">
@@ -251,12 +257,16 @@
             {% for condition in conditions %}
             <div class="card">
                 <div class="image-container">
-                    {# *** CORRECTED IMAGE HANDLING HERE *** #}
                     <img src="{{ condition.image_url | default(url_for('static', filename='images/conditions/disease_placeholder.png')) }}" alt="{{ condition.name | default('Condition image') }}">
                 </div>
                 <div class="content">
                     <h1>{{ condition.name | default('Condition') }}</h1>
-                    {# Removed image-text-container as image is now separate #}
+                    {# ADDED Specialization display #}
+                    {% if condition.specialization_name %}
+                    <span class="condition-specialization">
+                        <i class="fas fa-tags"></i> {{ condition.specialization_name }}
+                    </span>
+                    {% endif %}
                     <p>{{ (condition.short_description or condition.description or '') | truncate(120, True) | default('Learn more about this condition.', True) }}</p>
                 </div>
                 <a href="{{ url_for('disease_info.view_condition', condition_id=condition.condition_id) }}" class="btn" >Read More</a>

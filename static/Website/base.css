@@ -218,7 +218,7 @@ body {
 
 .nav-links a,
 .nav-links .dropbtn {
-  color: var(--text-color);
+  color: var(--nav-link-color);
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
@@ -236,6 +236,7 @@ body {
 }
 .nav-links a:after, 
 .nav-links .dropbtn:after {
+
   content: '';
   position: absolute;
   width: 0;
@@ -243,13 +244,14 @@ body {
   bottom: -2px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--section-title-gradient);
+  color: var(--nav-link-hover-color);
+  background-color: var(--nav-link-hover-bg);
   transition: width 0.3s ease;
 }
 .nav-links a:hover, 
 .nav-links .dropbtn:hover {
-  color: var(--navbar-hover-text-color);
-  background-color: var(--navbar-hover-bg-color); 
+  color: var(--nav-link-hover-color);
+  background-color: var(--nav-link-hover-bg);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px var(--shadow-glow); 
 }

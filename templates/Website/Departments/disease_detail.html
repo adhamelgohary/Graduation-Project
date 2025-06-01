@@ -26,8 +26,17 @@
 {% block content %}
 <div class="disease-container">
     <div class="header">
-        {# THIS IS THE MAIN HEADING ON THE PAGE #}
         <h1>{{ condition.name | default('Condition Details') }}</h1> 
+        {# ADDED Specialization display under the main heading if available #}
+        {% if condition.specialization_name %}
+            <p class="text-muted fs-5">
+                <i class="fas fa-tags fa-fw"></i> Relevant Specialization: <strong>{{ condition.specialization_name }}</strong>
+            </p>
+        {% elif condition.department_name %}
+             <p class="text-muted fs-5">
+                <i class="fas fa-hospital-alt fa-fw"></i> Relevant Department: <strong>{{ condition.department_name }}</strong>
+            </p>
+        {% endif %}
     </div>
 
     <div class="top-content">
@@ -41,7 +50,6 @@
                 <hr>
             {% endif %}
              <div class="content-container">
-                 {# MODIFIED: Display full overview text directly #}
                  <div class="overview-full-text pre-wrap">
                     {{ condition.overview | default('<span class="no-text-provided">No overview available.</span>' | safe) }}
                  </div>
@@ -50,7 +58,6 @@
     </div>
 
     <div class="main-content">
-        {# Quick Facts Card (Unchanged) #}
         <div class="card quick-facts-card">
             <h3><i class="fas fa-list-check"></i> Quick Facts</h3>
             <dl class="quick-facts-list">
@@ -58,12 +65,21 @@
                  {% if condition.urgency_level %}<dt><i class="fas fa-exclamation-circle fa-fw"></i>Urgency:</dt> <dd class="urgency-{{ condition.urgency_level | lower |replace(' ', '-') }}">{{ condition.urgency_level | title }}</dd>{% endif %}
                  {% if condition.typical_duration %}<dt><i class="far fa-clock fa-fw"></i>Duration:</dt> <dd>{{ condition.typical_duration | escape }}</dd>{% endif %}
                  {% if condition.icd_code %}<dt><i class="fas fa-barcode fa-fw"></i>ICD-10:</dt> <dd>{{ condition.icd_code | escape }}</dd>{% endif %}
-                 {% if condition.specialist_type %}<dt><i class="fas fa-user-md fa-fw"></i>Specialist:</dt> <dd>{{ condition.specialist_type | escape }}</dd>{% endif %}
+                 
+                 {# MODIFIED: Display condition's specific specialization if available, else general specialist_type #}
+                 {% if condition.specialization_name %}
+                    <dt><i class="fas fa-user-md fa-fw"></i>Specialization:</dt> <dd>{{ condition.specialization_name | escape }}</dd>
+                 {% elif condition.specialist_type %}
+                    <dt><i class="fas fa-user-md fa-fw"></i>Specialist (General):</dt> <dd>{{ condition.specialist_type | escape }}</dd>
+                 {% endif %}
+
                  {% if condition.self_treatable is not none %}<dt><i class="fas fa-notes-medical fa-fw"></i>Self-Treatable:</dt> <dd>{{ condition.self_treatable_display }}</dd>{% endif %}
+                 {% if condition.department_name and not condition.specialization_name %} {# Show department if no specific specialization is listed for the condition #}
+                    <dt><i class="fas fa-hospital-alt fa-fw"></i>Department:</dt> <dd>{{ condition.department_name | escape }}</dd>
+                 {% endif %}
             </dl>
         </div>
 
-        {# --- COMBINED Symptoms Section (Unchanged structure, relies on existing JS) --- #}
         {% if condition.regular_symptoms_list or condition.emergency_symptoms_list %}
         <div class="card">
             <h3><i class="fas fa-head-side-cough"></i> {{ condition.name | default('Condition') }} Symptoms</h3>
@@ -86,8 +102,7 @@
         </div>
         {% endif %}
 
-        {# --- Causes Section (MODIFIED with Read More) --- #}
-        {% if condition.causes_text or condition.causes_list %} {# Check if there's any original text or a generated list #}
+        {% if condition.causes_text or condition.causes_list %}
         <div class="card">
             <h3><i class="fas fa-question-circle"></i> Causes</h3>
             <div class="content-container">
@@ -96,17 +111,17 @@
                     <div class="content-full causes-full" style="display: none;">
                         {% if condition.causes_list %}
                             <ul>{% for item in condition.causes_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
-                        {% elif condition.causes_full %} {# Fallback to full text if list is empty for some reason #}
+                        {% elif condition.causes_full %} 
                             <p class="pre-wrap">{{ condition.causes_full | safe }}</p>
                         {% else %}
                             <p class="no-text-provided">No causes specified.</p>
                         {% endif %}
                     </div>
                     <button class="read-more-btn" data-target-snippet=".causes-snippet" data-target-full=".causes-full" aria-expanded="false" data-has-more="true">Read more <span class="arrow">▼</span></button>
-                {% else %} {# No "Read more" needed, display full content (prefer list) #}
+                {% else %} 
                     {% if condition.causes_list %}
                         <ul>{% for item in condition.causes_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
-                    {% elif condition.causes_full %} {# Show full text if it was short and not list-like #}
+                    {% elif condition.causes_full %} 
                         <p class="pre-wrap">{{ condition.causes_full | safe }}</p>
                     {% else %}
                         <p class="no-text-provided">No causes specified.</p>
@@ -117,7 +132,6 @@
         {% endif %}
 
 
-        {# --- Risk Factors Section (MODIFIED with Read More) --- #}
         {% if condition.risk_factors_text or condition.risk_factors_list %}
         <div class="card">
             <h3><i class="fas fa-biohazard"></i> Risk Factors</h3>
@@ -147,7 +161,6 @@
         </div>
         {% endif %}
 
-        {# --- Complications Section (MODIFIED with Read More) --- #}
         {% if condition.complications_text or condition.complications_list %}
          <div class="card">
             <h3><i class="fas fa-exclamation-triangle"></i> Potential Complications</h3>
@@ -177,12 +190,11 @@
         </div>
         {% endif %}
 
-        {# --- Diagnosis & Testing Section (MODIFIED with Read More for each sub-section, content as list) --- #}
         {% if (condition.diagnosis_details or condition.diagnosis_list) or (condition.testing_details or condition.testing_list) %}
         <div class="card">
             <h3><i class="fas fa-stethoscope"></i> Diagnosis & Testing</h3>
             
-            {% if condition.diagnosis_details or condition.diagnosis_list %} {# Check original text (diagnosis_details) or list #}
+            {% if condition.diagnosis_details or condition.diagnosis_list %} 
             <h4>Diagnosis:</h4>
             <div class="content-container">
                 {% if condition.diagnosis_has_more %}
@@ -210,7 +222,7 @@
             {% if (condition.diagnosis_details or condition.diagnosis_list) and (condition.testing_details or condition.testing_list) %}<hr class="section-divider">{% endif %}
             {% endif %}
 
-            {% if condition.testing_details or condition.testing_list %} {# Check original text (testing_details) or list #}
+            {% if condition.testing_details or condition.testing_list %} 
             <h4>Common Tests:</h4>
             <div class="content-container">
                 {% if condition.testing_has_more %}
@@ -239,7 +251,6 @@
         </div>
         {% endif %}
 
-        {# --- Treatment Protocols Section (MODIFIED with Read More) --- #}
         {% if condition.treatment_protocols_text or condition.treatment_protocols_list %}
         <div class="card">
             <h3><i class="fas fa-pills"></i> Treatment Approaches</h3>
@@ -269,7 +280,6 @@
         </div>
         {% endif %}
 
-        {# --- Educational Content Section (Unchanged structure, uses existing Read More) --- #}
         {% if condition.educational_content %}
         <div class="card educational-content-card">
              <h3><i class="fas fa-book-open"></i> Further Information & Resources</h3>
@@ -283,17 +293,25 @@
          </div>
         {% endif %}
 
-    </div> {# End main-content #}
+    </div> 
 
-    {# --- Doctors Section (Unchanged) --- #}
+    {# MODIFIED: Doctors Section Title reflects specialization if doctors are filtered by it #}
     <div class="doctors-section">
-        <h2><i class="fas fa-user-md"></i> Find a Specialist</h2>
+        <h2>
+            <i class="fas fa-user-md"></i> 
+            {% if condition.specialization_id and doctors %}
+                Specialists for {{ condition.specialization_name }}
+            {% elif condition.department_id and doctors %}
+                Doctors in {{ condition.department_name }}
+            {% else %}
+                Find a Specialist
+            {% endif %}
+        </h2>
         {% if doctors %}
            <div class="doctors-grid">
                 {% for doctor in doctors %}
                 <div class="doctor-card">
                     <div class="doctor-avatar">
-                        {# THIS LINE IS RESPONSIBLE FOR DISPLAYING THE DOCTOR'S IMAGE #}
                         <img src="{{ doctor.profile_picture_url | default(url_for('static', filename='images/profile_pics/default_avatar.png')) }}" alt="Dr. {{ doctor.first_name }} {{ doctor.last_name }}" class="doctor-profile-pic">
                     </div>
                     <div class="doctor-details">
@@ -306,11 +324,18 @@
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-muted text-center mt-3">No specific specialists listed for this condition's department.</p>
+            <p class="text-muted text-center mt-3">
+                {% if condition.specialization_name %}
+                    No specialists currently listed for <strong>{{ condition.specialization_name }}</strong> related to this condition.
+                {% elif condition.department_name %}
+                    No doctors currently listed in the <strong>{{ condition.department_name }}</strong> department related to this condition.
+                {% else %}
+                    No specific specialists listed for this condition at the moment.
+                {% endif %}
+            </p>
         {% endif %}
     </div>
 
-    {# --- Associated Tracker Section --- #}
     {% if condition.associated_tracker %}
     <div class="card tracker-promo-card mt-4">
         <div class="card-body text-center">
@@ -318,11 +343,9 @@
             <p>Use our <strong>{{ condition.associated_tracker.display_name }}</strong> to help monitor your symptoms and progress.</p>
             
             {% if current_user.is_authenticated and current_user.user_type == 'patient' %}
-                {# *** UPDATED HREF *** #}
                 <a href="{{ url_for('patient_tracker_bp.view_tracker_page', tracker_url_name=condition.associated_tracker.url_name) }}" class="button button-primary">
                     <i class="fas fa-arrow-right"></i> Go to {{ condition.associated_tracker.display_name }}
                 </a>
-            {# ... (rest of the conditions for logged out / non-patient users) ... #}
             {% elif current_user.is_authenticated %}
                  <button class="button button-secondary" disabled title="Trackers are for patient use.">
                     <i class="fas fa-lock"></i> {{ condition.associated_tracker.display_name }} (Patients Only)
@@ -331,7 +354,6 @@
                 <p class="text-muted mb-2">
                     <i class="fas fa-info-circle"></i> You need to be logged in as a patient to use this tracker.
                 </p>
-                {# Point login 'next' URL to the tracker page after login #}
                 <a href="{{ url_for('login.login_route', next=url_for('patient_tracker_bp.view_tracker_page', tracker_url_name=condition.associated_tracker.url_name, _external=True)) }}" class="button button-outline">
                     <i class="fas fa-sign-in-alt"></i> Login to Use Tracker
                 </a>
@@ -339,40 +361,33 @@
         </div>
     </div>
     {% endif %}
-    {# --- End Associated Tracker Section --- #}
 
 </div>
 {% endblock %}
 
 {% block scripts %}
-{# JavaScript remains the same as previous version - it should handle the new read-more sections as they use the same classes #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const readMoreButtons = document.querySelectorAll('.read-more-btn');
-    readMoreButtons.forEach(button => { /* ... Same JS as before ... */
+    readMoreButtons.forEach(button => { 
         const container = button.closest('.content-container'); if (!container) return;
         const hasMore = button.dataset.hasMore === 'true'; const isSymptomsButton = button.classList.contains('symptoms-read-more');
         const snippetSelector = button.dataset.targetSnippet; const fullSelector = button.dataset.targetFull;
         const snippetElement = container.querySelector(snippetSelector); const fullElement = container.querySelector(fullSelector);
         
-        // Hide button if not needed (no "hasMore" flag from Python unless it's the special symptoms button)
-        // or if target elements are missing.
         if ((!hasMore && !isSymptomsButton) || !snippetElement || !fullElement) {
-             if (!isSymptomsButton || !fullElement){ // For regular read-more, if no "hasMore" or elements missing, hide.
+             if (!isSymptomsButton || !fullElement){ 
                 button.style.display = 'none'; 
              }
-             // Logic for symptoms button or initial display of full content when no snippet needed.
              if (isSymptomsButton) { 
                 if(snippetElement) snippetElement.style.display = 'block'; 
                 if(fullElement) fullElement.style.display = 'none'; 
-             } else { 
-
-             }
+             } 
              
              const emergencyHasContent = isSymptomsButton && fullElement && fullElement.textContent.trim();
-             if (isSymptomsButton && emergencyHasContent && !hasMore) { // Ensure symptoms button shows if emergency content exists
+             if (isSymptomsButton && emergencyHasContent && !hasMore) { 
                 button.style.display = 'inline-block'; 
-                button.dataset.hasMore = 'true'; // Treat as if it has more for JS logic
+                button.dataset.hasMore = 'true'; 
                 if(snippetElement) snippetElement.style.display = 'block'; 
                 fullElement.style.display = 'none'; 
                 button.setAttribute('aria-expanded', 'false'); 
@@ -381,10 +396,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 button.style.display = 'none'; 
              }
 
-             if (button.style.display === 'none') return; // Stop if button is determined to be not needed
+             if (button.style.display === 'none') return; 
         }
         
-        // Initial state for buttons that are displayed
         if (snippetElement) snippetElement.style.display = 'block'; 
         if (fullElement) fullElement.style.display = 'none'; 
         button.setAttribute('aria-expanded', 'false'); 
@@ -394,7 +408,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const isExpanded = this.getAttribute('aria-expanded') === 'true';
             if (isSymptomsButton) { 
                 if (fullElement) fullElement.style.display = isExpanded ? 'none' : 'block'; 
-                // Regular symptoms (snippetElement for this button type) always visible
                 if (snippetElement) snippetElement.style.display = 'block'; 
                 this.innerHTML = isExpanded ? 'View Emergency Symptoms <span class="arrow">▼</span>' : 'Hide Emergency Symptoms <span class="arrow">▲</span>'; 
             } else { 

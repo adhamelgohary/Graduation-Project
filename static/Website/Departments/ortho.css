@@ -6,46 +6,71 @@
     --text-secondary: rgba(255, 255, 255, 0.7);
     
     /* Orthopedics Accents */
-    --primary-accent-ortho: #4CAF50;
+    --primary-accent-ortho: #9B59B6; 
+    --rgb-primary-accent-ortho: 155, 89, 182; 
     --secondary-accent-ortho: #81D4FA;
     --rgb-secondary-accent-ortho: 129, 212, 250;
 
     /* Mapped variables */
     --text-highlight: var(--primary-accent-ortho);
-    --accent-color: var(--primary-accent-ortho);
+    --accent-color: var(--primary-accent-ortho); /* General accent, maps to primary ortho purple */
     --border-color: rgba(255, 255, 255, 0.1);
     
     --particle-bg: rgba(var(--rgb-secondary-accent-ortho), 0.08); 
-    --neon-blue: var(--secondary-accent-ortho);
+    --neon-blue: var(--secondary-accent-ortho); /* Specific name for the blue accent */
     
     --hero-bg: rgba(var(--rgb-primary-accent-ortho), 0.05);
-    --card-bg: rgba(35, 35, 40, 0.8); /* Adjusted card BG for neutral base */
+    --card-bg: rgba(var(--rgb-primary-accent-ortho), 0.03); /* MODIFIED: Subtle purple tint for cards */
     
     --section-title-gradient: linear-gradient(90deg, var(--primary-accent-ortho), var(--secondary-accent-ortho));
 
+    /* Dept Specific - these seem fine, mapping to the main accents */
     --dept-specific-color-1: var(--primary-accent-ortho);
     --dept-specific-color-2: var(--secondary-accent-ortho);
     --dept-neon-color: var(--secondary-accent-ortho);
 
-    --button-bg: rgba(var(--rgb-primary-accent-ortho), 0.7);
-    --button-hover: var(--primary-accent-ortho);
-    --accent-pink: var(--primary-accent-ortho);
+    /* Generic Button Variables (used by .btn in this file if not overridden) */
+    --button-bg-ortho: rgba(var(--rgb-primary-accent-ortho), 0.7);
+    --button-text-color-ortho: var(--text-primary);
+    --button-border-color-ortho: var(--primary-accent-ortho);
+    --button-hover-bg-ortho: var(--primary-accent-ortho);
+    --button-hover-text-color-ortho: var(--text-primary);
+    --button-hover-border-color-ortho: var(--primary-accent-ortho);
+    --button-shadow-ortho: 0 4px 12px rgba(var(--rgb-primary-accent-ortho), 0.3);
+
+    /* Read More Button (specific for cards, pale purple) */
+    --button-readmore-bg: rgba(var(--rgb-primary-accent-ortho), 0.2);
+    --button-readmore-text: var(--primary-accent-ortho);
+    --button-readmore-border: rgba(var(--rgb-primary-accent-ortho), 0.4);
+    --button-readmore-hover-bg: rgba(var(--rgb-primary-accent-ortho), 0.35);
+    --button-readmore-hover-text: var(--text-primary); 
+    --button-readmore-hover-border: rgba(var(--rgb-primary-accent-ortho), 0.6);
+    
+    /* Emergency Button uses --accent-color, which is --primary-accent-ortho */
+    
+    --accent-pink: var(--primary-accent-ortho); /* Legacy name, now purple */
     --accent-white: #ffffff;
 
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    --blue-glow: rgba(var(--rgb-secondary-accent-ortho), 0.15);
-    --card-hover: rgba(var(--rgb-secondary-accent-ortho), 0.3);
+    /* Shadows & Glows */
+    --shadow-color: rgba(0, 0, 0, 0.1); /* Generic shadow */
+    --blue-glow: rgba(var(--rgb-secondary-accent-ortho), 0.15); /* Blueish glow */
+    
+    /* Card Specific Hover Effects */
+    --card-hover-border: var(--primary-accent-ortho);
+    --shadow-glow: 0 15px 35px rgba(var(--rgb-primary-accent-ortho), 0.2); /* Purple glow for card hover */
+
 }
 
 /* Light Theme - Orthopedics Palette - NEUTRALIZED BACKGROUND */
 [data-theme="light"] {
-    --bg-secondary: rgba(249, 249, 250, 0.95); /* Very Light Off-White/Gray, semi-transparent - Neutral */
-    --text-primary: #2E4D30; /* Dark, muted green */
-    --text-secondary: rgba(46, 77, 48, 0.7);
-    --border-color: rgba(46, 77, 48, 0.15);
+    --bg-secondary: rgba(249, 249, 250, 0.95); 
+    --text-primary: #4A235A; 
+    --text-secondary: rgba(74, 35, 90, 0.7); 
+    --border-color: rgba(74, 35, 90, 0.15); 
 
     /* Orthopedics Light Accents */
-    --primary-accent-ortho: #388E3C;
+    --primary-accent-ortho: #8E44AD; 
+    --rgb-primary-accent-ortho: 142, 68, 173; 
     --secondary-accent-ortho: #60C7F8;
     --rgb-secondary-accent-ortho: 96, 199, 248;
     
@@ -54,46 +79,66 @@
     --particle-bg: rgba(var(--rgb-secondary-accent-ortho), 0.1);
     --neon-blue: var(--secondary-accent-ortho);
     --hero-bg: rgba(var(--rgb-primary-accent-ortho), 0.1);
-    --card-bg: rgba(252, 252, 253, 0.95); /* Slightly off-white cards for depth */
+    --card-bg: rgba(var(--rgb-primary-accent-ortho), 0.05); /* MODIFIED: Subtle purple tint for cards */
     --section-title-gradient: linear-gradient(90deg, var(--primary-accent-ortho), var(--secondary-accent-ortho));
 
     --dept-specific-color-1: var(--primary-accent-ortho);
     --dept-specific-color-2: var(--secondary-accent-ortho);
     --dept-neon-color: var(--secondary-accent-ortho);
 
-    --button-bg: rgba(var(--rgb-primary-accent-ortho), 0.8);
-    --button-hover: var(--primary-accent-ortho);
-    --accent-pink: var(--primary-accent-ortho);
+    /* Generic Button Variables - Light Theme */
+    --button-bg-ortho: rgba(var(--rgb-primary-accent-ortho), 0.8);
+    --button-text-color-ortho: var(--accent-white); /* White text on purple bg */
+    --button-border-color-ortho: var(--primary-accent-ortho);
+    --button-hover-bg-ortho: var(--primary-accent-ortho);
+    --button-hover-text-color-ortho: var(--accent-white);
+    --button-hover-border-color-ortho: var(--primary-accent-ortho);
+    --button-shadow-ortho: 0 4px 12px rgba(var(--rgb-primary-accent-ortho), 0.2);
+
+    /* Read More Button - Light Theme */
+    --button-readmore-bg: rgba(var(--rgb-primary-accent-ortho), 0.2);
+    --button-readmore-text: var(--primary-accent-ortho);
+    --button-readmore-border: rgba(var(--rgb-primary-accent-ortho), 0.4);
+    --button-readmore-hover-bg: rgba(var(--rgb-primary-accent-ortho), 0.35);
+    --button-readmore-hover-text: var(--text-primary); /* Dark purple text */
+    --button-readmore-hover-border: rgba(var(--rgb-primary-accent-ortho), 0.6);
     
-    --shadow-color: rgba(46, 77, 48, 0.07);
+    --accent-pink: var(--primary-accent-ortho); 
+    
+    --shadow-color: rgba(74, 35, 90, 0.07); 
     --blue-glow: rgba(var(--rgb-secondary-accent-ortho), 0.1);
-    --card-hover: rgba(var(--rgb-secondary-accent-ortho), 0.25);
+    
+    /* Card Specific Hover Effects - Light Theme */
+    --card-hover-border: var(--primary-accent-ortho);
+    --shadow-glow: 0 15px 35px rgba(var(--rgb-primary-accent-ortho), 0.15); /* Lighter purple glow */
 }
 
 /* --- Hero Section Specifics - Adapted for Orthopedics --- */
-.hero-section { /* From derma.css - uses global vars */
+.hero-section { 
     width: 100%;
-    background-color: var(--hero-bg); /* Global var */
     position: relative;
     overflow: hidden;
-    border-bottom: 1px solid var(--border-color); /* Global var */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .hero-particle {
     position: absolute;
     border-radius: 50%;
-    background-color: var(--particle-bg); /* Ortho particle background */
+    background-color: var(--particle-bg); 
     z-index: 0;
 }
 
 .hero-content {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 0 5%;
+    padding: 0 5%; 
     display: flex;
     align-items: center;
     position: relative;
     z-index: 10;
+    width: 100%; 
 }
 
 .text-content {
@@ -105,7 +150,7 @@
 .visual-content {
     flex: 1;
     position: relative;
-    min-height: 400px;
+    min-height: 400px; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -113,7 +158,7 @@
 }
 
 .hero-content h1 {
-    color: var(--text-primary); /* Uses ortho defined --text-primary */
+    color: var(--text-primary); 
     font-size: 42px;
     margin-bottom: 20px;
     line-height: 1.2;
@@ -121,29 +166,28 @@
 }
 
 .hero-content h1 .highlight {
-    color: var(--text-highlight); /* Ortho highlight color */
+    color: var(--text-highlight); 
     font-weight: bold;
 }
 
 .hero-content p {
-    color: var(--text-secondary); /* Uses ortho defined --text-secondary */
+    color: var(--text-secondary); 
     font-size: 16px;
     line-height: 1.6;
     margin-bottom: 30px;
     max-width: 600px;
 }
 
-/* Search Bar */
 .search-bar {
-    background-color: rgba(255, 255, 255, 0.1); /* Default dark for search */
+    background-color: rgba(255, 255, 255, 0.1); 
     border-radius: 20px;
     padding: 8px 15px;
     display: flex;
     align-items: center;
-    border: 1px solid var(--border-color); /* Ortho border */
+    border: 1px solid var(--border-color); 
 }
 .search-bar input {
-    background: transparent; border: none; color: var(--text-primary); /* Ortho text */
+    background: transparent; border: none; color: var(--text-primary); 
     outline: none; width: 150px; font-size: 14px;
 }
 .search-bar input::placeholder { color: var(--text-secondary); }
@@ -156,44 +200,44 @@
 
 
 /* --- Visual Elements (Density Graph, Cells, Bone Images) --- */
-.animated-graph-container { /* Changed from .animated-ecg-container */
+.animated-graph-container { 
     position: absolute; bottom: 10%; left: 0; width: 100%; height: 100px;
     overflow: hidden; z-index: 2;
     mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
 }
-.animated-density-line { /* Changed from .animated-ecg-line */
+.animated-density-line { 
     width: 200%; height: 100%; position: absolute; left: 0; top: 0;
 }
-.animated-density-line .density-segment { /* Changed from .ecg-segment */
-    fill: none; stroke: var(--neon-blue); /* Ortho "neon" color for graph */
+.animated-density-line .density-segment { 
+    fill: none; stroke: var(--neon-blue); 
     stroke-width: 2px;
     stroke-linecap: round; stroke-linejoin: round;
-    filter: drop-shadow(0 0 5px var(--neon-blue)); /* Ortho "neon" glow for graph */
-    animation: scroll-density 10s linear infinite; /* Changed animation name */
+    filter: drop-shadow(0 0 5px var(--neon-blue)); 
+    animation: scroll-density 10s linear infinite; 
     opacity: 0; transition: opacity 0.4s ease-in-out;
 }
-.animated-density-line .density-segment.visible-density { opacity: 1; } /* Changed class name */
+.animated-density-line .density-segment.visible-density { opacity: 1; } 
 
-@keyframes scroll-density { /* Changed animation name */
+@keyframes scroll-density { 
     0% { transform: translateX(0); }
     100% { transform: translateX(-800px); }
 }
 
 .cell {
     position: absolute; width: 30px; height: 30px; border-radius: 50%;
-    border: 1px solid var(--neon-blue); /* Ortho "neon" color for cells */
-    background-color: rgba(var(--neon-blue-rgb), 0.1);
-    box-shadow: 0 0 10px rgba(var(--neon-blue-rgb), 0.5);
+    border: 1px solid var(--neon-blue); 
+    background-color: rgba(var(--rgb-secondary-accent-ortho), 0.1); 
+    box-shadow: 0 0 10px rgba(var(--rgb-secondary-accent-ortho), 0.5);
     z-index: 2;
 }
 [data-theme="light"] .cell {
-    border-color: var(--neon-blue); /* Ortho "neon" for light theme cells */
-    background-color: rgba(var(--neon-blue-rgb), 0.1);
-    box-shadow: 0 0 10px rgba(var(--neon-blue-rgb), 0.3); /* Softer shadow for light */
+    border-color: var(--neon-blue); 
+    background-color: rgba(var(--rgb-secondary-accent-ortho), 0.1);
+    box-shadow: 0 0 10px rgba(var(--rgb-secondary-accent-ortho), 0.3); 
 }
 
-.bone-image { /* Changed from .heart-image */
+.bone-image { 
     position: absolute; width: 50px; height: 50px; object-fit: contain;
     z-index: -1; opacity: 0.8; pointer-events: none;
 }
@@ -213,35 +257,35 @@
 }
 .section-title::after {
     content: ''; display: block; width: 60px; height: 3px;
-    background: var(--section-title-gradient); /* Ortho section title gradient */
+    background: var(--section-title-gradient); 
     margin: 15px auto 30px; border-radius: 2px;
 }
 
-.conditions-section { margin: 80px 0; } /* Renamed from diseases-section */
-.conditions { /* Renamed from diseases */
+.conditions-section { margin: 80px 0; } 
+.conditions { 
     display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;
 }
 
 .card {
-    background-color: var(--card-bg); /* Uses ortho defined --card-bg */
+    background-color: var(--card-bg); /* CORRECTED: Uses defined --card-bg */
     border-radius: 12px; overflow: hidden;
-    border: 1px solid var(--border-color); /* Uses ortho defined --border-color */
+    border: 1px solid var(--border-color); 
     display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.12); /* Generic shadow */
+    box-shadow: 0 8px 15px var(--shadow-color); /* Using generic --shadow-color for base */
 }
 .card:hover {
     transform: translateY(-10px);
-    box-shadow: 0 15px 35px var(--shadow-glow); /* Ortho specific glow */
-    border-color: var(--card-hover-border); /* Ortho hover border for dark */
+    box-shadow: var(--shadow-glow); /* CORRECTED: Uses defined --shadow-glow */
+    border-color: var(--card-hover-border); /* CORRECTED: Uses defined --card-hover-border */
 }
 [data-theme="light"] .card {
-    background-color: var(--card-bg); /* Uses ortho light defined --card-bg (very transparent one) */
-    border: 1px solid var(--border-color); /* Uses ortho light defined --border-color */
-    box-shadow: 0 8px 15px rgba(0,0,0,0.06); /* Lighter generic shadow */
+    background-color: var(--card-bg); 
+    border: 1px solid var(--border-color); 
+    box-shadow: 0 8px 15px var(--shadow-color); 
 }
 [data-theme="light"] .card:hover {
-    box-shadow: 0 15px 35px var(--shadow-glow); /* Ortho specific light glow (defined in light theme block) */
-    border-color: var(--card-hover-border); /* Ortho hover border for light (defined in light theme block) */
+    box-shadow: var(--shadow-glow); 
+    border-color: var(--card-hover-border); 
 }
 
 .card .content { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
@@ -251,7 +295,7 @@
 }
 .card h1::after {
     content: ''; position: absolute; bottom: 0; left: 0; width: 40px; height: 2px;
-    background: var(--section-title-gradient); /* Ortho section title gradient */
+    background: var(--section-title-gradient); 
 }
 
 .image-text-container {
@@ -260,23 +304,23 @@
 }
 .image-text-container img {
     width: 85px; height: 100px; object-fit: contain; border-radius: 8px;
-    background-color: rgba(var(--accent-color-rgb), 0.05); /* Ortho accent subtle bg */
+    background-color: rgba(var(--rgb-primary-accent-ortho), 0.05);
     display: block;
-    border: 1px solid rgba(var(--accent-color-rgb), 0.1);
+    border: 1px solid rgba(var(--rgb-primary-accent-ortho), 0.1);
 }
 [data-theme="light"] .image-text-container img {
-    background-color: rgba(var(--accent-color-rgb), 0.08); /* Slightly more visible on light */
-    border: 1px solid rgba(var(--accent-color-rgb), 0.15);
+    background-color: rgba(var(--rgb-primary-accent-ortho), 0.08); 
+    border: 1px solid rgba(var(--rgb-primary-accent-ortho), 0.15);
 }
 .image-text-container p {
     font-size: 14px; color: var(--text-secondary); line-height: 1.5;
     margin-bottom: 0; text-align: center;
 }
 
-/* Button Styling - Using Ortho specific button variables */
-.btn {
-    background-color: var(--button-bg-ortho);
-    color: var(--button-text-color-ortho);
+/* Button Styling */
+.btn { /* This is the generic button style for ortho.css pages */
+    background-color: var(--button-bg-ortho); 
+    color: var(--button-text-color-ortho);    
     border: 1px solid var(--button-border-color-ortho);
     padding: 12px 25px; border-radius: 5px; text-decoration: none;
     font-size: 14px; transition: all 0.3s; display: block; cursor: pointer;
@@ -285,45 +329,51 @@
 .btn:hover {
     background-color: var(--button-hover-bg-ortho);
     color: var(--button-hover-text-color-ortho);
+    border-color: var(--button-hover-border-color-ortho); /* Added hover border color */
     transform: translateY(-2px);
     box-shadow: var(--button-shadow-ortho);
 }
 .card .btn { width: 85%; margin: 15px auto 25px; }
 
-.emergency-btn {
-    background-color: var(--accent-color); /* Solid ortho accent for emergency */
-    color: white;
-    border: 1px solid var(--accent-color);
+
+/* Styling for "Read More" buttons in cards (pale purple) */
+.card .btn:not(.emergency-btn) { /* This targets specific buttons within cards */
+    background-color: var(--button-readmore-bg);
+    color: var(--button-readmore-text);
+    border: 1px solid var(--button-readmore-border);
+}
+
+.card .btn:not(.emergency-btn):hover {
+    background-color: var(--button-readmore-hover-bg);
+    color: var(--button-readmore-hover-text);
+    border-color: var(--button-readmore-hover-border);
+    /* transform and box-shadow from .btn:hover will still apply if not overridden */
+}
+
+
+.emergency-btn { /* This uses the general --accent-color, which is --primary-accent-ortho */
+    background-color: var(--accent-color); 
+    color: white; /* Explicitly white for high contrast */
+    border: 1px solid var(--accent-color); 
     display: inline-block; width: auto; margin: 0;
 }
 .emergency-btn:hover {
-     background-color: color-mix(in srgb, var(--accent-color) 80%, black); /* Darken ortho accent */
-     border-color: color-mix(in srgb, var(--accent-color) 80%, black);
+     background-color: color-mix(in srgb, var(--accent-color) 80%, black); 
+     border-color: color-mix(in srgb, var(--accent-color) 80%, black); 
      color: white;
 }
 
-/* Light theme button adjustments already handled by --button-*-ortho vars in [data-theme="light"] block */
-/* This selector might be redundant if above vars are correctly scoped and named.
-   However, to ensure specificity for light non-emergency:
-*/
-[data-theme="light"] .btn:not(.emergency-btn) {
-    background-color: var(--button-bg-ortho); /* Correctly picks up light theme ortho button vars */
-    color: var(--button-text-color-ortho);
-    border-color: var(--button-border-color-ortho);
-}
-[data-theme="light"] .btn:not(.emergency-btn):hover {
-     background-color: var(--button-hover-bg-ortho);
-     color: var(--button-hover-text-color-ortho);
-     box-shadow: var(--button-shadow-ortho);
-}
+/* Light theme .btn styles are handled by the theme-specific variables */
+/* Light theme .emergency-btn */
 [data-theme="light"] .emergency-btn {
-  background-color: var(--accent-color);
-  color: white; /* text color remains white as per many emergency button conventions */
-  border: 1px solid var(--accent-color);
+  background-color: var(--accent-color); 
+  color: var(--accent-white); /* Ensure white text for light theme too */
+  border: 1px solid var(--accent-color); 
 }
 [data-theme="light"] .emergency-btn:hover {
-  background-color: color-mix(in srgb, var(--accent-color) 85%, #00000033); /* Darken but less severely than full black mix for light */
+  background-color: color-mix(in srgb, var(--accent-color) 85%, #00000033); 
   border-color: color-mix(in srgb, var(--accent-color) 85%, #00000033);
+  color: var(--accent-white);
 }
 
 
@@ -337,7 +387,7 @@
     .animated-graph-container { height: 80px; bottom: 5%; }
 }
 @media (max-width: 768px) {
-    .hero-section { padding-top: 120px; padding-bottom: 60px; }
+    .hero-section { padding-top: 100px; padding-bottom: 60px; } /* Adjusted padding */
     .hero-content h1 { font-size: 32px; }
     .conditions { grid-template-columns: 1fr; }
     .search-bar { width: 90%; max-width: none; }

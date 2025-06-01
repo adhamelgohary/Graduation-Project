@@ -14,10 +14,11 @@
   }
   
   body {
-    background-color: var(--background-color);
+    /* This background-color is the BASE for all disease pages */
+    background-color: var(--background-color); 
     color: var(--text-color);
     min-height: 100vh;
-    /* Updated to use new --rgb-secondary-accent for a generic-themed grid */
+    /* This background-image is the DEFAULT grid pattern, overridden by department-specific CSS */
     background-image: radial-gradient(circle, rgba(var(--rgb-secondary-accent, 143, 175, 210), 0.07) 1px, transparent 1px);
     background-size: 30px 30px;
     overflow-x: hidden;
@@ -28,35 +29,39 @@
   /* Theme Variables */
   :root {
     /* Dark theme (default) - GENERIC PALETTE */
-    --background-color: #0a101f; /* Slightly different dark blue base */
-    --card-bg-color: rgba(12, 22, 44, 0.8); /* Main card background */
-    --nested-card-bg: rgba(8, 16, 36, 0.85); /* Slightly different for nested elements */
+    --background-color: #0a101f; /* Base page background for dark mode */
+    --card-bg-color: transparent; /* MODIFIED: Default for cards is transparent */
+    --nested-card-bg: rgba(8, 16, 36, 0.85); /* Default for nested, will be department-themed */
     --text-color: white;
-    --text-secondary: rgba(255, 255, 255, 0.75); /* Slightly brighter secondary text */
-    --border-color: rgba(255, 255, 255, 0.12); /* Slightly more visible border */
-    --header-bg: rgba(8, 16, 36, 0.95); /* For fixed header/navbar */
+    --text-secondary: rgba(255, 255, 255, 0.75); 
+    --border-color: rgba(255, 255, 255, 0.12); /* Default border, will be department-themed */
+    --header-bg: rgba(8, 16, 36, 0.95); 
     
     /* Primary Accent Colors (Generic: Calm Blue and Lighter Slate Blue) */
-    --primary-accent: #5D8BBA;    /* Calm Blue */
+    --primary-accent: #5D8BBA;    
     --rgb-primary-accent: 93, 139, 186;
-    --secondary-accent: #8FAFD2;  /* Lighter Slate Blue / Cool Grayish Blue */
+    --secondary-accent: #8FAFD2;  
     --rgb-secondary-accent: 143, 175, 210;
 
     /* Define specific theme colors based on new accents */
     --icon-color: var(--secondary-accent);
     --section-title-gradient: var(--primary-accent); 
-    --primary-color: var(--primary-accent); /* Unifying variable */
-    --neon-blue: var(--secondary-accent); /* Re-purpose for main accent use (e.g., bullets) */
+    --primary-color: var(--primary-accent); 
+    --neon-blue: var(--secondary-accent); 
   
     /* Generic Interactive Colors */
     --interactive-color: var(--secondary-accent); 
     --rgb-interactive-color: var(--rgb-secondary-accent);
   
     /* Emergency Colors (Global - these can remain consistent across themes) */
-    --emergency-text: #ff3b5c; 
-    --rgb-emergency: 255, 59, 92;
-    --emergency-bg: rgba(var(--rgb-emergency), 0.15);
-    --emergency-border: rgba(var(--rgb-emergency), 0.3);
+    --emergency-text-universal: #ff3b5c; 
+    --rgb-emergency-universal: 255, 59, 92;
+    --emergency-bg-universal: rgba(var(--rgb-emergency-universal), 0.15);
+    --emergency-border-universal: rgba(var(--rgb-emergency-universal), 0.3);
+    /* Map generic emergency vars to universal ones */
+    --emergency-text: var(--emergency-text-universal);
+    --emergency-bg: var(--emergency-bg-universal);
+    --emergency-border: var(--emergency-border-universal);
   
     /* Search Bar */
     --search-bg: rgba(255, 255, 255, 0.08);
@@ -92,22 +97,25 @@
 
     /* Doctor Specific */
     --doctor-avatar-bg: rgba(var(--rgb-primary-accent), 0.1);
+
+    /* Text Shadow for Readability on Transparent Backgrounds */
+    --text-shadow-subtle: 0 1px 3px rgba(0,0,0,0.4);
   }
   
   /* Light theme - GENERIC PALETTE */
   [data-theme="light"] {
-    --background-color: #f0f4f8; /* Light Cool Gray/Off-white */
-    --card-bg-color: rgba(255, 255, 255, 0.95);
+    --background-color: #f0f4f8; /* Base page background for light mode */
+    --card-bg-color: transparent; /* MODIFIED: Default for cards is transparent */
     --nested-card-bg: rgba(245, 248, 251, 0.9);
-    --text-color: #1a2b42; /* Dark Blue/Gray */
+    --text-color: #1a2b42; 
     --text-secondary: rgba(26, 43, 66, 0.75);
     --border-color: rgba(26, 43, 66, 0.15);
-    --header-bg: rgba(255, 255, 255, 0.98); /* Almost solid white header */
+    --header-bg: rgba(255, 255, 255, 0.98); 
   
     /* Primary Accent Colors - Light Theme (Generic: Brighter Sky Blue and Pale Cornflower Blue) */
-    --primary-accent: #79A6DC;    /* Brighter Sky Blue */
+    --primary-accent: #79A6DC;    
     --rgb-primary-accent: 121, 166, 220;
-    --secondary-accent: #B8CCE4;  /* Pale Cornflower Blue */
+    --secondary-accent: #B8CCE4;  
     --rgb-secondary-accent: 184, 204, 228;
     
     /* Define specific theme colors based on new accents */
@@ -120,36 +128,43 @@
     --rgb-interactive-color: var(--rgb-secondary-accent);
   
     /* Emergency Colors - Light Theme */
-    --emergency-text: #d9304f; 
-    --rgb-emergency: 217, 48, 79;
-    --emergency-bg: rgba(var(--rgb-emergency), 0.08);
-    --emergency-border: rgba(var(--rgb-emergency), 0.2);
+    --emergency-text-universal: #d9304f; 
+    --rgb-emergency-universal: 217, 48, 79;
+    --emergency-bg-universal: rgba(var(--rgb-emergency-universal), 0.08);
+    --emergency-border-universal: rgba(var(--rgb-emergency-universal), 0.2);
+    /* Map generic emergency vars to universal ones */
+    --emergency-text: var(--emergency-text-universal);
+    --emergency-bg: var(--emergency-bg-universal);
+    --emergency-border: var(--emergency-border-universal);
   
     /* Search Bar - Light Theme */
     --search-bg: rgba(26, 43, 66, 0.05);
     --search-placeholder: rgba(26, 43, 66, 0.5);
-    --search-border: var(--border-color);
+    /* --search-border: var(--border-color); // Inherits */
   
     /* Navigation - Light Theme */
-    --nav-link-color: var(--text-color);
-    --nav-link-hover-color: var(--primary-accent);
-    --nav-link-hover-bg: rgba(var(--rgb-primary-accent), 0.1);
-    --dropdown-bg: var(--header-bg);
-    --dropdown-border: var(--border-color);
-    --dropdown-item-hover-bg: var(--nav-link-hover-bg);
+    /* --nav-link-color: var(--text-color); // Inherits */
+    /* --nav-link-hover-color: var(--primary-accent); // Inherits structure */
+    /* --nav-link-hover-bg: rgba(var(--rgb-primary-accent), 0.1); // Inherits structure */
+    /* --dropdown-bg: var(--header-bg); // Inherits structure */
+    /* --dropdown-border: var(--border-color); // Inherits structure */
+    /* --dropdown-item-hover-bg: var(--nav-link-hover-bg); // Inherits structure */
   
     /* Card Specifics - Light Theme */
     --card-shadow: 0 8px 20px rgba(26, 43, 66, 0.08);
     --card-hover-shadow: 0 12px 30px rgba(var(--rgb-interactive-color), 0.1);
-    --card-hover-border: var(--interactive-color);
+    /* --card-hover-border: var(--interactive-color); // Inherits structure */
   
     /* Hero Section General - Light Theme */
-    --hero-bg: rgba(var(--rgb-secondary-accent), 0.03);
-    --hero-particle-bg: rgba(var(--rgb-secondary-accent), 0.05);
-    --hero-text-highlight: var(--primary-accent);
+    /* --hero-bg: rgba(var(--rgb-secondary-accent), 0.03); // Inherits structure */
+    /* --hero-particle-bg: rgba(var(--rgb-secondary-accent), 0.05); // Inherits structure */
+    /* --hero-text-highlight: var(--primary-accent); // Inherits structure */
 
     /* Doctor Specific */
     --doctor-avatar-bg: rgba(var(--rgb-primary-accent), 0.15);
+
+    /* Text Shadow for Readability on Transparent Backgrounds - Light Theme */
+    --text-shadow-subtle: 0 1px 2px rgba(26,43,66,0.15);
   }
 
 /* Body style for light theme if different grid opacity is desired */
@@ -159,6 +174,7 @@
 
  /* START OF CONSOLIDATED DISEASE PAGE STYLES */
  /* These styles will use the GENERIC color variables defined above */
+ /* This section remains largely the same, as it uses the CSS variables that will be overridden by department-specific files */
 
 html, body {
     height: 100%; 
@@ -179,7 +195,7 @@ html, body {
     z-index: 1;
     text-align: center; 
     margin-bottom: var(--spacing-lg); 
-    border-bottom: 2px solid var(--primary-color); /* Uses generic --primary-accent */
+    border-bottom: 2px solid var(--primary-color); 
     padding-bottom: var(--spacing-md); 
 }
 
@@ -187,6 +203,7 @@ html, body {
     font-size: 2.5rem; 
     color: var(--text-color);
     font-weight: 700;
+    text-shadow: var(--text-shadow-subtle);
 }
 
 /* Main Content Containers */
@@ -220,11 +237,11 @@ html, body {
 
 .overview-container {
     flex: 2 1 500px; 
-    background-color: var(--card-bg-color);
+    background-color: var(--card-bg-color); /* Will be transparent by default */
     border-radius: var(--border-radius);
     overflow: hidden;
     transition: all 0.3s ease;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color); /* Border will be department specific */
     box-shadow: var(--card-shadow);
     padding: var(--spacing-lg);
     color: var(--text-color);
@@ -239,10 +256,11 @@ html, body {
     font-size: 1.8rem;
     display: flex; 
     align-items: center;
+    text-shadow: var(--text-shadow-subtle);
 }
 .overview-container h2 i {
     margin-right: var(--spacing-sm);
-    color: var(--icon-color); /* Uses generic --icon-color */
+    color: var(--icon-color); 
 }
 .overview-container h2::after {
     content: '';
@@ -251,7 +269,7 @@ html, body {
     left: 0;
     width: 40px;
     height: 2px;
-    background: var(--section-title-gradient); /* Uses generic gradient/color */
+    background: var(--section-title-gradient); 
 }
 .overview-container p,
 .overview-container div { 
@@ -284,9 +302,9 @@ html, body {
 .card {
     width: 100%;
     margin-bottom: 0; 
-    background-color: var(--card-bg-color);
+    background-color: var(--card-bg-color); /* Will be transparent */
     border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color); /* Border will be department specific */
     padding: var(--spacing-lg);
     box-shadow: var(--card-shadow);
     overflow: hidden;
@@ -303,6 +321,7 @@ html, body {
     padding-bottom: 10px;
     display: flex;
     align-items: center;
+    text-shadow: var(--text-shadow-subtle);
 }
 .card h2 { font-size: 1.6rem; } 
 .card h3 { font-size: 1.4rem; } 
@@ -314,13 +333,13 @@ html, body {
     left: 0;
     width: 40px;
     height: 2px;
-    background: var(--section-title-gradient); /* Uses generic gradient/color */
+    background: var(--section-title-gradient); 
     border-radius: 1px; 
 }
 
 .card h2 i, .card h3 i { 
     margin-right: var(--spacing-sm);
-    color: var(--icon-color); /* Uses generic --icon-color */
+    color: var(--icon-color); 
 }
 
 .card hr.section-divider {
@@ -348,7 +367,7 @@ html, body {
 
 .card ul li:before {
     content: "•";
-    color: var(--neon-blue); /* Uses generic --secondary-accent (via --neon-blue) */
+    color: var(--neon-blue); 
     font-weight: bold;
     position: absolute;
     left: 0;
@@ -380,7 +399,7 @@ html, body {
 .content-container .content-snippet { margin-bottom: 0.5rem; line-height: 1.6; }
 .content-container .content-full { display: none; line-height: 1.6; }
 .content-container .read-more-btn { background: none; border: none; color: var(--primary-color); cursor: pointer; padding: 3px 0; font-weight: 600; font-size: 0.95em; display: inline-block; margin-top: 0.5rem; transition: color 0.2s ease; }
-.content-container .read-more-btn:hover { text-decoration: underline; color: var(--interactive-color); } /* Uses generic accent */
+.content-container .read-more-btn:hover { text-decoration: underline; color: var(--interactive-color); } 
 .content-container .read-more-btn .arrow { display: inline-block; margin-left: 5px; transition: transform 0.2s ease-in-out; }
 .content-container .read-more-btn.expanded .arrow { transform: rotate(180deg); }
 .read-more-btn:not([data-has-more="true"]) { display: none !important; }
@@ -389,7 +408,7 @@ html, body {
 .emergency-signs { margin-top: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--emergency-border); background-color: var(--emergency-bg); border-radius: var(--border-radius); color: var(--emergency-text); font-size: 0.95rem; }
 .emergency-signs h4 { color: var(--emergency-text); margin-top: 0; margin-bottom: 0.75rem; font-size: 1.1em; font-weight: 700; display: flex; align-items: center; border-bottom: none; padding-bottom: 0; } 
 .emergency-signs h4::after { display: none; } 
-.emergency-signs h4 i { margin-right: 0.5rem; }
+.emergency-signs h4 i { margin-right: 0.5rem; color: var(--emergency-text); /* Ensure icon matches text color */ }
 .emergency-signs ul, .emergency-signs p { margin-bottom: 0; color: var(--emergency-text); } 
 
 .emergency-signs ul li {
@@ -398,7 +417,13 @@ html, body {
 .emergency-signs ul li::before { color: var(--emergency-text); } 
 
 /* Quick Facts Card Styling */
-.quick-facts-card { background-color: var(--nested-card-bg); } 
+.quick-facts-card { 
+    background-color: var(--nested-card-bg); /* Uses department-specific nested bg */
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color); /* Border will be department specific */
+    padding: var(--spacing-md);
+    box-shadow: var(--card-shadow);
+} 
 
 
 .quick-facts-list { display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-sm) var(--spacing-md); font-size: 0.95rem; }
@@ -429,7 +454,7 @@ html, body {
     margin-top: var(--spacing-xl);
     padding: var(--spacing-lg); 
     border-top: 1px solid var(--border-color);
-    background-color: var(--card-bg-color); 
+    background-color: var(--card-bg-color);  /* Will be transparent */
     border-radius: var(--border-radius);
     box-shadow: var(--card-shadow);
 }
@@ -446,15 +471,16 @@ html, body {
     display: flex; 
     align-items: center;
     justify-content: center; 
+    text-shadow: var(--text-shadow-subtle);
 }
 .doctors-section h2::after {
     content: ''; position: absolute; bottom: 0; left: 50%;
     transform: translateX(-50%); width: 60px; height: 3px;
-    background: var(--section-title-gradient); border-radius: 2px; /* Uses generic gradient/color */
+    background: var(--section-title-gradient); border-radius: 2px; 
 }
 .doctors-section h2 i {
      margin-right: var(--spacing-sm);
-     color: var(--icon-color); /* Uses generic --icon-color */
+     color: var(--icon-color); 
 }
 
 
@@ -473,8 +499,8 @@ html, body {
     align-items: center;
     text-align: center;
     gap: var(--spacing-sm);
-    background-color: var(--nested-card-bg);
-    border: 1px solid var(--border-color);
+    background-color: var(--nested-card-bg); /* Uses department-specific nested bg */
+    border: 1px solid var(--border-color); /* Border will be department specific */
     border-radius: var(--border-radius);
     padding: var(--spacing-md); 
     transition: all 0.3s;
@@ -482,8 +508,9 @@ html, body {
 }
 .doctor-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(var(--rgb-interactive-color), 0.15); /* Uses generic accent */
-    border-color: var(--card-hover-border); /* Uses generic accent */
+    box-shadow: var(--card-hover-shadow); 
+    border-color: var(--card-hover-border); 
+    background-color: rgba(var(--rgb-interactive-color), 0.05); /* Subtle hover bg */
 }
 
 .doctor-avatar {
@@ -491,7 +518,7 @@ html, body {
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background-color: var(--doctor-avatar-bg); /* Uses generic accent tint */
+    background-color: var(--doctor-avatar-bg); 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -515,7 +542,7 @@ html, body {
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
 }
 
-.appointment-button { /* This uses emergency colors, which is a global theme, retained */
+.appointment-button { 
     display: inline-block;
     background-color: var(--emergency-bg);
     color: var(--emergency-text);
@@ -526,40 +553,17 @@ html, body {
     cursor: pointer; text-decoration: none; transition: all 0.3s;
 }
 .appointment-button:hover {
-    background-color: rgba(var(--rgb-emergency), 0.3); 
-    border-color: rgba(var(--rgb-emergency), 0.5); 
+    background-color: color-mix(in srgb, var(--emergency-bg) 80%, black); 
+    border-color: color-mix(in srgb, var(--emergency-border) 80%, black); 
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(var(--rgb-emergency), 0.2);
+    box-shadow: 0 5px 15px rgba(var(--rgb-emergency-universal), 0.2);
+}
+[data-theme="light"] .appointment-button:hover {
+    background-color: color-mix(in srgb, var(--emergency-bg) 80%, white); 
+    border-color: color-mix(in srgb, var(--emergency-border) 80%, white); 
 }
 
-/* Tracker Promo Styling */
-.tracker-promo {
-    margin-top: var(--spacing-xl); padding: var(--spacing-lg);
-    border: 1px solid var(--secondary-accent); 
-    background-color: rgba(var(--rgb-secondary-accent), 0.08); 
-    border-radius: var(--border-radius);
-    text-align: center;
- }
-  .tracker-promo h3 {
-     margin-top: 0; color: var(--secondary-accent); display: flex; 
-     align-items: center; justify-content: center; gap: 0.5rem;
-     border-bottom: none; padding-bottom: 0; 
-  }
-   .tracker-promo h3::after { display: none; } 
-  .tracker-button {
-    display: inline-block; margin-top: var(--spacing-md);
-    background-color: var(--secondary-accent); color: white; 
-    padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: var(--border-radius); text-decoration: none;
-    font-weight: 500; transition: background-color 0.2s ease;
-    border: none; 
-  }
-  .tracker-button:hover {
-    background-color: color-mix(in srgb, var(--secondary-accent) 85%, black); /* Darken generic --secondary-accent */
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(var(--rgb-secondary-accent), 0.2); /* Shadow with generic accent */
- }
+/* REMOVED Tracker Promo Styling as per request */
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -576,88 +580,5 @@ html, body {
     .doctors-grid .doctor-card { padding: var(--spacing-md); }
 }
 
-/* Styles for ALS and Progression Timeline - GENERIC THEME */
-/* These sections will now use the generic color palette */
-:root {
-    /* Dark theme (default) - GENERIC ALS/PROGRESSION */
-    --als-bg-color: rgba(var(--rgb-primary-accent), 0.1);
-    --als-border-color: var(--primary-accent);
-    --als-heading-color: var(--text-color); 
-    --als-text-color: var(--text-secondary);
-    --als-bullet-color: var(--secondary-accent); 
-    --als-highlight-color: rgba(var(--rgb-secondary-accent), 0.15);
-    --als-strong-color: var(--primary-accent); 
-    --als-shadow-color: rgba(0, 0, 0, 0.2);
-    --als-shadow-color-emphasis: rgba(var(--rgb-secondary-accent), 0.2); 
-    --als-circle-color: var(--primary-accent);
-    --als-circle-shadow: rgba(var(--rgb-primary-accent), 0.25);
-
-    /* Progression Timeline - Dark Theme - GENERIC */
-    --progression-line-color: rgba(var(--rgb-primary-accent), 0.5);
-    --progression-dot-color: var(--primary-accent);
-    --progression-stage1-color: rgba(var(--rgb-primary-accent), 0.15);
-    --progression-stage2-color: rgba(var(--rgb-primary-accent), 0.20); 
-    --progression-stage3-color: rgba(var(--rgb-primary-accent), 0.25); 
-    --progression-text-color: var(--text-secondary); 
-    --progression-border-color: rgba(var(--rgb-primary-accent), 0.3);
-    --progression-stage-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Light theme variables - GENERIC ALS/PROGRESSION */
-[data-theme="light"] {
-    --als-bg-color: rgba(var(--rgb-primary-accent), 0.15); 
-    --als-border-color: var(--primary-accent);
-    --als-heading-color: color-mix(in srgb, var(--primary-accent) 80%, var(--text-color)); 
-    --als-text-color: var(--text-secondary); 
-    --als-bullet-color: var(--secondary-accent);
-    --als-highlight-color: rgba(var(--rgb-secondary-accent), 0.1);
-    --als-strong-color: color-mix(in srgb, var(--primary-accent) 70%, var(--text-color));
-    --als-shadow-color: rgba(var(--rgb-primary-accent), 0.15);
-    --als-shadow-color-emphasis: rgba(var(--rgb-secondary-accent), 0.2);
-    --als-circle-color: var(--primary-accent);
-    --als-circle-shadow: rgba(var(--rgb-primary-accent), 0.2);
-
-    /* Progression Timeline - Light Theme - GENERIC */
-    --progression-line-color: rgba(var(--rgb-primary-accent), 0.4);
-    --progression-dot-color: var(--primary-accent);
-    --progression-stage1-color: rgba(var(--rgb-primary-accent), 0.2);
-    --progression-stage2-color: rgba(var(--rgb-primary-accent), 0.25);
-    --progression-stage3-color: rgba(var(--rgb-primary-accent), 0.3);
-    --progression-text-color: var(--text-secondary); 
-    --progression-border-color: rgba(var(--rgb-primary-accent), 0.25);
-    --progression-stage-shadow: 0 3px 8px rgba(var(--rgb-primary-accent), 0.1);
-}
-
-.early-symptoms { background-color: var(--als-bg-color); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; border-left: none; box-shadow: 0 5px 15px var(--als-shadow-color); position: relative; transition: all 0.3s ease; }
-.early-symptoms::before { content: ""; position: absolute; top: -10px; left: 20px; width: 22px; height: 22px; background-color: var(--als-circle-color); border-radius: 50%; box-shadow: 0 0 0 5px var(--als-circle-shadow); transition: all 0.3s ease; }
-.early-symptoms:hover { transform: translateY(-3px); box-shadow: 0 8px 20px var(--als-shadow-color-emphasis); }
-.early-symptoms h4 { color: var(--als-heading-color); margin-top: 0; margin-bottom: 1.2rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; position: relative; transition: color 0.3s ease; padding-left: 5px; border-bottom: none; } 
-.early-symptoms h4::after { display: none; } 
-.early-symptoms ul { margin: 0; padding-left: 5px; list-style-type: none; }
-.early-symptoms li { margin-bottom: 0.9rem; line-height: 1.6; color: var(--als-text-color); position: relative; padding-left: 28px; font-size: 1rem; padding-top: 0.3rem; padding-bottom: 0.3rem; transition: all 0.3s ease; border-radius: 6px; }
-.early-symptoms li strong + span, .early-symptoms li strong + text, .symptom-description { color: var(--als-text-color); }
-.early-symptoms li strong { color: var(--als-strong-color); font-weight: 600; margin-right: 4px; transition: color 0.3s ease; }
-.early-symptoms li::before { content: ""; width: 8px; height: 8px; background-color: var(--als-bullet-color); border-radius: 50%; position: absolute; left: 10px; top: 12px; transition: all 0.3s ease; }
-.early-symptoms li:last-child { margin-bottom: 0; }
-.early-symptoms li:hover { background-color: var(--als-highlight-color); transform: translateX(5px); }
-
-.progression-timeline { position: relative; padding: 20px 0; margin: 25px 0; border-left: 3px solid var(--progression-line-color); padding-left: 20px; }
-.progression-stage { position: relative; margin-bottom: 25px; padding: 15px; background-color: var(--progression-stage1-color); border-radius: 8px; color: var(--progression-text-color); border-left: 3px solid var(--progression-border-color); box-shadow: var(--progression-stage-shadow); transition: all 0.3s ease; }
-.progression-stage:nth-child(2) { background-color: var(--progression-stage2-color); }
-.progression-stage:nth-child(3) { background-color: var(--progression-stage3-color); margin-bottom: 0; }
-.progression-stage::before { content: ''; position: absolute; left: -32px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; background-color: var(--progression-dot-color); border-radius: 50%; box-shadow: 0 0 0 4px var(--als-circle-shadow); z-index: 1; transition: all 0.3s ease; }
-.progression-stage:hover { transform: translateX(8px); box-shadow: 0 5px 15px var(--als-shadow-color-emphasis); }
-.progression-stage:hover::before { transform: translateY(-50%) scale(1.2); }
-
-.content-full h4 { color: var(--text-color); margin: 20px 0 15px; font-size: 1.1rem; font-weight: 600; }
-
-@media (max-width: 768px) {
-    .early-symptoms { padding: 1.2rem; margin: 1rem 0; }
-    .early-symptoms h4 { font-size: 1.1rem; }
-    .early-symptoms li { font-size: 0.95rem; padding-left: 24px; }
-    .progression-timeline { padding-left: 15px; }
-    .progression-stage { padding: 12px; margin-bottom: 20px; }
-    .progression-stage::before { left: -26px; width: 12px; height: 12px; }
-}
-
+/* REMOVED Styles for ALS and Progression Timeline as per request */
 /* END OF CONSOLIDATED DISEASE PAGE STYLES */

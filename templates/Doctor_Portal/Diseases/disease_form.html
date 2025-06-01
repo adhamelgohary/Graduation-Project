@@ -52,12 +52,59 @@
             <div class="form-section">
                 <h4><i class="fas fa-tags fa-fw"></i> Classification & Relevance</h4>
                 <div class="row g-3">
-                    <div class="col-md-3 form-group"><label for="urgency_level" class="form-label">Urgency Level <span class="text-danger">*</span></label><select id="urgency_level" name="urgency_level" class="form-select" required><option value="" disabled {% if not (disease.urgency_level if disease else request.form.get('urgency_level')) %}selected{% endif %}>-- Select --</option>{% set s_urg = (disease.urgency_level if disease else request.form.get('urgency_level', ''))|string %}{% for l in urgency_levels or [] %}<option value="{{ l }}" {% if s_urg == l %}selected{% endif %}>{{ l|title }}</option>{% endfor %}</select></div>
-                    <div class="col-md-3 form-group"><label for="condition_type" class="form-label">Condition Type</label><select id="condition_type" name="condition_type" class="form-select"><option value="" {% if not (disease.condition_type if disease else request.form.get('condition_type')) %}selected{% endif %}>-- Optional --</option>{% set s_type = (disease.condition_type if disease else request.form.get('condition_type', ''))|string %}{% for t in condition_types or [] %}<option value="{{ t }}" {% if s_type == t %}selected{% endif %}>{{ t|title }}</option>{% endfor %}</select></div>
-                    <div class="col-md-3 form-group"><label for="gender_relevance" class="form-label">Gender Relevance <span class="text-danger">*</span></label><select id="gender_relevance" name="gender_relevance" class="form-select" required>{% set s_gen = (disease.gender_relevance if disease else request.form.get('gender_relevance', 'all'))|string %}{% for r in gender_relevance_opts or [] %}<option value="{{ r }}" {% if s_gen == r %}selected{% endif %}>{{ r|title }}</option>{% endfor %}</select></div>
-                    <div class="col-md-3 form-group"><label for="department_id" class="form-label">Department</label><select id="department_id" name="department_id" class="form-select"><option value="" {% if not (disease.department_id if disease else request.form.get('department_id')) %}selected{% endif %}>-- Optional --</option>{% set s_dept = (disease.department_id if disease else request.form.get('department_id', ''))|string %}{% for d in departments or [] %}<option value="{{ d.department_id }}" {% if s_dept == d.department_id|string %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select></div>
-                    <div class="col-md-6 form-group"><label for="age_relevance" class="form-label">Age Relevance</label><input type="text" id="age_relevance" name="age_relevance" class="form-control" value="{{ disease.age_relevance if disease else request.form.get('age_relevance', '') }}" placeholder="e.g., Adults, Children"></div>
-                    <div class="col-md-6 form-group"><label for="specialist_type" class="form-label">Relevant Specialist</label><input type="text" id="specialist_type" name="specialist_type" class="form-control" value="{{ disease.specialist_type if disease else request.form.get('specialist_type', '') }}" placeholder="e.g., Cardiologist"></div>
+                    <div class="col-md-3 form-group">
+                        <label for="urgency_level" class="form-label">Urgency Level <span class="text-danger">*</span></label>
+                        <select id="urgency_level" name="urgency_level" class="form-select" required>
+                            <option value="" disabled {% if not (disease.urgency_level if disease else request.form.get('urgency_level')) %}selected{% endif %}>-- Select --</option>
+                            {% set s_urg = (disease.urgency_level if disease else request.form.get('urgency_level', ''))|string %}
+                            {% for l in urgency_levels or [] %}
+                            <option value="{{ l }}" {% if s_urg == l %}selected{% endif %}>{{ l|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label for="condition_type" class="form-label">Condition Type</label>
+                        <select id="condition_type" name="condition_type" class="form-select">
+                            <option value="" {% if not (disease.condition_type if disease else request.form.get('condition_type')) %}selected{% endif %}>-- Optional --</option>
+                            {% set s_type = (disease.condition_type if disease else request.form.get('condition_type', ''))|string %}
+                            {% for t in condition_types or [] %}
+                            <option value="{{ t }}" {% if s_type == t %}selected{% endif %}>{{ t|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label for="gender_relevance" class="form-label">Gender Relevance <span class="text-danger">*</span></label>
+                        <select id="gender_relevance" name="gender_relevance" class="form-select" required>
+                            {% set s_gen = (disease.gender_relevance if disease else request.form.get('gender_relevance', 'all'))|string %}
+                            {% for r in gender_relevance_opts or [] %}
+                            <option value="{{ r }}" {% if s_gen == r %}selected{% endif %}>{{ r|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 form-group">
+                        <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
+                        <select id="department_id" name="department_id" class="form-select" required>
+                            <option value="" {% if not (disease.department_id if disease else request.form.get('department_id')) %}selected{% endif %}>-- Select Department --</option>
+                            {% set s_dept_id = (disease.department_id if disease else request.form.get('department_id', ''))|string %}
+                            {% for d in departments or [] %}
+                            <option value="{{ d.department_id }}" {% if s_dept_id == d.department_id|string %}selected{% endif %}>{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                     <div class="col-md-4 form-group">
+                        <label for="specialization_id" class="form-label">Specialization (within Department)</label>
+                        <select id="specialization_id" name="specialization_id" class="form-select">
+                            <option value="">-- Select Department First or Optional --</option>
+                            {% set s_spec_id = (disease.specialization_id if disease else request.form.get('specialization_id', ''))|string %}
+                            {% if specializations_for_form %} {# Passed from Python for initial load (add/edit) #}
+                                {% for s in specializations_for_form %}
+                                    <option value="{{ s.specialization_id }}" {% if s_spec_id == s.specialization_id|string %}selected{% endif %}>{{ s.name }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 form-group"><label for="age_relevance" class="form-label">Age Relevance</label><input type="text" id="age_relevance" name="age_relevance" class="form-control" value="{{ disease.age_relevance if disease else request.form.get('age_relevance', '') }}" placeholder="e.g., Adults, Children"></div>
+                    <div class="col-md-4 form-group"><label for="specialist_type" class="form-label">Relevant Specialist (Free Text)</label><input type="text" id="specialist_type" name="specialist_type" class="form-control" value="{{ disease.specialist_type if disease else request.form.get('specialist_type', '') }}" placeholder="e.g., Cardiologist (General Info)"></div>
                 </div>
             </div>
 
@@ -95,48 +142,42 @@
                 </div>
             </div>
 
-            {# ... other form fields ... #}
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="disease_image" class="form-label">Condition Image (Optional)</label>
+                    <input type="file" class="form-control form-control-sm" id="disease_image" name="disease_image" accept="image/*">
+                    {% if disease and disease.condition_image_filename %}
+                        <input type="hidden" name="current_condition_image_filename" value="{{ disease.condition_image_filename }}">
+                        <div class="mt-2">
+                            Current: <a href="{{ url_for('.serve_condition_image', image_filename_in_db=disease.condition_image_filename) }}" target="_blank">{{ disease.condition_image_filename |  truncate(30)}}</a>
+                            <div class="form-check form-check-inline ms-2">
+                                <input class="form-check-input" type="checkbox" id="delete_image" name="delete_image">
+                                <label class="form-check-label" for="delete_image">Delete current image</label>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
 
-{# Existing Image Upload Section #}
-<div class="row mb-3">
-    <div class="col-md-6">
-        <label for="disease_image" class="form-label">Condition Image (Optional)</label>
-        <input type="file" class="form-control form-control-sm" id="disease_image" name="disease_image" accept="image/*">
-        {% if disease and disease.condition_image_filename %}
-            <input type="hidden" name="current_condition_image_filename" value="{{ disease.condition_image_filename }}">
-            <div class="mt-2">
-                Current: <a href="{{ url_for('.serve_condition_image', image_filename_in_db=disease.condition_image_filename) }}" target="_blank">{{ disease.condition_image_filename |  truncate(30)}}</a>
-                <div class="form-check form-check-inline ms-2">
-                    <input class="form-check-input" type="checkbox" id="delete_image" name="delete_image">
-                    <label class="form-check-label" for="delete_image">Delete current image</label>
+                <div class="col-md-6">
+                    <label for="condition_video" class="form-label">Condition Video (Optional)</label>
+                    <input type="file" class="form-control form-control-sm" id="condition_video" name="condition_video" accept="video/*">
+                    {% if disease and disease.condition_video_filename %}
+                        <input type="hidden" name="current_condition_video_filename" value="{{ disease.condition_video_filename }}">
+                        <div class="mt-2">
+                            Current: <a href="{{ url_for('.serve_condition_video', video_filename_in_db=disease.condition_video_filename) }}" target="_blank">{{ disease.condition_video_filename | truncate(30) }}</a>
+                            <div class="form-check form-check-inline ms-2">
+                                <input class="form-check-input" type="checkbox" id="delete_video" name="delete_video">
+                                <label class="form-check-label" for="delete_video">Delete current video</label>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <small class="form-text text-muted">Allowed video types: {{ config.ALLOWED_VIDEO_EXTENSIONS | join(', ') }}</small>
                 </div>
             </div>
-        {% endif %}
-    </div>
-
-    {# --- NEW Video Upload Section --- #}
-    <div class="col-md-6">
-        <label for="condition_video" class="form-label">Condition Video (Optional)</label>
-        <input type="file" class="form-control form-control-sm" id="condition_video" name="condition_video" accept="video/*">
-        {% if disease and disease.condition_video_filename %}
-            <input type="hidden" name="current_condition_video_filename" value="{{ disease.condition_video_filename }}">
-            <div class="mt-2">
-                Current: <a href="{{ url_for('.serve_condition_video', video_filename_in_db=disease.condition_video_filename) }}" target="_blank">{{ disease.condition_video_filename | truncate(30) }}</a>
-                <div class="form-check form-check-inline ms-2">
-                    <input class="form-check-input" type="checkbox" id="delete_video" name="delete_video">
-                    <label class="form-check-label" for="delete_video">Delete current video</label>
-                </div>
-            </div>
-        {% endif %}
-        <small class="form-text text-muted">Allowed video types: {{ config.ALLOWED_VIDEO_EXTENSIONS | join(', ') }}</small>
-    </div>
-</div>
-
-{# ... rest of the form and submit button ... #}
 
             <div class="form-actions">
                 <a href="{{ url_for('disease_management.list_diseases') }}" class="button button-outline button-secondary">Cancel</a>
-                <button type="submit" class="button button-primary"><i class="fas fa-save fa-fw"></i> {{ 'Update Condition' if disease else 'Add Condition' }}</button>
+                <button type="submit" class="button button-primary"><i class="fas fa-save fa-fw"></i> {{ 'Update Condition' if disease and disease.condition_id else 'Add Condition' }}</button>
             </div>
         </form>
     </div>
@@ -146,6 +187,69 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() { /* Basic JS if needed */ });
+document.addEventListener('DOMContentLoaded', function() {
+    const departmentSelect = document.getElementById('department_id');
+    const specializationSelect = document.getElementById('specialization_id');
+    
+    // Store the initially selected specialization ID (for edit or POST error repopulation)
+    const initialSpecializationId = specializationSelect.value;
+
+    function fetchSpecializations(departmentId, selectedSpecializationId) {
+        if (!departmentId) {
+            specializationSelect.innerHTML = '<option value="">-- Select Department First or Optional --</option>';
+            specializationSelect.disabled = true;
+            return;
+        }
+        specializationSelect.disabled = false;
+        specializationSelect.innerHTML = '<option value="">Loading specializations...</option>'; // Loading state
+
+        // Correctly build the URL for the API endpoint
+        let fetchUrl = "{{ url_for('disease_management.api_get_specializations_for_department', department_id=0) }}";
+        fetchUrl = fetchUrl.replace('/0/', `/${departmentId}/`);
+
+        fetch(fetchUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                specializationSelect.innerHTML = '<option value="">-- Select Specialization (Optional) --</option>';
+                if (data.specializations && data.specializations.length > 0) {
+                    data.specializations.forEach(spec => {
+                        const option = new Option(spec.name, spec.specialization_id);
+                        if (selectedSpecializationId && spec.specialization_id.toString() === selectedSpecializationId) {
+                            option.selected = true;
+                        }
+                        specializationSelect.add(option);
+                    });
+                } else {
+                    specializationSelect.innerHTML = '<option value="">-- No specializations found --</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching specializations:', error);
+                specializationSelect.innerHTML = '<option value="">-- Error loading specializations --</option>';
+            });
+    }
+
+    if (departmentSelect) {
+        departmentSelect.addEventListener('change', function() {
+            // When department changes, fetch new specializations.
+            // We don't pass initialSpecializationId here because it might be from a different department.
+            fetchSpecializations(this.value, null); 
+        });
+
+        // Initial load: if a department is already selected (e.g., on edit form or add form prefill),
+        // fetch its specializations and try to select the initialSpecializationId if it's relevant.
+        if (departmentSelect.value) {
+            fetchSpecializations(departmentSelect.value, initialSpecializationId);
+        } else {
+            specializationSelect.innerHTML = '<option value="">-- Select Department First or Optional --</option>';
+            specializationSelect.disabled = true;
+        }
+    }
+});
 </script>
 {% endblock %}

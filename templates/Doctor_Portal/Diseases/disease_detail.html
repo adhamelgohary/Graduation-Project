@@ -78,8 +78,19 @@
                     <div class="col-md-3 col-6 mb-3"><span class="detail-label">Gender Relevance</span><div class="detail-value">{{ details.condition.gender_relevance | title }}</div></div>
                     <div class="col-md-3 col-6 mb-3"><span class="detail-label">Self-Treatable</span><div class="detail-value">{{ 'Yes' if details.condition.self_treatable else 'No' }}</div></div>
                     <div class="col-md-4 col-6 mb-3"><span class="detail-label">Age Relevance</span><div class="detail-value">{{ details.condition.age_relevance | default('Any') }}</div></div>
-                    <div class="col-md-4 col-6 mb-3"><span class="detail-label">Relevant Specialist</span><div class="detail-value">{{ details.condition.specialist_type | default('N/A') }}</div></div>
+                    <div class="col-md-4 col-6 mb-3"><span class="detail-label">Relevant Specialist (Free Text)</span><div class="detail-value">{{ details.condition.specialist_type | default('N/A') }}</div></div>
                     <div class="col-md-4 col-6 mb-3"><span class="detail-label">Typical Duration</span><div class="detail-value">{{ details.condition.typical_duration | default('Variable') }}</div></div>
+                </div>
+                <hr>
+                 <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <span class="detail-label">Assigned Department</span>
+                        <div class="detail-value">{{ details.condition.department_name | default('N/A') }}</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <span class="detail-label">Assigned Specialization</span>
+                        <div class="detail-value">{{ details.condition.specialization_name | default('N/A') }}</div>
+                    </div>
                 </div>
                 <hr>
                 <div class="mb-3"><span class="detail-label">Overview</span><div class="detail-value pre-wrap">{{ details.condition.overview | default('N/A') }}</div></div>
@@ -97,8 +108,7 @@
                      <span class="detail-label">Patient Education / Links</span>
                      <div class="detail-value pre-wrap">{{ details.condition.educational_content | default('None provided.') | urlize(40, true) }}</div>
                 </div>
-                {# ... inside the main details display area ... #}
-
+                
                 {% if details.condition.condition_image_filename %}
                 <div class="mb-3 text-center">
                     <h5 class="text-muted">Image</h5>
@@ -106,19 +116,16 @@
                 </div>
                 {% endif %}
                 
-                {# --- NEW Video Display Section --- #}
                 {% if details.condition.condition_video_filename %}
                 <div class="mb-4 text-center">
                     <h5 class="text-muted mt-3">Video Overview</h5>
                     <video width="100%" style="max-width: 640px; border-radius: var(--border-radius); box-shadow: var(--box-shadow);" controls>
-                        <source src="{{ url_for('.serve_condition_video', video_filename_in_db=details.condition.condition_video_filename) }}" type="video/mp4"> {# Adjust type if you know it, or let browser infer #}
+                        <source src="{{ url_for('.serve_condition_video', video_filename_in_db=details.condition.condition_video_filename) }}" type="video/mp4">
                         Your browser does not support the video tag. You can <a href="{{ url_for('.serve_condition_video', video_filename_in_db=details.condition.condition_video_filename) }}">download the video</a>.
                     </video>
                     <p class="mt-2"><a href="{{ url_for('.serve_condition_video', video_filename_in_db=details.condition.condition_video_filename) }}" class="button button-outline button-small">Download Video</a></p>
                 </div>
                 {% endif %}
-                
-                {# ... other details like educational content, symptoms, etc. ... #}
             </div>
         </div>
     </div>
@@ -141,10 +148,10 @@
                 <div class="card-header"><h5><i class="fas fa-pills"></i> Treatment Protocols</h5></div>
                 <div class="card-body"><div class="detail-value pre-wrap">{{ details.condition.treatment_protocols_text | default('<span class="no-text-provided">No protocols specified.</span>' | safe) }}</div></div>
             </div>
-            <div class="card shadow-sm content-section">
-                <div class="card-header"><h5><i class="fas fa-user-md"></i> Associated Doctors</h5></div>
+            <div class="card shadow-sm content-section"> {# This section shows doctors in the same DEPARTMENT as the condition #}
+                <div class="card-header"><h5><i class="fas fa-user-md"></i> Associated Doctors (Same Department)</h5></div>
                 <div class="card-body">
-                    <span class="detail-label">Department</span>
+                    <span class="detail-label">Condition's Department</span>
                     <div class="detail-value mb-3">{{ details.condition.department_name or 'N/A' }}</div>
                     {% if details.associated_doctors %}
                       <ul class="list-unstyled doctor-list">
