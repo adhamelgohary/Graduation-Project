@@ -1,663 +1,639 @@
-/* neurodisease.css - UPDATED WITH neuro.css COLORING */
-
-/* Reset and Global Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Arial', sans-serif; /* Consider using Inter if available */
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease; /* Added transition from base.css */
-}
-
-html, body {
-    height: 100%;
-}
-
-/* Theme Variables - Aligned with neuro.css */
+/* --- Root Variables - NEUROLOGY PALETTE (FOR DISEASE DETAIL PAGE) --- */
 :root {
-    /* Core theme from neuro.css (Dark Mode) */
-    --bg-primary: #05152a;
-    --bg-secondary: rgba(5, 21, 42, 0.95);
-    --text-primary: white;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    --text-highlight: #3182ce;
-    --accent-color: #3182ce; /* Main blue accent from neuro.css */
-    --accent-pink: #ff3b5c; /* Pink accent from neuro.css */
-    --border-color: rgba(255, 255, 255, 0.1);
-    --particle-bg: rgba(0, 180, 255, 0.05);
-    --neon-blue: #00f0ff; /* Specific neon blue */
-    --hero-bg: rgba(5, 21, 42, 0.7); /* For hero sections or distinct backgrounds */
-    --card-bg: rgba(8, 28, 56, 0.8);
-    --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c);
-    --neon-blue-rgb: 0, 240, 255;
-    --accent-pink-rgb: 255, 59, 92; /* Derived from --accent-pink */
-    --accent-color-rgb: 49, 130, 206; /* Derived from --accent-color (blue) */
-    --shadow-color: 0 8px 30px rgba(0, 0, 0, 0.12);
-    --blue-glow: rgba(0, 140, 255, 0.2);
-    --card-hover-border-color: rgba(255, 255, 255, 0.2); /* From neuro.css --card-hover (dark) */
-    --accent-white: #ffffff;
-    --button-bg: #0078ff; /* neuro.css general button background */
-    --search-bg: rgba(0, 0, 0, 0.2); /* neuro.css search background */
-    --search-placeholder: rgba(255, 255, 255, 0.5); /* neuro.css search placeholder */
-    --nav-hover-bg: rgba(0, 0, 0, 0.2); /* neuro.css nav hover background */
-
-    /* Aliases for neurodisease.css internal consistency, mapped to neuro.css values */
-    --background-color: var(--bg-primary);
-    --text-color: var(--text-primary);
-    --card-bg-color: var(--card-bg);
-    --nested-card-bg: var(--hero-bg); /* Slightly different from main card for depth */
-    --header-bg: var(--bg-secondary); /* For section headers or distinct panels */
-    --card-shadow: var(--shadow-color);
-    --doctor-avatar-bg: var(--particle-bg);
-    --dropdown-bg: var(--bg-secondary);
-
-    /* Emergency styles using accent-pink */
-    --emergency-bg: rgba(var(--accent-pink-rgb), 0.1);
-    --emergency-border: rgba(var(--accent-pink-rgb), 0.2);
-    --emergency-text: var(--accent-pink);
-
-    /* Semantic variables previously in neurodisease.css, now mapped to neuro.css concepts */
-    --primary-color: var(--accent-color); /* Main blue accent for general UI elements */
-    --secondary-color: var(--accent-pink); /* Pink accent for secondary actions/highlights */
-    --secondary-rgb: var(--accent-pink-rgb); /* RGB for the secondary (pink) accent */
-    --icon-color: var(--text-highlight); /* Default icon color */
-
-     /* Spacing Variables (Retained) */
-     --spacing-xs: 5px;
-     --spacing-sm: 10px;
-     --spacing-md: 15px;
-     --spacing-lg: 25px;
-     --spacing-xl: 40px;
-     /* Border Radius (Retained) */
-     --border-radius: 12px;
-
-    /* ALS Specific Variables - Retained from original prompt's neurodisease.css */
-    --als-bg-color: rgba(13, 29, 56, 0.6);
-    --als-border-color: #ff9800;
-    --als-heading-color: #000000;
-    --als-text-color: #000000;
-    --als-bullet-color: #00f0ff; /* Matches --neon-blue */
-    --als-highlight-color: rgba(var(--neon-blue-rgb), 0.15);
-    --als-strong-color: #000000;
-    --als-shadow-color: rgba(0, 0, 0, 0.3);
-    --als-shadow-color-emphasis: rgba(var(--neon-blue-rgb), 0.3);
-    --als-circle-color: #ffb74d;
-    --als-circle-shadow: rgba(255, 183, 77, 0.25);
-
-    /* Progression Timeline - Dark Theme - Retained from original prompt's neurodisease.css */
-    --progression-line-color: rgba(255, 152, 0, 0.5);
-    --progression-dot-color: #ff9800;
-    --progression-stage1-color: rgba(255, 183, 77, 0.2);
-    --progression-stage2-color: rgba(255, 152, 0, 0.3);
-    --progression-stage3-color: rgba(230, 81, 0, 0.4);
-    --progression-text-color: #000000;
-    --progression-border-color: rgba(255, 152, 0, 0.3);
-    --progression-stage-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
-}
-
-/* Light theme - Aligned with neuro.css */
-[data-theme="light"] {
-    /* Core theme from neuro.css (Light Mode) */
-    --bg-primary: #f0f4f8;
-    --bg-secondary: rgba(240, 244, 248, 0.95);
-    --text-primary: #1a365d;
-    --text-secondary: rgba(26, 54, 93, 0.7);
-    --text-highlight: #3182ce;
-    --accent-color: #3182ce; /* Main blue accent */
-    --accent-pink: #e31b3d; /* Pink accent */
-    --border-color: rgba(0, 0, 0, 0.1);
-    --particle-bg: rgba(49, 130, 206, 0.05);
-    --neon-blue: #3182ce; /* Solid blue in light mode, not "neon" */
-    --hero-bg: rgba(240, 244, 248, 0.7);
-    --card-bg: rgba(255, 255, 255, 0.9);
-    --section-title-gradient: linear-gradient(90deg, #3182ce, #4299e1);
-    --neon-blue-rgb: 49, 130, 206; /* Derived from light --neon-blue #3182ce */
-    --accent-pink-rgb: 227, 27, 61; /* Derived from light --accent-pink #e31b3d */
-    --accent-color-rgb: 49, 130, 206; /* Derived from light --accent-color (blue) */
-    --shadow-color: 0 8px 30px rgba(0, 0, 0, 0.06);
-    --blue-glow: rgba(49, 130, 206, 0.2);
-    --card-hover-border-color: rgba(0, 0, 0, 0.2); /* From neuro.css --card-hover (light) */
-    --accent-white: #ffffff; /* Remains white, context matters */
-    --button-bg: #eba0ac; /* neuro.css light button background */
-    --search-bg: rgba(0, 0, 0, 0.05); /* neuro.css light search background */
-    --search-placeholder: rgba(26, 54, 93, 0.5); /* neuro.css light search placeholder */
-    --nav-hover-bg: rgba(0, 0, 0, 0.05); /* neuro.css light nav hover background */
-
-    /* Aliases for neurodisease.css internal consistency */
-    --background-color: var(--bg-primary);
-    --text-color: var(--text-primary);
-    --card-bg-color: var(--card-bg);
-    --nested-card-bg: var(--hero-bg);
-    --header-bg: var(--bg-secondary);
-    --card-shadow: var(--shadow-color);
-    --doctor-avatar-bg: var(--particle-bg);
-    --dropdown-bg: var(--bg-secondary);
-
-    /* Emergency styles using accent-pink */
-    --emergency-bg: rgba(var(--accent-pink-rgb), 0.1);
-    --emergency-border: rgba(var(--accent-pink-rgb), 0.2);
-    --emergency-text: var(--accent-pink);
-
-    /* Semantic variables previously in neurodisease.css */
-    --primary-color: var(--accent-color);
-    --secondary-color: var(--accent-pink);
-    --secondary-rgb: var(--accent-pink-rgb);
-    --icon-color: var(--text-highlight);
-
-    /* ALS Specific - Light Theme - Retained from original prompt's neurodisease.css */
-    --als-bg-color: rgba(255, 243, 224, 0.8);
-    --als-border-color: #ff9800;
-    --als-heading-color: #e65100;
-    --als-text-color: #614337;
-    --als-bullet-color: #ff9800;
-    --als-highlight-color: rgba(255, 152, 0, 0.08);
-    --als-strong-color: #e65100;
-    --als-shadow-color: rgba(255, 152, 0, 0.1);
-    --als-shadow-color-emphasis: rgba(255, 152, 0, 0.25);
-    --als-circle-color: #ff9800;
-    --als-circle-shadow: rgba(255, 152, 0, 0.2);
-
-    /* Progression Timeline - Light Theme - Retained from original prompt's neurodisease.css */
-    --progression-line-color: rgba(255, 152, 0, 0.3);
-    --progression-dot-color: #ff9800;
-    --progression-stage1-color: rgba(255, 248, 225, 0.9);
-    --progression-stage2-color: rgba(255, 236, 179, 0.9);
-    --progression-stage3-color: rgba(255, 224, 178, 0.9);
-    --progression-text-color: #614337;
-    --progression-border-color: rgba(255, 152, 0, 0.2);
-    --progression-stage-shadow: 0 3px 8px rgba(255, 152, 0, 0.1);
-}
-
-body {
-    background-color: var(--background-color);
-    color: var(--text-color);
-    min-height: 100vh;
-    background-image: radial-gradient(circle, rgba(var(--accent-color-rgb, 0, 120, 255), 0.1) 1px, transparent 1px); /* Grid pattern using accent color */
-    background-size: 30px 30px;
-    overflow-x: hidden;
-    padding-top: 70px; /* Assuming fixed navbar height */
-}
-
-/* Header Section Styling */
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 10px;
-    padding: 0 5%;
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    margin-bottom: var(--spacing-lg);
-    border-bottom: 2px solid var(--primary-color); /* Uses new --primary-color (blue accent) */
-    padding-bottom: var(--spacing-md);
-}
-
-.header h1 {
-    font-size: 2.5rem;
-    color: var(--text-color); /* Now var(--text-primary) */
-    font-weight: 700;
-}
-
-/* Main Content Containers */
-.disease-container {
-    max-width: 1400px;
-    margin: var(--spacing-lg) auto;
-    padding: 0 5%;
-}
-
-.top-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-xl, 40px);
-    margin-bottom: var(--spacing-xl, 40px);
-    align-items: flex-start;
-}
-
-.centered-gif {
-    flex: 1 1 300px;
-    max-width: 400px;
-    text-align: center;
-}
-
-.centered-gif img {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--border-radius);
-    box-shadow: var(--card-shadow); /* Uses new --card-shadow */
-    border: 1px solid var(--border-color); /* Uses new --border-color */
-}
-
-.overview-container {
-    flex: 2 1 500px;
-    background-color: var(--card-bg-color); /* Uses new --card-bg-color */
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    transition: all 0.3s ease;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--card-shadow);
-    padding: var(--spacing-lg);
-    color: var(--text-color);
-}
-
-.overview-container h2 {
-    color: var(--text-color);
-    margin-top: 0;
-    margin-bottom: 20px;
-    position: relative;
-    padding-bottom: 10px;
-    font-size: 1.8rem;
-    display: flex;
-    align-items: center;
-}
-.overview-container h2 i {
-    margin-right: var(--spacing-sm);
-    color: var(--icon-color); /* Uses new --icon-color (text-highlight) */
-}
-.overview-container h2::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 40px;
-    height: 2px;
-    background: var(--section-title-gradient); /* Uses new --section-title-gradient */
-}
-.overview-container p,
-.overview-container div {
-     color: var(--text-secondary); /* Uses new --text-secondary */
-     line-height: 1.6;
-}
-.overview-container .description-emphasis {
-     font-style: italic;
+    /* Dark Theme - Neurology Palette */
+    --raw-neuro-primary: #2196F3;    
+    --raw-neuro-secondary: #64B5F6;  
+    --raw-neuro-primary-rgb: 33, 150, 243; 
+    --raw-neuro-secondary-rgb: 100, 181, 246;
+ 
+    /* OVERRIDING base.css global theme variables for Neurology Disease Detail */
+    --primary-color: var(--raw-neuro-primary);
+    --accent-color: var(--raw-neuro-primary);
+    --text-highlight: var(--raw-neuro-primary);
+    
+    --border-color: rgba(var(--raw-neuro-primary-rgb), 0.25); 
+    --border-color-light: rgba(var(--raw-neuro-primary-rgb), 0.15); 
+    
+    --particle-bg: rgba(var(--raw-neuro-secondary-rgb), 0.08); 
+    --neon-blue: var(--raw-neuro-primary); 
+    --shadow-glow: rgba(var(--raw-neuro-primary-rgb), 0.2); 
+    --hero-bg: rgba(var(--raw-neuro-primary-rgb), 0.05); 
+    --section-title-gradient: linear-gradient(90deg, var(--raw-neuro-primary), var(--raw-neuro-secondary));
+    --section-title-undl-gradient: var(--section-title-gradient); 
+    
+    --nav-link-color: var(--raw-neuro-secondary); 
+    --nav-link-hover-color: var(--raw-neuro-primary); 
+ 
+    --card-bg-color: rgba(var(--raw-neuro-primary-rgb), 0.03); 
+    --card-hover-bg-color: rgba(var(--raw-neuro-primary-rgb), 0.08);
+    --card-hover-border: rgba(var(--raw-neuro-primary-rgb), 0.3);
+    --nested-card-bg: rgba(var(--raw-neuro-primary-rgb), 0.02); 
+ 
+    --button-bg: rgba(var(--raw-neuro-primary-rgb), 0.7);
+    --button-hover-bg: var(--raw-neuro-primary);
+    --button-text-color: white; 
+    --button-border-color: var(--raw-neuro-primary);
+ 
+    --emergency-bg: var(--raw-neuro-primary);
+    --emergency-border: var(--raw-neuro-primary);
+    --emergency-text: white;
+    --emergency-hover-bg: color-mix(in srgb, var(--raw-neuro-primary) 80%, black);
+    --emergency-hover-text: white;
+ 
+    --icon-color-main: var(--raw-neuro-primary);
+    --interactive-text-color: var(--raw-neuro-secondary);
+    --shadow-effect: 0 5px 15px rgba(var(--raw-neuro-primary-rgb), 0.08);
+    --doctor-avatar-bg-color: rgba(var(--raw-neuro-secondary-rgb), 0.1);
+ 
+    --animation-duration-fast: 0.2s;
+    --animation-duration-normal: 0.3s;
+    --animation-duration-slow: 0.5s;
+    --animation-timing-function: ease-in-out;
+ }
+ 
+ /* Light Theme - Neurology Palette */
+ [data-theme="light"] {
+    --raw-neuro-primary: #1976D2;    
+    --raw-neuro-secondary: #42A5F5;  
+    --raw-neuro-primary-rgb: 25, 118, 210; 
+    --raw-neuro-secondary-rgb: 66, 165, 245;
+    
+    --primary-color: var(--raw-neuro-primary);
+    --accent-color: var(--raw-neuro-primary);
+    --text-highlight: var(--raw-neuro-primary);
+ 
+    --border-color: rgba(var(--raw-neuro-primary-rgb), 0.3);
+    --border-color-light: rgba(var(--raw-neuro-primary-rgb), 0.2);
+ 
+    --particle-bg: rgba(var(--raw-neuro-secondary-rgb), 0.1);
+    --neon-blue: var(--raw-neuro-primary);
+    --shadow-glow: rgba(var(--raw-neuro-primary-rgb), 0.15); 
+    --hero-bg: rgba(var(--raw-neuro-primary-rgb), 0.1);
+    --section-title-gradient: linear-gradient(90deg, var(--raw-neuro-primary), var(--raw-neuro-secondary));
+    --section-title-undl-gradient: var(--section-title-gradient);
+ 
+    --nav-link-color: var(--raw-neuro-primary); 
+    --nav-link-hover-color: color-mix(in srgb, var(--raw-neuro-primary) 70%, black); 
+ 
+    --card-bg-color: rgba(var(--raw-neuro-primary-rgb), 0.04);
+    --card-hover-bg-color: rgba(var(--raw-neuro-primary-rgb), 0.09);
+    --card-hover-border: rgba(var(--raw-neuro-primary-rgb), 0.25);
+    --nested-card-bg: rgba(var(--raw-neuro-primary-rgb), 0.03);
+ 
+    --button-bg: rgba(var(--raw-neuro-primary-rgb), 0.8);
+    --button-hover-bg: var(--raw-neuro-primary);
+    --button-text-color: white; 
+    --button-border-color: var(--raw-neuro-primary);
+ 
+    --emergency-bg: var(--raw-neuro-primary);
+    --emergency-border: var(--raw-neuro-primary);
+    --emergency-text: var(--text-primary); 
+    --emergency-hover-bg: color-mix(in srgb, var(--raw-neuro-primary) 85%, #00000033);
+    --emergency-hover-text: var(--text-primary);
+ 
+    --icon-color-main: var(--raw-neuro-primary);
+    --interactive-text-color: var(--raw-neuro-primary);
+    --shadow-effect: 0 5px 15px rgba(var(--raw-neuro-primary-rgb), 0.06);
+    --doctor-avatar-bg-color: rgba(var(--raw-neuro-secondary-rgb), 0.15);
+ }
+ /* === END OF UNIFIED NEUROLOGY PALETTE === */
+ 
+ 
+ /* Reset and Global Styles (Copied from cardio.css structure) */
+ * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+     font-family: var(--font-main, 'Inter', 'Arial', sans-serif);
+     transition: background-color var(--animation-duration-normal) var(--animation-timing-function), 
+                 color var(--animation-duration-normal) var(--animation-timing-function), 
+                 border-color var(--animation-duration-normal) var(--animation-timing-function), 
+                 opacity var(--animation-duration-normal) var(--animation-timing-function), 
+                 box-shadow var(--animation-duration-normal) var(--animation-timing-function),
+                 transform var(--animation-duration-fast) var(--animation-timing-function);
+ }
+ 
+ html, body {
+     height: 100%;
+ }
+ 
+ body {
+     color: var(--text-color);
+     min-height: 100vh;
+     background-image: radial-gradient(circle, var(--particle-bg) 1px, transparent 1px); 
+     background-size: 30px 30px;
+     overflow-x: hidden;
+     padding-top: 70px; 
+ }
+ 
+ 
+ /* Header Section Styling */
+ .header {
+     display: flex;
+     flex-direction: column; 
+     align-items: center;
+     justify-content: center;
+     gap: var(--spacing-xs); 
+     margin-top: var(--spacing-sm); 
+     padding: var(--spacing-md) 5%;
+     max-width: 1400px;
+     margin-left: auto;
+     margin-right: auto;
+     position: relative;
+     z-index: 1;
+     text-align: center; 
+     margin-bottom: var(--spacing-lg); 
+     border-bottom: 2px solid var(--primary-color); 
+ }
+ 
+ .header h1 {
+     font-size: 2.5rem; 
+     color: var(--text-primary);
+     font-weight: 700;
+     margin-bottom: var(--spacing-xs); 
+ }
+ .header p.text-muted.fs-5 { 
+     font-size: 1.1rem; 
      color: var(--text-secondary);
-     display: block;
+     margin-top: 0;
+ }
+ .header p.text-muted.fs-5 i {
+     color: var(--primary-color); 
+ }
+ 
+ 
+ /* Main Content Containers */
+ .disease-container { 
+     max-width: 1400px;
+     margin: var(--spacing-lg) auto;
+     padding: 0 5%;
+ }
+ 
+ .top-content {
+     display: flex;
+     flex-wrap: wrap; 
+     gap: var(--spacing-xl);
+     margin-bottom: var(--spacing-xl);
+     align-items: flex-start;
+ }
+ 
+ .centered-gif { 
+     flex: 1 1 300px; 
+     max-width: 400px;
+     text-align: center;
+ }
+ 
+ .centered-gif img {
+     max-width: 100%;
+     height: auto;
+     border-radius: var(--border-radius);
+     box-shadow: var(--shadow-effect);
+     border: 1px solid var(--border-color-light); 
+     transition: transform var(--animation-duration-normal) var(--animation-timing-function), 
+                 box-shadow var(--animation-duration-normal) var(--animation-timing-function);
+ }
+ .centered-gif img:hover {
+     transform: scale(1.03);
+     box-shadow: 0 8px 25px var(--shadow-glow);
+ }
+ 
+ 
+ .overview-container {
+     flex: 2 1 500px; 
+     background-color: var(--card-bg-color); 
+     border-radius: var(--border-radius);
+     overflow: hidden;
+     border: 1px solid var(--border-color);
+     box-shadow: var(--shadow-effect);
+     padding: var(--spacing-lg);
+     color: var(--text-primary); 
+ }
+ 
+ .overview-container h2 { 
+     color: var(--text-primary); 
+     margin-top: 0;
+     margin-bottom: var(--spacing-md);
+     position: relative;
+     padding-bottom: var(--spacing-sm);
+     font-size: 1.8rem;
+     display: flex; 
+     align-items: center;
+ }
+ .overview-container h2 i {
+     margin-right: var(--spacing-sm);
+     color: var(--icon-color-main);
+ }
+ .overview-container h2::after {
+     content: '';
+     position: absolute;
+     bottom: 0;
+     left: 0;
+     width: 40px;
+     height: 2px;
+     background: var(--section-title-undl-gradient);
+ }
+ .overview-container p,
+ .overview-container div { 
+      color: var(--text-secondary);
+      line-height: 1.6;
+ }
+ .overview-container .description-emphasis { 
+      font-style: italic;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: var(--spacing-md);
+  }
+  .overview-container hr { 
+      border: none;
+      border-top: 1px dashed var(--border-color-light);
+      margin: var(--spacing-md) 0;
+  }
+ 
+ 
+ .main-content {
+     display: flex; 
+     flex-direction: column; 
+     gap: var(--spacing-lg);
+     margin: 0 auto var(--spacing-xl) auto; 
+     max-width: 1400px;
+     padding: 0 5%; 
+ }
+ 
+ /* CARD STYLING (Standard Structure) */
+ .card {
+     width: 100%;
+     margin-bottom: 0; 
+     background-color: var(--card-bg-color); 
+     border-radius: var(--border-radius);
+     border: 1px solid var(--border-color);
+     padding: var(--spacing-lg);
+     box-shadow: var(--shadow-effect);
+     overflow: hidden;
+     color: var(--text-primary); 
+     transition: transform var(--animation-duration-normal) var(--animation-timing-function), 
+                 box-shadow var(--animation-duration-normal) var(--animation-timing-function),
+                 border-color var(--animation-duration-normal) var(--animation-timing-function),
+                 background-color var(--animation-duration-normal) var(--animation-timing-function);
+ }
+ .card:hover {
+     transform: translateY(-5px) scale(1.01); 
+     box-shadow: 0 10px 30px var(--shadow-glow); 
+     border-color: var(--card-hover-border); 
+     background-color: var(--card-hover-bg-color); 
+ }
+ 
+ /* Heading Styles within Cards */
+ .card h2, .card h3 { 
+     color: var(--text-primary); 
+     margin-top: 0;
+     margin-bottom: var(--spacing-md);
+     position: relative;
+     padding-bottom: var(--spacing-sm);
+     display: flex;
+     align-items: center;
+ }
+ .card h2 { font-size: 1.6rem; } 
+ .card h3 { font-size: 1.4rem; } 
+ 
+ .card h2::after, .card h3::after { 
+     content: '';
+     position: absolute;
+     bottom: 0;
+     left: 0;
+     width: 40px;
+     height: 2px;
+     background: var(--section-title-undl-gradient);
+     border-radius: 1px; 
+ }
+ 
+ .card h2 i, .card h3 i { 
+     margin-right: var(--spacing-sm);
+     color: var(--icon-color-main); 
+ }
+ 
+ .card hr.section-divider {
+    border: none;
+    border-top: 1px solid var(--border-color-light);
+    margin: var(--spacing-lg) 0;
+ }
+ 
+ /* Text Styling within Cards */
+ .card p, .card ul, .card li {
+     color: var(--text-secondary);
+     line-height: 1.6;
+ }
+ 
+ .card ul {
+     list-style-type: none; 
+     padding-left: var(--spacing-xs); 
+ }
+ 
+ .card ul li {
+     position: relative;
+     padding-left: var(--spacing-md); 
+     margin-bottom: var(--spacing-sm);
+ }
+ 
+ .card ul li:before {
+     content: "•";
+     color: var(--primary-color); 
+     font-weight: bold;
+     position: absolute;
+     left: 0;
+     top: 0; 
+ }
+ 
+ .card ul.disc-list,
+ .content-container ul.disc-list { 
+     list-style: disc; 
+     padding-left: var(--spacing-lg); 
+     margin-top: var(--spacing-sm);
      margin-bottom: var(--spacing-md);
  }
- .overview-container hr {
-     border: none;
-     border-top: 1px dashed var(--border-color);
-     margin: 15px 0;
+ .card ul.disc-list li::before,
+ .content-container ul.disc-list li::before {
+     content: none; 
  }
-
-
-.main-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-lg, 30px);
-    margin: 0 auto var(--spacing-xl, 40px) auto;
-    max-width: 1400px;
-    padding: 0 5%;
-}
-
-/* General Card Styling */
-.card {
-    width: 100%;
-    margin-bottom: 0;
-    background-color: var(--card-bg-color);
-    border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
-    padding: var(--spacing-lg);
-    box-shadow: var(--card-shadow);
-    overflow: hidden;
-    transition: all 0.3s ease;
-    color: var(--text-color);
-}
-.card:hover { /* Added hover from neuro.css card example */
-    transform: translateY(-5px); /* Subtle lift */
-    box-shadow: 0 10px 25px var(--blue-glow); /* Use blue-glow for consistency */
-    border-color: var(--card-hover-border-color); /* Use specific variable */
-}
-
-
-/* Heading Styles within Cards */
-.card h2, .card h3 {
-    color: var(--text-color);
-    margin-top: 0;
-    margin-bottom: var(--spacing-md);
-    position: relative;
-    padding-bottom: 10px;
-    display: flex;
-    align-items: center;
-}
-.card h2 { font-size: 1.6rem; }
-.card h3 { font-size: 1.4rem; }
-
-.card h2::after, .card h3::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 40px;
-    height: 2px;
-    background: var(--section-title-gradient);
-    border-radius: 1px;
-}
-
-.card h2 i, .card h3 i {
-    margin-right: var(--spacing-sm);
-    color: var(--icon-color); /* Consistent icon color */
-}
-
-.card hr.section-divider {
-   border: none;
-   border-top: 1px solid var(--border-color);
-   margin: var(--spacing-lg) 0;
-}
-
-/* Text Styling within Cards */
-.card p, .card ul, .card li {
-    color: var(--text-secondary);
-    line-height: 1.6;
-}
-
-.card ul {
-    list-style-type: none;
-    padding-left: 5px;
-}
-
-.card ul li {
-    position: relative;
-    padding-left: 20px;
-    margin-bottom: 10px;
-}
-
-.card ul li:before {
-    content: "•";
-    color: var(--primary-color); /* Bullets use main accent color (blue) */
-    font-weight: bold;
-    position: absolute;
-    left: 0;
-    top: 0;
-}
-
-/* Read More Styling */
-.content-container { position: relative; }
-.content-container .content-snippet { margin-bottom: 0.5rem; line-height: 1.6; }
-.content-container .content-full { display: none; line-height: 1.6; }
-.content-container .read-more-btn { background: none; border: none; color: var(--primary-color); cursor: pointer; padding: 3px 0; font-weight: 600; font-size: 0.95em; display: inline-block; margin-top: 0.5rem; transition: color 0.2s ease; }
-.content-container .read-more-btn:hover { text-decoration: underline; color: var(--text-highlight); } /* Hover to text-highlight */
-.content-container .read-more-btn .arrow { display: inline-block; margin-left: 5px; transition: transform 0.2s ease-in-out; }
-.content-container .read-more-btn.expanded .arrow { transform: rotate(180deg); }
-.read-more-btn:not([data-has-more="true"]) { display: none !important; }
-
-/* Emergency Signs Styling */
-.emergency-signs { margin-top: 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--emergency-border); background-color: var(--emergency-bg); border-radius: var(--border-radius); color: var(--emergency-text); font-size: 0.95rem; }
-.emergency-signs h4 { color: var(--emergency-text); margin-top: 0; margin-bottom: 0.75rem; font-size: 1.1em; font-weight: 700; display: flex; align-items: center; border-bottom: none; padding-bottom: 0; }
-.emergency-signs h4::after { display: none; }
-.emergency-signs h4 i { margin-right: 0.5rem; }
-.emergency-signs ul, .emergency-signs p { margin-bottom: 0; color: var(--emergency-text); }
-.emergency-signs ul li::before { color: var(--emergency-text); }
-
-/* Quick Facts Card Styling */
-.quick-facts-card { background-color: var(--nested-card-bg); }
-
-
-.quick-facts-list { display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-sm) var(--spacing-md); font-size: 0.95rem; }
-.quick-facts-list dt { grid-column: 1; font-weight: 600; color: var(--text-secondary); text-align: left; display: flex; align-items: center; white-space: nowrap; }
-.quick-facts-list dt i { color: var(--icon-color); margin-right: 8px; width: 1.2em; text-align: center; flex-shrink: 0; }
-.quick-facts-list dd { grid-column: 2; margin-bottom: 0; text-align: left; color: var(--text-color); }
-@media (max-width: 576px) {
-    .quick-facts-list { grid-template-columns: 1fr; gap: var(--spacing-xs) 0; }
-    .quick-facts-list dt { grid-column: 1; margin-bottom: 2px; }
-    .quick-facts-list dd { grid-column: 1; padding-left: 1.2em; margin-left: 8px; margin-bottom: var(--spacing-sm); }
-}
-.demographic-list { padding-left: 20px; list-style: disc; margin-top: 10px; font-size: 0.95rem;}
-.demographic-list li { margin-bottom: var(--spacing-xs); }
-
-
-/* === ADD THIS TO cardisease.css, orthodisease.css, AND neurodisease.css === */
-
-/* Styling for the revealed Emergency Symptoms section WITHIN the main Symptoms card */
-.emergency-symptoms-details {
-    margin-top: var(--spacing-md, 1rem); /* Space above the emergency section when revealed */
-    padding-top: var(--spacing-md, 1rem);
-    border-top: 1px dashed var(--border-color); /* Separator line */
-}
-
-/* Apply the existing emergency-signs styling to the inner container */
-.emergency-symptoms-details .emergency-signs {
-    margin-top: 0; /* Remove extra top margin if nested */
-    /* Inherit styles defined earlier for .emergency-signs: */
-    /* padding: 1rem 1.25rem; */
-    /* border: 1px solid var(--emergency-border); */
-    /* background-color: var(--emergency-bg); */
-    /* border-radius: var(--border-radius); */
-    /* color: var(--emergency-text); */
-    /* font-size: 0.95rem; */
-}
-
-.emergency-symptoms-details .emergency-signs h4 {
-    /* Inherit styles defined earlier for .emergency-signs h4: */
-    /* color: var(--emergency-text); */
-    /* margin-top: 0; */
-    /* margin-bottom: 0.75rem; */
-    /* font-size: 1.1em; */
-    /* font-weight: 700; */
-    /* display: flex; */
-    /* align-items: center; */
-    /* border-bottom: none; */
-    /* padding-bottom: 0; */
-}
-.emergency-symptoms-details .emergency-signs h4::after { display: none; } /* Ensure no underline */
-.emergency-symptoms-details .emergency-signs h4 .sos-emoji { font-size: 1.2em; margin-right: 0.5em; } /* Explicitly style SOS emoji */
-
-.emergency-symptoms-details .emergency-signs p {
-     /* Inherit styles defined earlier for .emergency-signs p: */
-     /* margin-bottom: 0; */
-     /* color: var(--emergency-text); */
-     /* pre-wrap is applied in the HTML template */
-}
-
-/* --- End of Added CSS --- */
-
-/* Doctors Section Styling */
-.doctors-section {
-    margin-top: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    border-top: 1px solid var(--border-color);
-    background-color: var(--card-bg-color); /* Section has card background */
-    border-radius: var(--border-radius);
-    box-shadow: var(--card-shadow);
-}
-
-.doctors-section h2 {
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: var(--spacing-lg);
-    color: var(--text-color);
-    font-size: 2rem;
-    font-weight: 600;
-    position: relative;
-    padding-bottom: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.doctors-section h2::after {
-    content: ''; position: absolute; bottom: 0; left: 50%;
-    transform: translateX(-50%); width: 60px; height: 3px;
-    background: var(--section-title-gradient); border-radius: 2px;
-}
-.doctors-section h2 i {
-     margin-right: var(--spacing-sm);
-     color: var(--icon-color);
-}
-
-
-.doctors-grid {
-    display: grid;
-    gap: var(--spacing-lg);
-    grid-template-columns: 1fr;
-}
-@media (min-width: 768px) { .doctors-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1200px) { .doctors-grid { grid-template-columns: repeat(4, 1fr); } }
-
-
-.doctor-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: var(--spacing-sm);
-    background-color: var(--nested-card-bg); /* Use nested card background */
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-md);
-    transition: all 0.3s;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Subtle initial shadow */
-}
-.doctor-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px var(--blue-glow); /* Use blue-glow for hover */
-    border-color: var(--card-hover-border-color);
-}
-
-.doctor-avatar {
-    margin-top: 5px;
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background-color: var(--doctor-avatar-bg); /* Uses new --doctor-avatar-bg (particle-bg) */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    border: 2px solid var(--border-color);
-}
-
-.doctor-avatar img.doctor-profile-pic {
-     width: 100%;
-     height: 100%;
-     object-fit: cover;
- }
-
-.doctor-details { width: 100%; }
-.doctor-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; color: var(--text-color); }
-.doctor-specialty { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--spacing-xs); }
-.doctor-short-bio {
-    font-size: 0.9rem; color: var(--text-secondary);
-    margin-bottom: var(--spacing-md);
-    max-height: 4.5em; overflow: hidden; text-overflow: ellipsis;
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
-}
-
-.appointment-button {
-    display: inline-block;
-    background-color: var(--emergency-bg); /* Uses new --emergency-bg */
-    color: var(--emergency-text); /* Uses new --emergency-text */
-    border: 1px solid var(--emergency-border); /* Uses new --emergency-border */
-    padding: 8px 16px;
-    border-radius: 5px;
-    font-size: 0.9rem;
-    cursor: pointer; text-decoration: none; transition: all 0.3s;
-}
-.appointment-button:hover {
-    background-color: rgba(var(--accent-pink-rgb), 0.3); /* Darken/intensify pink bg on hover */
-    border-color: rgba(var(--accent-pink-rgb), 0.5);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(var(--accent-pink-rgb), 0.2);
-}
-
-/* Tracker Promo Styling */
-.tracker-promo {
-    margin-top: var(--spacing-xl); padding: var(--spacing-lg);
-    border: 1px solid var(--secondary-color); /* Uses new --secondary-color (accent-pink) */
-    background-color: rgba(var(--secondary-rgb), 0.08); /* Uses new --secondary-rgb (accent-pink-rgb) */
-    border-radius: var(--border-radius);
-    text-align: center;
- }
-  .tracker-promo h3 {
-     margin-top: 0; color: var(--secondary-color); display: flex;
-     align-items: center; justify-content: center; gap: 0.5rem;
-     border-bottom: none; padding-bottom: 0;
+ 
+ 
+ .pre-wrap {
+     white-space: pre-wrap;
+     word-wrap: break-word;
   }
-   .tracker-promo h3::after { display: none; }
-  .tracker-button {
-    display: inline-block; margin-top: var(--spacing-md);
-    background-color: var(--secondary-color); color: var(--accent-white);
-    padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: var(--border-radius); text-decoration: none;
-    font-weight: 500; transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    border: none;
-  }
-  .tracker-button:hover {
-    /* Define a darker shade for pink hover if not available, or use existing logic */
-    background-color: color-mix(in srgb, var(--secondary-color) 85%, black); /* Darken pink */
-    color: var(--accent-white);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(var(--secondary-rgb), 0.2);
+ 
+ /* Read More Styling */
+ .content-container { position: relative; }
+ .content-container .content-snippet { margin-bottom: var(--spacing-sm); line-height: 1.6; }
+ .content-container .content-full { display: none; line-height: 1.6; }
+ .content-container .read-more-btn { 
+     background: none; 
+     border: none; 
+     color: var(--interactive-text-color); 
+     cursor: pointer; 
+     padding: 3px 0; 
+     font-weight: 600; 
+     font-size: 0.95em; 
+     display: inline-block; 
+     margin-top: var(--spacing-sm); 
+     transition: color var(--animation-duration-fast) var(--animation-timing-function);
  }
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .header {
-        flex-direction: column; text-align: center; margin-top: 10px;
-        padding-bottom: var(--spacing-sm);
-    }
-    .header h1 { font-size: 2rem; }
-    .top-content { flex-direction: column; }
-    .main-content { gap: var(--spacing-md); margin-top: var(--spacing-lg); }
-    .card { padding: var(--spacing-md); }
-    .quick-facts-card { padding: var(--spacing-md); }
-    .doctors-section { padding: var(--spacing-md); }
-    .doctors-grid .doctor-card { padding: var(--spacing-md); }
-}
-
-/* Styles for ALS and Progression Timeline (Retained variables, styles below use them) */
-.early-symptoms { background-color: var(--als-bg-color); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; border-left: none; box-shadow: 0 5px 15px var(--als-shadow-color); position: relative; transition: all 0.3s ease; }
-.early-symptoms::before { content: ""; position: absolute; top: -10px; left: 20px; width: 22px; height: 22px; background-color: var(--als-circle-color); border-radius: 50%; box-shadow: 0 0 0 5px var(--als-circle-shadow); transition: all 0.3s ease; }
-.early-symptoms:hover { transform: translateY(-3px); box-shadow: 0 8px 20px var(--als-shadow-color-emphasis); }
-.early-symptoms h4 { color: var(--als-heading-color); margin-top: 0; margin-bottom: 1.2rem; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; position: relative; transition: color 0.3s ease; padding-left: 5px; border-bottom: none; }
-.early-symptoms h4::after { display: none; }
-.early-symptoms ul { margin: 0; padding-left: 5px; list-style-type: none; }
-.early-symptoms li { margin-bottom: 0.9rem; line-height: 1.6; color: var(--als-text-color); position: relative; padding-left: 28px; font-size: 1rem; padding-top: 0.3rem; padding-bottom: 0.3rem; transition: all 0.3s ease; border-radius: 6px; }
-.early-symptoms li strong + span, .early-symptoms li strong + text, .symptom-description { color: var(--als-text-color); }
-.early-symptoms li strong { color: var(--als-strong-color); font-weight: 600; margin-right: 4px; transition: color 0.3s ease; }
-.early-symptoms li::before { content: ""; width: 8px; height: 8px; background-color: var(--als-bullet-color); border-radius: 50%; position: absolute; left: 10px; top: 12px; transition: all 0.3s ease; }
-.early-symptoms li:last-child { margin-bottom: 0; }
-.early-symptoms li:hover { background-color: var(--als-highlight-color); transform: translateX(5px); }
-
-.progression-timeline { position: relative; padding: 20px 0; margin: 25px 0; border-left: 3px solid var(--progression-line-color); padding-left: 20px; }
-.progression-stage { position: relative; margin-bottom: 25px; padding: 15px; background-color: var(--progression-stage1-color); border-radius: 8px; color: var(--progression-text-color); border-left: 3px solid var(--progression-border-color); box-shadow: var(--progression-stage-shadow); transition: all 0.3s ease; }
-.progression-stage:nth-child(2) { background-color: var(--progression-stage2-color); }
-.progression-stage:nth-child(3) { background-color: var(--progression-stage3-color); margin-bottom: 0; }
-.progression-stage::before { content: ''; position: absolute; left: -32px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; background-color: var(--progression-dot-color); border-radius: 50%; box-shadow: 0 0 0 4px var(--als-circle-shadow); z-index: 1; transition: all 0.3s ease; }
-.progression-stage:hover { transform: translateX(8px); box-shadow: 0 5px 15px var(--als-shadow-color-emphasis); } /* Using als-shadow-emphasis for consistency if desired, or keep progression specific */
-.progression-stage:hover::before { transform: translateY(-50%) scale(1.2); }
-
-.content-full h4 { color: var(--text-color); margin: 20px 0 15px; font-size: 1.1rem; font-weight: 600; }
-
-@media (max-width: 768px) {
-    .early-symptoms { padding: 1.2rem; margin: 1rem 0; }
-    .early-symptoms h4 { font-size: 1.1rem; }
-    .early-symptoms li { font-size: 0.95rem; padding-left: 24px; }
-    .progression-timeline { padding-left: 15px; }
-    .progression-stage { padding: 12px; margin-bottom: 20px; }
-    .progression-stage::before { left: -26px; width: 12px; height: 12px; }
-}
-
-.association-list {
-    list-style: disc;
-    padding-left: 25px;
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-}
-.association-list li {
-    margin-bottom: 0.5rem;
-}
-.symptom-list-vertical {
-    list-style: disc;
-    padding-left: 25px;
-    margin: 0.5rem 0 1rem 0;
-}
-.symptom-list-vertical li {
-    margin-bottom: 0.4rem;
-}
-
-.protocol-link { margin-left: 8px; font-size: 0.9em; }
-hr.section-divider { margin: 1.5rem 0; border-top: 1px dashed var(--border-color); } /* Updated to use theme border color */
+ .content-container .read-more-btn:hover { 
+     text-decoration: underline; 
+     color: var(--primary-color); 
+ } 
+ .content-container .read-more-btn .arrow { display: inline-block; margin-left: 5px; transition: transform var(--animation-duration-fast) var(--animation-timing-function); }
+ .content-container .read-more-btn.expanded .arrow { transform: rotate(180deg); }
+ .read-more-btn:not([data-has-more="true"]) { display: none !important; }
+ 
+ /* Emergency Signs Styling */
+ .emergency-signs { 
+     margin-top: var(--spacing-md); 
+     padding: var(--spacing-md) var(--spacing-lg); 
+     border: 1px solid var(--emergency-border); 
+     background-color: var(--emergency-bg); 
+     border-radius: var(--border-radius); 
+     color: var(--emergency-text); 
+     font-size: 0.95rem; 
+ }
+ .emergency-signs h4 { 
+     color: var(--emergency-text); 
+     margin-top: 0; 
+     margin-bottom: var(--spacing-sm); 
+     font-size: 1.1em; 
+     font-weight: 700; 
+     display: flex; 
+     align-items: center; 
+     border-bottom: none; 
+     padding-bottom: 0; 
+ } 
+ .emergency-signs h4::after { display: none; } 
+ .emergency-signs h4 i { margin-right: var(--spacing-sm); color: var(--emergency-text); }
+ .emergency-signs ul, .emergency-signs p { 
+     margin-bottom: 0; 
+     color: var(--emergency-text); 
+ } 
+ 
+ .emergency-signs ul li {
+     color: var(--emergency-text);
+ }
+ .emergency-signs ul li::before { 
+     color: var(--emergency-text); 
+ } 
+ 
+ /* Quick Facts Card Styling */
+ .quick-facts-card { 
+     background-color: var(--nested-card-bg); 
+     border-radius: var(--border-radius); 
+     padding: var(--spacing-lg); 
+     border: 1px solid var(--border-color); 
+     box-shadow: var(--shadow-effect); 
+ } 
+ 
+ 
+ .quick-facts-list { display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-sm) var(--spacing-md); font-size: 0.95rem; }
+ .quick-facts-list dt { grid-column: 1; font-weight: 600; color: var(--text-secondary); text-align: left; display: flex; align-items: center; white-space: nowrap; }
+ .quick-facts-list dt i { color: var(--icon-color-main); margin-right: 8px; width: 1.2em; text-align: center; flex-shrink: 0; } 
+ .quick-facts-list dd { grid-column: 2; margin-bottom: 0; text-align: left; color: var(--text-primary); } 
+ @media (max-width: 576px) {
+     .quick-facts-list { grid-template-columns: 1fr; gap: var(--spacing-xs) 0; }
+     .quick-facts-list dt { grid-column: 1; margin-bottom: 2px; }
+     .quick-facts-list dd { grid-column: 1; padding-left: calc(1.2em + var(--spacing-xs) + var(--spacing-xs)); margin-left:0; margin-bottom: var(--spacing-sm); }
+ }
+ .demographic-list { padding-left: var(--spacing-md); list-style: disc; margin-top: var(--spacing-sm); font-size: 0.95rem;}
+ .demographic-list li { margin-bottom: var(--spacing-xs); }
+ 
+ 
+ /* === Common Emergency Symptoms Details Styling === */
+ .emergency-symptoms-details {
+     margin-top: var(--spacing-md); 
+     padding-top: var(--spacing-md);
+     border-top: 1px dashed var(--border-color-light); 
+ }
+ .emergency-symptoms-details .emergency-signs { margin-top: 0; }
+ .emergency-symptoms-details .emergency-signs h4 .sos-emoji { font-size: 1.2em; margin-right: 0.5em; } 
+ /* --- End of Common --- */
+ 
+ /* Doctors Section Styling */
+ .doctors-section {
+     margin-top: var(--spacing-xl);
+     padding: var(--spacing-lg); 
+     border-top: 1px solid var(--border-color);
+     background-color: var(--card-bg-color); 
+     border-radius: var(--border-radius);
+     box-shadow: var(--shadow-effect);
+ }
+ 
+ .doctors-section h2 {
+     text-align: center;
+     margin-top: 0; 
+     margin-bottom: var(--spacing-lg);
+     color: var(--text-primary);
+     font-size: 2rem;
+     font-weight: 600;
+     position: relative;
+     padding-bottom: var(--spacing-sm);
+     display: flex; 
+     align-items: center;
+     justify-content: center; 
+ }
+ .doctors-section h2::after {
+     content: ''; position: absolute; bottom: 0; left: 50%;
+     transform: translateX(-50%); width: 60px; height: 3px;
+     background: var(--section-title-undl-gradient); border-radius: 2px;
+ }
+ .doctors-section h2 i {
+      margin-right: var(--spacing-sm);
+      color: var(--icon-color-main); 
+ }
+ 
+ 
+ .doctors-grid {
+     display: grid;
+     gap: var(--spacing-lg);
+     grid-template-columns: 1fr; 
+ }
+ @media (min-width: 600px) { 
+     .doctors-grid { grid-template-columns: repeat(2, 1fr); } 
+ }
+ @media (min-width: 992px) { 
+     .doctors-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } 
+ }
+ 
+ 
+ .doctor-card { 
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     text-align: center;
+     gap: var(--spacing-sm);
+     background-color: var(--nested-card-bg); 
+     border: 1px solid var(--border-color);
+     border-radius: var(--border-radius);
+     padding: var(--spacing-md); 
+     box-shadow: 0 3px 10px var(--shadow-effect); 
+     transition: transform var(--animation-duration-normal) var(--animation-timing-function), 
+                 box-shadow var(--animation-duration-normal) var(--animation-timing-function),
+                 border-color var(--animation-duration-normal) var(--animation-timing-function);
+     opacity: 0; 
+     transform: translateY(20px); 
+     animation: doctor-fade-in var(--animation-duration-slow) var(--animation-timing-function) forwards; 
+ }
+ .doctors-grid .doctor-card:nth-child(1) { animation-delay: 0.1s; }
+ .doctors-grid .doctor-card:nth-child(2) { animation-delay: 0.2s; }
+ .doctors-grid .doctor-card:nth-child(3) { animation-delay: 0.3s; }
+ .doctors-grid .doctor-card:nth-child(4) { animation-delay: 0.4s; }
+ .doctors-grid .doctor-card:nth-child(5) { animation-delay: 0.5s; }
+ .doctors-grid .doctor-card:nth-child(6) { animation-delay: 0.6s; }
+ 
+ 
+ @keyframes doctor-fade-in { 
+     to {
+         opacity: 1;
+         transform: translateY(0);
+     }
+ }
+ 
+ .doctor-card:hover {
+     transform: translateY(-5px) scale(1.02); 
+     box-shadow: 0 8px 25px var(--shadow-glow); 
+     border-color: var(--primary-color);
+ }
+ 
+ .doctor-avatar {
+     margin-top: var(--spacing-xs); 
+     width: 90px; 
+     height: 90px;
+     border-radius: 50%;
+     background-color: var(--doctor-avatar-bg-color); 
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     overflow: hidden; 
+     border: 3px solid var(--border-color-light); 
+     box-shadow: 0 0 10px rgba(var(--raw-neuro-secondary-rgb), 0.1); /* Themed avatar glow */
+     transition: transform var(--animation-duration-fast) var(--animation-timing-function);
+ }
+ .doctor-card:hover .doctor-avatar {
+     transform: scale(1.05);
+ }
+ 
+ .doctor-avatar img.doctor-profile-pic {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+  }
+ 
+ .doctor-details { width: 100%; padding-top: var(--spacing-xs); } 
+ .doctor-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; color: var(--text-primary); }
+ .doctor-specialty { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--spacing-xs); }
+ .doctor-short-bio {
+     font-size: 0.85rem; 
+     color: var(--text-secondary);
+     margin-bottom: var(--spacing-md);
+     line-height: 1.5;
+     max-height: calc(1.5em * 3); 
+     overflow: hidden; 
+     text-overflow: ellipsis;
+     display: -webkit-box; 
+     -webkit-line-clamp: 3; 
+     -webkit-box-orient: vertical;
+ }
+ 
+ /* Appointment Button Styling */
+ .appointment-button {
+     display: inline-block; 
+     background-color: var(--button-bg); 
+     color: var(--button-text-color); 
+     border: 1px solid var(--button-border-color); 
+     padding: var(--spacing-xs) var(--spacing-md); 
+     border-radius: var(--border-radius-sm, 5px);
+     font-size: 0.9rem;
+     font-weight: 600; 
+     cursor: pointer; 
+     text-decoration: none; 
+     text-align: center;
+     width: auto; 
+     max-width: 200px; 
+     margin: var(--spacing-sm) auto 0; 
+     transition: background-color var(--animation-duration-fast) var(--animation-timing-function),
+                 color var(--animation-duration-fast) var(--animation-timing-function),
+                 border-color var(--animation-duration-fast) var(--animation-timing-function),
+                 transform var(--animation-duration-fast) var(--animation-timing-function),
+                 box-shadow var(--animation-duration-fast) var(--animation-timing-function);
+ }
+ .appointment-button:hover {
+     background-color: var(--button-hover-bg);
+     color: white; 
+     border-color: var(--button-hover-bg);
+     transform: translateY(-2px) scale(1.03); 
+     box-shadow: 0 4px 10px var(--shadow-glow); 
+ }
+ [data-theme="light"] .appointment-button:hover {
+     color: white; 
+ }
+ 
+ 
+ /* Responsive Design */
+ @media (max-width: 768px) {
+     .header {
+         padding-top: var(--spacing-sm);
+         padding-bottom: var(--spacing-sm);
+     }
+     .header h1 { font-size: 2rem; }
+     .top-content { flex-direction: column; }
+     .main-content { gap: var(--spacing-md); margin-top: var(--spacing-lg); } 
+     .card, .overview-container, .quick-facts-card, .doctors-section, .doctor-card { 
+         padding: var(--spacing-md); 
+     }
+     .doctors-grid { grid-template-columns: 1fr; } 
+ }
+ 
+ @media (max-width: 576px) {
+     .quick-facts-list dd {
+       padding-left: 0; 
+       margin-left: calc(1.2em + var(--spacing-xs) + var(--spacing-xs)); 
+     }
+     .quick-facts-list dt i {
+         margin-right: var(--spacing-xs);
+     }
+ }

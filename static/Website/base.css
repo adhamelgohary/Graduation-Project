@@ -18,8 +18,8 @@
   --bg-footer: rgba(3, 13, 27, 0.9);
   --nested-card-bg: rgba(5, 21, 42, 0.8);
   
-  --accent-pink: #ff3b5c;
-  --neon-blue: #00f0ff;
+  --accent-pink: #ff3b5c; /* Default primary accent */
+  --neon-blue: #00f0ff;   /* Default secondary accent */
   --primary-color: var(--accent-pink); 
   --primary-hover-color: color-mix(in srgb, var(--primary-color) 80%, black);
   --danger-color: #e74c3c;
@@ -40,7 +40,7 @@
 
   --shadow-color: rgba(0, 0, 0, 0.2);
   --card-shadow: 0 10px 30px var(--shadow-color);
-  --shadow-glow: rgba(0, 240, 255, 0.15);
+  --shadow-glow: rgba(0, 240, 255, 0.15); /* Default neon blue glow */
 
   --button-bg: rgba(255, 59, 92, 0.3);
   --button-hover-bg: rgba(255, 59, 92, 0.5);
@@ -51,7 +51,7 @@
   --emergency-border: rgba(255, 59, 92, 0.2);
   --emergency-text: #ff3b5c;
 
-  --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c);
+  --section-title-gradient: linear-gradient(90deg, #3b83ff, #ff3b5c); /* Default gradient */
   --doctor-avatar-bg: rgba(255, 255, 255, 0.05);
 
    --spacing-xs: 5px;
@@ -62,6 +62,7 @@
 
    --border-radius: 12px;
 
+  /* Department Specific Colors (can be overridden in department CSS) */
   --dept-color-dermatology: #00A99D;
   --dept-color-dermatology-rgb: 0, 169, 157;
   --dept-color-cardiology: #E91E63;
@@ -73,9 +74,12 @@
   --dept-color-pediatrics: #4CAF50;
   --dept-color-pediatrics-rgb: 76, 175, 80;
 
+  /* Navbar Specific Variables */
   --navbar-bg-color: var(--bg-nav);
-  --navbar-hover-bg-color: rgba(255, 255, 255, 0.08);
-  --navbar-hover-text-color: var(--accent-pink);
+  --nav-link-color: var(--text-secondary); /* MODIFIED: Default nav link color (subtle) */
+  --nav-link-hover-color: var(--accent-pink); /* MODIFIED: Default hover/active color */
+  --nav-link-hover-bg: rgba(255, 255, 255, 0.08); /* Kept subtle bg for hover */
+  
   --navbar-submenu-bg: rgba(0,0,0,0.1);
   --card-bg-color: var(--bg-secondary);
   --hover-bg-color: rgba(255, 255, 255, 0.05);
@@ -83,9 +87,9 @@
 
   --navbar-dropdown-bg: var(--navbar-bg-color);
   --navbar-dropdown-border-color: var(--border-color);
-  --navbar-dropdown-text-color: var(--text-primary);
-  --navbar-dropdown-hover-bg: var(--navbar-hover-bg-color);
-  --navbar-dropdown-hover-text-color: var(--navbar-hover-text-color);
+  --navbar-dropdown-text-color: var(--text-primary); /* Dropdown items can be brighter */
+  --navbar-dropdown-hover-bg: var(--nav-link-hover-bg);
+  --navbar-dropdown-hover-text-color: var(--nav-link-hover-color);
 }
 
 [data-theme="light"] {
@@ -95,7 +99,9 @@
   --bg-footer: rgba(239, 242, 247, 0.95);
   --nested-card-bg: #f8fafd;
   
-  --neon-blue: #3182ce;
+  --accent-pink: #d9304f; /* Stronger pink for light theme */
+  --neon-blue: #3182ce; 
+  --primary-color: var(--accent-pink);
   --primary-hover-color: color-mix(in srgb, var(--primary-color) 80%, #333);
   --danger-color: #dc3545;
   
@@ -114,7 +120,7 @@
 
   --shadow-color: rgba(0, 0, 0, 0.1);
   --card-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  --shadow-glow: rgba(59, 131, 255, 0.1);
+  --shadow-glow: rgba(59, 131, 255, 0.1); /* Default blue glow for light */
 
   --button-bg: rgba(255, 59, 92, 0.15);
   --button-hover-bg: rgba(255, 59, 92, 0.3);
@@ -125,19 +131,22 @@
   
   --doctor-avatar-bg: rgba(5, 21, 42, 0.05);
 
+  /* Navbar Specific Variables - Light Theme */
   --navbar-bg-color: var(--bg-nav);
-  --navbar-hover-bg-color: #e9ecef;
-  --navbar-hover-text-color: var(--accent-pink);
+  --nav-link-color: var(--text-secondary); /* MODIFIED: Default nav link color (subtle) */
+  --nav-link-hover-color: var(--accent-pink); /* MODIFIED: Default hover/active color */
+  --nav-link-hover-bg: #e9ecef; /* Kept subtle bg for hover */
+
   --navbar-submenu-bg: rgba(0,0,0,0.03);
   --card-bg-color: var(--bg-secondary);
   --hover-bg-color: #f0f2f5; 
   --secondary-bg-color: #e9ecef;
 
   --navbar-dropdown-bg: var(--bg-secondary);
-  --navbar-dropdown-border-color: #dddddd; /* Fallback for light theme */
+  --navbar-dropdown-border-color: #dddddd; 
   --navbar-dropdown-text-color: var(--text-primary);
-  --navbar-dropdown-hover-bg: var(--navbar-hover-bg-color);
-  --navbar-dropdown-hover-text-color: var(--navbar-hover-text-color);
+  --navbar-dropdown-hover-bg: var(--nav-link-hover-bg);
+  --navbar-dropdown-hover-text-color: var(--nav-link-hover-color);
 }
 
 html { scroll-behavior: smooth; }
@@ -178,7 +187,7 @@ body {
   backdrop-filter: blur(8px);
 }
 .navbar:hover {
-  box-shadow: 0 4px 20px var(--shadow-glow);
+  box-shadow: 0 4px 20px var(--shadow-glow); /* Uses --shadow-glow which can be themed */
 }
 .nav-logo {
   display: flex;
@@ -190,23 +199,23 @@ body {
 .nav-logo span {
   font-size: 20px;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--text-color); /* Default logo text color */
   letter-spacing: 1px;
   transition: color 0.3s ease;
 }
 .nav-logo:hover h1,
 .nav-logo:hover span {
-  color: var(--accent-pink);
+  color: var(--nav-link-hover-color); /* Logo hover uses general nav link hover color */
 }
 .nav-logo svg {
   width: 28px;
   height: 28px;
-  stroke: var(--accent-pink);
+  stroke: var(--primary-color); /* SVG stroke uses primary accent */
   fill: none;
   transition: stroke 0.3s ease, filter 0.3s ease;
 }
 .nav-logo:hover svg {
-  stroke: var(--neon-blue);
+  stroke: var(--neon-blue); /* SVG hover uses general neon blue (can be themed) */
   filter: drop-shadow(0 0 4px var(--neon-blue));
 }
 .nav-links {
@@ -218,7 +227,7 @@ body {
 
 .nav-links a,
 .nav-links .dropbtn {
-  color: var(--nav-link-color);
+  color: var(--nav-link-color); /* Uses the new variable */
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
@@ -236,7 +245,6 @@ body {
 }
 .nav-links a:after, 
 .nav-links .dropbtn:after {
-
   content: '';
   position: absolute;
   width: 0;
@@ -244,16 +252,15 @@ body {
   bottom: -2px;
   left: 50%;
   transform: translateX(-50%);
-  color: var(--nav-link-hover-color);
-  background-color: var(--nav-link-hover-bg);
+  background-color: var(--nav-link-hover-color); /* Underline uses hover color */
   transition: width 0.3s ease;
 }
 .nav-links a:hover, 
 .nav-links .dropbtn:hover {
-  color: var(--nav-link-hover-color);
-  background-color: var(--nav-link-hover-bg);
+  color: var(--nav-link-hover-color); /* Uses the new variable for hover text */
+  background-color: var(--nav-link-hover-bg); /* Subtle background on hover */
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--shadow-glow); 
+  box-shadow: 0 4px 8px var(--shadow-glow); /* Uses --shadow-glow which can be themed */
 }
 .nav-links a:hover:after, 
 .nav-links .dropbtn:hover:after {
@@ -261,7 +268,7 @@ body {
 }
 .nav-links a.active,
 .nav-links .dropbtn.active {
-  color: var(--accent-pink);
+  color: var(--nav-link-hover-color); /* Active state uses hover color */
 }
 .nav-links a.active::after,
 .nav-links .dropbtn.active::after {
@@ -275,7 +282,7 @@ body {
 }
 
 .navbar .nav-links .dropdown .dropdown-content {
-  display: none; /* Hidden by default, JS will toggle .is-open */
+  display: none; 
   position: absolute;
   top: 100%; 
   left: 0;
@@ -313,7 +320,7 @@ body {
 
 .navbar .nav-links .dropdown .dropdown-content a:hover {
   background-color: var(--navbar-dropdown-hover-bg);
-  color: var(--navbar-dropdown-hover-text-color);
+  color: var(--navbar-dropdown-hover-text-color); /* Uses dropdown specific hover text */
   transform: none; 
   box-shadow: none;
 }
@@ -346,7 +353,7 @@ body {
 }
 .theme-toggle:hover {
   background-color: color-mix(in srgb, var(--input-bg) 90%, var(--text-color) 5%);
-  border-color: var(--neon-blue);
+  border-color: var(--neon-blue); /* Uses general themed neon-blue */
   transform: rotate(30deg);
 }
 .theme-toggle svg {
@@ -356,7 +363,7 @@ body {
   transition: fill 0.3s ease;
 }
 .theme-toggle:hover svg {
-  fill: var(--neon-blue);
+  fill: var(--neon-blue); /* Uses general themed neon-blue */
 }
 .sun-icon, .moon-icon { width: 20px; height: 20px; }
 [data-theme="dark"] .sun-icon { display: block; }
@@ -372,7 +379,7 @@ body {
   color: var(--text-color); padding: var(--spacing-xs); margin-left: var(--spacing-sm);
   transition: color 0.3s ease;
 }
-.mobile-menu-btn:hover { color: var(--accent-pink); }
+.mobile-menu-btn:hover { color: var(--nav-link-hover-color); } /* Uses general nav link hover */
 .mobile-menu-btn svg { width: 24px; height: 24px; stroke: currentColor; }
 .mobile-menu {
   position: fixed; top: 70px; left: -100%;
@@ -386,15 +393,16 @@ body {
 }
 .mobile-menu.active { left: 0; }
 .mobile-menu a {
-  color: var(--text-color); text-decoration: none; font-size: 16px;
+  color: var(--nav-link-color); /* Uses nav link color for mobile */
+  text-decoration: none; font-size: 16px;
   padding: var(--spacing-md) var(--spacing-xs);
   border-bottom: 1px solid var(--border-color);
   text-align: left; border-radius: 4px;
   transition: color 0.3s ease, background-color 0.3s ease;
 }
-.mobile-menu a:hover { color: var(--accent-pink); background-color: rgba(255,255,255,0.03); }
+.mobile-menu a:hover { color: var(--nav-link-hover-color); background-color: rgba(255,255,255,0.03); }
 .mobile-menu a:last-child { border-bottom: none; }
-.mobile-menu a.active { color: var(--accent-pink); font-weight: 600; }
+.mobile-menu a.active { color: var(--nav-link-hover-color); font-weight: 600; } /* Active uses hover color */
 .mobile-menu hr { border: none; border-top: 1px solid var(--border-color); margin: var(--spacing-sm) 0; }
 
 .mobile-menu .dropdown-mobile-header {
@@ -406,7 +414,7 @@ body {
   color: var(--text-secondary);
 }
 .mobile-menu .dropdown-mobile-item.active {
-  color: var(--accent-pink) !important;
+  color: var(--nav-link-hover-color) !important; /* Active mobile dropdown item */
 }
 
 
@@ -430,7 +438,8 @@ body {
 }
 .page-title::after {
  content: ''; display: block; width: 70px; height: 3px;
- background: var(--section-title-gradient); margin: var(--spacing-md) auto 0; border-radius: 2px;
+ background: var(--section-title-gradient); /* Uses themed gradient */
+ margin: var(--spacing-md) auto 0; border-radius: 2px;
 }
 .section-title {
   font-size: 2em; margin-bottom: var(--spacing-lg); text-align: center; position: relative;
@@ -438,7 +447,8 @@ body {
 }
 .section-title::after {
   content: ''; display: block; width: 60px; height: 3px;
-  background: var(--section-title-gradient); margin: var(--spacing-sm) auto var(--spacing-lg);
+  background: var(--section-title-gradient); /* Uses themed gradient */
+  margin: var(--spacing-sm) auto var(--spacing-lg);
   border-radius: 2px;
 }
 
@@ -450,11 +460,11 @@ body {
   transition: all 0.3s ease;
 }
 .card:hover {
-  transform: translateY(-5px); box-shadow: 0 10px 25px var(--shadow-glow);
+  transform: translateY(-5px); box-shadow: 0 10px 25px var(--shadow-glow); /* Uses themed glow */
   border-color: var(--card-hover-border);
 }
 [data-theme="light"] .card:hover {
-  box-shadow: 0 10px 25px rgba(var(--neon-blue-rgb, 49, 130, 206), 0.15);
+  box-shadow: 0 10px 25px rgba(var(--neon-blue-rgb, 49, 130, 206), 0.15); /* Neon blue is now department specific */
 }
 
 /* Basic Button Styles */
@@ -462,25 +472,30 @@ body {
     display: inline-block; padding: var(--spacing-sm) var(--spacing-lg);
     border-radius: 5px; font-size: 1rem; font-weight: 500;
     text-align: center; text-decoration: none; cursor: pointer;
-    border: 1px solid var(--button-border-color);
-    background-color: var(--button-bg); color: var(--button-text-color);
+    border: 1px solid var(--button-border-color); /* Uses themed button vars */
+    background-color: var(--button-bg); 
+    color: var(--button-text-color);
     transition: all 0.3s ease;
 }
 .button:hover, button:hover, input[type="submit"]:hover {
-    background-color: var(--button-hover-bg); color: white;
-    border-color: var(--button-hover-bg); transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(255, 59, 92, 0.2);
+    background-color: var(--button-hover-bg); 
+    color: white; /* Often white for hover on colored bg */
+    border-color: var(--button-hover-bg); 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(255, 59, 92, 0.2); /* Specific shadow, maybe make var(--button-shadow)? */
 }
 [data-theme="light"] .button, 
 [data-theme="light"] button, 
 [data-theme="light"] input[type="submit"] {
-    background-color: var(--button-bg); color: var(--button-text-color);
+    background-color: var(--button-bg); 
+    color: var(--button-text-color);
     border-color: var(--button-border-color);
 }
 [data-theme="light"] .button:hover, 
 [data-theme="light"] button:hover, 
 [data-theme="light"] input[type="submit"]:hover {
-    background-color: var(--button-hover-bg); color: white;
+    background-color: var(--button-hover-bg); 
+    color: white; /* Often white for hover on colored bg */
     border-color: var(--button-hover-bg);
 }
 

@@ -1,69 +1,88 @@
 /* --- Root Variables - DERMATOLOGY PALETTE --- */
 :root {
-    /* Dark Theme - Dermatology Palette - NEUTRALIZED BACKGROUND */
-    --bg-secondary: rgba(28, 28, 30, 0.95);
-    --text-primary: white;
-    --text-secondary: rgba(255, 255, 255, 0.7);
+    /* Dark Theme - Dermatology Palette */
+    /* --bg-secondary from base.css is used for card backgrounds for a neutral look */
     
-    /* Dermatology Accents */
-    --primary-accent-derma: #E6B8A2;    /* Soft Peach/Beige */
-    --secondary-accent-derma: #8FBCBB;  /* Dusty Teal */
-    --rgb-secondary-accent-derma: 143, 188, 187;
+    /* Dermatology Accents (Raw palette values) */
+    --raw-derma-primary: #E6B8A2;    
+    --raw-derma-secondary: #8FBCBB;  
+    --raw-derma-primary-rgb: 230, 184, 162; 
+    --raw-derma-secondary-rgb: 143, 188, 187;
 
-    /* Mapped variables */
-    --text-highlight: var(--primary-accent-derma);
-    --accent-color: var(--primary-accent-derma);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --particle-bg: rgba(var(--rgb-secondary-accent-derma), 0.08); 
-    --neon-blue: var(--secondary-accent-derma); /* Re-purposed name, uses derma accent */
-    --hero-bg: rgba(var(--rgb-primary-accent-derma), 0.05);
-    --section-title-gradient: linear-gradient(90deg, var(--primary-accent-derma), var(--secondary-accent-derma));
-    --dept-specific-color-1: var(--primary-accent-derma);
-    --dept-specific-color-2: var(--secondary-accent-derma);
-    --dept-neon-color: var(--secondary-accent-derma);
-    --button-bg: rgba(var(--rgb-primary-accent-derma), 0.7);
-    --button-hover: var(--primary-accent-derma);
-    --accent-pink: var(--primary-accent-derma); /* Mapped from original theme */
-    --accent-white: #ffffff;
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    --blue-glow: rgba(var(--rgb-secondary-accent-derma), 0.15); /* Re-purposed name */
-    --card-hover: rgba(var(--rgb-secondary-accent-derma), 0.3);
+    /* OVERRIDING base.css global theme variables for Dermatology */
+    --primary-color: var(--raw-derma-primary);
+    --accent-color: var(--raw-derma-primary);
+    --text-highlight: var(--raw-derma-primary);
+    
+    /* --border-color inherits from base.css for neutral contrast */
+    --particle-bg: rgba(var(--raw-derma-secondary-rgb), 0.08); 
+    --neon-blue: var(--raw-derma-secondary); 
+    --shadow-glow: rgba(var(--raw-derma-secondary-rgb), 0.15); 
+    --hero-bg: rgba(var(--raw-derma-primary-rgb), 0.05);
+    --section-title-gradient: linear-gradient(90deg, var(--raw-derma-primary), var(--raw-derma-secondary));
+    
+    --nav-link-color: var(--raw-derma-secondary); 
+    --nav-link-hover-color: var(--raw-derma-primary); 
+
+    /* Card theming - uses base.css --card-bg-color for neutral, but hover border is themed */
+    /* --card-bg-color: var(--bg-secondary); /* from base.css */
+    /* --card-hover-bg-color: var(--hover-bg-color); /* from base.css */
+    --card-hover-border: rgba(var(--raw-derma-secondary-rgb), 0.3); 
+
+    --button-bg: rgba(var(--raw-derma-primary-rgb), 0.7);
+    --button-hover-bg: var(--raw-derma-primary);
+    --button-text-color: var(--text-primary); 
+    --button-border-color: var(--raw-derma-primary);
+
+    --emergency-bg: var(--raw-derma-primary); 
+    --emergency-border: var(--raw-derma-primary);
+    --emergency-text: white; 
+    --emergency-hover-bg: color-mix(in srgb, var(--raw-derma-primary) 80%, black);
+    --emergency-hover-text: white;
 }
 
-/* Light Theme - Dermatology Palette - NEUTRALIZED BACKGROUND */
+/* Light Theme - Dermatology Palette */
 [data-theme="light"] {
-    --bg-secondary: rgba(248, 248, 249, 0.95);
-    --text-primary: #4A3B32;
-    --text-secondary: rgba(74, 59, 50, 0.7);
-    --border-color: rgba(74, 59, 50, 0.15);
-
-    /* Dermatology Light Accents */
-    --primary-accent-derma: #D9A58C;    /* Slightly stronger Peach/Beige for light */
-    --secondary-accent-derma: #7EAEAD;  /* Slightly stronger Dusty Teal for light */
-    --rgb-secondary-accent-derma: 126, 174, 173;
+    /* Dermatology Light Accents (Raw palette values) */
+    --raw-derma-primary: #D9A58C;    
+    --raw-derma-secondary: #7EAEAD;  
+    --raw-derma-primary-rgb: 217, 165, 140;
+    --raw-derma-secondary-rgb: 126, 174, 173;
     
-    --text-highlight: var(--primary-accent-derma);
-    --accent-color: var(--primary-accent-derma);
-    --particle-bg: rgba(var(--rgb-secondary-accent-derma), 0.1);
-    --neon-blue: var(--secondary-accent-derma);
-    --hero-bg: rgba(var(--rgb-primary-accent-derma), 0.1);
-    --section-title-gradient: linear-gradient(90deg, var(--primary-accent-derma), var(--secondary-accent-derma));
-    --dept-specific-color-1: var(--primary-accent-derma);
-    --dept-specific-color-2: var(--secondary-accent-derma);
-    --dept-neon-color: var(--secondary-accent-derma);
-    --button-bg: rgba(var(--rgb-primary-accent-derma), 0.8);
-    --button-hover: var(--primary-accent-derma);
-    --accent-pink: var(--primary-accent-derma);
-    --shadow-color: rgba(74, 59, 50, 0.07);
-    --blue-glow: rgba(var(--rgb-secondary-accent-derma), 0.1);
-    --card-hover: rgba(var(--rgb-secondary-accent-derma), 0.25);
+    /* OVERRIDING base.css global theme variables for Dermatology - Light */
+    --primary-color: var(--raw-derma-primary);
+    --accent-color: var(--raw-derma-primary);
+    --text-highlight: var(--raw-derma-primary);
+
+    --particle-bg: rgba(var(--raw-derma-secondary-rgb), 0.1);
+    --neon-blue: var(--raw-derma-secondary);
+    --shadow-glow: rgba(var(--raw-derma-secondary-rgb), 0.1); 
+    --hero-bg: rgba(var(--raw-derma-primary-rgb), 0.1);
+    --section-title-gradient: linear-gradient(90deg, var(--raw-derma-primary), var(--raw-derma-secondary));
+    
+    --nav-link-color: var(--raw-derma-secondary); 
+    --nav-link-hover-color: var(--raw-derma-primary); 
+
+    --card-hover-border: rgba(var(--raw-derma-secondary-rgb), 0.25);
+
+    --button-bg: rgba(var(--raw-derma-primary-rgb), 0.8);
+    --button-hover-bg: var(--raw-derma-primary);
+    --button-text-color: var(--text-primary); 
+    --button-border-color: var(--raw-derma-primary);
+
+    --emergency-bg: var(--raw-derma-primary); 
+    --emergency-border: var(--raw-derma-primary);
+    --emergency-text: var(--text-primary); 
+    --emergency-hover-bg: color-mix(in srgb, var(--raw-derma-primary) 85%, #00000033);
+    --emergency-hover-text: var(--text-primary);
 }
 
 
 /* --- Hero Section Specifics --- */
+
+/* --- Hero Section Specifics --- */
 .hero-section { 
     width: 100%;
-    background-color: var(--hero-bg); 
     position: relative;
     overflow: hidden;
     border-bottom: 1px solid var(--border-color); 
@@ -79,7 +98,7 @@
 .hero-content {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 80px 5% 60px; /* Added some default padding */
+    padding: 5%;
     display: flex;
     align-items: center;
     position: relative;
@@ -95,7 +114,6 @@
 .visual-content {
     flex: 1;
     position: relative;
-    min-height: 400px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -110,22 +128,10 @@
     font-weight: bold;
 }
 
-.hero-content h1 .highlight { /* This class name `highlight` is used in the template from previous discussion */
-    color: var(--text-highlight); /* Uses the mapped derma --text-highlight */
+.hero-content h1 .highlight {
+    color: var(--primary-color); 
     font-weight: bold;
 }
-/* If your hero template uses {{ department.hero_highlight }} and {{ department.hero_main }} */
-/* then style hero-highlight-text and hero-main-text as needed */
-.hero-highlight-text { /* Example if you have this class */
-    color: var(--text-highlight); /* Primary derma accent */
-    display: block; /* or inline, depending on design */
-    font-size: 1.1em; /* Example */
-}
-.hero-main-text {  /* Example if you have this class */
-    color: var(--text-primary); /* Main text color */
-    font-weight: 300; /* Example */
-}
-
 
 .hero-content p {
     color: var(--text-secondary);
@@ -135,6 +141,7 @@
     max-width: 600px;
 }
 
+
 /* Search Bar */
 .search-bar {
     background-color: rgba(255, 255, 255, 0.1);
@@ -143,206 +150,200 @@
     display: flex;
     align-items: center;
     border: 1px solid var(--border-color);
-    max-width: 250px; /* Added max-width */
-    margin-top: 20px; /* Added some margin */
+    max-width: 250px; 
+    margin-top: 20px; 
 }
 .search-bar input {
     background: transparent; border: none; color: var(--text-primary);
-    outline: none; width: 100%; /* Changed to 100% */ font-size: 14px;
+    outline: none; width: 100%; font-size: 14px;
 }
 .search-bar input::placeholder { color: var(--text-secondary); }
-.search-icon { color: var(--text-secondary); margin-right: 8px; /* Increased margin */ }
+.search-icon { color: var(--text-secondary); margin-right: 8px; }
 
-[data-theme="light"] .search-bar { background-color: rgba(var(--rgb-primary-accent-derma), 0.08); border-color: rgba(var(--rgb-primary-accent-derma), 0.3); }
+[data-theme="light"] .search-bar { 
+    background-color: rgba(var(--raw-derma-primary-rgb), 0.08); 
+    border-color: rgba(var(--raw-derma-primary-rgb), 0.3); 
+}
 [data-theme="light"] .search-bar input { color: var(--text-primary); }
 [data-theme="light"] .search-bar input::placeholder { color: var(--text-secondary); }
 [data-theme="light"] .search-icon { color: var(--text-secondary); }
 
 
-/* --- Visual Elements (Example: Skin cells, abstract patterns for Dermatology) --- */
-/* Replacing ECG with something more dermatology-themed if this were derma.css */
-/* For now, I'll theme the existing .animated-ecg-container classes with derma colors */
-/* You would replace the SVG path data for ECG with paths for skin cells or abstract patterns */
-
-.animated-ecg-container { /* Or rename to .animated-pattern-container for derma */
-    position: absolute; bottom: 10%; left: 0; width: 100%; height: 100px;
-    overflow: hidden; z-index: 2;
-    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+/* --- Visual Elements --- */
+.animated-skin-pattern-container { 
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+    z-index: 0;
 }
-.animated-ecg-line { /* Or .animated-pattern-line */
-    width: 200%; height: 100%; position: absolute; left: 0; top: 0; 
+.animated-skin-pattern-container svg {
+    width: 100%; height: 100%;
+    opacity: 0.07; 
 }
-.animated-ecg-line .ecg-segment { /* Or .pattern-segment */
-    fill: none; stroke: var(--dept-neon-color); /* Uses derma secondary accent */
-    stroke-width: 2px;
-    stroke-linecap: round; stroke-linejoin: round;
-    filter: drop-shadow(0 0 5px var(--dept-neon-color)); /* Glow with derma secondary */
-    animation: scroll-ecg 10s linear infinite; /* Keep animation, adjust speed if needed */
-    opacity: 0; transition: opacity 0.4s ease-in-out;
-}
-.animated-ecg-line .ecg-segment.visible-ecg { opacity: 1; }
-@keyframes scroll-ecg { 0% { transform: translateX(0); } 100% { transform: translateX(-800px); } } /* Adjust value based on SVG width */
-
-.cell { /* Could be styled as skin cells for derma */
-    position: absolute; width: 30px; height: 30px; border-radius: 50%; /* or irregular shapes */
-    border: 1px solid var(--dept-neon-color); /* Derma secondary accent */
-    background-color: rgba(var(--rgb-secondary-accent-derma), 0.1); /* Tint of derma secondary */
-    box-shadow: 0 0 10px rgba(var(--rgb-secondary-accent-derma), 0.5); /* Glow with derma secondary */
-    z-index: 2;
-}
-[data-theme="light"] .cell {
-    border-color: var(--dept-neon-color); /* Derma secondary accent for light theme */
-    background-color: rgba(var(--rgb-secondary-accent-derma), 0.15);
-    box-shadow: 0 0 10px rgba(var(--rgb-secondary-accent-derma), 0.4);
+.animated-skin-pattern-container svg rect {
+    fill: url(#skinPattern); 
 }
 
-.heart-image { /* Rename to .derma-visual-element or similar if not hearts */
-    position: absolute; width: 50px; height: 50px; object-fit: contain;
-    z-index: -1; opacity: 0.8; pointer-events: none;
-    /* Example: Could be an SVG of a skin layer, a leaf, or an abstract shape */
-    /* For derma, could use filter: hue-rotate() on an image if using a generic icon */
+.floating-icon {
+    position: absolute;
+    animation: floatAnimation 6s ease-in-out infinite alternate;
+    opacity: 0.7;
 }
-.visual-content .heart-image { z-index: 3; width: 40px; height: 40px; }
-.main-content .heart-image { z-index: -1; }
+@keyframes floatAnimation {
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(-5deg); }
+}
+.skin-cell-icon svg circle:first-child { fill: var(--particle-bg); stroke: var(--neon-blue); }
+.skin-cell-icon svg circle:last-child { fill: var(--primary-color); }
+.skin-cell-icon svg path { stroke: color-mix(in srgb, var(--neon-blue) 50%, transparent); }
+
+.lotion-bottle-icon svg rect:first-child { fill: white; stroke: var(--border-color); }
+.lotion-bottle-icon svg rect:nth-child(2) { fill: var(--raw-derma-secondary); } /* Using raw color */
+.lotion-bottle-icon svg rect:last-child { fill: var(--raw-derma-secondary); } /* Using raw color */
+
+
+.derma-image { 
+    position: absolute;
+    object-fit: contain;
+    pointer-events: none;
+}
 
 
 /* --- Main Content & Disease/Condition Cards --- */
 .main-content {
     padding: 40px 5%; position: relative; overflow: hidden;
-    margin-top: 0px; /* Adjusted, hero has padding */
+    margin-top: 0px; 
 }
 
 .section-title { 
     font-size: 32px; margin-bottom: 20px; text-align: center; position: relative;
-    color: var(--text-primary); font-weight: bold;
+    color: var(--text-primary); 
+    font-weight: bold;
 }
 .section-title::after {
     content: ''; display: block; width: 60px; height: 3px;
-    background: var(--section-title-gradient); /* Uses derma gradient */
+    background: var(--section-title-gradient); 
     margin: 15px auto 30px; border-radius: 2px;
 }
 
-.diseases-section { margin: 60px 0; } /* Adjusted margin */
-.diseases { /* This is for listing conditions/diseases */
+.diseases-section { margin: 60px 0; } 
+.diseases { 
     display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;
 }
 
-/* Card styling for conditions */
-.card { /* This refers to condition cards on the department landing page */
-    background-color: var(--card-bg); /* Base card bg */
-    border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);
-    display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease;
-    box-shadow: var(--shadow-color); 
+/* CARD STYLING - Standardized to match cardio.css structure */
+.card { 
+    background-color: var(--card-bg-color); /* This will be base.css --bg-secondary */
+    border-radius: var(--border-radius, 12px);
+    overflow: hidden; 
+    border: 1px solid var(--border-color);
+    display: flex; 
+    flex-direction: column; 
+    height: 100%; 
+    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow, 0 5px 15px rgba(0,0,0,0.1));
 }
 .card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px var(--blue-glow); /* Uses derma accent glow */
-    border-color: var(--card-hover); /* Uses derma accent hover border */
-}
-[data-theme="light"] .card {
-    background-color: var(--card-bg); /* Light theme card bg */
-}
-[data-theme="light"] .card:hover {
-    box-shadow: 0 15px 35px var(--blue-glow);
-    border-color: var(--card-hover);
+    background-color: var(--card-hover-bg-color); /* This will be base.css --hover-bg-color */
+    transform: translateY(-10px); 
+    box-shadow: 0 15px 35px var(--shadow-glow); 
+    border-color: var(--card-hover-border); 
 }
 
-.card .content { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
-.card h3 { /* Changed to H3 for semantic correctness for condition names in a list, H1 is for page title */
-    font-size: 22px; margin-bottom: 15px; color: var(--text-primary);
-    position: relative; padding-bottom: 10px; line-height: 1.3; font-weight: bold;
+.card .content { 
+    padding: var(--spacing-lg, 25px);
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
 }
-.card h3::after { 
-    content: ''; position: absolute; bottom: 0; left: 0; width: 40px; height: 2px;
-    background: var(--section-title-gradient); /* Derma gradient for card titles */
+.card h1 { /* Title within condition card on department landing */
+    font-size: 22px; 
+    margin-bottom: var(--spacing-md, 15px); 
+    color: var(--text-primary);
+    position: relative; 
+    padding-bottom: var(--spacing-sm, 10px); 
+    line-height: 1.3; 
+    font-weight: bold;
+}
+.card h1::after { 
+    content: ''; 
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    width: 40px; 
+    height: 2px;
+    background: var(--section-title-gradient); 
 }
 
 .image-text-container {
-    display: flex; flex-direction: column; align-items: center; gap: 15px;
-    margin-bottom: 20px; flex-grow: 1;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: var(--spacing-md, 15px);
+    margin-bottom: var(--spacing-lg, 20px); 
+    flex-grow: 1;
 }
-.image-text-container img { /* This is for the condition image */
-    width: 100%; /* Make image responsive within its container */
-    max-width: 150px; /* Control max size */
-    height: auto; /* Maintain aspect ratio */
-    aspect-ratio: 1 / 1; /* Make it square, adjust as needed */
-    object-fit: cover; /* Or contain, depending on image style */
-    border-radius: 8px;
-    background-color: rgba(var(--rgb-secondary-accent-derma), 0.05); /* Subtle bg with derma accent */
+.image-text-container img { 
+    width: 85px; 
+    height: 100px; 
+    object-fit: contain; 
+    border-radius: var(--border-radius-sm, 8px);
+    background-color: rgba(var(--raw-derma-secondary-rgb), 0.05); 
     display: block;
 }
-[data-theme="light"] .image-text-container img { background-color: rgba(var(--rgb-secondary-accent-derma), 0.08); }
+[data-theme="light"] .image-text-container img { background-color: rgba(var(--raw-derma-secondary-rgb), 0.08); }
 
-.image-text-container p { /* Condition short description */
-    font-size: 14px; color: var(--text-secondary); line-height: 1.5;
+.image-text-container p { 
+    font-size: 14px; color: var(--text-secondary); 
+    line-height: 1.5;
     margin-bottom: 0; text-align: center;
-    /* For controlling text lines (optional) */
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* Show 3 lines */
+    -webkit-line-clamp: 3; 
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    min-height: calc(1.5em * 3); /* Reserve space for 3 lines */
+    min-height: calc(1.5em * 3); 
 }
 
-/* Button Styling */
+/* BUTTON STYLING - Standardized to match cardio.css structure */
 .btn {
-    background-color: var(--button-bg); 
-    color: var(--accent-white); 
-    border: 1px solid var(--accent-pink); /* Mapped to derma primary */
-    padding: 10px 20px; /* Adjusted padding */
-    border-radius: 5px; text-decoration: none;
-    font-size: 14px; transition: all 0.3s; display: block; cursor: pointer;
-    text-align: center; font-weight: 500; /* Adjusted weight */
+    background-color: var(--button-bg);
+    color: var(--button-text-color);
+    padding: var(--spacing-sm, 12px) var(--spacing-lg, 25px);
+    border-radius: var(--border-radius-sm, 5px);
+    text-decoration: none;
+    border: 1px solid var(--button-border-color);
+    font-size: 14px;
+    transition: all 0.3s;
+    display: block;
+    cursor: pointer;
+    text-align: center;
+    font-weight: bold;
     box-sizing: border-box;
-    width: auto; /* Let content define width, or set specific */
-    margin: 0 auto; /* Center if block */
 }
 .btn:hover {
-    background-color: var(--button-hover); 
-    color: white; transform: translateY(-2px);
+    background-color: var(--button-hover-bg);
+    color: white; 
+    border-color: var(--button-hover-bg); 
+    transform: translateY(-2px);
     box-shadow: 0 5px 15px var(--shadow-color); 
 }
-.card .btn { /* Button within a condition card */
-    width: auto; /* Auto width based on text */
-    max-width: 85%; /* Max width */
-    margin: 20px auto 0; /* Margin top, auto horizontal, no bottom margin from btn itself */
-    padding: 12px 25px;
+.card .btn { 
+    width: 85%; 
+    margin: var(--spacing-md, 15px) auto var(--spacing-lg, 25px); 
 }
 
-/* Emergency button (typically global, but theming its non-emergency aspects) */
-.emergency-btn { /* This button often has its own distinct (e.g., red) global theme */
-    background-color: var(--emergency-bg, #D32F2F); /* Fallback to a red if not defined globally */
-    color: var(--emergency-text-color, white);
-    border: 1px solid var(--emergency-border-color, #D32F2F);
-    /* Ensure it uses global emergency colors if they exist, otherwise provide fallbacks */
-    /* Original provided CSS used accent-pink, so mapping that intent */
-    /* background-color: var(--accent-pink); */
-    /* color: white; border: 1px solid var(--accent-pink); */
+.emergency-btn { 
+    background-color: var(--emergency-bg); 
+    color: var(--emergency-text);
+    border: 1px solid var(--emergency-border);
     display: inline-block; width: auto; margin: 0;
 }
 .emergency-btn:hover {
-     background-color: color-mix(in srgb, var(--accent-pink) 80%, black); /* Darken derma accent */
-     border-color: color-mix(in srgb, var(--accent-pink) 80%, black);
-}
-[data-theme="light"] .emergency-btn { 
-    background-color: var(--accent-pink); color: white;
-    border: 1px solid var(--accent-pink);
-}
-[data-theme="light"] .emergency-btn:hover {
-    background-color: color-mix(in srgb, var(--accent-pink) 70%, black); /* Darken for light theme */
-    border-color: color-mix(in srgb, var(--accent-pink) 70%, black);
-}
-
-/* Light mode general button */
-[data-theme="light"] .btn:not(.emergency-btn) {
-    background-color: var(--button-bg);
-    color: var(--text-primary); border-color: var(--accent-pink);
-}
-[data-theme="light"] .btn:not(.emergency-btn):hover {
-     background-color: var(--button-hover); color: white;
-     box-shadow: 0 5px 15px var(--shadow-color);
+     background-color: var(--emergency-hover-bg); 
+     border-color: var(--emergency-border);
+     color: var(--emergency-hover-text);
 }
 
 
@@ -353,27 +354,26 @@
     .hero-content p { max-width: 100%; }
     .visual-content { min-height: 300px; width: 80%; margin-top: 30px; }
     .search-bar { margin-left: auto; margin-right: auto; }
-    .animated-ecg-container { height: 80px; bottom: 5%; }
+    .animated-skin-pattern-container { height: 80px; bottom: 5%; }
 }
 @media (max-width: 768px) {
-    .hero-section { padding-top: 40px; padding-bottom: 40px; } /* Assuming navbar height handled elsewhere */
+    .hero-section { padding-top: 40px; padding-bottom: 40px; } 
     .hero-content h1 { font-size: 32px; }
-    .diseases { grid-template-columns: 1fr; } /* Single column for diseases on smaller screens */
+    .diseases { grid-template-columns: 1fr; } 
     .search-bar { width: 90%; max-width: none; }
     .main-content { padding: 20px 5%; }
     .section-title { font-size: 28px; }
-    .animated-ecg-container { height: 60px; }
-    .card h3 { font-size: 20px; } /* Adjust card title size */
+    .animated-skin-pattern-container { height: 60px; }
+    .card h1 { font-size: 20px; } 
 }
 @media (max-width: 480px) {
     .hero-section { padding-top: 30px; padding-bottom: 30px; }
     .hero-content h1 { font-size: 28px; }
     .hero-content p { font-size: 15px; }
     .btn, .card .btn { padding: 10px 20px; font-size: 13px; }
-    .card h3 { font-size: 18px; }
+    .card h1 { font-size: 18px; }
     .image-text-container img { max-width: 120px; }
     .image-text-container p { font-size: 13px; -webkit-line-clamp: 2; min-height: calc(1.5em * 2); }
     .section-title { font-size: 24px; }
-    .animated-ecg-container { display: none; } /* Hide complex animation on very small screens */
+    .animated-skin-pattern-container { display: none; } 
 }
-/* --- END OF THEMED DEPARTMENT CSS --- */

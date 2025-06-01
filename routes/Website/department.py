@@ -1,6 +1,6 @@
 # routes/Website/department.py
 
-from flask import Blueprint, render_template, current_app, abort, url_for
+from flask import Blueprint, render_template, current_app, abort, url_for, request # Added request
 import mysql.connector
 import sys
 import os
@@ -92,7 +92,8 @@ def get_department_by_id(dept_id):
         if conn and conn.is_connected(): conn.close()
     return department
 
-def get_conditions_by_department(dept_id):
+# MODIFIED to accept search_term
+def get_conditions_by_department(dept_id, search_term=None):
     conditions = []; conn = None; cursor = None
     logger = current_app.logger if current_app else print
     SNIPPET_LENGTH_LIST = 100
@@ -101,17 +102,35 @@ def get_conditions_by_department(dept_id):
         if not conn: 
             getattr(logger, 'error', print)(f"DB conn failed for conditions in dept {dept_id}"); return []
         cursor = conn.cursor(dictionary=True)
-        # MODIFIED QUERY to include specialization_name
-        query = """
+        
+        params = [dept_id]
+        # Base query
+        base_query = """
             SELECT 
                 c.condition_id, c.condition_name, c.description, c.condition_image_filename,
                 s.name AS specialization_name
             FROM conditions c
             LEFT JOIN specializations s ON c.specialization_id = s.specialization_id
             WHERE c.department_id = %s AND c.is_active = TRUE 
-            ORDER BY c.condition_name ASC
         """
-        cursor.execute(query, (dept_id,))
+        
+        # Add search condition if search_term is provided
+        if search_term:
+            search_like = f"%{search_term.lower()}%" # Prepare for LIKE comparison, ensure lowercase for DB
+            base_query += """
+                AND (LOWER(c.condition_name) LIKE %s 
+                     OR LOWER(c.description) LIKE %s 
+                     OR LOWER(s.name) LIKE %s)
+            """
+            # Split search term for multi-word search in name (more advanced)
+            # For now, we'll match the whole term against name, description, and specialization
+            params.extend([search_like, search_like, search_like])
+            getattr(logger, 'info', print)(f"Searching conditions in dept {dept_id} for term: '{search_term}'")
+
+
+        base_query += " ORDER BY c.condition_name ASC"
+        
+        cursor.execute(base_query, tuple(params))
         for cond_data in cursor.fetchall():
             img_file_from_db = cond_data.get('condition_image_filename')
             if img_file_from_db and current_app and 'UPLOAD_FOLDER_CONDITIONS' in current_app.config and get_relative_path_for_db:
@@ -122,16 +141,14 @@ def get_conditions_by_department(dept_id):
                     cond_data['image_url'] = url_for('static', filename=relative_image_path)
                 else:
                     cond_data['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
-                    getattr(logger, 'warning', print)(f"Could not generate relative path for condition image: {actual_filename} (original: {img_file_from_db}) in dept {dept_id}. Using placeholder.")
             else:
                 cond_data['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
             
             cond_data['name'] = cond_data.get('condition_name')
             desc = cond_data.get('description', '')
             cond_data['short_description'], _ = create_snippet(desc, SNIPPET_LENGTH_LIST)
-            # specialization_name is already in cond_data from the query
             conditions.append(cond_data)
-    except Exception as e: getattr(logger, 'exception', print)(f"Error fetching conditions for dept {dept_id}: {e}")
+    except Exception as e: getattr(logger, 'exception', print)(f"Error fetching conditions for dept {dept_id} (search: {search_term}): {e}")
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
@@ -146,7 +163,6 @@ def get_condition_details_by_id(condition_id):
         if not conn: 
             getattr(logger, 'error', print)(f"DB conn failed for condition ID {condition_id}"); return None
         cursor = conn.cursor(dictionary=True)
-        # MODIFIED QUERY to include specialization_name
         query = """
             SELECT 
                 c.*, c.condition_name AS name, 
@@ -186,7 +202,6 @@ def get_condition_details_by_id(condition_id):
             elif dept_name == 'Dermatology': condition['specific_css'] = 'Website/Conditions/dermadisease.css'
             else: condition['specific_css'] = 'Website/Conditions/generic_disease.css'
             condition['self_treatable_display'] = 'Yes' if condition.get('self_treatable') else ('No' if condition.get('self_treatable') is not None else 'N/A')
-            # specialization_name is already in condition from the query
     except Exception as e: getattr(logger, 'exception', print)(f"Error fetching condition ID {condition_id}: {e}")
     finally:
         if cursor: cursor.close()
@@ -206,28 +221,34 @@ def list_departments():
         current_app.logger.info(f"No departments to display after excluding '{excluded_department_name}'.")
     return render_template('Website/Departments/department_list.html', departments=departments_to_display)
 
-@department_bp.route('/<int:dept_id>/')
+# MODIFIED to handle search
+@department_bp.route('/<int:dept_id>/', methods=['GET']) # Ensure methods=['GET'] if form uses GET
 def department_landing(dept_id):
     department = get_department_by_id(dept_id)
     if not department:
         abort(404, description=f"Department with ID {dept_id} not found.")
+    
     excluded_department_name = "Nutrition Services"
     if department.get('name', '').strip().lower() == excluded_department_name.lower():
         abort(404, description="This department page is not available.")
-    department_conditions = get_conditions_by_department(dept_id) # This now includes specialization_name
-    return render_template('Website/Departments/department_landing.html', department=department, conditions=department_conditions)
+
+    search_query = request.args.get('search', '').strip() # Get search query from URL
+    
+    department_conditions = get_conditions_by_department(dept_id, search_term=search_query)
+    
+    return render_template(
+        'Website/Departments/department_landing.html', 
+        department=department, 
+        conditions=department_conditions,
+        search_term=search_query # Pass search term to template to repopulate input
+    )
 
 @department_bp.route('/condition/<int:condition_id>/')
 def condition_detail_page(condition_id): 
-    # This route is less used now that disease_info.view_condition is primary,
-    # but get_condition_details_by_id() is updated for consistency.
     condition = get_condition_details_by_id(condition_id)
     if not condition:
         abort(404, description=f"Condition with ID {condition_id} not found.")
     
-    # Note: Doctor fetching logic here would also need adjustment if this page were primary
-    # For now, it will show doctors from the condition's department.
-    # The main `disease_info.view_condition` route handles specialization-specific doctors.
     related_doctors = []
     department_id_for_condition = condition.get('department_id')
     if department_id_for_condition:
@@ -236,8 +257,6 @@ def condition_detail_page(condition_id):
             conn_doc = get_db_connection()
             if conn_doc:
                 cursor_doc = conn_doc.cursor(dictionary=True, buffered=True)
-                # Basic doctor fetching by department (as it was)
-                # For specialization-specific doctors, use the `disease_info.py` route.
                 cursor_doc.execute("""
                     SELECT u.user_id, u.first_name, u.last_name, d.profile_photo_url, s.name AS specialization_name, d.biography
                     FROM users u JOIN doctors d ON u.user_id = d.user_id LEFT JOIN specializations s ON d.specialization_id = s.specialization_id

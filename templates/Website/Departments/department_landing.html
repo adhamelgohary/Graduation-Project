@@ -46,11 +46,11 @@
         margin-right: 15px;
         margin-bottom: 15px;
     }
-    .condition-specialization { /* New style for specialization */
+    .condition-specialization {
         font-size: 0.85em;
         color: var(--text-muted, #6c757d);
         margin-bottom: 0.5rem;
-        display: block; /* Ensures it takes its own line if needed */
+        display: block; 
     }
     .condition-specialization .fa-tags {
         margin-right: 0.3em;
@@ -66,7 +66,7 @@
         }
     }
      .no-conditions-message {
-         grid-column: 1 / -1;
+         grid-column: 1 / -1; /* Span across all columns in the grid */
          text-align: center;
          padding: 40px 20px;
          color: var(--text-secondary);
@@ -74,6 +74,38 @@
          border-radius: 8px;
          border: 1px dashed var(--border-color);
      }
+    .department-search-form { /* Style for the search form */
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px; /* Space below the search bar */
+        align-items: center;
+    }
+    .department-search-form input[type="search"] {
+        flex-grow: 1;
+        padding: 0.6em 1em;
+        border: 1px solid var(--border-color-light, #ccc);
+        border-radius: var(--border-radius-lg, 0.5rem);
+        font-size: 1rem;
+    }
+    .department-search-form button {
+        padding: 0.6em 1.2em;
+        font-size: 1rem;
+        background-color: var(--accent-primary, #007bff);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius-lg, 0.5rem);
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    .department-search-form button:hover {
+        background-color: var(--accent-primary-dark, #0056b3);
+    }
+    .department-search-form .clear-search-btn {
+        background-color: var(--accent-secondary, #6c757d);
+    }
+    .department-search-form .clear-search-btn:hover {
+        background-color: var(--accent-secondary-dark, #545b62);
+    }
   </style>
 {% endblock %}
 
@@ -88,13 +120,19 @@
     <div class="text-content">
         <h1>Advanced <span class="highlight">{{ department.hero_highlight | default('Medical') }}</span> Care, <br>Innovative <span class="highlight">{{ department.hero_main | default('Health') }}</span> <br>Treatments</h1>
         <p>{{ department.description | default('Learn more about our specialized services.') }}</p>
-        <div class="search-bar">
-            <span class="search-icon">🔍</span>
-            <input type="text" placeholder="Search {{ department.name | default('Conditions') }}...">
-        </div>
+        {# MODIFIED: Search bar is now a form #}
+        <form method="GET" action="{{ url_for('department.department_landing', dept_id=department.department_id) }}" class="search-bar-form">
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="search" name="search" placeholder="Search {{ department.name | default('Conditions') }}..." value="{{ search_term | default('', True) }}">
+                {# Removed explicit submit button, form submission can be triggered by Enter key #}
+                {# Or add a button if preferred: <button type="submit" class="button-primary">Search</button> #}
+            </div>
+        </form>
     </div>
 
     <div class="visual-content">
+        {# ... (visual content remains the same) ... #}
         {% if department.hero_images %}
             {% for img_src in department.hero_images %}
                 <img src="{{ url_for('static', filename=img_src) }}" alt="Decorative Element" class="{{ department.hero_main | lower }}-image"
@@ -251,17 +289,30 @@
      {% endif %}
      
 <div class="conditions-section">
-    <h2 class="section-title">{{ department.name }} Conditions</h2>
+    <h2 class="section-title">{{ department.name }} Conditions
+        {% if search_term %}
+            <small class="text-muted fs-6">(Results for "{{ search_term }}")</small>
+        {% endif %}
+    </h2>
+
+    {# Client-side search/filter input - if needed for further filtering on displayed results #}
+    {# For now, server-side search is primary, this is an optional enhancement #}
+    {# 
+    <form class="department-search-form" id="clientSideSearchForm" style="display: none;">  {# Hide if not using client-side search yet #}
+    {#    <input type="search" id="conditionClientSearch" placeholder="Filter displayed conditions..." class="form-control">
+    {#    <button type="button" id="clearClientSearchBtn" class="btn btn-sm btn-outline-secondary">Clear</button>
+    {# </form> 
+    #}
+
     <div class="conditions">
         {% if conditions %}
             {% for condition in conditions %}
-            <div class="card">
+            <div class="card condition-card-item" data-condition-name="{{ condition.name | lower }}" data-condition-specialization="{{ condition.specialization_name | lower if condition.specialization_name else '' }}">
                 <div class="image-container">
                     <img src="{{ condition.image_url | default(url_for('static', filename='images/conditions/disease_placeholder.png')) }}" alt="{{ condition.name | default('Condition image') }}">
                 </div>
                 <div class="content">
                     <h1>{{ condition.name | default('Condition') }}</h1>
-                    {# ADDED Specialization display #}
                     {% if condition.specialization_name %}
                     <span class="condition-specialization">
                         <i class="fas fa-tags"></i> {{ condition.specialization_name }}
@@ -274,7 +325,11 @@
             {% endfor %}
         {% else %}
             <p class="no-conditions-message">
-                No specific conditions listed for this department yet.
+                {% if search_term %}
+                    No conditions found matching "{{ search_term }}" in this department.
+                {% else %}
+                    No specific conditions listed for this department yet.
+                {% endif %}
             </p>
         {% endif %}
     </div>
@@ -326,4 +381,55 @@
 </script>
 {% endif %}
 
+{# Optional: Client-side filtering script (can be added here if desired) #}
+{#
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const clientSearchInput = document.getElementById('conditionClientSearch');
+    const clearClientSearchButton = document.getElementById('clearClientSearchBtn');
+    const conditionCards = document.querySelectorAll('.condition-card-item');
+    const noConditionsMessage = document.querySelector('.no-conditions-message'); // Assuming you might want to show/hide this too
+
+    if (clientSearchInput) { // Only run if client-side search elements exist
+        function filterConditions() {
+            const searchTerm = clientSearchInput.value.toLowerCase().trim();
+            let found = false;
+            conditionCards.forEach(card => {
+                const name = card.dataset.conditionName.toLowerCase();
+                const specialization = card.dataset.conditionSpecialization.toLowerCase();
+                const description = card.querySelector('p') ? card.querySelector('p').textContent.toLowerCase() : '';
+                
+                if (name.includes(searchTerm) || specialization.includes(searchTerm) || description.includes(searchTerm)) {
+                    card.style.display = ''; // Or 'flex' or 'block' depending on your layout needs
+                    found = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            if (noConditionsMessage) {
+                 noConditionsMessage.style.display = found ? 'none' : 'block';
+                 if (found && searchTerm) { // Hide "no conditions listed yet" if search term provides results
+                    if (noConditionsMessage.textContent.includes("No specific conditions listed")) {
+                        noConditionsMessage.style.display = 'none';
+                    }
+                 } else if (!found && searchTerm) {
+                     noConditionsMessage.textContent = `No conditions found matching "${clientSearchInput.value}" in this department.`;
+                 } else if (!found && !searchTerm) {
+                      noConditionsMessage.textContent = "No specific conditions listed for this department yet.";
+                 }
+            }
+        }
+
+        clientSearchInput.addEventListener('input', filterConditions);
+
+        if (clearClientSearchButton) {
+            clearClientSearchButton.addEventListener('click', function() {
+                clientSearchInput.value = '';
+                filterConditions(); // Re-apply filter (which will show all)
+            });
+        }
+    }
+});
+</script>
+#}
 {% endblock %}

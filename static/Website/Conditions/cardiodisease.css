@@ -1,126 +1,116 @@
-/* === UNIFIED CARDIOLOGY PALETTE === */
+/* --- Root Variables - CARDIOLOGY PALETTE (FOR DISEASE DETAIL PAGE) --- */
 :root {
-    /* -- ACCENTS -- */
-    --cardio-primary-accent: #FF6B6B; /* Main Pink/Red */
-    --cardio-rgb-primary-accent: 255, 107, 107;
-    --cardio-secondary-accent: #FFBABA; /* Lighter Pink */
-    --cardio-rgb-secondary-accent: 255, 186, 186;
+    /* Dark Theme - Cardiology Palette */
+    --raw-cardio-primary: #FF6B6B;
+    --raw-cardio-primary-rgb: 255, 107, 107;
+    --raw-cardio-secondary: #FFBABA;
+    --raw-cardio-secondary-rgb: 255, 186, 186;
 
-    /* -- DARK THEME: BASE COLORS -- */
-    --dark-text-main: white;
-    --dark-text-subtle: rgba(255, 255, 255, 0.75);
-    --dark-border-standard: rgba(var(--cardio-rgb-primary-accent), 0.3);
-    --dark-border-light: rgba(var(--cardio-rgb-primary-accent), 0.2);
-    --dark-shadow-main: rgba(0, 0, 0, 0.2);
-    --dark-particle-dot-bg: rgba(var(--cardio-rgb-secondary-accent), 0.08);
+    /* OVERRIDING base.css global theme variables for Cardiology Disease Detail */
+    --primary-color: var(--raw-cardio-primary);
+    --accent-color: var(--raw-cardio-primary); 
+    --text-highlight: var(--raw-cardio-primary);
+    
+    --border-color: rgba(var(--raw-cardio-primary-rgb), 0.25); 
+    --border-color-light: rgba(var(--raw-cardio-primary-rgb), 0.15); 
+    
+    --particle-bg: rgba(var(--raw-cardio-secondary-rgb), 0.08); 
+    --neon-blue: var(--raw-cardio-primary); 
+    --shadow-glow: rgba(var(--raw-cardio-primary-rgb), 0.2); 
+    --hero-bg: rgba(var(--raw-cardio-primary-rgb), 0.07); 
+    --section-title-gradient: linear-gradient(90deg, var(--raw-cardio-primary), var(--raw-cardio-secondary));
+    --section-title-undl-gradient: var(--section-title-gradient); 
+    
+    --nav-link-color: var(--raw-cardio-secondary); 
+    --nav-link-hover-color: var(--raw-cardio-primary); 
+    
+    --card-bg-color: rgba(var(--raw-cardio-primary-rgb), 0.08); 
+    --card-hover-bg-color: rgba(var(--raw-cardio-primary-rgb), 0.15); 
+    --card-hover-border: rgba(var(--raw-cardio-primary-rgb), 0.4);
+    --nested-card-bg: rgba(var(--raw-cardio-primary-rgb), 0.05); 
 
-    /* -- DARK THEME: TRANSPARENT ELEMENT BACKGROUNDS -- */
-    --dark-bg-card: rgba(var(--cardio-rgb-primary-accent), 0.1);
-    --dark-bg-card-hover: rgba(var(--cardio-rgb-primary-accent), 0.18);
-    --dark-bg-card-nested: rgba(var(--cardio-rgb-secondary-accent), 0.1);
-    --dark-bg-button: rgba(var(--cardio-rgb-primary-accent), 0.25);
-    --dark-bg-button-hover: rgba(var(--cardio-rgb-primary-accent), 0.4);
-    --dark-bg-nav-link-hover: rgba(var(--cardio-rgb-primary-accent), 0.12); /* Subtle for nav */
-    --dark-bg-dropdown: rgba(var(--cardio-rgb-primary-accent), 0.22);
-    --dark-bg-hero: rgba(var(--cardio-rgb-primary-accent), 0.07);
-    --dark-bg-emergency: rgba(var(--cardio-rgb-primary-accent), 0.2);
-    --dark-bg-doctor-avatar: rgba(var(--cardio-rgb-primary-accent), 0.1);
+    --button-bg: rgba(var(--raw-cardio-primary-rgb), 0.2);
+    --button-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.35);
+    --button-text-color: var(--raw-cardio-primary); 
+    --button-border-color: var(--raw-cardio-primary); 
 
+    --emergency-bg: rgba(var(--raw-cardio-primary-rgb), 0.3); 
+    --emergency-border: var(--raw-cardio-primary);
+    --emergency-text: var(--raw-cardio-primary); 
+    --emergency-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.5);
+    --emergency-hover-text: white; 
 
-    /* -- LIGHT THEME: BASE COLORS -- */
-    --light-text-main: #523636; /* Darker, slightly desaturated red-brown */
-    --light-text-subtle: rgba(82, 54, 54, 0.75);
-    --light-border-standard: rgba(var(--cardio-rgb-primary-accent), 0.35); /* Using light theme primary accent */
-    --light-border-light: rgba(var(--cardio-rgb-primary-accent), 0.25); /* Using light theme primary accent */
-    --light-shadow-main: rgba(82, 54, 54, 0.12);
-    --light-particle-dot-bg: rgba(var(--cardio-rgb-secondary-accent), 0.1); /* Using light theme secondary accent */
+    --icon-color-main: var(--raw-cardio-primary);
+    --interactive-text-color: var(--raw-cardio-secondary);
+    --shadow-effect: 0 5px 15px rgba(var(--raw-cardio-primary-rgb), 0.08);
+    --doctor-avatar-bg-color: rgba(var(--raw-cardio-secondary-rgb), 0.1);
 
-    /* -- LIGHT THEME: TRANSPARENT ELEMENT BACKGROUNDS -- */
-    --light-bg-card: rgba(var(--cardio-rgb-primary-accent), 0.07);
-    --light-bg-card-hover: rgba(var(--cardio-rgb-primary-accent), 0.15);
-    --light-bg-card-nested: rgba(var(--cardio-rgb-secondary-accent), 0.08);
-    --light-bg-button: rgba(var(--cardio-rgb-primary-accent), 0.2);
-    --light-bg-button-hover: rgba(var(--cardio-rgb-primary-accent), 0.35);
-    --light-bg-nav-link-hover: rgba(var(--cardio-rgb-primary-accent), 0.1); /* Subtle for nav */
-    --light-bg-dropdown: rgba(var(--cardio-rgb-primary-accent), 0.18);
-    --light-bg-hero: rgba(var(--cardio-rgb-primary-accent), 0.06);
-    --light-bg-emergency: rgba(var(--cardio-rgb-primary-accent), 0.15);
-    --light-bg-doctor-avatar: rgba(var(--cardio-rgb-primary-accent), 0.08);
-
-
-    /* -- GENERIC MAPPINGS (Dark theme defaults, overridden by [data-theme="light"]) -- */
-    --text-color: var(--dark-text-main);
-    --text-secondary: var(--dark-text-subtle);
-    --border-color: var(--dark-border-standard);
-    --border-color-light: var(--dark-border-light); /* Used for less prominent borders */
-    --shadow-effect: var(--dark-shadow-main);
-    --particle-bg: var(--dark-particle-dot-bg);
-
-    --card-bg-color: var(--dark-bg-card);
-    --card-hover-bg-color: var(--dark-bg-card-hover);
-    --nested-card-bg: var(--dark-bg-card-nested);
-    --button-bg-color: var(--dark-bg-button); /* For generic buttons if any */
-    --button-hover-bg-color: var(--dark-bg-button-hover); /* For generic buttons if any */
-    --nav-link-hover-bg-color: var(--dark-bg-nav-link-hover);
-    --dropdown-bg-color: var(--dark-bg-dropdown);
-    --hero-bg-color: var(--dark-bg-hero); /* If a hero-like banner is used on disease page */
-    --emergency-bg-color: var(--dark-bg-emergency);
-    --doctor-avatar-bg-color: var(--dark-bg-doctor-avatar);
-    --header-component-bg: var(--dark-bg-card); /* For .header in this file */
-
-    /* -- SHARED INTERACTIVE & ACCENT COLORS -- */
-    --icon-color-main: var(--cardio-primary-accent);
-    --section-title-undl-gradient: linear-gradient(90deg, var(--cardio-primary-accent), var(--cardio-secondary-accent));
-    --interactive-text-color: var(--cardio-primary-accent); /* For read-more, etc. */
-    --nav-link-text-default-color: var(--text-color); /* Default color of nav links */
-    --nav-link-text-hover-color: var(--cardio-primary-accent); /* Link text turns pink on hover */
-    --emergency-text-color: var(--cardio-primary-accent);
-    --emergency-border-color: var(--cardio-primary-accent); /* Solid accent border for emergency */
-
-    /* -- LAYOUT & TYPOGRAPHY -- */
-    --border-radius: 12px;
-    --spacing-xs: 5px;
-    --spacing-sm: 10px;
-    --spacing-md: 15px;
-    --spacing-lg: 25px;
-    --spacing-xl: 40px;
-    --font-main: 'Arial', sans-serif;
+    --animation-duration-fast: 0.2s;
+    --animation-duration-normal: 0.3s;
+    --animation-duration-slow: 0.5s;
+    --animation-timing-function: ease-in-out;
 }
 
+/* Light Theme - Cardiology Palette */
 [data-theme="light"] {
-    /* Override generic mappings with light theme specifics */
-    --text-color: var(--light-text-main);
-    --text-secondary: var(--light-text-subtle);
-    --border-color: var(--light-border-standard);
-    --border-color-light: var(--light-border-light);
-    --shadow-effect: var(--light-shadow-main);
-    --particle-bg: var(--light-particle-dot-bg);
+    --raw-cardio-primary: #E55A5A;
+    --raw-cardio-primary-rgb: 229, 90, 90;
+    --raw-cardio-secondary: #F4A7A7;
+    --raw-cardio-secondary-rgb: 244, 167, 167;
+    
+    --primary-color: var(--raw-cardio-primary);
+    --accent-color: var(--raw-cardio-primary);
+    --text-highlight: var(--raw-cardio-primary);
 
-    --card-bg-color: var(--light-bg-card);
-    --card-hover-bg-color: var(--light-bg-card-hover);
-    --nested-card-bg: var(--light-bg-card-nested);
-    --button-bg-color: var(--light-bg-button);
-    --button-hover-bg-color: var(--light-bg-button-hover);
-    --nav-link-hover-bg-color: var(--light-bg-nav-link-hover);
-    --dropdown-bg-color: var(--light-bg-dropdown);
-    --hero-bg-color: var(--light-bg-hero);
-    --emergency-bg-color: var(--light-bg-emergency);
-    --doctor-avatar-bg-color: var(--light-bg-doctor-avatar);
-    --header-component-bg: var(--light-bg-card);
+    --border-color: rgba(var(--raw-cardio-primary-rgb), 0.3);
+    --border-color-light: rgba(var(--raw-cardio-primary-rgb), 0.2);
 
-    /* Text color for emergency button in light theme needs to be readable */
-    --emergency-text-color: var(--light-text-main);
+    --particle-bg: rgba(var(--raw-cardio-secondary-rgb), 0.1);
+    --neon-blue: var(--raw-cardio-primary);
+    --shadow-glow: rgba(var(--raw-cardio-primary-rgb), 0.15); 
+    --hero-bg: rgba(var(--raw-cardio-primary-rgb), 0.06);
+    --section-title-gradient: linear-gradient(90deg, var(--raw-cardio-primary), var(--raw-cardio-secondary));
+    --section-title-undl-gradient: var(--section-title-gradient);
+
+    --nav-link-color: var(--raw-cardio-primary); 
+    --nav-link-hover-color: color-mix(in srgb, var(--raw-cardio-primary) 70%, black); 
+
+    --card-bg-color: rgba(var(--raw-cardio-primary-rgb), 0.07);
+    --card-hover-bg-color: rgba(var(--raw-cardio-primary-rgb), 0.12);
+    --card-hover-border: rgba(var(--raw-cardio-primary-rgb), 0.35);
+    --nested-card-bg: rgba(var(--raw-cardio-primary-rgb), 0.04);
+
+    --button-bg: rgba(var(--raw-cardio-primary-rgb), 0.15);
+    --button-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.3);
+    --button-text-color: var(--raw-cardio-primary); 
+    --button-border-color: var(--raw-cardio-primary);
+
+    --emergency-bg: rgba(var(--raw-cardio-primary-rgb), 0.25);
+    --emergency-border: var(--raw-cardio-primary);
+    --emergency-text: var(--raw-cardio-primary); 
+    --emergency-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.4);
+    --emergency-hover-text: var(--text-primary); 
+
+    --icon-color-main: var(--raw-cardio-primary);
+    --interactive-text-color: var(--raw-cardio-primary);
+    --shadow-effect: 0 5px 15px rgba(var(--raw-cardio-primary-rgb), 0.06);
+    --doctor-avatar-bg-color: rgba(var(--raw-cardio-secondary-rgb), 0.15);
 }
 /* === END OF UNIFIED CARDIOLOGY PALETTE === */
 
 
-/* Reset and Global Styles */
+/* Reset and Global Styles (Assumed to be minimal if base.css handles most) */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: var(--font-main);
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+    font-family: var(--font-main, 'Inter', 'Arial', sans-serif);
+    transition: background-color var(--animation-duration-normal) var(--animation-timing-function), 
+                color var(--animation-duration-normal) var(--animation-timing-function), 
+                border-color var(--animation-duration-normal) var(--animation-timing-function), 
+                opacity var(--animation-duration-normal) var(--animation-timing-function), 
+                box-shadow var(--animation-duration-normal) var(--animation-timing-function),
+                transform var(--animation-duration-fast) var(--animation-timing-function);
 }
 
 html, body {
@@ -133,31 +123,18 @@ body {
     background-image: radial-gradient(circle, var(--particle-bg) 1px, transparent 1px); 
     background-size: 30px 30px;
     overflow-x: hidden;
-    padding-top: 70px; /* Assuming fixed navbar height */
-}
-
-/* Navigation Variables (for site's main navbar, if styled globally and uses these) */
-/* These variables are intended to be used by a separate, global navbar CSS */
-:root {
-    /* These are just providing values; the actual navbar styling is elsewhere */
-    --nav-link-color: var(--nav-link-text-default-color); /* Default text color for nav links */
-    --nav-link-hover-color: var(--nav-link-text-hover-color); /* Text color for nav links on hover */
-    --nav-link-hover-bg: var(--nav-link-hover-bg-color); /* Background for nav links on hover */
-    
-    --dropdown-bg: var(--dropdown-bg-color); /* Background for dropdown menu */
-    --dropdown-border: var(--border-color-light); /* Border for dropdown menu */
-    --dropdown-item-hover-color: var(--nav-link-text-hover-color); /* Text color for dropdown items on hover */
-    --dropdown-item-hover-bg: var(--nav-link-hover-bg-color); /* Background for dropdown items on hover */
+    padding-top: 70px; 
 }
 
 
-/* Header Section Styling (for the disease page title area) */
+/* Header Section Styling */
 .header {
     display: flex;
+    flex-direction: column; 
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    margin-top: 10px; 
+    gap: var(--spacing-xs); 
+    margin-top: var(--spacing-sm); 
     padding: var(--spacing-md) 5%;
     max-width: 1400px;
     margin-left: auto;
@@ -166,15 +143,24 @@ body {
     z-index: 1;
     text-align: center; 
     margin-bottom: var(--spacing-lg); 
-    border-bottom: 2px solid var(--cardio-primary-accent); 
-    /* background-color: var(--header-component-bg); /* Optional: if this header needs its own card-like bg */
+    border-bottom: 2px solid var(--primary-color); 
 }
 
 .header h1 {
     font-size: 2.5rem; 
-    color: var(--text-color);
+    color: var(--text-primary);
     font-weight: 700;
+    margin-bottom: var(--spacing-xs); 
 }
+.header p.text-muted.fs-5 { 
+    font-size: 1.1rem; 
+    color: var(--text-secondary);
+    margin-top: 0;
+}
+.header p.text-muted.fs-5 i {
+    color: var(--primary-color); 
+}
+
 
 /* Main Content Containers */
 .disease-container { 
@@ -203,7 +189,14 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-effect);
     border: 1px solid var(--border-color-light); 
+    transition: transform var(--animation-duration-normal) var(--animation-timing-function), 
+                box-shadow var(--animation-duration-normal) var(--animation-timing-function);
 }
+.centered-gif img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 25px var(--shadow-glow);
+}
+
 
 .overview-container {
     flex: 2 1 500px; 
@@ -213,11 +206,11 @@ body {
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-effect);
     padding: var(--spacing-lg);
-    color: var(--text-color);
+    color: var(--text-primary); 
 }
 
 .overview-container h2 { 
-    color: var(--text-color);
+    color: var(--text-primary); 
     margin-top: 0;
     margin-bottom: var(--spacing-md);
     position: relative;
@@ -263,10 +256,10 @@ body {
     gap: var(--spacing-lg);
     margin: 0 auto var(--spacing-xl) auto; 
     max-width: 1400px;
-    padding: 0 5%;
+    padding: 0 5%; 
 }
 
-/* General Card Styling */
+/* CARD STYLING (Standard Structure) */
 .card {
     width: 100%;
     margin-bottom: 0; 
@@ -276,18 +269,22 @@ body {
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-effect);
     overflow: hidden;
-    color: var(--text-color);
+    color: var(--text-primary); 
+    transition: transform var(--animation-duration-normal) var(--animation-timing-function), 
+                box-shadow var(--animation-duration-normal) var(--animation-timing-function),
+                border-color var(--animation-duration-normal) var(--animation-timing-function),
+                background-color var(--animation-duration-normal) var(--animation-timing-function);
 }
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px var(--shadow-effect); /* Enhanced shadow on hover */
-    border-color: var(--cardio-primary-accent); /* Accent border on hover */
+    transform: translateY(-5px) scale(1.01); 
+    box-shadow: 0 10px 30px var(--shadow-glow); 
+    border-color: var(--card-hover-border); 
     background-color: var(--card-hover-bg-color); 
 }
 
 /* Heading Styles within Cards */
 .card h2, .card h3 { 
-    color: var(--text-color); 
+    color: var(--text-primary); 
     margin-top: 0;
     margin-bottom: var(--spacing-md);
     position: relative;
@@ -327,7 +324,7 @@ body {
 }
 
 .card ul {
-    list-style-type: none; /* Default, individual lists can override */
+    list-style-type: none; 
     padding-left: var(--spacing-xs); 
 }
 
@@ -339,14 +336,13 @@ body {
 
 .card ul li:before {
     content: "•";
-    color: var(--cardio-primary-accent); 
+    color: var(--primary-color); 
     font-weight: bold;
     position: absolute;
     left: 0;
     top: 0; 
 }
 
-/* For lists that should have disc bullets */
 .card ul.disc-list,
 .content-container ul.disc-list { 
     list-style: disc; 
@@ -356,7 +352,7 @@ body {
 }
 .card ul.disc-list li::before,
 .content-container ul.disc-list li::before {
-    content: none; /* Remove custom bullet if using native disc */
+    content: none; 
 }
 
 
@@ -379,12 +375,13 @@ body {
     font-size: 0.95em; 
     display: inline-block; 
     margin-top: var(--spacing-sm); 
+    transition: color var(--animation-duration-fast) var(--animation-timing-function);
 }
 .content-container .read-more-btn:hover { 
     text-decoration: underline; 
-    color: var(--cardio-secondary-accent); /* Lighter pink for hover on text */
+    color: var(--primary-color); 
 } 
-.content-container .read-more-btn .arrow { display: inline-block; margin-left: 5px; transition: transform 0.2s ease-in-out; }
+.content-container .read-more-btn .arrow { display: inline-block; margin-left: 5px; transition: transform var(--animation-duration-fast) var(--animation-timing-function); }
 .content-container .read-more-btn.expanded .arrow { transform: rotate(180deg); }
 .read-more-btn:not([data-has-more="true"]) { display: none !important; }
 
@@ -392,14 +389,14 @@ body {
 .emergency-signs { 
     margin-top: var(--spacing-md); 
     padding: var(--spacing-md) var(--spacing-lg); 
-    border: 1px solid var(--emergency-border-color); 
-    background-color: var(--emergency-bg-color); 
+    border: 1px solid var(--emergency-border); 
+    background-color: var(--emergency-bg); 
     border-radius: var(--border-radius); 
-    color: var(--emergency-text-color); 
+    color: var(--emergency-text); 
     font-size: 0.95rem; 
 }
 .emergency-signs h4 { 
-    color: var(--emergency-text-color); 
+    color: var(--emergency-text); 
     margin-top: 0; 
     margin-bottom: var(--spacing-sm); 
     font-size: 1.1em; 
@@ -410,18 +407,17 @@ body {
     padding-bottom: 0; 
 } 
 .emergency-signs h4::after { display: none; } 
-.emergency-signs h4 i { margin-right: var(--spacing-sm); }
+.emergency-signs h4 i { margin-right: var(--spacing-sm); color: var(--emergency-text); }
 .emergency-signs ul, .emergency-signs p { 
     margin-bottom: 0; 
-    color: var(--emergency-text-color); 
+    color: var(--emergency-text); 
 } 
 
 .emergency-signs ul li {
-    color: var(--emergency-text-color);
+    color: var(--emergency-text);
 }
-/* Ensure list bullets inside emergency also use emergency text color if using custom bullets */
 .emergency-signs ul li::before { 
-    color: var(--emergency-text-color); 
+    color: var(--emergency-text); 
 } 
 
 /* Quick Facts Card Styling */
@@ -437,11 +433,11 @@ body {
 .quick-facts-list { display: grid; grid-template-columns: auto 1fr; gap: var(--spacing-sm) var(--spacing-md); font-size: 0.95rem; }
 .quick-facts-list dt { grid-column: 1; font-weight: 600; color: var(--text-secondary); text-align: left; display: flex; align-items: center; white-space: nowrap; }
 .quick-facts-list dt i { color: var(--icon-color-main); margin-right: 8px; width: 1.2em; text-align: center; flex-shrink: 0; } 
-.quick-facts-list dd { grid-column: 2; margin-bottom: 0; text-align: left; color: var(--text-color); }
+.quick-facts-list dd { grid-column: 2; margin-bottom: 0; text-align: left; color: var(--text-primary); } 
 @media (max-width: 576px) {
     .quick-facts-list { grid-template-columns: 1fr; gap: var(--spacing-xs) 0; }
     .quick-facts-list dt { grid-column: 1; margin-bottom: 2px; }
-    .quick-facts-list dd { grid-column: 1; padding-left: calc(1.2em + 8px) ; margin-left:0; margin-bottom: var(--spacing-sm); }
+    .quick-facts-list dd { grid-column: 1; padding-left: calc(1.2em + var(--spacing-xs) + var(--spacing-xs)); margin-left:0; margin-bottom: var(--spacing-sm); }
 }
 .demographic-list { padding-left: var(--spacing-md); list-style: disc; margin-top: var(--spacing-sm); font-size: 0.95rem;}
 .demographic-list li { margin-bottom: var(--spacing-xs); }
@@ -454,7 +450,6 @@ body {
     border-top: 1px dashed var(--border-color-light); 
 }
 .emergency-symptoms-details .emergency-signs { margin-top: 0; }
-/* .emergency-symptoms-details .emergency-signs h4::after { display: none; }  Already covered */
 .emergency-symptoms-details .emergency-signs h4 .sos-emoji { font-size: 1.2em; margin-right: 0.5em; } 
 /* --- End of Common --- */
 
@@ -472,7 +467,7 @@ body {
     text-align: center;
     margin-top: 0; 
     margin-bottom: var(--spacing-lg);
-    color: var(--text-color);
+    color: var(--text-primary);
     font-size: 2rem;
     font-weight: 600;
     position: relative;
@@ -497,8 +492,12 @@ body {
     gap: var(--spacing-lg);
     grid-template-columns: 1fr; 
 }
-@media (min-width: 768px) { .doctors-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 1200px) { .doctors-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+@media (min-width: 600px) { 
+    .doctors-grid { grid-template-columns: repeat(2, 1fr); } 
+}
+@media (min-width: 992px) { 
+    .doctors-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } 
+}
 
 
 .doctor-card { 
@@ -512,25 +511,51 @@ body {
     border-radius: var(--border-radius);
     padding: var(--spacing-md); 
     box-shadow: 0 3px 10px var(--shadow-effect); 
+    transition: transform var(--animation-duration-normal) var(--animation-timing-function), 
+                box-shadow var(--animation-duration-normal) var(--animation-timing-function),
+                border-color var(--animation-duration-normal) var(--animation-timing-function);
+    opacity: 0; 
+    transform: translateY(20px); 
+    animation: doctor-fade-in var(--animation-duration-slow) var(--animation-timing-function) forwards; /* Renamed animation */
 }
+/* Staggered animation for doctor cards */
+.doctors-grid .doctor-card:nth-child(1) { animation-delay: 0.1s; }
+.doctors-grid .doctor-card:nth-child(2) { animation-delay: 0.2s; }
+.doctors-grid .doctor-card:nth-child(3) { animation-delay: 0.3s; }
+.doctors-grid .doctor-card:nth-child(4) { animation-delay: 0.4s; }
+.doctors-grid .doctor-card:nth-child(5) { animation-delay: 0.5s; }
+.doctors-grid .doctor-card:nth-child(6) { animation-delay: 0.6s; }
+
+
+@keyframes doctor-fade-in { /* Renamed animation */
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .doctor-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px var(--shadow-effect); 
-    border-color: var(--cardio-primary-accent);
-    background-color: var(--card-hover-bg-color); /* Use general card hover for consistency */
+    transform: translateY(-5px) scale(1.02); 
+    box-shadow: 0 8px 25px var(--shadow-glow); 
+    border-color: var(--primary-color);
 }
 
 .doctor-avatar {
     margin-top: var(--spacing-xs); 
-    width: 80px;
-    height: 80px;
+    width: 90px; 
+    height: 90px;
     border-radius: 50%;
     background-color: var(--doctor-avatar-bg-color); 
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden; 
-    border: 2px solid var(--border-color-light);
+    border: 3px solid var(--border-color-light); 
+    box-shadow: 0 0 10px rgba(var(--raw-cardio-primary-rgb), 0.1); 
+    transition: transform var(--animation-duration-fast) var(--animation-timing-function);
+}
+.doctor-card:hover .doctor-avatar {
+    transform: scale(1.05);
 }
 
 .doctor-avatar img.doctor-profile-pic {
@@ -539,36 +564,53 @@ body {
      object-fit: cover;
  }
 
-.doctor-details { width: 100%; } 
-.doctor-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; color: var(--text-color); }
+.doctor-details { width: 100%; padding-top: var(--spacing-xs); } 
+.doctor-name { font-weight: 600; font-size: 1.1rem; margin-bottom: 4px; color: var(--text-primary); }
 .doctor-specialty { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--spacing-xs); }
 .doctor-short-bio {
-    font-size: 0.9rem; color: var(--text-secondary);
+    font-size: 0.85rem; 
+    color: var(--text-secondary);
     margin-bottom: var(--spacing-md);
-    max-height: 4.5em; overflow: hidden; text-overflow: ellipsis;
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    line-height: 1.5;
+    max-height: calc(1.5em * 3); 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    display: -webkit-box; 
+    -webkit-line-clamp: 3; 
+    -webkit-box-orient: vertical;
 }
 
+/* Appointment Button Styling */
 .appointment-button {
-    display: inline-block;
-    background-color: var(--emergency-bg-color); 
-    color: var(--emergency-text-color); 
-    border: 1px solid var(--emergency-border-color); 
-    padding: 8px 16px;
-    border-radius: 5px;
+    display: inline-block; /* Changed from block for better centering if needed */
+    background-color: var(--button-bg); 
+    color: var(--button-text-color); 
+    border: 1px solid var(--button-border-color); 
+    padding: var(--spacing-xs) var(--spacing-md); /* Adjusted padding */
+    border-radius: var(--border-radius-sm, 5px);
     font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer; text-decoration: none; 
+    font-weight: 600; /* Adjusted from bold */
+    cursor: pointer; 
+    text-decoration: none; 
+    text-align: center;
+    width: auto; /* Auto width */
+    max-width: 200px; 
+    margin: var(--spacing-sm) auto 0; /* Centering if parent is block/flex */
+    transition: background-color var(--animation-duration-fast) var(--animation-timing-function),
+                color var(--animation-duration-fast) var(--animation-timing-function),
+                border-color var(--animation-duration-fast) var(--animation-timing-function),
+                transform var(--animation-duration-fast) var(--animation-timing-function),
+                box-shadow var(--animation-duration-fast) var(--animation-timing-function);
 }
 .appointment-button:hover {
-    background-color: var(--cardio-primary-accent); /* More solid on hover */
-    color: var(--dark-text-main); /* White text on solid hover */
-    border-color: var(--cardio-primary-accent); 
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px var(--shadow-effect);
+    background-color: var(--button-hover-bg);
+    color: white; /* Ensure contrast on hover */
+    border-color: var(--button-hover-bg);
+    transform: translateY(-2px) scale(1.03); /* Added scale */
+    box-shadow: 0 4px 10px var(--shadow-glow); /* Themed shadow glow */
 }
 [data-theme="light"] .appointment-button:hover {
-    color: var(--dark-text-main); /* Ensure white text on solid hover for light theme too */
+    color: white; /* Ensure contrast for light theme hover */
 }
 
 
@@ -584,12 +626,13 @@ body {
     .card, .overview-container, .quick-facts-card, .doctors-section, .doctor-card { 
         padding: var(--spacing-md); 
     }
+    .doctors-grid { grid-template-columns: 1fr; } 
 }
 
 @media (max-width: 576px) {
     .quick-facts-list dd {
-      padding-left: 0; /* Remove padding */
-      margin-left: calc(1.2em + 8px + var(--spacing-xs)); /* Add margin to align with icon */
+      padding-left: 0; 
+      margin-left: calc(1.2em + var(--spacing-xs) + var(--spacing-xs)); 
     }
     .quick-facts-list dt i {
         margin-right: var(--spacing-xs);

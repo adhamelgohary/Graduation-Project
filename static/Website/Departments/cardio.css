@@ -1,83 +1,82 @@
 /* --- Root Variables - CARDIOLOGY PALETTE --- */
 :root {
     /* Dark Theme - Cardiology Palette */
-    --text-primary: white;
-    --text-secondary: rgba(255, 255, 255, 0.7);
-    
-    /* Cardiology Accents */
-    --primary-accent-cardio: #FF6B6B;
-    --rgb-primary-accent-cardio: 255, 107, 107;
-    --secondary-accent-cardio: #FFBABA;
-    --rgb-secondary-accent-cardio: 255, 186, 186;
+    --raw-cardio-primary: #FF6B6B;
+    --raw-cardio-primary-rgb: 255, 107, 107;
+    --raw-cardio-secondary: #FFBABA;
+    --raw-cardio-secondary-rgb: 255, 186, 186;
 
-    /* Mapped variables */
-    --text-highlight: var(--primary-accent-cardio);
-    --accent-color: var(--primary-accent-cardio); 
-    --border-color: rgba(var(--rgb-primary-accent-cardio), 0.25); /* Consistent border color */
-    --particle-bg: rgba(var(--rgb-secondary-accent-cardio), 0.08); 
-    --neon-blue: var(--primary-accent-cardio); 
-    --hero-bg: rgba(var(--rgb-primary-accent-cardio), 0.07); 
-    --section-title-gradient: linear-gradient(90deg, var(--primary-accent-cardio), var(--secondary-accent-cardio));
-    --dept-specific-color-1: var(--primary-accent-cardio);
-    --dept-specific-color-2: var(--secondary-accent-cardio);
-    --dept-neon-color: var(--primary-accent-cardio);
+    /* OVERRIDING base.css global theme variables for Cardiology */
+    --primary-color: var(--raw-cardio-primary);
+    --accent-color: var(--raw-cardio-primary); 
+    --text-highlight: var(--raw-cardio-primary);
     
-    /* Transparent backgrounds for cards and buttons */
-    --card-transparent-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.08);
-    --card-transparent-hover-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.15);
-    --button-transparent-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.2);
-    --button-transparent-hover-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.35);
-    --emergency-transparent-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.3);
-    --emergency-transparent-hover-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.5);
+    --border-color: rgba(var(--raw-cardio-primary-rgb), 0.25); 
+    --particle-bg: rgba(var(--raw-cardio-secondary-rgb), 0.08); 
+    --neon-blue: var(--raw-cardio-primary); 
+    --shadow-glow: rgba(var(--raw-cardio-primary-rgb), 0.2); 
+    --hero-bg: rgba(var(--raw-cardio-primary-rgb), 0.07); 
+    --section-title-gradient: linear-gradient(90deg, var(--raw-cardio-primary), var(--raw-cardio-secondary));
+    
+    --nav-link-color: var(--raw-cardio-secondary); 
+    --nav-link-hover-color: var(--raw-cardio-primary); 
+    
+    --card-bg-color: rgba(var(--raw-cardio-primary-rgb), 0.08); 
+    --card-hover-bg-color: rgba(var(--raw-cardio-primary-rgb), 0.15); 
+    --card-hover-border: rgba(var(--raw-cardio-primary-rgb), 0.4);
 
-    --accent-pink: var(--secondary-accent-cardio); 
-    --accent-white: #ffffff;
-    --shadow-color: rgba(0, 0, 0, 0.15); /* Slightly stronger shadow */
-    --blue-glow: rgba(var(--rgb-primary-accent-cardio), 0.2); 
-    --card-hover-border: rgba(var(--rgb-primary-accent-cardio), 0.4);
-    --dept-color-cardiology: var(--primary-accent-cardio); 
+    --button-bg: rgba(var(--raw-cardio-primary-rgb), 0.2);
+    --button-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.35);
+    --button-text-color: var(--raw-cardio-primary); 
+    --button-border-color: var(--raw-cardio-primary); 
+
+    --emergency-bg: rgba(var(--raw-cardio-primary-rgb), 0.3);
+    --emergency-border: var(--raw-cardio-primary);
+    --emergency-text: var(--raw-cardio-primary); 
+    --emergency-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.5);
+    --emergency-hover-text: white; 
 }
 
 /* Light Theme - Cardiology Palette */
 [data-theme="light"] {
-    --text-primary: #5D3A3A;
-    --text-secondary: rgba(93, 58, 58, 0.7);
-    --border-color: rgba(var(--rgb-primary-accent-cardio), 0.3);
-
-    /* Cardiology Light Accents */
-    --primary-accent-cardio: #E55A5A;
-    --rgb-primary-accent-cardio: 229, 90, 90;
-    --secondary-accent-cardio: #F4A7A7;
-    --rgb-secondary-accent-cardio: 244, 167, 167;
+    --raw-cardio-primary: #E55A5A;
+    --raw-cardio-primary-rgb: 229, 90, 90;
+    --raw-cardio-secondary: #F4A7A7;
+    --raw-cardio-secondary-rgb: 244, 167, 167;
     
-    --text-highlight: var(--primary-accent-cardio);
-    --accent-color: var(--primary-accent-cardio);
-    --particle-bg: rgba(var(--rgb-secondary-accent-cardio), 0.1);
-    --neon-blue: var(--primary-accent-cardio);
-    --hero-bg: rgba(var(--rgb-primary-accent-cardio), 0.06);
-    /* --section-title-gradient already defined */
-    --dept-specific-color-1: var(--primary-accent-cardio);
-    --dept-specific-color-2: var(--secondary-accent-cardio);
-    --dept-neon-color: var(--primary-accent-cardio);
+    --primary-color: var(--raw-cardio-primary);
+    --accent-color: var(--raw-cardio-primary);
+    --text-highlight: var(--raw-cardio-primary);
 
-    /* Transparent backgrounds for cards and buttons - Light */
-    --card-transparent-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.07);
-    --card-transparent-hover-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.12);
-    --button-transparent-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.15);
-    --button-transparent-hover-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.3);
-    --emergency-transparent-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.25);
-    --emergency-transparent-hover-bg-cardio: rgba(var(--rgb-primary-accent-cardio), 0.4);
-    
-    --accent-pink: var(--secondary-accent-cardio);
-    --shadow-color: rgba(93, 58, 58, 0.1);
-    --blue-glow: rgba(var(--rgb-primary-accent-cardio), 0.15);
-    --card-hover-border: rgba(var(--rgb-primary-accent-cardio), 0.35);
-    --dept-color-cardiology: var(--primary-accent-cardio);
+    --border-color: rgba(var(--raw-cardio-primary-rgb), 0.3);
+    --particle-bg: rgba(var(--raw-cardio-secondary-rgb), 0.1);
+    --neon-blue: var(--raw-cardio-primary);
+    --shadow-glow: rgba(var(--raw-cardio-primary-rgb), 0.15); 
+    --hero-bg: rgba(var(--raw-cardio-primary-rgb), 0.06);
+    --section-title-gradient: linear-gradient(90deg, var(--raw-cardio-primary), var(--raw-cardio-secondary));
+
+    --nav-link-color: var(--raw-cardio-primary); 
+    --nav-link-hover-color: color-mix(in srgb, var(--raw-cardio-primary) 70%, black); 
+
+    --card-bg-color: rgba(var(--raw-cardio-primary-rgb), 0.07);
+    --card-hover-bg-color: rgba(var(--raw-cardio-primary-rgb), 0.12);
+    --card-hover-border: rgba(var(--raw-cardio-primary-rgb), 0.35);
+
+    --button-bg: rgba(var(--raw-cardio-primary-rgb), 0.15);
+    --button-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.3);
+    --button-text-color: var(--raw-cardio-primary); 
+    --button-border-color: var(--raw-cardio-primary);
+
+    --emergency-bg: rgba(var(--raw-cardio-primary-rgb), 0.25);
+    --emergency-border: var(--raw-cardio-primary);
+    --emergency-text: var(--raw-cardio-primary); 
+    --emergency-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.4);
+    --emergency-hover-text: var(--text-primary); 
 }
+
 /* --- Hero Section Specifics --- */
 .hero-section { 
     width: 100%;
-    background-color: var(--hero-bg); 
     position: relative;
     overflow: hidden;
     border-bottom: 1px solid var(--border-color); 
@@ -93,7 +92,7 @@
 .hero-content {
     max-width: 1400px;
     margin: 0 auto;
-    padding: 80px 5% 60px; /* Added top/bottom padding */
+    padding: 5%;
     display: flex;
     align-items: center;
     position: relative;
@@ -109,7 +108,6 @@
 .visual-content {
     flex: 1;
     position: relative;
-    min-height: 400px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -125,7 +123,7 @@
 }
 
 .hero-content h1 .highlight {
-    color: var(--dept-color-cardiology); 
+    color: var(--primary-color); 
     font-weight: bold;
 }
 
@@ -139,7 +137,7 @@
 
 /* Search Bar */
 .search-bar {
-    background-color: rgba(var(--rgb-secondary-accent-cardio), 0.1);
+    background-color: rgba(var(--raw-cardio-secondary-rgb), 0.1);
     border-radius: 20px;
     padding: 8px 15px;
     display: flex;
@@ -154,7 +152,7 @@
 .search-icon { color: var(--text-secondary); margin-right: 5px; }
 
 [data-theme="light"] .search-bar { 
-    background-color: rgba(var(--rgb-secondary-accent-cardio), 0.12); 
+    background-color: rgba(var(--raw-cardio-secondary-rgb), 0.12); 
 }
 
 
@@ -167,9 +165,10 @@
 }
 .animated-ecg-line { width: 200%; height: 100%; position: absolute; left: 0; top: 0; }
 .animated-ecg-line .ecg-segment {
-    fill: none; stroke: var(--dept-neon-color); stroke-width: 2px;
+    fill: none; stroke: var(--neon-blue); 
+    stroke-width: 2px;
     stroke-linecap: round; stroke-linejoin: round;
-    filter: drop-shadow(0 0 5px var(--dept-neon-color));
+    filter: drop-shadow(0 0 5px var(--neon-blue));
     animation: scroll-ecg 10s linear infinite;
     opacity: 0; transition: opacity 0.4s ease-in-out;
 }
@@ -178,14 +177,15 @@
 
 .cell {
     position: absolute; width: 30px; height: 30px; border-radius: 50%;
-    border: 1px solid var(--dept-neon-color);
-    background-color: rgba(var(--rgb-primary-accent-cardio), 0.1);
-    box-shadow: 0 0 10px rgba(var(--rgb-primary-accent-cardio), 0.5); z-index: 2;
+    border: 1px solid var(--neon-blue);
+    background-color: rgba(var(--raw-cardio-primary-rgb), 0.1);
+    box-shadow: 0 0 10px rgba(var(--raw-cardio-primary-rgb), 0.5); 
+    z-index: 2;
 }
-[data-theme="light"] .cell { /* Already uses theme-aware vars, should be fine */
-    border-color: var(--dept-neon-color);
-    background-color: rgba(var(--rgb-primary-accent-cardio), 0.1);
-    box-shadow: 0 0 10px rgba(var(--rgb-primary-accent-cardio), 0.5);
+[data-theme="light"] .cell { 
+    border-color: var(--neon-blue);
+    background-color: rgba(var(--raw-cardio-primary-rgb), 0.1);
+    box-shadow: 0 0 10px rgba(var(--raw-cardio-primary-rgb), 0.5);
 }
 
 .heart-image { 
@@ -197,17 +197,18 @@
 
 
 /* --- Main Content & Disease Cards --- */
-.main-content { /* This class is for the content area within cardio.html */
+.main-content { 
     padding: 40px 5%; position: relative; overflow: hidden;
-    margin-top: 0; /* Adjusted from 60px, assuming hero provides spacing */
-    max-width: 1400px; /* Added for consistency */
-    margin-left: auto; /* Added for centering */
-    margin-right: auto; /* Added for centering */
+    margin-top: 0;
+    max-width: 1400px; 
+    margin-left: auto; 
+    margin-right: auto; 
 }
 
 .section-title { 
     font-size: 32px; margin-bottom: 20px; text-align: center; position: relative;
-    color: var(--text-primary); font-weight: bold;
+    color: var(--text-primary);
+    font-weight: bold;
 }
 .section-title::after {
     content: ''; display: block; width: 60px; height: 3px;
@@ -215,92 +216,140 @@
     margin: 15px auto 30px; border-radius: 2px;
 }
 
-.diseases-section { margin: 40px 0 80px; } /* Adjusted top margin */
+.diseases-section { margin: 40px 0 80px; } 
 .diseases {
     display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px;
 }
 
-.card { /* Styles for disease cards in cardio.html */
-    background-color: var(--card-transparent-bg-cardio); 
-    border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color);
-    display: flex; flex-direction: column; height: 100%; transition: all 0.3s ease;
-    box-shadow: 0 5px 15px var(--shadow-color); 
+/* CARD STYLING - TO BE USED AS REFERENCE */
+.card { 
+    background-color: var(--card-bg-color); 
+    border-radius: var(--border-radius, 12px); /* Use global or fallback */
+    overflow: hidden; 
+    border: 1px solid var(--border-color);
+    display: flex; 
+    flex-direction: column; 
+    height: 100%; 
+    transition: all 0.3s ease;
+    box-shadow: var(--card-shadow, 0 5px 15px rgba(0,0,0,0.1)); /* Use global or fallback */
 }
 .card:hover {
-    background-color: var(--card-transparent-hover-bg-cardio); 
-    transform: translateY(-10px);
-    box-shadow: 0 15px 35px var(--blue-glow); 
+    background-color: var(--card-hover-bg-color); 
+    transform: translateY(-10px); /* Consistent hover effect */
+    box-shadow: 0 15px 35px var(--shadow-glow); 
     border-color: var(--card-hover-border); 
 }
 
-.card .content { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
-.card h1 { /* h1 for disease card titles in cardio.html */
-    font-size: 22px; margin-bottom: 15px; color: var(--text-primary);
-    position: relative; padding-bottom: 10px; line-height: 1.3; font-weight: bold;
+.card .content { 
+    padding: var(--spacing-lg, 25px); /* Use global or fallback */
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+}
+.card h1 { /* Title within condition card on department landing */
+    font-size: 22px; 
+    margin-bottom: var(--spacing-md, 15px); 
+    color: var(--text-primary);
+    position: relative; 
+    padding-bottom: var(--spacing-sm, 10px); 
+    line-height: 1.3; 
+    font-weight: bold;
 }
 .card h1::after { 
-    content: ''; position: absolute; bottom: 0; left: 0; width: 40px; height: 2px;
-    background: var(--section-title-gradient);
+    content: ''; 
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    width: 40px; 
+    height: 2px;
+    background: var(--section-title-gradient); /* Consistent title underline */
 }
 
 .image-text-container {
-    display: flex; flex-direction: column; align-items: center; gap: 15px;
-    margin-bottom: 20px; flex-grow: 1;
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: var(--spacing-md, 15px);
+    margin-bottom: var(--spacing-lg, 20px); 
+    flex-grow: 1;
 }
 .image-text-container img {
-    width: 85px; height: 100px; object-fit: contain; border-radius: 8px;
-    background-color: rgba(var(--rgb-secondary-accent-cardio), 0.05); display: block;
+    width: 85px; 
+    height: 100px; 
+    object-fit: contain; 
+    border-radius: var(--border-radius-sm, 8px);
+    background-color: rgba(var(--raw-cardio-secondary-rgb), 0.05); /* Example: theme specific subtle bg */
+    display: block;
 }
 [data-theme="light"] .image-text-container img { 
-    background-color: rgba(var(--rgb-secondary-accent-cardio), 0.08); 
+    background-color: rgba(var(--raw-cardio-secondary-rgb), 0.08); 
 }
 .image-text-container p {
-    font-size: 14px; color: var(--text-secondary); line-height: 1.5;
-    margin-bottom: 0; text-align: center;
+    font-size: 14px; 
+    color: var(--text-secondary); 
+    line-height: 1.5;
+    margin-bottom: 0; 
+    text-align: center;
 }
 
-/* Button Styling */
+/* BUTTON STYLING - TO BE USED AS REFERENCE */
 .btn {
-    background-color: var(--button-transparent-bg-cardio); 
-    color: var(--accent-white); 
-    padding: 12px 25px; border-radius: 5px; text-decoration: none;
-    border: 1px solid transparent; 
-    font-size: 14px; transition: all 0.3s; display: block; cursor: pointer;
-    text-align: center; font-weight: bold; box-sizing: border-box;
+    background-color: var(--button-bg); 
+    color: var(--button-text-color); 
+    padding: var(--spacing-sm, 12px) var(--spacing-lg, 25px); 
+    border-radius: var(--border-radius-sm, 5px); 
+    text-decoration: none;
+    border: 1px solid var(--button-border-color); 
+    font-size: 14px; 
+    transition: all 0.3s; 
+    display: block; 
+    cursor: pointer;
+    text-align: center; 
+    font-weight: bold; 
+    box-sizing: border-box;
 }
 .btn:hover {
-    background-color: var(--button-transparent-hover-bg-cardio); 
-    color: var(--accent-white); 
+    background-color: var(--button-hover-bg); 
+    color: white; /* Keep hover text white for contrast generally */
+    border-color: var(--button-hover-bg); /* Match border to bg on hover */
     transform: translateY(-2px);
     box-shadow: 0 5px 15px var(--shadow-color); 
 }
-.card .btn { width: 85%; margin: 15px auto 25px; }
+.card .btn { /* Button specifically within a card */
+    width: 85%; 
+    margin: var(--spacing-md, 15px) auto var(--spacing-lg, 25px); 
+}
 
-/* Emergency button */
+
+/* Emergency button specific style */
 .emergency-btn { 
-    background-color: var(--emergency-transparent-bg-cardio);
-    color: var(--accent-white); 
-    border: 1px solid var(--primary-accent-cardio); /* Keep a more solid border for emphasis */
-    display: inline-block; width: auto; margin: 0;
+    background-color: var(--emergency-bg); 
+    color: var(--emergency-text);  
+    border: 1px solid var(--emergency-border); 
+    display: inline-block; 
+    width: auto; 
+    margin: 0; 
 }
 .emergency-btn:hover {
-     background-color: var(--emergency-transparent-hover-bg-cardio); 
-     border-color: var(--primary-accent-cardio);
+     background-color: var(--emergency-hover-bg); 
+     border-color: var(--emergency-border); 
+     color: var(--emergency-hover-text); 
 }
 
-/* Light mode button overrides */
+/* Light mode button overrides for generic .btn (if text color needs to change from white on hover) */
 [data-theme="light"] .btn:not(.emergency-btn) {
-    color: var(--text-primary); 
+    /* --button-text-color for light theme is already set in :root[data-theme="light"] */
 }
 [data-theme="light"] .btn:not(.emergency-btn):hover {
-     color: var(--text-primary); 
+     color: white; /* Usually white on a darker/more saturated hover background */
 }
+
+/* Light mode for emergency button (if text color needs to change) */
 [data-theme="light"] .emergency-btn {
-    color: var(--text-primary); /* Ensure text is readable on light emergency button */
-    border: 1px solid var(--primary-accent-cardio);
+    /* Uses --emergency-text from light theme variables */
 }
 [data-theme="light"] .emergency-btn:hover { 
-    color: var(--text-primary);
+    /* Uses --emergency-hover-text from light theme variables */
 }
 
 
@@ -314,7 +363,7 @@
     .animated-ecg-container { height: 80px; bottom: 5%; }
 }
 @media (max-width: 768px) {
-    .hero-section { padding-top: 40px; padding-bottom: 40px; } /* Adjust for smaller screens if nav is also changing */
+    .hero-section { padding-top: 40px; padding-bottom: 40px; } 
     .hero-content { padding-top: 40px; padding-bottom: 20px; }
     .hero-content h1 { font-size: 32px; }
     .diseases { grid-template-columns: 1fr; }
@@ -322,12 +371,13 @@
     .main-content { padding: 20px 5%; }
     .section-title { font-size: 28px; }
     .animated-ecg-container { height: 60px; }
+    .card h1 { font-size: 20px; } /* Adjust card title for smaller screens */
 }
 @media (max-width: 480px) {
     .hero-content h1 { font-size: 28px; }
     .hero-content p { font-size: 15px; }
-    .btn { padding: 10px 20px; font-size: 13px; }
-    .card h1 { font-size: 20px; }
+    .btn, .card .btn { padding: 10px 20px; font-size: 13px; }
+    .card h1 { font-size: 18px; }
     .image-text-container img { width: 70px; height: 85px; }
     .image-text-container p { font-size: 13px; }
     .section-title { font-size: 24px; }
