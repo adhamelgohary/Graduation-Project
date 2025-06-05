@@ -11,22 +11,22 @@
     --accent-color: var(--raw-derma-primary);
     --text-highlight: var(--raw-derma-primary);
     
-    --border-color: rgba(var(--raw-derma-primary-rgb), 0.2); /* Adjusted for derma */
+    --border-color: rgba(var(--raw-derma-primary-rgb), 0.2); 
     --border-color-light: rgba(var(--raw-derma-primary-rgb), 0.12);
 
     --particle-bg: rgba(var(--raw-derma-secondary-rgb), 0.08); 
     --neon-blue: var(--raw-derma-secondary); 
     --shadow-glow: rgba(var(--raw-derma-secondary-rgb), 0.15); 
-    --hero-bg: rgba(var(--raw-derma-primary-rgb), 0.05); /* Not typically a hero on detail page */
+    --hero-bg: rgba(var(--raw-derma-primary-rgb), 0.05); 
     --section-title-gradient: linear-gradient(90deg, var(--raw-derma-primary), var(--raw-derma-secondary));
     --section-title-undl-gradient: var(--section-title-gradient); 
     
     --nav-link-color: var(--raw-derma-secondary); 
     --nav-link-hover-color: var(--raw-derma-primary); 
-    
-    /* For Derma, using more neutral card from base.css and theming hover */
-    --card-bg-color: var(--bg-secondary); /* Inherit neutral from base.css */
-    --card-hover-bg-color: var(--hover-bg-color); /* Inherit neutral from base.css */
+
+    /* For Derma, cards use neutral background from base.css, hover border is themed */
+    /* --card-bg-color: var(--bg-secondary); /* Inherited from base.css */
+    /* --card-hover-bg-color: var(--hover-bg-color); /* Inherited from base.css */
     --card-hover-border: rgba(var(--raw-derma-secondary-rgb), 0.3);
     --nested-card-bg: color-mix(in srgb, var(--bg-secondary) 90%, var(--raw-derma-primary) 5%);
 
@@ -36,11 +36,7 @@
     --button-text-color: var(--text-primary); 
     --button-border-color: var(--raw-derma-primary); 
 
-    --emergency-bg: var(--raw-derma-primary); 
-    --emergency-border: var(--raw-derma-primary);
-    --emergency-text: white; 
-    --emergency-hover-bg: color-mix(in srgb, var(--raw-derma-primary) 80%, black);
-    --emergency-hover-text: white; 
+    /* EMERGENCY STYLING NOW COMES FROM GLOBAL VARS IN base.css */
 
     --icon-color-main: var(--raw-derma-primary);
     --interactive-text-color: var(--raw-derma-secondary);
@@ -82,30 +78,19 @@
     --card-hover-border: rgba(var(--raw-derma-secondary-rgb), 0.25);
     --nested-card-bg: color-mix(in srgb, var(--bg-secondary) 95%, var(--raw-derma-primary) 5%);
 
-
     --button-bg: rgba(var(--raw-derma-primary-rgb), 0.8);
     --button-hover-bg: var(--raw-derma-primary);
     --button-text-color: var(--text-primary); 
     --button-border-color: var(--raw-derma-primary);
 
-    --emergency-bg: var(--raw-derma-primary); 
-    --emergency-border: var(--raw-derma-primary);
-    --emergency-text: var(--text-primary); 
-    --emergency-hover-bg: color-mix(in srgb, var(--raw-derma-primary) 85%, #00000033);
-    --emergency-hover-text: var(--text-primary);
+    /* EMERGENCY STYLING NOW COMES FROM GLOBAL VARS IN base.css */
 
     --icon-color-main: var(--raw-derma-primary);
     --interactive-text-color: var(--raw-derma-primary);
     --shadow-effect: 0 5px 15px rgba(var(--raw-derma-secondary-rgb), 0.06);
     --doctor-avatar-bg-color: rgba(var(--raw-derma-secondary-rgb), 0.15);
 }
-/* === END OF UNIFIED DERMATOLOGY PALETTE === */
-
-/* 
-    PASTE THE REST OF THE CSS RULES (from .header down to @media queries) 
-    FROM THE CORRECTED cardiodisease.css HERE. 
-    DO NOT CHANGE THOSE RULES, ONLY THE VARIABLE BLOCK ABOVE.
-*/
+/* === END OF DERMATOLOGY PALETTE === */
 
 /* Reset and Global Styles (Copied from cardio.css) */
 * {

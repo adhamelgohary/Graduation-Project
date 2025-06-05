@@ -34,11 +34,7 @@
     --button-text-color: white; 
     --button-border-color: var(--raw-neuro-primary);
  
-    --emergency-bg: var(--raw-neuro-primary);
-    --emergency-border: var(--raw-neuro-primary);
-    --emergency-text: white;
-    --emergency-hover-bg: color-mix(in srgb, var(--raw-neuro-primary) 80%, black);
-    --emergency-hover-text: white;
+    /* EMERGENCY STYLING NOW COMES FROM GLOBAL VARS IN base.css */
  
     --icon-color-main: var(--raw-neuro-primary);
     --interactive-text-color: var(--raw-neuro-secondary);
@@ -85,19 +81,14 @@
     --button-text-color: white; 
     --button-border-color: var(--raw-neuro-primary);
  
-    --emergency-bg: var(--raw-neuro-primary);
-    --emergency-border: var(--raw-neuro-primary);
-    --emergency-text: var(--text-primary); 
-    --emergency-hover-bg: color-mix(in srgb, var(--raw-neuro-primary) 85%, #00000033);
-    --emergency-hover-text: var(--text-primary);
+    /* EMERGENCY STYLING NOW COMES FROM GLOBAL VARS IN base.css */
  
     --icon-color-main: var(--raw-neuro-primary);
     --interactive-text-color: var(--raw-neuro-primary);
     --shadow-effect: 0 5px 15px rgba(var(--raw-neuro-primary-rgb), 0.06);
     --doctor-avatar-bg-color: rgba(var(--raw-neuro-secondary-rgb), 0.15);
  }
- /* === END OF UNIFIED NEUROLOGY PALETTE === */
- 
+ /* === END OF NEUROLOGY PALETTE === */
  
  /* Reset and Global Styles (Copied from cardio.css structure) */
  * {

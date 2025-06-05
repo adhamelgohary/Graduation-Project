@@ -5,16 +5,16 @@ from flask import (
     Blueprint, request, jsonify, current_app, abort, render_template, flash, url_for, redirect
 )
 from flask_login import login_required, current_user
-from db import get_db_connection # Assuming your db.py provides this
+from db import get_db_connection 
 from datetime import time, date, datetime, timedelta
 import logging
 
 try:
-    from .utils import check_doctor_authorization, get_provider_id
+    from routes.Doctor_Portal.utils import check_doctor_authorization, get_provider_id 
 except (ImportError, ValueError) as e:
-    logging.getLogger(__name__).error(f"CRITICAL: Failed to import utils. Details: {e}", exc_info=True)
-    def check_doctor_authorization(user): return False
-    def get_provider_id(user): return None
+    logging.getLogger(__name__).critical(f"CRITICAL: Failed to import utils for availability. Details: {e}", exc_info=True)
+    def check_doctor_authorization(user): return False 
+    def get_provider_id(user): return None 
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +22,10 @@ availability_bp = Blueprint(
     'availability',
     __name__,
     url_prefix='/portal/availability',
-    template_folder='../../templates' 
+    template_folder='../../templates/Doctor_Portal/Availability' 
 )
 
-# --- Database Helper Functions (Read-only, no explicit transactions here) ---
+# --- Database Helper Functions (Remain Unchanged, ensure they are correct) ---
 def get_all_provider_locations(provider_id):
     conn = None; cursor = None; locations = []
     try:
@@ -39,10 +39,10 @@ def get_all_provider_locations(provider_id):
         locations = cursor.fetchall()
     except (mysql.connector.Error, ConnectionError) as err:
         logger.error(f"DB/Conn Error get provider locs P:{provider_id}: {err}", exc_info=True)
-        raise # Re-raise to be caught by the calling route
+        raise 
     except Exception as e:
         logger.error(f"Unexpected error in get_all_provider_locations P:{provider_id}: {e}", exc_info=True)
-        raise # Re-raise
+        raise 
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
@@ -87,11 +87,11 @@ def get_overrides(provider_id, start_date_str=None, end_date_str=None):
     filters = [provider_id]; sql_where_clause = ""
     try:
         if start_date_str:
-            start_date = date.fromisoformat(start_date_str)
-            sql_where_clause += " AND dao.override_date >= %s"; filters.append(start_date)
+            start_date_obj = date.fromisoformat(start_date_str) # Renamed to avoid conflict
+            sql_where_clause += " AND dao.override_date >= %s"; filters.append(start_date_obj)
         if end_date_str:
-            end_date = date.fromisoformat(end_date_str)
-            sql_where_clause += " AND dao.override_date <= %s"; filters.append(end_date)
+            end_date_obj = date.fromisoformat(end_date_str) # Renamed to avoid conflict
+            sql_where_clause += " AND dao.override_date <= %s"; filters.append(end_date_obj)
     except ValueError:
         logger.warning(f"Invalid date format for override filter P:{provider_id}. start: {start_date_str}, end: {end_date_str}")
         sql_where_clause = ""; filters = [provider_id]
@@ -134,6 +134,7 @@ def get_overrides(provider_id, start_date_str=None, end_date_str=None):
     return overrides
 
 def check_location_weekly_slot_overlap(doctor_location_id, day_of_week, new_start_time_str, new_end_time_str, exclude_id=None):
+    # Unchanged
     conn = None; cursor = None; overlap = True 
     try:
         new_start_time = time.fromisoformat(new_start_time_str)
@@ -142,11 +143,9 @@ def check_location_weekly_slot_overlap(doctor_location_id, day_of_week, new_star
             raise ValueError("Start time must be before end time.")
         if not doctor_location_id:
             raise ValueError("Location ID required for weekly overlap check.")
-
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB Connection failed for overlap check.")
-        
-        with conn.cursor() as cursor_check: # Use 'with' for read-only cursor
+        with conn.cursor() as cursor_check: 
             query = """SELECT 1 FROM doctor_location_availability
                        WHERE doctor_location_id = %s AND day_of_week = %s
                        AND (%s < end_time AND %s > start_time)"""
@@ -159,31 +158,26 @@ def check_location_weekly_slot_overlap(doctor_location_id, day_of_week, new_star
             overlap = cursor_check.fetchone() is not None
     except ValueError as ve: 
         logger.warning(f"Validation error during weekly overlap check for DL_ID:{doctor_location_id}: {ve}")
-        # Overlap remains true (safe default)
     except (mysql.connector.Error, ConnectionError) as db_err:
         logger.error(f"DB/Connection Error weekly overlap DL_ID:{doctor_location_id}: {db_err}", exc_info=True)
     except Exception as e:
         logger.error(f"Unexpected error check weekly overlap DL_ID:{doctor_location_id}: {e}", exc_info=True)
     finally:
-        # Cursor is auto-closed by 'with' statement
         if conn and conn.is_connected(): conn.close()
     return overlap
 
 def check_override_overlap(provider_id, override_date_str, doctor_location_id=None, start_time_str=None, end_time_str=None, exclude_id=None):
+    # Unchanged
     conn = None; cursor = None; overlap = True
     try:
         override_date_obj = date.fromisoformat(override_date_str)
         start_time_obj = time.fromisoformat(start_time_str) if start_time_str else time.min 
         end_time_obj = time.fromisoformat(end_time_str) if end_time_str else time.max     
-
         if start_time_str and end_time_str and start_time_obj >= end_time_obj:
              raise ValueError("Start time must be before end time for override.")
-
         current_location_id_int = int(doctor_location_id) if doctor_location_id is not None else None
-
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB Connection failed for override overlap check.")
-        
         with conn.cursor() as cursor_check:
             params = {
                 'provider_id': provider_id, 'override_date': override_date_obj,
@@ -194,15 +188,8 @@ def check_override_overlap(provider_id, override_date_str, doctor_location_id=No
                 SELECT 1 FROM doctor_availability_overrides dao
                 WHERE dao.doctor_id = %(provider_id)s
                   AND dao.override_date = %(override_date)s
-                  AND ( /* Time overlap logic */
-                        (dao.start_time IS NULL OR dao.end_time IS NULL) OR /* Existing is full day */
-                        (%(start_time)s < COALESCE(dao.end_time, TIME('23:59:59')) AND %(end_time)s > COALESCE(dao.start_time, TIME('00:00:00')))
-                      )
-                  AND ( /* Location scope logic */
-                        dao.doctor_location_id IS NULL OR /* Existing is general override */
-                        %(current_loc_id)s IS NULL OR /* New is general override */
-                        dao.doctor_location_id = %(current_loc_id)s /* Both specific to same location */
-                      )
+                  AND ( (dao.start_time IS NULL OR dao.end_time IS NULL) OR (%(start_time)s < COALESCE(dao.end_time, TIME('23:59:59')) AND %(end_time)s > COALESCE(dao.start_time, TIME('00:00:00'))) )
+                  AND ( dao.doctor_location_id IS NULL OR %(current_loc_id)s IS NULL OR dao.doctor_location_id = %(current_loc_id)s )
             """
             if exclude_id:
                 query += " AND dao.override_id != %(exclude_id)s"
@@ -221,27 +208,23 @@ def check_override_overlap(provider_id, override_date_str, doctor_location_id=No
     return overlap
 
 def get_location_daily_caps(provider_id):
+    # Unchanged
     conn = None; cursor = None; caps_data_for_template = []
     try:
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB Conn failed for get_location_daily_caps.")
-        
         with conn.cursor(dictionary=True) as loc_cursor:
             loc_cursor.execute("SELECT doctor_location_id, location_name FROM doctor_locations WHERE doctor_id = %s AND is_active = TRUE ORDER BY location_name ASC", (provider_id,))
             locations = loc_cursor.fetchall()
-
         if not locations: return []
-
         with conn.cursor(dictionary=True) as caps_cursor:
             query_caps = "SELECT cap.cap_id, cap.doctor_location_id, cap.day_of_week, cap.max_appointments FROM doctor_location_daily_caps cap WHERE cap.doctor_id = %s"
             caps_cursor.execute(query_caps, (provider_id,))
             fetched_caps = caps_cursor.fetchall()
-
         caps_map = {}
         for cap_entry in fetched_caps:
             key = (cap_entry['doctor_location_id'], cap_entry['day_of_week'])
             caps_map[key] = {'cap_id': cap_entry['cap_id'], 'max_appointments': cap_entry['max_appointments']}
-
         for loc in locations:
             loc_id = loc['doctor_location_id']
             location_caps_for_days = [None] * 7
@@ -261,41 +244,35 @@ def get_location_daily_caps(provider_id):
         if conn and conn.is_connected(): conn.close()
     return caps_data_for_template
 
-# --- Helper Functions with Own Transaction Management ---
 def add_or_update_location_daily_cap(provider_id, doctor_location_id, day_of_week, max_appointments):
+    # Unchanged
     conn = None; cursor = None; operation_successful = False
     message = ""; result_cap = None
     try:
         day_of_week_int = int(day_of_week)
         max_appts_int = int(max_appointments)
         doc_loc_id_int = int(doctor_location_id)
-
         if not (0 <= day_of_week_int <= 6): raise ValueError("Invalid day of the week (0-6).")
         if max_appts_int < 0: raise ValueError("Max appointments must be non-negative.")
         if not doc_loc_id_int > 0 : raise ValueError("Valid Location ID is required.")
-
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB Connection failed.")
         if conn.in_transaction: 
             logger.warning(f"add_or_update_cap: Conn already in transaction. P:{provider_id}, L:{doc_loc_id_int}")
             try: conn.rollback()
             except Exception as e_rb: logger.error(f"Pre-emptive rollback failed: {e_rb}")
-        
         conn.start_transaction()
         cursor = conn.cursor(dictionary=True)
-
         cursor.execute("SELECT location_name FROM doctor_locations WHERE doctor_location_id = %s AND doctor_id = %s AND is_active = TRUE", (doc_loc_id_int, provider_id))
         loc_data = cursor.fetchone()
         if not loc_data:
             raise ValueError(f"Invalid, inactive, or unauthorized Location ID: {doc_loc_id_int}")
-
         query = """
             INSERT INTO doctor_location_daily_caps (doctor_id, doctor_location_id, day_of_week, max_appointments, created_at, updated_at)
             VALUES (%s, %s, %s, %s, NOW(), NOW())
             ON DUPLICATE KEY UPDATE max_appointments = VALUES(max_appointments), updated_at = NOW()
         """
         cursor.execute(query, (provider_id, doc_loc_id_int, day_of_week_int, max_appts_int))
-
         cursor.execute("SELECT cap_id, max_appointments FROM doctor_location_daily_caps WHERE doctor_id = %s AND doctor_location_id = %s AND day_of_week = %s", (provider_id, doc_loc_id_int, day_of_week_int))
         result_cap_data = cursor.fetchone()
         conn.commit()
@@ -315,7 +292,7 @@ def add_or_update_location_daily_cap(provider_id, doctor_location_id, day_of_wee
         if cursor: cursor.close()
         if conn and conn.is_connected():
             try:
-                if conn.in_transaction: # Should only be true if commit failed
+                if conn.in_transaction: 
                     logger.info(f"add_or_update_cap: Rolling back due to failure. P:{provider_id}")
                     conn.rollback()
             except Exception as rb_err: logger.error(f"Rollback error add_or_update_cap: {rb_err}", exc_info=True)
@@ -323,20 +300,19 @@ def add_or_update_location_daily_cap(provider_id, doctor_location_id, day_of_wee
     return operation_successful, message, result_cap
 
 def delete_location_daily_cap_by_details(provider_id, doctor_location_id, day_of_week):
+    # Unchanged
     conn = None; cursor = None; operation_successful = False; message = ""
     try:
         day_of_week_int = int(day_of_week)
         doc_loc_id_int = int(doctor_location_id)
         if not doc_loc_id_int > 0: raise ValueError("Valid Location ID is required.")
         if not (0 <= day_of_week_int <= 6): raise ValueError("Invalid day of the week (0-6).")
-
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB Connection failed.")
         if conn.in_transaction: 
             logger.warning(f"delete_cap_by_details: Conn already in transaction. P:{provider_id}, L:{doc_loc_id_int}")
             try: conn.rollback()
             except Exception as e_rb: logger.error(f"Pre-emptive rollback failed: {e_rb}")
-
         conn.start_transaction()
         cursor = conn.cursor()
         query = "DELETE FROM doctor_location_daily_caps WHERE doctor_id = %s AND doctor_location_id = %s AND day_of_week = %s"
@@ -363,174 +339,225 @@ def delete_location_daily_cap_by_details(provider_id, doctor_location_id, day_of
             finally: conn.close()
     return operation_successful, message
 
-# --- Route to Display Availability Management Page ---
-@availability_bp.route('/', methods=['GET'])
+# --- Main Page Routes ---
+@availability_bp.route('/')
 @login_required
-def manage_availability_page():
-    if not check_doctor_authorization(current_user):
-        logger.warning(f"Unauthorized access to availability page by user {current_user.id}")
-        abort(403)
+def manage_availability_redirect():
+    # Redirect to the default tab, e.g., weekly schedule
+    return redirect(url_for('.manage_weekly_schedule'))
 
+@availability_bp.route('/weekly-schedule', methods=['GET'])
+@login_required
+def manage_weekly_schedule():
+    if not check_doctor_authorization(current_user): abort(403)
     provider_id = get_provider_id(current_user)
     if provider_id is None:
-        logger.error(f"Provider_id missing for user {current_user.id} on availability page.")
-        flash("Your provider account is not properly configured. Please contact support.", "danger")
-        return redirect(url_for('doctor_main.dashboard')) # Or appropriate error page/dashboard
+        flash("Provider account not configured.", "danger")
+        return redirect(url_for('doctor_main.dashboard'))
 
     try:
         locations = get_all_provider_locations(provider_id)
         weekly_slots = get_all_provider_location_slots(provider_id)
-        overrides = get_overrides(provider_id)
-        daily_caps_data = get_location_daily_caps(provider_id)
-    except (ConnectionError, mysql.connector.Error) as db_err:
-        logger.critical(f"DB error loading availability page P:{provider_id}: {db_err}", exc_info=True)
-        flash("A database error occurred while loading availability data. Please try again later.", "danger")
-        return redirect(url_for('doctor_main.dashboard')) # Or render error template
     except Exception as e:
-        logger.critical(f"Unexpected error loading availability page P:{provider_id}: {e}", exc_info=True)
-        flash("An unexpected error occurred. Please try again later.", "danger")
-        return redirect(url_for('doctor_main.dashboard'))
+        flash("Error loading weekly schedule data. Please try again later.", "danger")
+        logger.error(f"Error loading weekly schedule page for P:{provider_id}: {e}", exc_info=True)
+        # Render the page with empty data or redirect
+        locations = []
+        weekly_slots = []
+        # return redirect(url_for('doctor_main.dashboard')) # Alternative
 
     days_of_week_map = {0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday"}
-    return render_template('Doctor_Portal/availability_management.html',
-        locations=locations, weekly_slots=weekly_slots, overrides=overrides,
-        daily_caps_data=daily_caps_data, days_of_week_map=days_of_week_map)
+    
+    csrf_token_form_field = ""
+    if hasattr(current_app, 'extensions') and 'csrf' in current_app.extensions:
+        from flask_wtf.csrf import generate_csrf
+        csrf_token_form_field = f'<input type="hidden" name="csrf_token" value="{generate_csrf()}">'
 
-# --- AJAX Handlers (with refined transaction management) ---
-# routes/Doctor_Portal/availability_management.py
-# ... (other imports and existing code up to the route) ...
+    return render_template('weekly_schedule.html',
+                           locations=locations,
+                           weekly_slots=weekly_slots,
+                           days_of_week_map=days_of_week_map,
+                           csrf_token_form_field=csrf_token_form_field)
 
-@availability_bp.route('/weekly', methods=['POST'])
+@availability_bp.route('/daily-caps', methods=['GET'])
 @login_required
-def add_weekly_slot_route():
-    if not check_doctor_authorization(current_user): return jsonify(success=False, message="Access denied."), 403
+def manage_daily_caps():
+    if not check_doctor_authorization(current_user): abort(403)
     provider_id = get_provider_id(current_user)
-    if provider_id is None: return jsonify(success=False, message="Provider ID missing."), 400
-
-    conn = None; cursor = None; operation_successful = False
+    if provider_id is None:
+        flash("Provider account not configured.", "danger")
+        return redirect(url_for('doctor_main.dashboard'))
+    
     try:
-        # ... (your form data retrieval and initial validation as before) ...
+        locations = get_all_provider_locations(provider_id) 
+        daily_caps_data = get_location_daily_caps(provider_id)
+    except Exception as e:
+        flash("Error loading daily caps data. Please try again later.", "danger")
+        logger.error(f"Error loading daily caps page for P:{provider_id}: {e}", exc_info=True)
+        locations = []
+        daily_caps_data = []
+
+    days_of_week_map = {0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday"}
+    csrf_token_form_field = "" 
+    if hasattr(current_app, 'extensions') and 'csrf' in current_app.extensions:
+        from flask_wtf.csrf import generate_csrf
+        csrf_token_form_field = f'<input type="hidden" name="csrf_token" value="{generate_csrf()}">'
+
+    return render_template('daily_caps.html', 
+                           locations=locations, 
+                           daily_caps_data=daily_caps_data,
+                           days_of_week_map=days_of_week_map,
+                           csrf_token_form_field=csrf_token_form_field)
+
+@availability_bp.route('/date-overrides', methods=['GET'])
+@login_required
+def manage_date_overrides():
+    if not check_doctor_authorization(current_user): abort(403)
+    provider_id = get_provider_id(current_user)
+    if provider_id is None:
+        flash("Provider account not configured.", "danger")
+        return redirect(url_for('doctor_main.dashboard'))
+
+    try:
+        locations = get_all_provider_locations(provider_id)
+        overrides = get_overrides(provider_id) 
+    except Exception as e:
+        flash("Error loading date override data. Please try again later.", "danger")
+        logger.error(f"Error loading date overrides page for P:{provider_id}: {e}", exc_info=True)
+        locations = []
+        overrides = []
+    
+    csrf_token_form_field = ""
+    if hasattr(current_app, 'extensions') and 'csrf' in current_app.extensions:
+        from flask_wtf.csrf import generate_csrf
+        csrf_token_form_field = f'<input type="hidden" name="csrf_token" value="{generate_csrf()}">'
+
+    return render_template('date_overrides.html', 
+                           locations=locations, 
+                           overrides=overrides,
+                           csrf_token_form_field=csrf_token_form_field)
+
+
+# --- Form Handling Routes (Full Page POST and Redirect) ---
+
+@availability_bp.route('/weekly-schedule/add', methods=['POST'])
+@login_required
+def add_weekly_slot_page_route():
+    if not check_doctor_authorization(current_user): abort(403)
+    provider_id = get_provider_id(current_user)
+    if provider_id is None:
+        flash("Provider account not configured.", "danger")
+        return redirect(url_for('.manage_weekly_schedule'))
+
+    conn = None; cursor = None # Initialize here
+    operation_successful = False # To track if commit should happen or rollback
+    
+    try:
         doctor_location_id = request.form.get('doctor_location_id', type=int)
         day_of_week = request.form.get('day_of_week', type=int)
-        start_time_str = request.form.get('start_time'); end_time_str = request.form.get('end_time')
+        start_time_str = request.form.get('start_time')
+        end_time_str = request.form.get('end_time')
 
         if not all([doctor_location_id, day_of_week is not None, start_time_str, end_time_str]):
-            raise ValueError("Location, day, start/end times required.")
-        if not (0 <= day_of_week <= 6): raise ValueError("Invalid day (0-6).")
-        start_t = time.fromisoformat(start_time_str); end_t = time.fromisoformat(end_time_str)
-        if start_t >= end_t: raise ValueError("Start time must be before end time.")
-
-        conn = get_db_connection() # <--- The connection is obtained here
-        if not conn: raise ConnectionError("DB connection failed.")
-
-        # AGGRESSIVE ATTEMPT TO CLEAR ANY PRE-EXISTING TRANSACTION STATE
-        if conn.in_transaction:
-            logger.warning(f"add_weekly: Connection (ID: {conn.connection_id if hasattr(conn, 'connection_id') else 'N/A'}) received in transaction. Attempting to clear. P:{provider_id}")
-            try:
-                conn.rollback() # First, try to rollback
-                logger.info(f"add_weekly: Pre-emptive rollback successful. P:{provider_id}")
-            except mysql.connector.Error as rb_err:
-                logger.error(f"add_weekly: Pre-emptive rollback failed: {rb_err}. Attempting commit to clear. P:{provider_id}", exc_info=True)
-                try:
-                    conn.commit() # If rollback fails, try to commit (might clear some states)
-                    logger.info(f"add_weekly: Pre-emptive commit (after failed rollback) successful. P:{provider_id}")
-                except mysql.connector.Error as c_err:
-                    logger.error(f"add_weekly: Pre-emptive commit also failed: {c_err}. Connection state is likely bad. P:{provider_id}", exc_info=True)
-                    # At this point, the connection is likely unusable for a new transaction.
-                    # We could raise an error here, or proceed and let start_transaction fail.
-                    # For this test, let's proceed to see if start_transaction still fails.
-            
-            # After attempting to clear, check again. This is for logging/understanding.
-            if conn.in_transaction:
-                logger.error(f"add_weekly: Connection (ID: {conn.connection_id if hasattr(conn, 'connection_id') else 'N/A'}) *still* in transaction after clear attempts. P:{provider_id}")
-            else:
-                logger.info(f"add_weekly: Connection (ID: {conn.connection_id if hasattr(conn, 'connection_id') else 'N/A'}) successfully cleared of prior transaction. P:{provider_id}")
-
-        # Ensure autocommit is False before manual transaction start
-        # This is crucial. If get_db_connection() sets it to True, start_transaction will fail or be meaningless.
-        if conn.autocommit is True:
-            logger.warning(f"add_weekly: Connection (ID: {conn.connection_id if hasattr(conn, 'connection_id') else 'N/A'}) had autocommit=True. Setting to False. P:{provider_id}")
-            conn.autocommit = False
-
-
-        # NOW, attempt to start the transaction for this route's operations
-        conn.start_transaction() # <--- THIS IS WHERE THE ORIGINAL ERROR OCCURS
+            flash("Location, day, start and end times are required.", "danger")
+            raise ValueError("Missing required fields")
+        if not (0 <= day_of_week <= 6): 
+            flash("Invalid day of the week selected.", "danger")
+            raise ValueError("Invalid day of week")
         
-        # ... (rest of your logic: location check, overlap check, INSERT, commit) ...
-        with conn.cursor() as cursor_check_loc:
+        start_t = time.fromisoformat(start_time_str)
+        end_t = time.fromisoformat(end_time_str)
+        if start_t >= end_t:
+            flash("Start time must be before end time.", "danger")
+            raise ValueError("Start time not before end time")
+
+        conn = get_db_connection()
+        if not conn: 
+            logger.error(f"add_weekly_slot_page_route: Failed to get DB connection for P:{provider_id}")
+            raise ConnectionError("DB connection failed.")
+
+        # --- Ensure clean state before starting a new transaction ---
+        if conn.in_transaction:
+            logger.warning(f"add_weekly_slot_page_route: Connection (ID: {conn.connection_id if hasattr(conn, 'connection_id') else 'N/A'}) was unexpectedly in a transaction. Attempting rollback. P:{provider_id}")
+            try:
+                conn.rollback() # Attempt to clear any lingering transaction
+                logger.info(f"add_weekly_slot_page_route: Pre-emptive rollback succeeded. P:{provider_id}")
+            except mysql.connector.Error as rb_err:
+                logger.error(f"add_weekly_slot_page_route: Pre-emptive rollback failed: {rb_err}. Connection state might be problematic. P:{provider_id}", exc_info=True)
+                # Depending on the error, you might re-raise or try to proceed cautiously.
+                # For now, let's log and proceed to see if start_transaction still fails.
+
+        # Ensure autocommit is False for manual transaction control
+        if conn.autocommit is True:
+            logger.info(f"add_weekly_slot_page_route: Connection (ID: {conn.connection_id if hasattr(conn, 'connection_id') else 'N/A'}) had autocommit=True. Setting to False. P:{provider_id}")
+            conn.autocommit = False
+        # --- End of clean state assurance ---
+        
+        conn.start_transaction() # Start the transaction for this specific operation
+        
+        # Check location ownership within the current transaction
+        with conn.cursor() as cursor_check_loc: # Using 'with' ensures cursor is closed
             cursor_check_loc.execute("SELECT 1 FROM doctor_locations WHERE doctor_location_id = %s AND doctor_id = %s AND is_active = TRUE", (doctor_location_id, provider_id))
             if not cursor_check_loc.fetchone():
-                # No data modified yet in *this* transaction, so no need to rollback *this* transaction
-                return jsonify(success=False, message="Invalid, inactive, or unauthorized location."), 403
-        
-        if check_location_weekly_slot_overlap(doctor_location_id, day_of_week, start_time_str, end_time_str):
-            # No data modified yet in *this* transaction
-            return jsonify(success=False, message="This slot overlaps with an existing one."), 400
+                flash("Invalid or unauthorized location selected.", "danger")
+                raise ValueError("Invalid location") # This will trigger rollback in finally
 
-        cursor = conn.cursor(dictionary=True)
+        # Check for overlap (this function gets its own connection, so it's isolated)
+        if check_location_weekly_slot_overlap(doctor_location_id, day_of_week, start_time_str, end_time_str):
+            flash("This slot overlaps with an existing one for the selected location and day.", "warning")
+            raise ValueError("Slot overlap") # This will trigger rollback in finally
+
+        cursor = conn.cursor(dictionary=True) # Create cursor for insert after checks
         query = "INSERT INTO doctor_location_availability (doctor_location_id, day_of_week, start_time, end_time) VALUES (%s, %s, %s, %s)"
         cursor.execute(query, (doctor_location_id, day_of_week, start_time_str, end_time_str))
-        new_slot_id = cursor.lastrowid
+        # new_slot_id = cursor.lastrowid # Not used in redirect flow currently, but good to have if needed
         
-        cursor.execute("SELECT location_name FROM doctor_locations WHERE doctor_location_id = %s", (doctor_location_id,))
-        loc_info = cursor.fetchone()
-        location_name = loc_info['location_name'] if loc_info else 'Unknown'
-        
-        conn.commit() # Committing *this* transaction
-        operation_successful = True
-        
-        return jsonify(success=True, message="Weekly slot added.", slot={"location_availability_id": new_slot_id, "doctor_location_id": doctor_location_id, "location_name": location_name, "day_of_week": day_of_week, "start_time": start_time_str, "end_time": end_time_str}), 201
+        conn.commit() # Commit the transaction for this operation
+        operation_successful = True # Mark as successful for the finally block
+        flash("Weekly slot added successfully.", "success")
 
-    except ValueError as ve: 
-        # If conn was obtained and a transaction *was* started for this route, finally block will handle rollback.
-        return jsonify(success=False, message=str(ve)), 400
+    except ValueError as ve:
+        logger.warning(f"Validation error adding weekly slot for P:{provider_id}: {ve}")
+        # Flash message should have been set by the validation checks
     except (mysql.connector.Error, ConnectionError) as err:
-        # This will catch the "Transaction already in progress" if the aggressive clear fails
-        # OR if other DB errors occur.
-        logger.error(f"DB Err add weekly P:{provider_id} L:{request.form.get('doctor_location_id')}: {err}", exc_info=True)
-        msg = f"DB Error: {err.msg}" if hasattr(err,'msg') else "Database Error"
-        if hasattr(err, 'errno') and err.errno == 1452 : msg="Invalid Location ID"
-        # Specific check for the error in question
-        if "Transaction already in progress" in str(err):
-            msg = "Database connection is in an inconsistent state. Please try again. If the problem persists, contact support."
-        return jsonify(success=False, message=msg), 500
+        logger.error(f"DB Error adding weekly slot P:{provider_id}: {err}", exc_info=True)
+        flash(f"Database error: {getattr(err, 'msg', 'Could not add slot.')}", "danger")
     except Exception as e:
-        logger.error(f"Err add weekly P:{provider_id} L:{request.form.get('doctor_location_id')}: {e}", exc_info=True)
-        return jsonify(success=False, message="An unexpected error occurred."), 500
+        logger.error(f"Unexpected error adding weekly slot P:{provider_id}: {e}", exc_info=True)
+        flash("An unexpected error occurred while adding the slot.", "danger")
     finally:
-        if cursor: cursor.close()
+        if cursor: 
+            cursor.close()
         if conn and conn.is_connected():
             try:
-                # This rollback is for the transaction *started by this route*, if it wasn't committed.
-                if conn.in_transaction: 
-                    if not operation_successful: # Only rollback if this route's operation wasn't successful
-                        logger.info(f"add_weekly: Rolling back this route's transaction. P:{provider_id}")
-                        conn.rollback()
-                    else:
-                        # This state implies commit was called, but conn.in_transaction is still true.
-                        # This is highly unusual for a successful commit.
-                        logger.warning(f"add_weekly: Connection (ID: {conn.connection_id if hasattr(conn, 'connection_id') else 'N/A'}) still in transaction after successful commit. This is unexpected. P:{provider_id}")
+                # Only rollback if an operation was started for this route AND it wasn't successful
+                if conn.in_transaction and not operation_successful: 
+                    logger.info(f"add_weekly_slot_page_route: Rolling back this route's transaction due to failure. P:{provider_id}")
+                    conn.rollback()
+                elif conn.in_transaction and operation_successful:
+                     logger.warning(f"add_weekly_slot_page_route: Connection (ID: {conn.connection_id if hasattr(conn, 'connection_id') else 'N/A'}) still in transaction after explicit commit. This is unexpected. P:{provider_id}")
+                     # You might attempt another rollback here if this state is problematic
+                     # conn.rollback() 
             except Exception as rb_err: 
-                logger.error(f"Rollback error in add_weekly finally: {rb_err}", exc_info=True)
+                logger.error(f"Rollback/Cleanup error in add_weekly_slot_page_route finally: {rb_err}", exc_info=True)
             finally: 
-                conn.close() # Always close the connection
+                conn.close() 
+        
+    return redirect(url_for('.manage_weekly_schedule'))
 
-@availability_bp.route('/weekly/<int:location_availability_id>', methods=['DELETE'])
+@availability_bp.route('/weekly-schedule/delete/<int:location_availability_id>', methods=['POST'])
 @login_required
-def delete_weekly_slot_route(location_availability_id):
-    if not check_doctor_authorization(current_user): return jsonify(success=False, message="Access denied."), 403
+def delete_weekly_slot_page_route(location_availability_id):
+    if not check_doctor_authorization(current_user): abort(403)
     provider_id = get_provider_id(current_user)
-    if provider_id is None: return jsonify(success=False, message="Provider ID missing."), 400
+    if provider_id is None:
+        flash("Provider account not configured.", "danger")
+        return redirect(url_for('.manage_weekly_schedule'))
 
-    conn = None; cursor = None; operation_successful = False
+    conn = None; cursor = None
     try:
-        conn = get_db_connection(); 
+        conn = get_db_connection()
         if not conn: raise ConnectionError("DB connection failed.")
-        if conn.in_transaction:
-            logger.warning(f"del_weekly: Conn already in transaction. P:{provider_id}")
-            try: conn.rollback()
-            except Exception as e_rb: logger.error(f"Pre-emptive rollback failed: {e_rb}")
-
         conn.start_transaction()
         cursor = conn.cursor()
         query = """DELETE dla FROM doctor_location_availability dla
@@ -539,189 +566,176 @@ def delete_weekly_slot_route(location_availability_id):
         cursor.execute(query, (location_availability_id, provider_id))
         
         if cursor.rowcount == 0:
-            with conn.cursor() as check_cursor: # Check existence using a separate auto-closed cursor
-                 check_cursor.execute("SELECT 1 FROM doctor_location_availability WHERE location_availability_id = %s", (location_availability_id,))
-                 exists = check_cursor.fetchone()
-            status_code = 403 if exists else 404
-            # No data modified that needs rollback here beyond what finally handles
-            return jsonify(success=False, message="Slot not found or unauthorized."), status_code
-        
+            flash("Slot not found or you are not authorized to delete it.", "warning")
+        else:
+            flash("Weekly slot deleted successfully.", "success")
         conn.commit()
-        operation_successful = True
-        return jsonify(success=True, message="Weekly slot deleted."), 200
-    except (mysql.connector.Error, ConnectionError) as err: 
-        logger.error(f"DB Err del weekly ID {location_availability_id} P:{provider_id}: {err}", exc_info=True)
-        return jsonify(success=False, message="DB error."), 500
-    except Exception as e: 
-        logger.error(f"Err del weekly ID {location_availability_id} P:{provider_id}: {e}", exc_info=True)
-        return jsonify(success=False, message="Error."), 500
+    except (mysql.connector.Error, ConnectionError) as err:
+        if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
+        logger.error(f"DB Error deleting weekly slot ID {location_availability_id} P:{provider_id}: {err}", exc_info=True)
+        flash("Database error while deleting slot.", "danger")
+    except Exception as e:
+        if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
+        logger.error(f"Unexpected error deleting weekly slot ID {location_availability_id} P:{provider_id}: {e}", exc_info=True)
+        flash("An unexpected error occurred.", "danger")
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected():
-            try:
-                if conn.in_transaction: 
-                    logger.info(f"del_weekly: Rolling back. P:{provider_id}")
-                    conn.rollback()
-            except Exception as rb_err: logger.error(f"Rollback error del_weekly: {rb_err}", exc_info=True)
-            finally: conn.close()
+        if conn and conn.is_connected(): conn.close()
+        
+    return redirect(url_for('.manage_weekly_schedule'))
 
-@availability_bp.route('/override', methods=['POST'])
+
+@availability_bp.route('/daily-caps/save', methods=['POST'])
 @login_required
-def add_override_route():
-    if not check_doctor_authorization(current_user): return jsonify(success=False, message="Access denied."), 403
+def save_daily_caps_page_route():
+    if not check_doctor_authorization(current_user): abort(403)
     provider_id = get_provider_id(current_user)
-    if provider_id is None: return jsonify(success=False, message="Provider ID missing."), 400
+    if provider_id is None:
+        flash("Provider account not configured.", "danger")
+        return redirect(url_for('.manage_daily_caps'))
 
-    conn = None; cursor = None; operation_successful = False
-    location_name_for_response = "All Locations (General)"
+    all_ops_successful = True
+    error_messages = []
+    try:
+        locations = get_all_provider_locations(provider_id) # Get locations to iterate through
+        for loc in locations:
+            for day_idx in range(7):
+                cap_value_str = request.form.get(f"cap_{loc['doctor_location_id']}_{day_idx}")
+                if cap_value_str is not None: 
+                    if cap_value_str.strip() == '' or cap_value_str.strip() == '0':
+                        success, msg = delete_location_daily_cap_by_details(provider_id, loc['doctor_location_id'], day_idx)
+                        if not success: 
+                            all_ops_successful = False
+                            error_messages.append(f"Location '{loc['location_name']}', Day {day_idx}: {msg}")
+                    else:
+                        try:
+                            max_appts = int(cap_value_str)
+                            if max_appts < 0:
+                                all_ops_successful = False
+                                error_messages.append(f"Location '{loc['location_name']}', Day {day_idx}: Cap must be non-negative.")
+                                continue
+                            success, msg, _ = add_or_update_location_daily_cap(provider_id, loc['doctor_location_id'], day_idx, max_appts)
+                            if not success:
+                                all_ops_successful = False
+                                error_messages.append(f"Location '{loc['location_name']}', Day {day_idx}: {msg}")
+                        except ValueError:
+                            all_ops_successful = False
+                            error_messages.append(f"Location '{loc['location_name']}', Day {day_idx}: Invalid cap value '{cap_value_str}'.")
+    except Exception as e:
+        logger.error(f"Error processing batch daily caps save for P:{provider_id}: {e}", exc_info=True)
+        flash("An unexpected error occurred while saving caps.", "danger")
+        return redirect(url_for('.manage_daily_caps'))
+
+    if all_ops_successful:
+        flash("Daily caps updated successfully.", "success")
+    else:
+        flash("Some errors occurred while updating daily caps: " + "; ".join(error_messages), "danger")
+        
+    return redirect(url_for('.manage_daily_caps'))
+
+
+@availability_bp.route('/date-overrides/add', methods=['POST'])
+@login_required
+def add_override_page_route():
+    if not check_doctor_authorization(current_user): abort(403)
+    provider_id = get_provider_id(current_user)
+    if provider_id is None:
+        flash("Provider account not configured.", "danger")
+        return redirect(url_for('.manage_date_overrides'))
+
+    conn = None; cursor = None
     try:
         override_date_str = request.form.get('override_date')
         doctor_location_id_str = request.form.get('doctor_location_id', '').strip()
         doctor_location_id = int(doctor_location_id_str) if doctor_location_id_str and doctor_location_id_str.isdigit() else None
         start_time_str = request.form.get('start_time', '').strip() or None
         end_time_str = request.form.get('end_time', '').strip() or None
-        is_unavailable_str = request.form.get('is_unavailable', 'true')
-        is_unavailable = is_unavailable_str.lower() == 'true'
+        is_unavailable_str = request.form.get('is_unavailable', 'false') # If checkbox not checked, it won't be in form
+        is_unavailable = is_unavailable_str.lower() == 'true' or request.form.get('is_unavailable') == 'on' # Handle 'on' from checkbox
         reason = request.form.get('reason', '').strip() or None
 
-        if not override_date_str: raise ValueError("Override date is required.")
-        date.fromisoformat(override_date_str)
+        if not override_date_str:
+            flash("Override date is required.", "danger"); raise ValueError("Missing override date")
+        date.fromisoformat(override_date_str) 
+
         if start_time_str and end_time_str:
             start_t = time.fromisoformat(start_time_str); end_t = time.fromisoformat(end_time_str)
-            if start_t >= end_t: raise ValueError("Start time must be before end time.")
+            if start_t >= end_t:
+                flash("Start time must be before end time.", "danger"); raise ValueError("Start time not before end time")
         elif (start_time_str and not end_time_str) or (not start_time_str and end_time_str):
-            raise ValueError("Both start and end times required for partial day, or neither for full day.")
+            flash("Both start and end times are required for a partial day override, or leave both blank for a full day override.", "warning"); raise ValueError("Partial time missing")
 
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB connection failed.")
-        if conn.in_transaction:
-            logger.warning(f"add_override: Conn already in transaction. P:{provider_id}")
-            try: conn.rollback()
-            except Exception as e_rb: logger.error(f"Pre-emptive rollback failed: {e_rb}")
 
-        if doctor_location_id is not None:
-            with conn.cursor(dictionary=True) as cursor_loc_check:
-                cursor_loc_check.execute("SELECT location_name FROM doctor_locations WHERE doctor_location_id = %s AND doctor_id = %s AND is_active = TRUE", (doctor_location_id, provider_id))
-                loc_info = cursor_loc_check.fetchone()
-                if not loc_info: return jsonify(success=False, message="Invalid, inactive, or unauthorized location ID."), 403
-                location_name_for_response = loc_info['location_name']
+        if doctor_location_id is not None: # Check location ownership if a specific location is chosen
+            with conn.cursor() as cursor_loc_check: 
+                cursor_loc_check.execute("SELECT 1 FROM doctor_locations WHERE doctor_location_id = %s AND doctor_id = %s AND is_active = TRUE", (doctor_location_id, provider_id))
+                if not cursor_loc_check.fetchone():
+                    flash("Invalid or unauthorized location selected.", "danger"); raise ValueError("Invalid location")
         
         if check_override_overlap(provider_id, override_date_str, doctor_location_id, start_time_str, end_time_str):
-            return jsonify(success=False, message="This override conflicts with an existing one."), 400
+            flash("This override overlaps with an existing one for the selected date and location scope.", "warning"); raise ValueError("Override overlap")
 
         conn.start_transaction()
         cursor = conn.cursor()
         query = "INSERT INTO doctor_availability_overrides (doctor_id, doctor_location_id, override_date, start_time, end_time, is_unavailable, reason) VALUES (%s, %s, %s, %s, %s, %s, %s)"
         params = (provider_id, doctor_location_id, override_date_str, start_time_str, end_time_str, is_unavailable, reason)
-        cursor.execute(query, params); new_id = cursor.lastrowid
+        cursor.execute(query, params)
         conn.commit()
-        operation_successful = True
+        flash("Date override added successfully.", "success")
 
-        override_data = {"override_id": new_id, "doctor_location_id": doctor_location_id, "location_name": location_name_for_response, "override_date": override_date_str, "start_time": start_time_str, "end_time": end_time_str, "is_unavailable": is_unavailable, "reason": reason}
-        return jsonify(success=True, message="Override added.", override=override_data), 201
-    except ValueError as ve: return jsonify(success=False, message=str(ve)), 400
+    except ValueError as ve:
+        logger.warning(f"Validation error adding override for P:{provider_id}: {ve}")
+        # Flash message should have been set by the validation checks or explicitly above
     except (mysql.connector.Error, ConnectionError) as err:
-        logger.error(f"DB Err add override P:{provider_id} L:{request.form.get('doctor_location_id')}: {err}", exc_info=True)
-        msg = f"DB Error: {err.msg}" if hasattr(err,'msg') else "Database Error"
-        if hasattr(err, 'errno') and err.errno == 1452 : msg="Invalid Location ID (if specified)"
-        return jsonify(success=False, message=msg), 500
+        if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
+        logger.error(f"DB Error adding override P:{provider_id}: {err}", exc_info=True)
+        flash(f"Database error: {getattr(err, 'msg', 'Could not add override.')}", "danger")
     except Exception as e:
-        logger.error(f"Err add override P:{provider_id} L:{request.form.get('doctor_location_id')}: {e}", exc_info=True)
-        return jsonify(success=False, message="An unexpected error occurred."), 500
+        if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
+        logger.error(f"Unexpected error adding override P:{provider_id}: {e}", exc_info=True)
+        flash("An unexpected error occurred while adding the override.", "danger")
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected():
-            try:
-                if conn.in_transaction: 
-                    logger.info(f"add_override: Rolling back. P:{provider_id}")
-                    conn.rollback()
-            except Exception as rb_err: logger.error(f"Rollback error add_override: {rb_err}", exc_info=True)
-            finally: conn.close()
+        if conn and conn.is_connected(): conn.close()
+        
+    return redirect(url_for('.manage_date_overrides'))
 
-@availability_bp.route('/override/<int:override_id>', methods=['DELETE'])
+
+@availability_bp.route('/date-overrides/delete/<int:override_id>', methods=['POST'])
 @login_required
-def delete_override_route(override_id):
-    if not check_doctor_authorization(current_user): return jsonify(success=False, message="Access denied."), 403
+def delete_override_page_route(override_id): 
+    if not check_doctor_authorization(current_user): abort(403)
     provider_id = get_provider_id(current_user)
-    if provider_id is None: return jsonify(success=False, message="Provider ID missing."), 400
+    if provider_id is None:
+        flash("Provider account not configured.", "danger")
+        return redirect(url_for('.manage_date_overrides'))
 
-    conn = None; cursor = None; operation_successful = False
+    conn = None; cursor = None
     try:
         conn = get_db_connection()
         if not conn: raise ConnectionError("DB connection failed.")
-        if conn.in_transaction:
-            logger.warning(f"del_override: Conn already in transaction. P:{provider_id}")
-            try: conn.rollback()
-            except Exception as e_rb: logger.error(f"Pre-emptive rollback failed: {e_rb}")
-        
         conn.start_transaction()
         cursor = conn.cursor()
         query = "DELETE FROM doctor_availability_overrides WHERE override_id = %s AND doctor_id = %s"
         cursor.execute(query, (override_id, provider_id))
         
         if cursor.rowcount == 0:
-            with conn.cursor() as check_cursor:
-                check_cursor.execute("SELECT 1 FROM doctor_availability_overrides WHERE override_id = %s", (override_id,))
-                exists = check_cursor.fetchone()
-            status_code = 403 if exists else 404
-            return jsonify(success=False, message="Override not found or unauthorized."), status_code
-        
+            flash("Override not found or you are not authorized to delete it.", "warning")
+        else:
+            flash("Date override deleted successfully.", "success")
         conn.commit()
-        operation_successful = True
-        return jsonify(success=True, message="Override deleted."), 200
-    except (mysql.connector.Error, ConnectionError) as err: 
-        logger.error(f"DB Err del override ID {override_id} P:{provider_id}: {err}", exc_info=True)
-        return jsonify(success=False, message="DB error."), 500
-    except Exception as e: 
-        logger.error(f"Err del override ID {override_id} P:{provider_id}: {e}", exc_info=True)
-        return jsonify(success=False, message="Error."), 500
+    except (mysql.connector.Error, ConnectionError) as err:
+        if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
+        logger.error(f"DB Error deleting override ID {override_id} P:{provider_id}: {err}", exc_info=True)
+        flash("Database error while deleting override.", "danger")
+    except Exception as e:
+        if conn and conn.is_connected() and conn.in_transaction: conn.rollback()
+        logger.error(f"Unexpected error deleting override ID {override_id} P:{provider_id}: {e}", exc_info=True)
+        flash("An unexpected error occurred.", "danger")
     finally:
         if cursor: cursor.close()
-        if conn and conn.is_connected():
-            try:
-                if conn.in_transaction: 
-                    logger.info(f"del_override: Rolling back. P:{provider_id}")
-                    conn.rollback()
-            except Exception as rb_err: logger.error(f"Rollback error del_override: {rb_err}", exc_info=True)
-            finally: conn.close()
-
-@availability_bp.route('/location-caps/save', methods=['POST'])
-@login_required
-def save_location_daily_cap_route():
-    if not check_doctor_authorization(current_user): return jsonify(success=False, message="Access denied."), 403
-    provider_id = get_provider_id(current_user)
-    if provider_id is None: return jsonify(success=False, message="Provider ID missing."), 400
-
-    data = request.json
-    if not data: return jsonify(success=False, message="Invalid request data."), 400
-
-    doctor_location_id_str = data.get('doctor_location_id')
-    day_of_week_str = data.get('day_of_week') 
-    max_appointments_str = data.get('max_appointments')
-
-    if doctor_location_id_str is None or day_of_week_str is None or max_appointments_str is None:
-        return jsonify(success=False, message="Location, day, and max appointments value required."), 400
-
-    try:
-        doctor_location_id_int = int(doctor_location_id_str)
-        day_of_week_int = int(day_of_week_str)
-
-        if max_appointments_str == '': # Clear cap
-            op_success, message = delete_location_daily_cap_by_details(provider_id, doctor_location_id_int, day_of_week_int)
-            status_code = 200 if op_success else (500 if "Database error" in message else 400)
-            return jsonify(success=op_success, message=message, deleted=True, doctor_location_id=doctor_location_id_int, day_of_week=day_of_week_int), status_code
-        else:
-            max_appointments_int = int(max_appointments_str)
-            # Validation for max_appointments_int (e.g. non-negative) is inside add_or_update helper
-    except ValueError:
-        return jsonify(success=False, message="Invalid input: Ensure numeric values for ID, day, and caps."), 400
-    except Exception as e:
-        logger.error(f"Error parsing daily cap save request: {e}", exc_info=True)
-        return jsonify(success=False, message="Error processing request."), 500
-
-    op_success, message, result_cap = add_or_update_location_daily_cap(provider_id, doctor_location_id_int, day_of_week_int, max_appointments_int)
-    status_code = 200 if op_success else 400
-    if not op_success:
-        if "Database error" in message or "unexpected" in message.lower() or "DB Connection failed" in message: status_code = 500
-        elif "Invalid or unauthorized Location" in message: status_code = 403
-    return jsonify(success=op_success, message=message, cap=result_cap if op_success else None, deleted=False), status_code
+        if conn and conn.is_connected(): conn.close()
+        
+    return redirect(url_for('.manage_date_overrides'))

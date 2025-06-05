@@ -4,17 +4,19 @@
 
 {% block head_extra %}
     <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}">
+
     <style>
+        /* ... your existing styles ... */
         .appointment-list-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 1.5rem;
         }
         .appointment-card {
-            background-color: var(--bg-secondary);
+            background-color: var(--bg-secondary); /* Ensure --bg-secondary is themed for light/dark */
             border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-md, 8px); /* Use base.css variable if available */
-            box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1)); /* Use base.css variable */
+            border-radius: var(--border-radius-md, 8px);
+            box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1));
             display: flex;
             flex-direction: column;
             height: 100%;
@@ -31,15 +33,17 @@
             flex-wrap: wrap; gap: 0.5rem;
             border-bottom: 1px dashed var(--border-color-light, var(--border-color));
             padding-bottom: 0.75rem;
+            color: var(--text-color); /* Ensure title text color is themed */
         }
         .appointment-card .card-title .status-badge {
             font-size: 0.8em; padding: 0.3em 0.6em; border-radius: var(--border-radius-sm, 4px);
+            /* Ensure status badges have themed background and text color */
         }
         .appointment-card .card-text {
             font-size: 0.95em; color: var(--text-secondary); margin-bottom: 0.6rem;
             display: flex; align-items: center; gap: 0.5rem;
         }
-        .appointment-card .card-text i.fas { /* More specific icon styling */
+        .appointment-card .card-text i.fas {
             color: var(--text-muted, var(--text-secondary)); width: 16px; text-align: center; margin-right: 0.25rem;
         }
         .appointment-card .card-text.doctor-name { color: var(--text-color); font-weight: 500; }
@@ -48,9 +52,79 @@
             margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color-light, var(--border-color));
             display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;
         }
-        .appointment-list-table .table { margin-bottom: 0; } /* Bootstrap table styles */
-        .appointment-list-table th { white-space: nowrap; }
-        .no-results { padding: 2rem; text-align: center; color: var(--text-secondary); background-color: var(--bg-secondary); border-radius: var(--border-radius-md, 8px); margin-top: 1rem;}
+        .appointment-list-table .table { margin-bottom: 0; }
+        /* .appointment-list-table th { white-space: nowrap; } /* This was original, keep if desired, or override below */
+
+        .no-results {
+            padding: 2rem; text-align: center; color: var(--text-secondary);
+            background-color: var(--bg-secondary); /* Ensure --bg-secondary is themed */
+            border-radius: var(--border-radius-md, 8px); margin-top: 1rem;
+            border: 1px solid var(--border-color); /* Match card border */
+        }
+
+        /* --- NEW/UPDATED STYLES FOR PAST APPOINTMENTS TABLE --- */
+
+        /* General cell styling for the past appointments table */
+        .appointment-list-table .table th,
+        .appointment-list-table .table td {
+            padding: 0.9rem 1rem; /* Adjust padding as desired (original BS is 0.75rem) */
+            vertical-align: middle; /* Aligns content vertically in cells */
+            border-top-color: var(--border-color-light, var(--border-color)); /* Ensure border color is themed */
+            color: var(--text-secondary); /* Default text color for td */
+        }
+        .appointment-list-table .table td:first-child,
+        .appointment-list-table .table th:first-child {
+            padding-left: 1.25rem; /* More padding for the first cell if card has padding */
+        }
+        .appointment-list-table .table td:last-child,
+        .appointment-list-table .table th:last-child {
+            padding-right: 1.25rem; /* More padding for the last cell */
+        }
+
+
+        /* Styling for the table header (thead th) */
+        .appointment-list-table .table thead th {
+            color: var(--text-primary-strong, var(--text-primary)); /* Stronger text color for header, themed */
+            border-bottom: 2px solid var(--border-color, #dee2e6); /* Emphasize header bottom border, themed */
+            font-weight: 600; /* Bolder text for headers */
+            white-space: nowrap; /* Keep header text on one line if it was intended */
+        }
+        .appointment-list-table .table td {
+            color: var(--text-secondary);
+        }
+        .appointment-list-table .table td strong, /* If you use strong tags in td */
+        .appointment-list-table .table td b,
+        .appointment-list-table .table td .font-weight-bold { /* Or Bootstrap classes */
+             color: var(--text-primary); /* Make bolded text in cells use primary text color */
+        }
+
+
+        /* Spacing and alignment for action buttons in the table */
+        .appointment-list-table .action-buttons {
+            white-space: nowrap; /* Try to keep buttons on one line */
+            text-align: right; /* Align buttons to the right of the cell */
+        }
+        .appointment-list-table .action-buttons .button {
+            margin-left: 0.5rem; /* Spacing between multiple buttons */
+        }
+        .appointment-list-table .action-buttons .button:first-child {
+            margin-left: 0; /* No left margin for the first button in the group */
+        }
+
+        /* Status badges within the table */
+        .appointment-list-table .status-badge {
+            font-size: 0.8em;
+            padding: 0.3em 0.6em;
+            border-radius: var(--border-radius-sm, 4px);
+            /* Ensure these status- specific classes provide themed background/text color */
+        }
+
+        /* If using .table-responsive, ensure it respects card's border radius */
+        .appointment-list-table .table-responsive {
+           border-radius: inherit; /* Inherit border-radius from the parent .card */
+           overflow: hidden; /* Clip the inner table to the rounded corners */
+        }
+        /* --- END OF NEW/UPDATED STYLES --- */
     </style>
 {% endblock %}
 

@@ -150,10 +150,6 @@
                href="{{ url_for('.view_patient_add_entry_tab', patient_id=patient_id) }}">
                <i class="fas fa-edit fa-fw"></i> Add Entry
             </a>
-            <a class="tab-button {% if current_section == 'trackers' %}active{% endif %}" 
-               href="{{ url_for('.view_patient_tracker_reports_tab', patient_id=patient_id) }}">
-               <i class="fas fa-chart-line fa-fw"></i> Tracker Reports
-            </a>
         </nav>
 
         <div class="profile-content-area card"> {# ADDED .card class here for a general wrapper #}
@@ -188,43 +184,7 @@
     {{ super() }}
     {# JavaScript for the "View Report JSON" modal - kept from previous #}
     <script>
-    // ... (existing modal JS from previous response) ...
-    document.addEventListener('DOMContentLoaded', function () {
-        const reportModalElement = document.getElementById('doctorViewReportContentModal');
-        let reportModalInstance = null;
-        if (reportModalElement && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            reportModalInstance = new bootstrap.Modal(reportModalElement);
-        }
-        const modalJsonContentEl = document.getElementById('doctorViewReportJsonContent');
-        document.body.addEventListener('click', async function(event) {
-            const viewButton = event.target.closest('.doctor-view-report-btn');
-            if (viewButton) {
-                event.preventDefault();
-                const reportId = viewButton.dataset.reportId;
-                const patientIdForUrl = viewButton.dataset.patientId; 
-                if (!reportId || !modalJsonContentEl || !reportModalInstance || !patientIdForUrl) {
-                    console.error("Modal, report ID, patient ID, or content element missing for doctor view.");
-                    return;
-                }
-                modalJsonContentEl.textContent = 'Loading report data...';
-                reportModalInstance.show();
-                try {
-                    const viewUrl = `{{ url_for('patients.view_patient_report_json_content', patient_id=0, report_id=0) }}`
-                                    .replace('/0/reports/0/view-json', `/${patientIdForUrl}/reports/${reportId}/view-json`);
-                    const response = await fetch(viewUrl);
-                    const result = await response.json();
-                    if (response.ok && result.success) {
-                        modalJsonContentEl.textContent = JSON.stringify(result.content, null, 2);
-                    } else {
-                        modalJsonContentEl.textContent = `Error: ${result.message || 'Could not load report content.'}`;
-                    }
-                } catch (err) {
-                    console.error('Error fetching report content for modal (doctor view):', err);
-                    modalJsonContentEl.textContent = 'Failed to load report details due to a network or server error.';
-                }
-            }
-        });
-    });
+    
     </script>
     {% block patient_profile_section_scripts_specific %}{% endblock %}
 {% endblock %}

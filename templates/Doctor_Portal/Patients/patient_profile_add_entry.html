@@ -48,7 +48,6 @@
         <div class="add-entry-form-block" id="form-diagnosis-anchor">
             <h5><i class="fas fa-stethoscope fa-fw"></i> Add New Diagnosis</h5>
             <form action="{{ url_for('patients.add_diagnosis', patient_id=patient.user_info.user_id) }}" method="POST">
-                {# ... Diagnosis form fields from your previous version ... #}
                  <div class="row g-3 mb-3">
                      <div class="col-md-4">
                          <label for="diag-date" class="form-label form-label-sm">Diagnosis Date <span class="text-danger">*</span></label>
@@ -131,15 +130,21 @@
         <div class="add-entry-form-block" id="form-symptom-anchor">
              <h5><i class="fas fa-head-side-cough fa-fw"></i> Record New Symptom</h5>
              <form action="{{ url_for('patients.add_symptom', patient_id=patient.user_info.user_id) }}" method="POST">
-                {# ... symptom form fields from previous version ... #}
                  <div class="row g-3 mb-3">
                      <div class="col-md-6">
                          <label for="symptom-name-input" class="form-label form-label-sm">Symptom <span class="text-danger">*</span></label>
+                         {# The input 'symptom_name_or_id' will hold the typed name or a selected name from datalist #}
                          <input type="text" list="symptomsDataList" id="symptom-name-input" name="symptom_name_or_id" class="form-control form-control-sm" required placeholder="Type or select symptom">
                          <datalist id="symptomsDataList">
-                             {% for sym_catalog_item in symptoms_catalog %}<option value="{{ sym_catalog_item.id }}">{{ sym_catalog_item.name }}</option>{% else %}<option value="" disabled>(No symptoms in catalog)</option>{% endfor %}
+                             {# The value attribute of option should be the symptom_name for easier matching if JS fails #}
+                             {% for sym_catalog_item in symptoms_catalog %}
+                                 <option value="{{ sym_catalog_item.name }}" data-id="{{ sym_catalog_item.id }}">{{ sym_catalog_item.name }}</option>
+                             {% else %}
+                                 <option value="" disabled>(No symptoms in catalog)</option>
+                             {% endfor %}
                          </datalist>
-                         <input type="hidden" name="symptom_id" id="symptom-id-hidden">
+                         {# This hidden input will store the ID if a datalist item is explicitly selected via JS #}
+                         <input type="hidden" name="symptom_id_selected" id="symptom-id-hidden">
                      </div>
                      <div class="col-md-3">
                          <label for="symptom-reported-date" class="form-label form-label-sm">Reported Date <span class="text-danger">*</span></label>
@@ -180,7 +185,6 @@
         <div class="add-entry-form-block" id="form-vaccination-anchor">
             <h5><i class="fas fa-syringe fa-fw"></i> Record Vaccination</h5>
             <form action="{{ url_for('patients.add_vaccination', patient_id=patient.user_info.user_id) }}" method="POST">
-                {# ... vaccination form fields from previous version ... #}
                 <div class="row g-3 mb-3">
                     <div class="col-md-5">
                         <label for="vaccine-id-select" class="form-label form-label-sm">Vaccine Name <span class="text-danger">*</span></label>
@@ -219,10 +223,9 @@
 {% endblock %}
 
 {% block patient_profile_section_scripts_specific %}
-    {# JavaScript specific to the forms (condition search, datalist, conditional visibility) #}
     <script>
-        // ... (JS for diagnosis search, symptom datalist, conditional field visibility - from previous correct version) ...
     document.addEventListener('DOMContentLoaded', function() {
+        // Diagnosis followup and resolved date visibility JS (same as before)
         const diagFollowupCheckbox = document.getElementById('diag-followup-check');
         const diagFollowupDetailsGroup = document.getElementById('diag-followup-details-group');
         if (diagFollowupCheckbox && diagFollowupDetailsGroup) {
@@ -256,33 +259,45 @@
             toggleDiagResolved();
         }
 
-         const sympNameInput = document.getElementById('symptom-name-input'); 
-         const sympIdHidden = document.getElementById('symptom-id-hidden');   
-         const sympDatalist = document.getElementById('symptomsDataList');
-         if (sympNameInput && sympIdHidden && sympDatalist) {
-             sympNameInput.addEventListener('input', function (e) {
+        // Symptom Datalist and Hidden ID Population
+        const sympNameInput = document.getElementById('symptom-name-input');
+        const sympIdHidden = document.getElementById('symptom-id-hidden'); // Will store the ID of the selected symptom
+        const sympDatalist = document.getElementById('symptomsDataList');
+
+        if (sympNameInput && sympIdHidden && sympDatalist) {
+            sympNameInput.addEventListener('input', function (e) {
                 const inputValue = e.target.value.trim();
-                 sympIdHidden.value = '';
-                 for (const option of sympDatalist.options) {
-                     if (option.value === inputValue || option.textContent.trim().toLowerCase() === inputValue.toLowerCase()) {
-                         sympIdHidden.value = option.value; break;
-                     }
-                 }
-             });
+                sympIdHidden.value = ''; // Clear hidden ID on new input
+                for (const option of sympDatalist.options) {
+                    // Match against the option's 'value' (which is the name) or its textContent
+                    if (option.value.toLowerCase() === inputValue.toLowerCase()) {
+                        sympIdHidden.value = option.dataset.id; // Use data-id attribute to get the ID
+                        break;
+                    }
+                }
+            });
+            // Optional: Clear hidden ID if input is cleared or doesn't match anything on blur/change
              sympNameInput.addEventListener('change', function(e){
-                if(e.target.value.trim() === '') { sympIdHidden.value = ''; }
-                else {
+                const inputValue = e.target.value.trim();
+                if(inputValue === '') {
+                    sympIdHidden.value = '';
+                } else {
                     let foundMatch = false;
-                     for (const option of sympDatalist.options) {
-                        if (option.value === e.target.value.trim() || option.textContent.trim().toLowerCase() === e.target.value.trim().toLowerCase()) {
-                            sympIdHidden.value = option.value; foundMatch = true; break;
+                    for (const option of sympDatalist.options) {
+                        if (option.value.toLowerCase() === inputValue.toLowerCase()) {
+                            sympIdHidden.value = option.dataset.id;
+                            foundMatch = true;
+                            break;
                         }
                     }
-                    if (!foundMatch) { sympIdHidden.value = ''; }
+                    if (!foundMatch) {
+                        sympIdHidden.value = ''; // If no exact match, clear ID (backend will treat as new)
+                    }
                 }
              });
-         }
+        }
 
+        // Diagnosis Search (same as before)
         const diagNameField = document.getElementById('diag-name-input'); 
         if (diagNameField) {
             const conditionSearchContainer = diagNameField.closest('.condition-search-container');

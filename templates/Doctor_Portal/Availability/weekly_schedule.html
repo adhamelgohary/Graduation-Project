@@ -1,0 +1,105 @@
+{% extends "Doctor_Portal/Availability/base_availability.html" %}
+
+{% block availability_title %}Weekly Schedule - Manage Availability{% endblock %}
+
+{% block page_title_area %}
+    <h1 class="h3"><i class="fas fa-calendar-week fa-fw"></i> Recurring Weekly Schedule</h1>
+{% endblock %}
+
+{% block availability_styles %}
+    {# Add any CSS specific to this page here if not in base_availability.css #}
+{% endblock %}
+
+{% block availability_content %}
+    <h4>Add New Weekly Slot</h4>
+    <form method="POST" action="{{ url_for('availability.add_weekly_slot_page_route') }}" class="form-section">
+        {{ csrf_token_form_field | safe if csrf_token_form_field else '' }} 
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label for="doctor_location_id" class="form-label">Location <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm location-select" id="doctor_location_id" name="doctor_location_id" required>
+                    <option value="" selected disabled>Select Location...</option>
+                    {% for loc in locations %}
+                    <option value="{{ loc.doctor_location_id }}" {% if request.form.doctor_location_id == loc.doctor_location_id|string %}selected{% endif %}>
+                        {{ loc.location_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="day_of_week" class="form-label">Day <span class="text-danger">*</span></label>
+                <select class="form-select form-select-sm day-select" id="day_of_week" name="day_of_week" required>
+                    <option value="" selected disabled>Select Day...</option>
+                    {% for day_val, day_name in days_of_week_map.items() %}
+                    <option value="{{ day_val }}" {% if request.form.day_of_week == day_val|string %}selected{% endif %}>
+                        {{ day_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="start_time" class="form-label">Start Time <span class="text-danger">*</span></label>
+                <input type="time" class="form-control form-control-sm time-input" id="start_time" name="start_time" 
+                       value="{{ request.form.start_time }}" required>
+            </div>
+            <div class="col-md-2">
+                <label for="end_time" class="form-label">End Time <span class="text-danger">*</span></label>
+                <input type="time" class="form-control form-control-sm time-input" id="end_time" name="end_time"
+                       value="{{ request.form.end_time }}" required>
+            </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Add Slot</button>
+            </div>
+        </div>
+    </form>
+
+    <h4>Existing Weekly Slots</h4>
+    {% if locations %}
+        {% for location in locations %}
+            <div class="mb-3 card shadow-sm">
+                <div class="card-header bg-light py-2"> {# Reduced padding in header #}
+                    <h5 class="mb-0 h6">{{ location.location_name }} <small class="text-muted fw-normal">({{ location.address }}, {{ location.city }})</small></h5>
+                </div>
+                <ul class="list-group list-group-flush" id="weeklySlotsList_{{ location.doctor_location_id }}">
+                    {% set has_slots_for_location = false %}
+                    {% for slot in weekly_slots if slot.doctor_location_id == location.doctor_location_id %}
+                        {% set has_slots_for_location = true %}
+                        <li class="list-group-item py-2" data-slot-id="{{ slot.location_availability_id }}"> {# Reduced padding #}
+                            <span><strong>{{ days_of_week_map.get(slot.day_of_week|int, 'Unknown Day') }}</strong>: {{ slot.start_time }} - {{ slot.end_time }}</span>
+                            <form method="POST" action="{{ url_for('availability.delete_weekly_slot_page_route', location_availability_id=slot.location_availability_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this weekly slot?');">
+                                {{ csrf_token_form_field | safe if csrf_token_form_field else '' }}
+                                <button type="submit" class="btn btn-sm btn-outline-danger delete-weekly-slot-btn" data-slot-id="{{ slot.location_availability_id }}" title="Delete Slot"><i class="fas fa-trash-alt"></i></button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                    {% if not has_slots_for_location %}
+                        <li class="list-group-item text-muted no-slots-message py-2">No weekly slots defined for this location.</li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-info">
+            You have no active locations defined. Please <a href="{{ url_for('locations.manage_locations_page') }}">add locations in your locations settings</a> to set weekly availability.
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block availability_scripts %}
+<script>
+    // Example: Client-side validation for start/end time
+    document.addEventListener('DOMContentLoaded', function() {
+        const addForm = document.getElementById('addWeeklySlotForm');
+        if (addForm) {
+            addForm.addEventListener('submit', function(event) {
+                const startTime = document.getElementById('weekly_start_time').value;
+                const endTime = document.getElementById('weekly_end_time').value;
+                if (startTime && endTime && startTime >= endTime) {
+                    alert('Start time must be before end time.');
+                    event.preventDefault(); 
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

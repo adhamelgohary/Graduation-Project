@@ -34,11 +34,7 @@
     --button-text-color: var(--raw-cardio-primary); 
     --button-border-color: var(--raw-cardio-primary); 
 
-    --emergency-bg: rgba(var(--raw-cardio-primary-rgb), 0.3); 
-    --emergency-border: var(--raw-cardio-primary);
-    --emergency-text: var(--raw-cardio-primary); 
-    --emergency-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.5);
-    --emergency-hover-text: white; 
+    /* EMERGENCY STYLING NOW COMES FROM GLOBAL VARS IN base.css */
 
     --icon-color-main: var(--raw-cardio-primary);
     --interactive-text-color: var(--raw-cardio-secondary);
@@ -85,19 +81,13 @@
     --button-text-color: var(--raw-cardio-primary); 
     --button-border-color: var(--raw-cardio-primary);
 
-    --emergency-bg: rgba(var(--raw-cardio-primary-rgb), 0.25);
-    --emergency-border: var(--raw-cardio-primary);
-    --emergency-text: var(--raw-cardio-primary); 
-    --emergency-hover-bg: rgba(var(--raw-cardio-primary-rgb), 0.4);
-    --emergency-hover-text: var(--text-primary); 
+    /* EMERGENCY STYLING NOW COMES FROM GLOBAL VARS IN base.css */
 
     --icon-color-main: var(--raw-cardio-primary);
     --interactive-text-color: var(--raw-cardio-primary);
     --shadow-effect: 0 5px 15px rgba(var(--raw-cardio-primary-rgb), 0.06);
     --doctor-avatar-bg-color: rgba(var(--raw-cardio-secondary-rgb), 0.15);
 }
-/* === END OF UNIFIED CARDIOLOGY PALETTE === */
-
 
 /* Reset and Global Styles (Assumed to be minimal if base.css handles most) */
 * {

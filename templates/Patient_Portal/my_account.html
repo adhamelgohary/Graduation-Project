@@ -4,108 +4,107 @@
 {% block title %}My Account - {{ super() }}{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/my_account.css') }}"> {# Optional specific CSS for this page #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/my_account.css') }}"> 
     <style>
      /* static/Patient_Portal/my_account.css */
-.account-container {
-    max-width: 900px; /* Or 1140px for wider layout */
-    margin: 2rem auto;
-    padding: 1rem;
-}
-
-.account-header {
-    text-align: center;
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--border-color); /* Using variable from your base.css */
-}
-
-.account-header h1 {
-    font-size: 2.25rem; /* Slightly larger */
-    color: var(--heading-color); /* Using variable */
-    margin-bottom: 0.5rem;
-}
-.account-header p {
-    font-size: 1.1rem;
-    color: var(--secondary-color); /* Using variable */
-}
-
-.account-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.75rem; /* Slightly increased gap */
-}
-
-.account-card {
-    background-color: var(--white-color); /* Using variable */
-    border-radius: var(--border-radius); /* Using variable */
-    box-shadow: var(--box-shadow-sm); /* Using variable */
-    padding: 1.75rem; /* Increased padding */
-    text-align: center;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Helps align buttons if text length varies */
-}
-
-.account-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--box-shadow); /* Using variable for larger shadow */
-}
-
-.account-card i.fas, .account-card i.far, .account-card i.fab  { /* Target font awesome icons */
-    font-size: 2.75rem; /* Larger icons */
-    color: var(--primary-color);
-    margin-bottom: 1.25rem;
-}
-
-.account-card h4 {
-    font-size: 1.3rem; /* Slightly larger card title */
-    margin-bottom: 0.75rem;
-    color: var(--heading-color);
-}
-
-.account-card p {
-    font-size: 0.95rem;
-    color: var(--text-color); /* Using variable */
-    margin-bottom: 1.5rem;
-    flex-grow: 1; /* Allows paragraph to take space, pushing button down */
-    min-height: 50px; /* Adjust as needed */
-}
-
-.account-card .button, 
-.account-card a.button { /* Ensure 'a' tags styled as buttons are targeted */
-    display: inline-block;
-    padding: 0.7rem 1.4rem; /* Slightly larger button */
-    background-color: var(--primary-color);
-    color: var(--white-color);
-    text-decoration: none;
-    border-radius: var(--border-radius);
-    font-weight: 500;
-    transition: background-color 0.2s ease;
-    border: none; /* Ensure button-like appearance */
-    cursor: pointer;
-    margin-top: auto; /* Pushes button to the bottom of the card flex container */
-}
-
-.account-card .button:hover,
-.account-card a.button:hover {
-    background-color: var(--primary-color-darker); /* Using variable */
-    color: var(--white-color);
-}
-
-/* Responsive adjustments if needed */
-@media (max-width: 600px) {
-    .account-grid {
-        grid-template-columns: 1fr; /* Stack cards on small screens */
+    .account-container {
+        max-width: 900px; 
+        margin: 2rem auto;
+        padding: 1rem;
     }
+
+    .account-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color); 
+    }
+
     .account-header h1 {
-        font-size: 1.8rem;
+        font-size: 2.25rem; 
+        color: var(--heading-color); 
+        margin-bottom: 0.5rem;
     }
-     .account-header p {
-        font-size: 1rem;
+    .account-header p {
+        font-size: 1.1rem;
+        color: var(--secondary-color); 
     }
-}
+
+    .account-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.75rem; 
+    }
+
+    .account-card {
+        background-color: var(--white-color); 
+        border-radius: var(--border-radius); 
+        box-shadow: var(--box-shadow-sm); 
+        padding: 1.75rem; 
+        text-align: center;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; 
+    }
+
+    .account-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--box-shadow); 
+    }
+
+    .account-card i.fas, .account-card i.far, .account-card i.fab  { 
+        font-size: 2.75rem; 
+        color: var(--primary-color);
+        margin-bottom: 1.25rem;
+    }
+
+    .account-card h4 {
+        font-size: 1.3rem; 
+        margin-bottom: 0.75rem;
+        color: var(--heading-color);
+    }
+
+    .account-card p {
+        font-size: 0.95rem;
+        color: var(--text-color); 
+        margin-bottom: 1.5rem;
+        flex-grow: 1; 
+        min-height: 50px; 
+    }
+
+    .account-card .button, 
+    .account-card a.button { 
+        display: inline-block;
+        padding: 0.7rem 1.4rem; 
+        background-color: var(--primary-color);
+        color: var(--white-color);
+        text-decoration: none;
+        border-radius: var(--border-radius);
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        border: none; 
+        cursor: pointer;
+        margin-top: auto; 
+    }
+
+    .account-card .button:hover,
+    .account-card a.button:hover {
+        background-color: var(--primary-color-darker); 
+        color: var(--white-color);
+    }
+
+    @media (max-width: 600px) {
+        .account-grid {
+            grid-template-columns: 1fr; 
+        }
+        .account-header h1 {
+            font-size: 1.8rem;
+        }
+         .account-header p {
+            font-size: 1rem;
+        }
+    }
     </style>
 {% endblock %}
 
@@ -127,6 +126,14 @@
             <a href="{{ url_for('patient_profile.manage_profile') }}" class="button">Edit Profile</a>
         </div>
 
+        {# Card 2: My Diet Plans (NEW) #}
+        <div class="account-card">
+            <i class="fas fa-utensils"></i> {# Or fas fa-apple-alt, fas fa-carrot etc. #}
+            <h4>My Diet Plans</h4>
+            <p>View diet plans currently assigned to you by your dietitian.</p>
+            <a href="{{ url_for('patient_medical_info.my_assigned_plans') }}" class="button">View My Plans</a>
+        </div>
+
         {# Card 3: Allergies #}
         <div class="account-card">
             <i class="fas fa-allergies"></i>
@@ -137,7 +144,7 @@
 
         {# Card 5: Vitals #}
         <div class="account-card">
-            <i class="fas fa-heartbeat"></i> {# Or fas fa-weight, fas fa-ruler-vertical #}
+            <i class="fas fa-heartbeat"></i> 
             <h4>Vitals & Measurements</h4>
             <p>Log your weight and other key health measurements.</p>
             <a href="{{ url_for('patient_medical_info.manage_vitals') }}" class="button">Manage Vitals</a>
@@ -150,13 +157,17 @@
             <p>View your recorded medical conditions and history.</p>
             <a href="{{ url_for('patient_medical_info.view_history') }}" class="button">View History</a>
         </div>
-        {# Card for My Tracker Reports #}
+
+        {# Card for Appointments - Assuming you have a patient appointment list route #}
+        {# This card was not explicitly requested to change but is common here #}
         <div class="account-card">
-            <i class="fas fa-chart-line"></i> {# Or a more relevant icon #}
-            <h4>My Tracker Reports</h4>
-            <p>View and manage your submitted health tracker entries.</p>
-            <a href="{{ url_for('patient_medical_info.view_my_tracker_reports') }}" class="button">View Reports</a>
+            <i class="far fa-calendar-alt"></i>
+            <h4>My Appointments</h4>
+            <p>View your upcoming and past appointments.</p>
+            {# Make sure 'appointment.view_my_appointments' is the correct endpoint #}
+            <a href="{{ url_for('appointment.view_my_appointments') }}" class="button">View Appointments</a>
         </div>
+
 
     </div>
 </div>

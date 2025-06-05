@@ -54,7 +54,8 @@ def search_users():
         if page > total_pages and total_pages > 0: page = total_pages
         offset = (page - 1) * per_page
 
-        data_query = f""" SELECT user_id, username, first_name, last_name, email, user_type, phone, created_at, account_status {base_query} {search_clause} ORDER BY user_type ASC, last_name ASC, first_name ASC LIMIT %s OFFSET %s """
+        data_query = f""" SELECT user_id, username, first_name, last_name, email, user_type, phone, created_at, account_status {base_query} {search_clause} 
+        ORDER BY user_type ASC, last_name ASC, first_name ASC LIMIT %s OFFSET %s """
         cursor.execute(data_query, tuple(params + [per_page, offset])); users = cursor.fetchall()
 
         if not users and executed_search:

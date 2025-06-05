@@ -51,9 +51,6 @@
                     <tr>
                         <td>
                             {# Link to patient nutrition progress page #}
-                            <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" title="View Progress for {{ assignment.patient_first_name }}">
-                                {{ assignment.patient_first_name }} {{ assignment.patient_last_name }}
-                            </a>
                              <span class="text-muted small">(ID: {{ assignment.patient_user_id }})</span>
                         </td>
                         <td>
@@ -78,8 +75,6 @@
                             {% endif %}
                         </td>
                         <td class="action-buttons text-end">
-                             <a href="{{ url_for('diet_plans.view_nutrition_progress', patient_user_id=assignment.patient_user_id) }}" class="button button-outline button-info button-xsmall" title="View Progress"><i class="fas fa-chart-line"></i></a>
-                             {# Conditionally show Deactivate button based on dietitian role and if assignment is active #}
                              {% if assignment.active and can_manage_assignments %}
                                 <form action="{{ url_for('diet_plans.deactivate_assignment', assignment_id=assignment.user_diet_plan_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deactivate this assignment? The patient will no longer see it as active.');">
                                     <button type="submit" class="button button-outline button-warning button-xsmall" title="Deactivate Assignment">

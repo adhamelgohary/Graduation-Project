@@ -1,0 +1,111 @@
+{% extends "Doctor_Portal/base.html" %}
+
+{% block title %}{% block availability_title %}Manage Availability{% endblock %}{% endblock %}
+
+{% block head_extra %}
+    {{ super() if super }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
+    <style>
+        .nav-tabs .nav-link {
+            color: var(--color-text-muted, #6c757d); 
+            border: 1px solid transparent;
+            border-bottom-color: var(--color-border, #dee2e6); 
+            margin-bottom: -1px; 
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color, #007bff);
+            background-color: var(--color-surface, #fff); 
+            border-color: var(--color-border, #dee2e6) var(--color-border, #dee2e6) var(--color-surface, #fff);
+            font-weight: 600;
+        }
+        .nav-tabs .nav-link:hover:not(.active) {
+            border-color: var(--color-border-light, #e9ecef) var(--color-border-light, #e9ecef) var(--color-border, #dee2e6);
+            background-color: var(--color-surface-secondary, #f8f9fa);
+            isolation: isolate;
+        }
+        .availability-content-wrapper { 
+            border: 1px solid var(--color-border, #dee2e6);
+            border-top: none;
+            padding: var(--spacing-lg, 1.5rem);
+            border-radius: 0 0 var(--border-radius, 0.25rem) var(--border-radius, 0.25rem);
+            background-color: var(--color-surface, #fff);
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+            margin-bottom: var(--spacing-xl);
+        }
+        .form-section {
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            border: 1px solid var(--color-border-light, #e9ecef);
+            border-radius: var(--border-radius-sm, 0.2rem);
+            background-color: var(--color-surface-secondary, #f8f9fa);
+        }
+         .list-group-item { display: flex; justify-content: space-between; align-items: center; }
+        .list-group-item small { color: #6c757d; }
+        .time-input { width: 120px !important; } 
+        .day-select { width: 150px !important; }
+        .location-select { min-width: 200px !important; }
+        .cap-input { width: 80px !important; text-align: center;}
+
+        .days-of-week-caps th { text-align: center; }
+        .days-of-week-caps td { vertical-align: middle; text-align: center;}
+        .override-reason { font-style: italic; color: #555; font-size: 0.9em; }
+        .override-unavailable { background-color: #ffe0e0 !important; border-left: 3px solid #dc3545 !important; } 
+        .override-available { background-color: #e0ffe0 !important; border-left: 3px solid #198754 !important; }
+        .cap-table-row .form-select, .cap-table-row .form-control {
+            height: calc(1.5em + .5rem + 2px);
+            padding: .25rem .5rem;
+            font-size: .875rem;
+        }
+        .cap-table-row button { padding: .25rem .5rem; font-size: .875rem; }
+        .days-of-week-map th { background-color: #f8f9fa; font-weight: 600; }
+        .days-of-week-map input[type="number"] { max-width: 70px; }
+
+        {% block availability_styles %}{% endblock %}
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header mb-3">
+        {% block page_title_area %}
+        <h1 class="h3"><i class="fas fa-calendar-alt fa-fw"></i> Manage My Availability</h1>
+        {% endblock %}
+    </div>
+
+    {% include '_flash_messages.html' %}
+
+    <!-- Nav tabs -->
+    <ul class="nav nav-tabs" id="availabilityTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if request.endpoint == 'availability.manage_weekly_schedule' %}active{% endif %}" 
+               href="{{ url_for('availability.manage_weekly_schedule') }}">
+                <i class="fas fa-calendar-week me-1"></i> Weekly Schedule
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if request.endpoint == 'availability.manage_daily_caps' %}active{% endif %}" 
+               href="{{ url_for('availability.manage_daily_caps') }}">
+                <i class="fas fa-tasks me-1"></i> Daily Caps
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if request.endpoint == 'availability.manage_date_overrides' %}active{% endif %}" 
+               href="{{ url_for('availability.manage_date_overrides') }}">
+                <i class="fas fa-calendar-day me-1"></i> Date Overrides
+            </a>
+        </li>
+    </ul>
+
+    <!-- Content area for child templates -->
+    <div class="availability-content-wrapper">
+        {% block availability_content %}
+        <p>Select a section above to manage your availability.</p>
+        {% endblock %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() if super }}
+    {% block availability_scripts %}{% endblock %}
+{% endblock %}

@@ -2,16 +2,13 @@
 {% block title %}Assign Diet Plan{% endblock %}
 
 {% block head_extra %}
-    {# Add CSS for Select2 #}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    {# Link to your shared CSS or specific styles #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
     <style>
-        /* Adjust Select2 height to match Bootstrap */
         .select2-container .select2-selection--single { height: calc(1.5em + .75rem + 2px)!important; padding: .375rem .75rem; }
         .select2-container--default .select2-selection--single .select2-selection__rendered{ line-height: 1.5; padding-left: 0;}
         .select2-container--default .select2-selection--single .select2-selection__arrow { height: calc(1.5em + .75rem)!important;}
-        .select2-container { width: 100% !important; } /* Ensure Select2 takes full width */
+        .select2-container { width: 100% !important; } 
     </style>
 {% endblock %}
 
@@ -33,17 +30,18 @@
         <form action="{{ url_for('diet_plans.assign_diet_plan') }}" method="POST" class="data-form">
             {# CSRF Token if using Flask-WTF #}
             {# {{ form.csrf_token }} #}
+            {{ csrf_token_form_field | safe if csrf_token_form_field else '' }}
+
 
             <div class="row">
                 <div class="col-md-6 form-group mb-3">
                     <label for="patient_user_id" class="form-label">Select Patient <span class="text-danger">*</span></label>
-                    {# Use form_data for repopulation on error #}
                     <select id="patient_user_id" name="patient_user_id" class="form-select select2-basic" required data-placeholder="-- Choose Patient --">
-                        <option value=""></option> {# Required empty option for Select2 placeholder #}
-                        {% set selected_patient_id = form_data.patient_user_id | int if form_data else None %}
+                        <option value=""></option> 
+                        {% set selected_patient_id = form_data.patient_user_id | int if form_data and form_data.patient_user_id else None %}
                         {% for patient in patients %}
                             <option value="{{ patient.user_id }}" {% if selected_patient_id == patient.user_id %}selected{% endif %}>
-                                {{ patient['CONCAT(first_name, \' \', last_name)'] }} (ID: {{ patient.user_id }})
+                                {{ patient.patient_display_name }} (ID: {{ patient.user_id }})  {# MODIFIED HERE #}
                             </option>
                         {% endfor %}
                     </select>
@@ -52,8 +50,8 @@
                 <div class="col-md-6 form-group mb-3">
                     <label for="plan_id" class="form-label">Select Diet Plan <span class="text-danger">*</span></label>
                     <select id="plan_id" name="plan_id" class="form-select select2-basic" required data-placeholder="-- Choose Diet Plan --">
-                         <option value=""></option> {# Required empty option for Select2 placeholder #}
-                         {% set selected_plan_id = form_data.plan_id | int if form_data else None %}
+                         <option value=""></option> 
+                         {% set selected_plan_id = form_data.plan_id | int if form_data and form_data.plan_id else None %}
                          {% for plan in diet_plans %}
                              <option value="{{ plan.plan_id }}" {% if selected_plan_id == plan.plan_id %}selected{% endif %}>
                                 {{ plan.plan_name }} (ID: {{ plan.plan_id }})
@@ -92,17 +90,15 @@
 {% endblock %}
 
 {% block scripts %}
-    {# Add JS for Select2 #}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            // Initialize basic Select2 on elements with the class
              $('.select2-basic').each(function() {
                 $(this).select2({
-                    placeholder: $(this).data('placeholder') || "-- Select --", // Use data-placeholder or default
+                    placeholder: $(this).data('placeholder') || "-- Select --", 
                     allowClear: true,
-                    width: '100%' // Ensure it takes full width
+                    width: '100%' 
                 });
              });
         });

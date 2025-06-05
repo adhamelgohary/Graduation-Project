@@ -104,45 +104,58 @@ def get_conditions_by_department(dept_id, search_term=None):
         cursor = conn.cursor(dictionary=True)
         
         params = [dept_id]
-        # Base query
         base_query = """
             SELECT 
-                c.condition_id, c.condition_name, c.description, c.condition_image_filename,
+                c.condition_id, c.condition_name, c.description, 
+                c.condition_image_filename, c.condition_video_filename, -- Added video filename
                 s.name AS specialization_name
             FROM conditions c
             LEFT JOIN specializations s ON c.specialization_id = s.specialization_id
             WHERE c.department_id = %s AND c.is_active = TRUE 
         """
         
-        # Add search condition if search_term is provided
         if search_term:
-            search_like = f"%{search_term.lower()}%" # Prepare for LIKE comparison, ensure lowercase for DB
+            search_like = f"%{search_term.lower()}%" 
             base_query += """
                 AND (LOWER(c.condition_name) LIKE %s 
                      OR LOWER(c.description) LIKE %s 
                      OR LOWER(s.name) LIKE %s)
             """
-            # Split search term for multi-word search in name (more advanced)
-            # For now, we'll match the whole term against name, description, and specialization
             params.extend([search_like, search_like, search_like])
-            getattr(logger, 'info', print)(f"Searching conditions in dept {dept_id} for term: '{search_term}'")
-
 
         base_query += " ORDER BY c.condition_name ASC"
         
         cursor.execute(base_query, tuple(params))
         for cond_data in cursor.fetchall():
+            # Image URL processing
             img_file_from_db = cond_data.get('condition_image_filename')
             if img_file_from_db and current_app and 'UPLOAD_FOLDER_CONDITIONS' in current_app.config and get_relative_path_for_db:
-                actual_filename = os.path.basename(img_file_from_db)
-                full_image_path = os.path.join(current_app.config['UPLOAD_FOLDER_CONDITIONS'], actual_filename)
-                relative_image_path = get_relative_path_for_db(full_image_path)
+                actual_img_filename = os.path.basename(img_file_from_db)
+                full_image_path = os.path.join(current_app.config['UPLOAD_FOLDER_CONDITIONS'], actual_img_filename)
+                relative_image_path = get_relative_path_for_db(full_image_path) # This should give path relative to static
                 if relative_image_path:
                     cond_data['image_url'] = url_for('static', filename=relative_image_path)
                 else:
                     cond_data['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
             else:
                 cond_data['image_url'] = url_for('static', filename="images/conditions/disease_placeholder.png")
+
+            # Video URL processing
+            video_file_from_db = cond_data.get('condition_video_filename')
+            cond_data['video_url'] = None # Initialize
+            if video_file_from_db and current_app and 'UPLOAD_FOLDER_CONDITION_VIDEOS' in current_app.config and get_relative_path_for_db:
+                # Assuming video_file_from_db is already a path relative to static/uploads/
+                # e.g., uploads/condition_videos/video.mp4
+                # The get_relative_path_for_db might be redundant if db stores path correctly relative to static base for uploads
+                
+                # If video_file_from_db is just a filename (e.g., video.mp4) and needs full path construction
+                # actual_video_filename = os.path.basename(video_file_from_db)
+                # full_video_path = os.path.join(current_app.config['UPLOAD_FOLDER_CONDITION_VIDEOS'], actual_video_filename)
+                # relative_video_path_from_static_root = get_relative_path_for_db(full_video_path)
+
+                # If video_file_from_db IS the path relative to static folder (e.g., 'uploads/condition_videos/myvideo.mp4')
+                # which is what _save_file_generic should be storing:
+                cond_data['video_url'] = url_for('static', filename=video_file_from_db)
             
             cond_data['name'] = cond_data.get('condition_name')
             desc = cond_data.get('description', '')
@@ -153,6 +166,7 @@ def get_conditions_by_department(dept_id, search_term=None):
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
     return conditions
+
 
 def get_condition_details_by_id(condition_id): 
     condition = None; conn = None; cursor = None

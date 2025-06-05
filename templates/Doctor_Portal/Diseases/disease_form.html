@@ -17,6 +17,7 @@
         label[for="emergency_symptoms_text"] { color: var(--color-danger, #dc3545); font-weight: bold; }
         label[for="emergency_symptoms_text"] .sos-emoji { font-size: 1.1em; margin-right: 0.3em; }
         .form-text.text-muted { font-size: 0.8rem; }
+        select:disabled { background-color: #e9ecef; opacity: 0.7; } /* Style for disabled selects */
     </style>
 {% endblock %}
 
@@ -81,33 +82,41 @@
                             {% endfor %}
                         </select>
                     </div>
+                    
+                    {# MODIFIED Department Field #}
                     <div class="col-md-3 form-group">
-                        <label for="department_id" class="form-label">Department <span class="text-danger">*</span></label>
-                        <select id="department_id" name="department_id" class="form-select" required>
-                            <option value="" {% if not (disease.department_id if disease else request.form.get('department_id')) %}selected{% endif %}>-- Select Department --</option>
-                            {% set s_dept_id = (disease.department_id if disease else request.form.get('department_id', ''))|string %}
-                            {% for d in departments or [] %}
-                            <option value="{{ d.department_id }}" {% if s_dept_id == d.department_id|string %}selected{% endif %}>{{ d.name }}</option>
-                            {% endfor %}
+                        <label for="department_id" class="form-label">Department</label>
+                        <select id="department_id" name="department_id" class="form-select" disabled>
+                            {# Only one option, pre-selected and disabled #}
+                            <option value="{{ disease.department_id if disease and disease.department_id else '' }}" selected>
+                                {{ fixed_dept_name if fixed_dept_name else 'N/A' }}
+                            </option>
                         </select>
+                        {# Hidden input to ensure value is submitted if form processing relies on it, though backend should use fixed IDs #}
+                        <input type="hidden" name="department_id_fixed" value="{{ disease.department_id if disease and disease.department_id else '' }}">
                     </div>
+
+                    {# MODIFIED Specialization Field #}
                      <div class="col-md-4 form-group">
-                        <label for="specialization_id" class="form-label">Specialization (within Department)</label>
-                        <select id="specialization_id" name="specialization_id" class="form-select">
-                            <option value="">-- Select Department First or Optional --</option>
-                            {% set s_spec_id = (disease.specialization_id if disease else request.form.get('specialization_id', ''))|string %}
-                            {% if specializations_for_form %} {# Passed from Python for initial load (add/edit) #}
-                                {% for s in specializations_for_form %}
-                                    <option value="{{ s.specialization_id }}" {% if s_spec_id == s.specialization_id|string %}selected{% endif %}>{{ s.name }}</option>
-                                {% endfor %}
+                        <label for="specialization_id" class="form-label">Specialization</label>
+                        <select id="specialization_id" name="specialization_id" class="form-select" disabled>
+                            {% if disease.specialization_id or fixed_spec_name %}
+                                <option value="{{ disease.specialization_id if disease and disease.specialization_id else '' }}" selected>
+                                    {{ fixed_spec_name if fixed_spec_name else 'General (No Specific Specialization)' }}
+                                </option>
+                            {% else %}
+                                 <option value="" selected>General (No Specific Specialization)</option>
                             {% endif %}
                         </select>
+                        <input type="hidden" name="specialization_id_fixed" value="{{ disease.specialization_id if disease and disease.specialization_id else '' }}">
                     </div>
+
                     <div class="col-md-4 form-group"><label for="age_relevance" class="form-label">Age Relevance</label><input type="text" id="age_relevance" name="age_relevance" class="form-control" value="{{ disease.age_relevance if disease else request.form.get('age_relevance', '') }}" placeholder="e.g., Adults, Children"></div>
                     <div class="col-md-4 form-group"><label for="specialist_type" class="form-label">Relevant Specialist (Free Text)</label><input type="text" id="specialist_type" name="specialist_type" class="form-control" value="{{ disease.specialist_type if disease else request.form.get('specialist_type', '') }}" placeholder="e.g., Cardiologist (General Info)"></div>
                 </div>
             </div>
 
+            {# ... (Rest of the form sections: Symptoms, Risk Factors, Testing, Management, File Uploads are THE SAME as before) ... #}
             <div class="form-section">
                 <h4><i class="fas fa-file-medical-alt fa-fw"></i> Symptoms, Causes & Complications</h4>
                 <div class="form-group mb-3"><label for="overview" class="form-label">Overview</label><textarea id="overview" name="overview" class="form-control" rows="3">{{ disease.overview if disease else request.form.get('overview', '') }}</textarea></div>

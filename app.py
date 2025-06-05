@@ -7,7 +7,6 @@ from flask_login import login_required, current_user
 # --- Import Utility Functions ---
 from utils.directory_configs import configure_directories
 from utils.template_helpers import register_template_helpers
-from utils.mail_config import configure_mail # Import even if mail is commented out
 
 # --- Import Blueprints ---
 from routes.login import login_bp, init_login_manager
@@ -65,7 +64,6 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16MB limit (Keep general c
 
 # --- Configure Features using Utility Functions ---
 configure_directories(app) # Sets upload paths and extension configs
-configure_mail(app)      # Sets mail server config (reads from env vars)
 register_template_helpers(app) # Registers Jinja filters and globals
 
 # --- Initialize Extensions ---

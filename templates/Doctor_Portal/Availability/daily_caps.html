@@ -1,0 +1,68 @@
+{% extends "Doctor_Portal/Availability/base_availability.html" %}
+
+{% block availability_title %}Daily Caps - Manage Availability{% endblock %}
+
+{% block page_title_area %}
+    <h1 class="h3"><i class="fas fa-tasks fa-fw"></i> Daily Appointment Caps</h1>
+{% endblock %}
+
+{% block availability_styles %}
+<style>
+    .cap-table-row .form-control { max-width: 80px; text-align: center; }
+    .days-of-week-map th { background-color: var(--color-surface-secondary, #f8f9fa); font-weight: 600; }
+    .days-of-week-map input[type="number"] { max-width: 70px; }
+</style>
+{% endblock %}
+
+{% block availability_content %}
+    <p class="small text-muted mb-3">Set the maximum number of appointments for specific days at each location. Leave blank or '0' to remove the cap for that day/location.</p>
+    
+    {% if locations %}
+    <form method="POST" action="{{ url_for('availability.save_daily_caps_page_route') }}">
+        {{ csrf_token_form_field | safe if csrf_token_form_field else '' }}
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead class="table-light days-of-week-map">
+                    <tr>
+                        <th style="width: 25%; vertical-align: middle;">Location</th>
+                        {% for day_idx in range(7) %}
+                        <th>{{ days_of_week_map.get(day_idx) }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                {% for loc_cap_data in daily_caps_data %}
+                    <tr class="cap-table-row" data-location-id="{{ loc_cap_data.doctor_location_id }}">
+                        <td><strong>{{ loc_cap_data.location_name }}</strong></td>
+                        {% for day_idx in range(7) %}
+                        <td>
+                            <input type="number" class="form-control form-control-sm cap-input"
+                                   name="cap_{{ loc_cap_data.doctor_location_id }}_{{ day_idx }}"
+                                   value="{{ loc_cap_data.caps[day_idx].max_appointments if loc_cap_data.caps[day_idx] and loc_cap_data.caps[day_idx].max_appointments is not none and loc_cap_data.caps[day_idx].max_appointments != 0 else '' }}"
+                                   min="0" placeholder="-"
+                                   title="Max appointments for {{ days_of_week_map.get(day_idx) }} at {{ loc_cap_data.location_name }}">
+                        </td>
+                        {% endfor %}
+                    </tr>
+                {% else %}
+                 <tr><td colspan="8" class="text-center text-muted p-3">No active locations found to set caps for.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+         <div class="text-end mt-3">
+            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-save"></i> Save All Caps</button>
+        </div>
+    </form>
+    {% else %}
+        <div class="alert alert-info">
+            No locations available to set caps for. Please <a href="{{ url_for('locations.manage_locations_page') }}">add locations in your locations settings</a>.
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block availability_scripts %}
+<script>
+    // Client-side validation for cap inputs (e.g., ensure non-negative) can go here.
+</script>
+{% endblock %}

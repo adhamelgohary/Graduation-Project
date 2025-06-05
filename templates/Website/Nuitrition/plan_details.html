@@ -1,120 +1,335 @@
-{% extends "Nuitrition/base_with_bot.html" %}
-{% block title %}{{ plan.plan_name }} - Details{% endblock %}
+{% extends "Website/Nuitrition/base_with_bot.html" %} 
+{% block title %}{{ plan.plan_name }} - Diet Plan Details{% endblock %}
 
 {% block head_extra %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-    .plan-header { margin-bottom: 30px; text-align: center; }
-    .plan-summary {
-        background-color: var(--card-bg-color);
-        padding: 20px;
-        border-radius: var(--border-radius);
-        margin-bottom: 30px;
-        border: 1px solid var(--border-color);
+    body[data-page-type="nutrition"] { }
+    .main-container.nutrition-details {
+        max-width: 900px; 
+        margin: var(--spacing-lg) auto;
     }
-    .plan-summary h2 { color: var(--primary-color); margin-top: 0; }
-    .plan-summary p { margin-bottom: 8px; }
+    .plan-header { 
+        margin-bottom: var(--spacing-lg); 
+        text-align: center; 
+        padding-bottom: var(--spacing-md);
+        border-bottom: 2px solid var(--primary-color);
+    }
+    .plan-header h1.page-title {
+        font-size: 2.2rem; 
+        color: var(--primary-color);
+        margin-bottom: var(--spacing-xs);
+    }
+     .plan-header .plan-meta-info {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+    .plan-summary-card { 
+        background-color: var(--card-bg-color);
+        padding: var(--spacing-lg);
+        border-radius: var(--border-radius);
+        margin-bottom: var(--spacing-xl);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--card-shadow);
+    }
+    .plan-summary-card h2 { 
+        color: var(--primary-color); 
+        margin-top: 0; 
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        border-bottom: 1px solid var(--border-color-light);
+        padding-bottom: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+    .plan-summary-card .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-sm) var(--spacing-md);
+    }
+    .plan-summary-card .summary-item p { 
+        margin-bottom: var(--spacing-xs); 
+        font-size: 0.95rem;
+    }
+    .plan-summary-card .summary-item strong {
+        color: var(--text-primary);
+    }
+     .plan-summary-card .plan-description {
+        margin-top: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        border-top: 1px dashed var(--border-color-light);
+        font-style: italic;
+        color: var(--text-secondary);
+    }
+
+    .meals-section-title {
+        text-align: center;
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-lg);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 1px solid var(--border-color);
+    }
 
     .meal-card {
-        background-color: var(--nested-card-bg, var(--bg-secondary));
+        background-color: var(--nested-card-bg);
         border: 1px solid var(--border-color);
-        padding: 20px;
-        margin-bottom: 25px;
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
         border-radius: var(--border-radius);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
     .meal-card h3 {
-        color: var(--accent-pink, var(--primary-color)); /* Match theme */
+        color: var(--accent-color); 
         margin-top: 0;
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px dashed var(--border-color);
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 1px dashed var(--border-color-light);
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
     }
-    .meal-card .meal-meta p { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px; }
+    .meal-card h3 i { margin-right: var(--spacing-sm); }
+
+    .meal-card .meal-meta {
+        margin-bottom: var(--spacing-md);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 1px solid var(--border-color-light);
+    }
+    .meal-card .meal-meta p { 
+        font-size: 0.9em; 
+        color: var(--text-secondary); 
+        margin-bottom: 5px; 
+    }
+    .meal-card .meal-meta p strong { color: var(--text-primary); }
     
     .food-item-list {
         list-style: none;
         padding-left: 0;
     }
     .food-item-list li {
-        padding: 10px;
-        margin-bottom: 10px;
-        border-bottom: 1px solid var(--border-color-light, rgba(var(--border-color-rgb), 0.5)); /* Lighter border */
+        background-color: var(--card-bg-color); 
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-color);
     }
     .food-item-list li:last-child {
-        border-bottom: none;
+        margin-bottom: 0;
     }
-    .food-item-list strong { color: var(--text-primary); }
+    .food-item-list strong.food-name { 
+        color: var(--primary-color); 
+        font-size: 1.05em;
+        display: block;
+        margin-bottom: var(--spacing-xs);
+    }
+     .food-item-list .serving-size {
+        font-size: 0.9em;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-xs);
+    }
     .food-item-list .nutrient-details {
         font-size: 0.85em;
         color: var(--text-secondary);
-        display: block; /* Block for better layout */
-        margin-top: 4px;
+        display: flex; 
+        flex-wrap: wrap;
+        gap: var(--spacing-xs) var(--spacing-sm); 
+        margin-top: var(--spacing-xs);
     }
+    .food-item-list .nutrient-details span { white-space: nowrap; } 
+
     .food-item-list .notes, .food-item-list .alternatives {
         font-size: 0.8em;
         font-style: italic;
-        color: var(--text-secondary-darker, var(--text-secondary)); /* Slightly darker italic text */
+        color: var(--text-secondary);
         display: block;
-        margin-top: 3px;
+        margin-top: var(--spacing-xs);
+        padding-top: var(--spacing-xs);
+        border-top: 1px dashed var(--border-color-light);
+    }
+    .back-button-container {
+        text-align: center; 
+        margin-top: var(--spacing-xl);
+        margin-bottom: var(--spacing-lg); /* Add some space before specialists */
+    }
+    .back-button-container .button {
+        background-color: var(--button-bg);
+        color: var(--button-text-color);
+        border-color: var(--button-border-color);
+    }
+    .back-button-container .button:hover {
+        background-color: var(--button-hover-bg);
+        color: white; 
+    }
+
+    /* Nutrition Specialists Section */
+    .nutrition-specialists-section {
+        margin-top: var(--spacing-xl);
+        padding-top: var(--spacing-lg);
+        border-top: 2px solid var(--primary-color);
+    }
+    .nutrition-specialists-section h2 {
+        text-align: center;
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+    }
+    .specialists-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--spacing-lg);
+    }
+    .specialist-card {
+        background-color: var(--card-bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        text-align: center;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .specialist-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-glow);
+    }
+    .specialist-avatar img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: var(--spacing-sm);
+        border: 3px solid var(--border-color-light);
+    }
+    .specialist-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-xs);
+    }
+    .specialist-title {
+        font-size: 0.9rem;
+        color: var(--accent-color); /* Use theme accent */
+        margin-bottom: var(--spacing-sm);
+    }
+    .specialist-bio {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: var(--spacing-md);
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-height: calc(1.5em * 3);
+        line-height: 1.5;
+    }
+    .specialist-card .appointment-button { /* Make sure this class matches your global button style */
+        display: inline-block;
+        background-color: var(--button-bg);
+        color: var(--button-text-color);
+        padding: var(--spacing-xs) var(--spacing-md);
+        border-radius: var(--border-radius-sm);
+        text-decoration: none;
+        border: 1px solid var(--button-border-color);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-top: auto; /* Pushes button to bottom of card */
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    .specialist-card .appointment-button:hover {
+        background-color: var(--button-hover-bg);
+        color: white;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <script>document.body.dataset.pageType = 'nutrition';</script>
-<div class="main-container">
+<div class="main-container nutrition-details">
     <div class="plan-header">
         <h1 class="page-title">{{ plan.plan_name }}</h1>
+        <p class="plan-meta-info">
+            <i class="fas fa-utensils"></i> Type: {{ plan.plan_type|replace('_', ' ')|title }} | 
+            <i class="fas fa-bullseye"></i> Target: {{ plan.target_conditions if plan.target_conditions else 'General Wellness' }}
+            {% if plan.creator_username %}
+                | <i class="fas fa-user-edit"></i> By: {{ plan.creator_username }}
+            {% endif %}
+        </p>
     </div>
     
-    <div class="plan-summary">
-        <h2>Plan Overview</h2>
-        <p>{{ plan.description | safe if plan.description else 'No detailed description available.' }}</p>
-        <p><strong>Plan Type:</strong> {{ plan.plan_type|replace('_', ' ')|title }}</p>
-        <p><strong>Target Conditions:</strong> {{ plan.target_conditions if plan.target_conditions else 'General Wellness' }}</p>
-        <p><strong>Approx. Daily Calories:</strong> {{ plan.calories or 'Varies' }}</p>
-        <p><strong>Approx. Daily Protein:</strong> {{ plan.protein_grams or 'Varies' }}g</p>
-        <p><strong>Approx. Daily Carbs:</strong> {{ plan.carbs_grams or 'Varies' }}g</p>
-        <p><strong>Approx. Daily Fat:</strong> {{ plan.fat_grams or 'Varies' }}g</p>
-        <p><strong>Approx. Daily Fiber:</strong> {{ plan.fiber_grams or 'Varies' }}g</p>
-        <p><strong>Approx. Daily Sodium:</strong> {{ plan.sodium_mg or 'Varies' }}mg</p>
-        {% if plan.creator_username %}
-            <p><small>Created by: {{ plan.creator_username }}</small></p>
+    <div class="plan-summary-card">
+        <h2><i class="fas fa-info-circle"></i> Plan Overview</h2>
+        <div class="summary-grid">
+            <div class="summary-item"><p><strong>Approx. Daily Calories:</strong> {{ plan.calories or 'Varies' }}</p></div>
+            <div class="summary-item"><p><strong>Approx. Daily Protein:</strong> {{ plan.protein_grams or 'Varies' }}g</p></div>
+            <div class="summary-item"><p><strong>Approx. Daily Carbs:</strong> {{ plan.carbs_grams or 'Varies' }}g</p></div>
+            <div class="summary-item"><p><strong>Approx. Daily Fat:</strong> {{ plan.fat_grams or 'Varies' }}g</p></div>
+            <div class="summary-item"><p><strong>Approx. Daily Fiber:</strong> {{ plan.fiber_grams or 'Varies' }}g</p></div>
+            <div class="summary-item"><p><strong>Approx. Daily Sodium:</strong> {{ plan.sodium_mg or 'Varies' }}mg</p></div>
+        </div>
+        {% if plan.description %}
+        <div class="plan-description">
+             <p>{{ plan.description | safe }}</p>
+        </div>
         {% endif %}
     </div>
 
-    <h2>Daily Meals</h2>
+    <h2 class="meals-section-title"><i class="fas fa-concierge-bell"></i> Daily Meals Breakdown</h2> {# Changed icon #}
     {% if meal_data %}
         {% for meal_entry in meal_data %}
             <div class="meal-card">
-                <h3>{{ meal_entry.meal_info.meal_name }} ({{ meal_entry.meal_info.meal_type|title }})</h3>
+                <h3>
+                    {% if meal_entry.meal_info.meal_type == 'breakfast' %}<i class="fas fa-mug-hot"></i> {# Changed icon #}
+                    {% elif meal_entry.meal_info.meal_type == 'lunch' %}<i class="fas fa-utensils"></i>
+                    {% elif meal_entry.meal_info.meal_type == 'dinner' %}<i class="fas fa-drumstick-bite"></i> {# Changed icon #}
+                    {% elif meal_entry.meal_info.meal_type == 'snack' %}<i class="fas fa-apple-alt"></i> {# Changed icon #}
+                    {% else %}<i class="fas fa-question-circle"></i>
+                    {% endif %}
+                    {{ meal_entry.meal_info.meal_name }} ({{ meal_entry.meal_info.meal_type|title }})
+                </h3>
                 {% if meal_entry.meal_info.description %}
                     <p><em>{{ meal_entry.meal_info.description|safe }}</em></p>
                 {% endif %}
                 <div class="meal-meta">
-                    {% if meal_entry.meal_info.time_of_day %}<p><strong>Time:</strong> {{ meal_entry.meal_info.time_of_day.strftime('%I:%M %p') if meal_entry.meal_info.time_of_day else 'Flexible' }}</p>{% endif %}
-                    <p><strong>Approx. Calories:</strong> {{ meal_entry.meal_info.calories or 'Varies' }}</p>
-                    <p><strong>Protein:</strong> {{ meal_entry.meal_info.protein_grams or 'N/A' }}g | 
-                       <strong>Carbs:</strong> {{ meal_entry.meal_info.carbs_grams or 'N/A' }}g | 
-                       <strong>Fat:</strong> {{ meal_entry.meal_info.fat_grams or 'N/A' }}g |
-                       <strong>Fiber:</strong> {{ meal_entry.meal_info.fiber_grams or 'N/A' }}g |
-                       <strong>Sodium:</strong> {{ meal_entry.meal_info.sodium_mg or 'N/A' }}mg
+                    {% if meal_entry.meal_info.time_of_day_obj %}<p><strong><i class="far fa-clock"></i> Time:</strong> {{ meal_entry.meal_info.time_of_day_obj.strftime('%I:%M %p') }}</p>
+                    {% elif meal_entry.meal_info.time_of_day %} 
+                        <p><strong><i class="far fa-clock"></i> Time:</strong> {{ meal_entry.meal_info.time_of_day }}</p>
+                    {% else %}
+                        <p><strong><i class="far fa-clock"></i> Time:</strong> Flexible</p>
+                    {% endif %}
+                    <p><strong><i class="fas fa-fire-alt"></i> Approx. Calories:</strong> {{ meal_entry.meal_info.calories or 'Varies' }}</p>
+                    <p>
+                       <strong><i class="fas fa-egg"></i> P:</strong> {{ meal_entry.meal_info.protein_grams or 'N/A' }}g |  {# Changed icon #}
+                       <strong><i class="fas fa-bread-slice"></i> C:</strong> {{ meal_entry.meal_info.carbs_grams or 'N/A' }}g | 
+                       <strong><i class="fas fa-oil-can"></i> F:</strong> {{ meal_entry.meal_info.fat_grams or 'N/A' }}g | {# Changed icon #}
+                       <strong><i class="fas fa-seedling"></i> Fiber:</strong> {{ meal_entry.meal_info.fiber_grams or 'N/A' }}g | {# Changed icon #}
+                       <strong><i class="fas fa-less-than"></i> Na:</strong> {{ meal_entry.meal_info.sodium_mg or 'N/A' }}mg {# Changed icon #}
                     </p>
                 </div>
                 
-                {% if meal_entry.items %}
-                    <h4>Food Items:</h4>
+                {% if meal_entry.food_items_list %}
+                    <h4><i class="fas fa-list-ul"></i> Food Items:</h4> {# Changed icon #}
                     <ul class="food-item-list">
-                    {% for item in meal_entry.items %}
+                    {% for item in meal_entry.food_items_list %}
                         <li>
-                            <strong>{{ item.food_name }}</strong> - {{ item.serving_size }}
-                            <span class="nutrient-details">
-                                Cals: {{ item.calories if item.calories is not none else 'N/A' }} | 
-                                P: {{ "%.1f"|format(item.protein_grams) if item.protein_grams is not none else 'N/A' }}g | 
-                                C: {{ "%.1f"|format(item.carbs_grams) if item.carbs_grams is not none else 'N/A' }}g | 
-                                F: {{ "%.1f"|format(item.fat_grams) if item.fat_grams is not none else 'N/A' }}g
-                            </span>
-                            {% if item.notes %}<span class="notes">Notes: {{ item.notes|safe }}</span>{% endif %}
-                            {% if item.alternatives %}<span class="alternatives">Alternatives: {{ item.alternatives|safe }}</span>{% endif %}
+                            <strong class="food-name">{{ item.food_name }}</strong>
+                            <div class="serving-size">{{ item.serving_size }}</div>
+                            <div class="nutrient-details">
+                                <span>Cals: {{ item.calories if item.calories is not none else 'N/A' }}</span>
+                                <span>P: {{ "%.1f"|format(item.protein_grams) if item.protein_grams is not none else 'N/A' }}g</span>
+                                <span>C: {{ "%.1f"|format(item.carbs_grams) if item.carbs_grams is not none else 'N/A' }}g</span> 
+                                <span>F: {{ "%.1f"|format(item.fat_grams) if item.fat_grams is not none else 'N/A' }}g</span>
+                            </div>
+                            {% if item.notes %}<div class="notes"><i class="far fa-sticky-note"></i> Notes: {{ item.notes|safe }}</div>{% endif %} {# Changed icon #}
+                            {% if item.alternatives %}<div class="alternatives"><i class="fas fa-random"></i> Alternatives: {{ item.alternatives|safe }}</div>{% endif %} {# Changed icon #}
                         </li>
                     {% endfor %}
                     </ul>
@@ -124,10 +339,37 @@
             </div>
         {% endfor %}
     {% else %}
-        <p>No meals have been defined for this diet plan yet.</p>
+        <div class="alert alert-info text-center">
+            <p><i class="fas fa-info-circle fa-2x mb-2"></i></p>
+            No meals have been defined for this diet plan yet.
+        </div>
     {% endif %}
-    <p style="text-align: center; margin-top: 30px;">
-        <a href="{{ url_for('nutrition_bp.list_diet_plans') }}" class="button">« Back to All Diet Plans</a>
-    </p>
+    
+    {# Nutrition Specialists Section #}
+    {% if specialists %}
+    <div class="nutrition-specialists-section">
+        <h2><i class="fas fa-user-md"></i> Consult a Nutrition Specialist</h2>
+        <div class="specialists-grid">
+            {% for specialist in specialists %}
+            <div class="specialist-card">
+                <div class="specialist-avatar">
+                    <img src="{{ specialist.profile_picture_url | default(url_for('static', filename='images/profile_pics/default_avatar.png')) }}" 
+                         alt="Photo of {{ specialist.first_name }} {{ specialist.last_name }}">
+                </div>
+                <div class="specialist-name">Dr. {{ specialist.first_name }} {{ specialist.last_name }}</div>
+                <div class="specialist-title">{{ specialist.specialization_name | default('Nutrition Specialist') }}</div>
+                {% if specialist.short_bio %}<p class="specialist-bio">{{ specialist.short_bio }}</p>{% endif %}
+                <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=specialist.user_id) }}" class="appointment-button button">
+                    <i class="far fa-calendar-check"></i> Schedule Appointment
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="back-button-container">
+        <a href="{{ url_for('nutrition_bp.list_diet_plans') }}" class="button"><i class="fas fa-arrow-left"></i> Back to All Diet Plans</a>
+    </div>
 </div>
 {% endblock %}

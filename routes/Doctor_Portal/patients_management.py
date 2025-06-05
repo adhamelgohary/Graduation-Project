@@ -150,7 +150,7 @@ def get_patient_full_details(patient_id):
 def patients_list():
     # ... (your existing patients_list logic) ...
     if not check_doctor_authorization(current_user):
-        flash("Access denied.", "warning"); return redirect(url_for('auth.login'))
+        flash("Access denied.", "warning"); return redirect(url_for('login.login_route'))
     doctor_id = get_provider_id(current_user)
     if doctor_id is None:
          flash("Could not identify provider ID.", "danger"); return redirect(url_for('doctor_main.dashboard'))
@@ -165,7 +165,7 @@ def patients_list():
 def view_patient_details_tab(patient_id):
     current_logger = current_app.logger if has_app_context() else logger
     if not check_doctor_authorization(current_user):
-        flash("Access denied.", "warning"); return redirect(url_for('auth.login'))
+        flash("Access denied.", "warning"); return redirect(url_for('login.login_route'))
     doctor_id = get_provider_id(current_user)
     if doctor_id is None:
          flash("Could not identify provider ID.", "danger"); return redirect(url_for('doctor_main.dashboard'))
@@ -189,7 +189,7 @@ def view_patient_details_tab(patient_id):
 def view_patient_records_tab(patient_id):
     current_logger = current_app.logger if has_app_context() else logger
     if not check_doctor_authorization(current_user):
-        flash("Access denied.", "warning"); return redirect(url_for('auth.login'))
+        flash("Access denied.", "warning"); return redirect(url_for('login.login_route'))
     doctor_id = get_provider_id(current_user)
     if doctor_id is None:
          flash("Could not identify provider ID.", "danger"); return redirect(url_for('doctor_main.dashboard'))
@@ -213,7 +213,7 @@ def view_patient_records_tab(patient_id):
 def view_patient_add_entry_tab(patient_id):
     current_logger = current_app.logger if has_app_context() else logger
     if not check_doctor_authorization(current_user):
-        flash("Access denied.", "warning"); return redirect(url_for('auth.login'))
+        flash("Access denied.", "warning"); return redirect(url_for('login.login_route'))
     doctor_id = get_provider_id(current_user)
     if doctor_id is None:
          flash("Could not identify provider ID.", "danger"); return redirect(url_for('doctor_main.dashboard'))
@@ -261,7 +261,7 @@ def add_diagnosis(patient_id):
     # return redirect(url_for('.view_patient_add_entry_tab', patient_id=patient_id) + '#form-diagnosis-anchor')
     # Example redirect on success:
     # return redirect(url_for('.view_patient_records_tab', patient_id=patient_id) + '#diagnosesAccordionHeader')
-    if not check_doctor_authorization(current_user): flash("Access denied.", "warning"); return redirect(url_for('auth.login'))
+    if not check_doctor_authorization(current_user): flash("Access denied.", "warning"); return redirect(url_for('login.login_route'))
     doctor_id = get_provider_id(current_user)
     if doctor_id is None: flash("Could not identify provider ID.", "danger"); return redirect(url_for('doctor_main.dashboard'))
     if not is_doctor_authorized_for_patient(doctor_id, patient_id): flash("Not authorized.", "danger"); return redirect(url_for('.patients_list'))
@@ -326,61 +326,123 @@ def add_diagnosis(patient_id):
 @patients_bp.route('/<int:patient_id>/symptoms', methods=['POST'])
 @login_required
 def add_symptom(patient_id):
-    # ... (Keep your existing add_symptom logic) ...
-    # Update redirect at the end:
-    if not check_doctor_authorization(current_user): flash("Access denied.", "warning"); return redirect(url_for('auth.login'))
+    if not check_doctor_authorization(current_user): flash("Access denied.", "warning"); return redirect(url_for('login.login_route'))
     doctor_id = get_provider_id(current_user)
     if doctor_id is None: flash("Could not identify provider ID.", "danger"); return redirect(url_for('doctor_main.dashboard'))
     if not is_doctor_authorized_for_patient(doctor_id, patient_id): flash("Not authorized.", "danger"); return redirect(url_for('.patients_list'))
 
     conn = None; cursor = None; errors = []
     form = request.form
+    symptom_id_to_use = None # This will hold the final symptom_id
+
     try:
-        symptom_input = form.get('symptom_name_or_id', '').strip()
-        symptom_id_hidden = form.get('symptom_id', '').strip()
+        # This field will contain the typed symptom name or a name selected from the datalist
+        symptom_name_input = form.get('symptom_name_or_id', '').strip()
+        # This field will contain the ID if a datalist item was explicitly selected via JavaScript
+        symptom_id_from_selection_str = form.get('symptom_id_selected', '').strip()
+
         reported_date_str = form.get('reported_date')
         onset_date_str = form.get('onset_date', '').strip() or None
         severity = form.get('severity', '').strip() or None
         duration = form.get('duration', '').strip() or None
-        frequency = form.get('frequency') or None
+        frequency = form.get('frequency') or None # Allow empty string for NULL
         notes = form.get('notes', '').strip() or None
 
-        symptom_id = None
-        if symptom_id_hidden and symptom_id_hidden.isdigit(): symptom_id = int(symptom_id_hidden)
-        elif symptom_input:
-             if symptom_input.isdigit(): symptom_id = int(symptom_input)
-             else:
-                 temp_conn_symp = get_db_connection(); temp_cursor_symp = temp_conn_symp.cursor()
-                 temp_cursor_symp.execute("SELECT symptom_id FROM symptoms WHERE LOWER(symptom_name) = LOWER(%s)", (symptom_input,))
-                 result_symp = temp_cursor_symp.fetchone()
-                 if result_symp: symptom_id = result_symp[0]
-                 else: errors.append(f"Symptom '{symptom_input}' not found.")
-                 if temp_cursor_symp: temp_cursor_symp.close()
-                 if temp_conn_symp and temp_conn_symp.is_connected(): temp_conn_symp.close()
-        else: errors.append("Symptom required.")
+        if not symptom_name_input:
+            errors.append("Symptom name is required.")
 
         reported_date = date.fromisoformat(reported_date_str) if reported_date_str else None
-        if not reported_date: errors.append("Reported date required.")
+        if not reported_date: errors.append("Reported date is required.")
         onset_date = date.fromisoformat(onset_date_str) if onset_date_str else None
         
         valid_frequencies = get_enum_values('patient_symptoms', 'frequency')
-        if frequency and frequency not in valid_frequencies: errors.append("Invalid frequency."); frequency = None
+        if frequency and frequency not in valid_frequencies:
+            errors.append("Invalid frequency selected.")
+            frequency = None # Or set to a default if applicable
+        elif frequency == "": # Handle empty string from select if "-- Optional --" is chosen
+            frequency = None
 
-        if errors: flash("Validation Errors: " + "; ".join(errors), "danger")
-        else:
+
+        if not errors:
             conn = get_db_connection(); cursor = conn.cursor()
-            sql = "INSERT INTO patient_symptoms (patient_id, symptom_id, reported_date, onset_date, severity, duration, frequency, notes, reported_by, created_at, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW(),NOW())"
-            params = (patient_id, symptom_id, reported_date, onset_date, severity, duration, frequency, notes, doctor_id)
-            cursor.execute(sql, params); conn.commit(); flash("Symptom recorded.", "success")
+
+            # Priority 1: Use the ID if it was explicitly selected via JavaScript
+            if symptom_id_from_selection_str and symptom_id_from_selection_str.isdigit():
+                symptom_id_to_use = int(symptom_id_from_selection_str)
+                # Optional: Verify this ID exists in symptoms table if you're paranoid
+                # cursor.execute("SELECT symptom_id FROM symptoms WHERE symptom_id = %s", (symptom_id_to_use,))
+                # if not cursor.fetchone():
+                #     errors.append("Selected symptom ID is invalid.")
+                #     symptom_id_to_use = None # Fallback to name lookup
+
+            # Priority 2: If no ID from selection, try to find symptom by the typed name
+            if not symptom_id_to_use and symptom_name_input:
+                cursor.execute("SELECT symptom_id FROM symptoms WHERE LOWER(symptom_name) = LOWER(%s)", (symptom_name_input,))
+                result_symp = cursor.fetchone()
+                if result_symp:
+                    symptom_id_to_use = result_symp[0]
+                else:
+                    # Symptom name not found, so insert it into the symptoms table
+                    try:
+                        # Basic default description, you might want to leave it NULL or add more fields
+                        sql_insert_new_symptom = "INSERT INTO symptoms (symptom_name, created_by) VALUES (%s, %s)"
+                        # Assuming symptom_name is unique or you handle duplicates appropriately
+                        cursor.execute(sql_insert_new_symptom, (symptom_name_input, doctor_id))
+                        symptom_id_to_use = cursor.lastrowid # Get the ID of the newly inserted symptom
+                        conn.commit() # Commit this insert separately or manage transaction carefully
+                        logger.info(f"New symptom '{symptom_name_input}' (ID: {symptom_id_to_use}) added to catalog by doctor {doctor_id}.")
+                    except mysql.connector.Error as symptom_insert_err:
+                        # Handle potential errors like duplicate symptom_name if it's unique constrained
+                        conn.rollback() # Rollback the symptom insert attempt
+                        logger.error(f"Error inserting new symptom '{symptom_name_input}': {symptom_insert_err}")
+                        errors.append(f"Could not add new symptom '{symptom_name_input}' to catalog. It might already exist or there was a DB error.")
+                        # Do not proceed if we couldn't get a symptom_id_to_use
+
+            if not symptom_id_to_use and not errors: # Should not happen if logic above is correct
+                 errors.append("Could not determine or create the symptom entry.")
+
+
+        if errors:
+            for err in errors: flash(err, "danger")
+        else:
+            # Proceed to insert into patient_symptoms
+            sql_patient_symptom = """
+                INSERT INTO patient_symptoms 
+                (patient_id, symptom_id, reported_date, onset_date, severity, duration, frequency, notes, reported_by, created_at, updated_at) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+            """
+            params_patient_symptom = (
+                patient_id, symptom_id_to_use, reported_date, onset_date, severity,
+                duration, frequency, notes, doctor_id
+            )
+            # If conn was used for new symptom insert, ensure it's still valid or re-establish transaction
+            if not conn.is_connected(): # Should not happen if handled well
+                conn = get_db_connection()
+                cursor = conn.cursor()
+
+            conn.start_transaction() # Start transaction for patient_symptom insert
+            cursor.execute(sql_patient_symptom, params_patient_symptom)
+            conn.commit()
+            flash(f"Symptom '{symptom_name_input}' recorded successfully.", "success")
             return redirect(url_for('.view_patient_records_tab', patient_id=patient_id) + '#symptomsAccordionHeader')
-    except (mysql.connector.Error, ConnectionError, ValueError) as err:
-        if conn and conn.is_connected() and getattr(conn, 'in_transaction', False): conn.rollback()
-        logger.error(f"Error adding symptom P:{patient_id}: {err}", exc_info=True); flash(f"Error: {str(err)}", "danger")
+
+    except (mysql.connector.Error, ValueError) as err:
+        if conn and conn.is_connected() and getattr(conn, 'in_transaction', False):
+            conn.rollback()
+        logger.error(f"Error processing add_symptom for P:{patient_id}, Symptom: '{form.get('symptom_name_or_id', '')}': {err}", exc_info=True)
+        flash(f"Error recording symptom: {str(err)}", "danger")
+    except Exception as e: # Catch any other unexpected errors
+        if conn and conn.is_connected() and getattr(conn, 'in_transaction', False):
+            conn.rollback()
+        logger.error(f"Unexpected error in add_symptom for P:{patient_id}: {e}", exc_info=True)
+        flash(f"An unexpected error occurred: {str(e)}", "danger")
     finally:
         if cursor: cursor.close()
         if conn and conn.is_connected(): conn.close()
-    return redirect(url_for('.view_patient_add_entry_tab', patient_id=patient_id) + '#form-symptom-anchor')
 
+    # On error, redirect back to the add entry tab
+    # Preserving form data is complex without WTForms, so user might need to re-enter.
+    return redirect(url_for('.view_patient_add_entry_tab', patient_id=patient_id) + '#form-symptom-anchor')
 
 @patients_bp.route('/<int:patient_id>/vaccinations', methods=['POST'])
 @login_required

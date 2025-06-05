@@ -17,34 +17,29 @@
     --particle-bg: rgba(var(--raw-ortho-secondary-rgb), 0.08); 
     --neon-blue: var(--raw-ortho-secondary); 
     --shadow-glow: rgba(var(--raw-ortho-primary-rgb), 0.2); 
-    --hero-bg: rgba(var(--raw-ortho-primary-rgb), 0.05); 
+    
+    --hero-bg: rgba(var(--raw-ortho-primary-rgb), 0.05);
+    --card-bg-color: rgba(var(--raw-ortho-primary-rgb), 0.03); 
+    --card-hover-bg-color: rgba(var(--raw-ortho-primary-rgb), 0.08);
+    
     --section-title-gradient: linear-gradient(90deg, var(--raw-ortho-primary), var(--raw-ortho-secondary));
     --section-title-undl-gradient: var(--section-title-gradient); 
-    
+
     --nav-link-color: var(--raw-ortho-secondary); 
     --nav-link-hover-color: var(--raw-ortho-primary); 
 
-    --card-bg-color: rgba(var(--raw-ortho-primary-rgb), 0.03); 
-    --card-hover-bg-color: rgba(var(--raw-ortho-primary-rgb), 0.08);
-    --card-hover-border: rgba(var(--raw-ortho-primary-rgb), 0.4);
-    --nested-card-bg: rgba(var(--raw-ortho-primary-rgb), 0.02); 
-
-    /* General button theme for Ortho pages */
     --button-bg: rgba(var(--raw-ortho-primary-rgb), 0.7);
     --button-text-color: white; 
     --button-border-color: var(--raw-ortho-primary);
     --button-hover-bg: var(--raw-ortho-primary);
     
-    /* Specific "Read More" button style for cards (using different variables for clarity if needed) */
-    /* For Ortho, the .appointment-button will use the general button theme above. */
-    /* If .card .btn (Read More) should be different, style it directly or use separate vars. */
-    /* Let's assume for now card buttons are also general theme. */
+    /* Ortho has specific styling for its "Read More" buttons if they differ from general buttons */
+    /* --button-readmore-bg: rgba(var(--raw-ortho-primary-rgb), 0.2); /* (Example if used) */
+        
+    --card-hover-border: var(--raw-ortho-primary);
+    --nested-card-bg: rgba(var(--raw-ortho-primary-rgb), 0.02);
 
-    --emergency-bg: var(--raw-ortho-primary);
-    --emergency-border: var(--raw-ortho-primary);
-    --emergency-text: white;
-    --emergency-hover-bg: color-mix(in srgb, var(--raw-ortho-primary) 80%, black);
-    --emergency-hover-text: white;
+    /* EMERGENCY STYLING NOW COMES FROM GLOBAL VARS IN base.css */
 
     --icon-color-main: var(--raw-ortho-primary);
     --interactive-text-color: var(--raw-ortho-secondary);
@@ -75,36 +70,32 @@
     --neon-blue: var(--raw-ortho-secondary);
     --shadow-glow: rgba(var(--raw-ortho-primary-rgb), 0.15); 
     --hero-bg: rgba(var(--raw-ortho-primary-rgb), 0.1);
+    --card-bg-color: rgba(var(--raw-ortho-primary-rgb), 0.05); 
+    --card-hover-bg-color: rgba(var(--raw-ortho-primary-rgb), 0.1);
     --section-title-gradient: linear-gradient(90deg, var(--raw-ortho-primary), var(--raw-ortho-secondary));
     --section-title-undl-gradient: var(--section-title-gradient);
 
     --nav-link-color: var(--raw-ortho-secondary); 
     --nav-link-hover-color: var(--raw-ortho-primary); 
 
-    --card-bg-color: rgba(var(--raw-ortho-primary-rgb), 0.05); 
-    --card-hover-bg-color: rgba(var(--raw-ortho-primary-rgb), 0.1);
-    --card-hover-border: rgba(var(--raw-ortho-primary-rgb), 0.25);
-    --nested-card-bg: rgba(var(--raw-ortho-primary-rgb), 0.03);
-
-    /* General Button variables for light theme */
     --button-bg: rgba(var(--raw-ortho-primary-rgb), 0.8);
     --button-text-color: white; 
     --button-border-color: var(--raw-ortho-primary);
     --button-hover-bg: var(--raw-ortho-primary);
     
-    --emergency-bg: var(--raw-ortho-primary);
-    --emergency-border: var(--raw-ortho-primary);
-    --emergency-text: var(--text-primary); 
-    --emergency-hover-bg: color-mix(in srgb, var(--raw-ortho-primary) 85%, #00000033);
-    --emergency-hover-text: var(--text-primary);
+    /* --button-readmore-bg: rgba(var(--raw-ortho-primary-rgb), 0.2); /* (Example if used) */
+    
+    --card-hover-border: var(--raw-ortho-primary);
+    --nested-card-bg: rgba(var(--raw-ortho-primary-rgb), 0.03);
+
+    /* EMERGENCY STYLING NOW COMES FROM GLOBAL VARS IN base.css */
 
     --icon-color-main: var(--raw-ortho-primary);
     --interactive-text-color: var(--raw-ortho-primary);
     --shadow-effect: 0 5px 15px rgba(var(--raw-ortho-primary-rgb), 0.06);
     --doctor-avatar-bg-color: rgba(var(--raw-ortho-secondary-rgb), 0.15);
 }
-/* === END OF UNIFIED ORTHOPEDICS PALETTE === */
-
+/* === END OF ORTHOPEDICS PALETTE === */
 
 /* Reset and Global Styles (Copied from cardio.css structure) */
 * {

@@ -42,7 +42,6 @@
       </div>
 
       <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
-      <a href="#">Contact</a>
 
       {% if current_user.is_authenticated %}
          <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
