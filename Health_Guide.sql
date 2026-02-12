@@ -717,6 +717,7 @@ CREATE TABLE `users` (
 --
 -- Triggers `users`
 --
+"""
 DELIMITER $$
 CREATE TRIGGER `after_users_insert_professional` AFTER INSERT ON `users` FOR EACH ROW BEGIN
     DECLARE unknown_spec_id INT;
@@ -755,7 +756,7 @@ CREATE TRIGGER `after_users_insert_professional` AFTER INSERT ON `users` FOR EAC
 END
 $$
 DELIMITER ;
-
+"""
 -- --------------------------------------------------------
 
 --
