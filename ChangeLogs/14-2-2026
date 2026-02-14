@@ -1,0 +1,88 @@
+🛠 Full Changelog
+🚀 Core Migration (Flask ➔ FastAPI)
+Refactored Routes:
+routes/Auth/login.py
+ & 
+routes/Auth/register.py
+ fully converted to APIRouter.
+Async SQLAlchemy used for all database interactions.
+Standardized response types to RedirectResponse and TemplateResponse.
+Authentication System:
+Replaced Flask-Login with a custom 
+AuthMiddleware
+ in 
+utils/auth_middleware.py
+.
+Integrated starlette.middleware.sessions for signed cookie management.
+Added current_user to global template context via 
+utils/template_helpers.py
+.
+Flash Messages:
+Implemented a custom 
+flash()
+ helper and 
+get_flashed_messages()
+ context processor to maintain compatibility with legacy templates.
+🛡 Security & Robustness
+Rate Limiting:
+Integrated fastapi-limiter and pyrate_limiter.
+Configured Redis connection in 
+main.py
+ lifespan.
+Applied limits: Login (5 req / 60s), Register (3 req / 60s).
+Error Handling:
+Created 
+utils/error_handlers.py
+ to catch HTTPException (404) and generic Exception (500).
+Designed a user-friendly popup error template in 
+templates/errors/error_popup.html
+.
+Preserved JSON error responses for /api/ prefixed routes.
+🛠 Administrative Tools
+SQLAdmin Integration:
+Added sqladmin dependency for a web-based database management interface.
+Registered all models: 
+Users
+, 
+Doctors
+, 
+Patients
+, 
+Appointments
+, 
+Vaccinations
+, etc.
+Refactoring: Moved all admin logic to 
+utils/admin_setup.py
+ for better modularity.
+Accessible at /admin_db.
+📦 Infrastructure & Documentation
+Docker:
+Added redis:alpine service to 
+docker-compose.yml
+.
+Updated 
+Dockerfile
+ and 
+start.sh
+ verification.
+Dependencies:
+Updated 
+requirements.txt
+ with: redis, fastapi-limiter, sqladmin, pyrate_limiter, itsdangerous.
+Docs:
+Updated 
+README.md
+ with new deployment commands and feature overview.
+Provided 
+env.example
+ updates.
+🐞 Bug Fixes & Refinement
+Resolved Python syntax errors in 
+utils/dependencies.py
+.
+Fixed ImportError related to FastAPILimiter package structure.
+Standardized template paths across all modified routes (e.g., 
+Auth/Login.html
+).
+Fixed missing primary key references in ModelView definitions.
