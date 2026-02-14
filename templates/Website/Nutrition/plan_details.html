@@ -353,13 +353,13 @@
             {% for specialist in specialists %}
             <div class="specialist-card">
                 <div class="specialist-avatar">
-                    <img src="{{ specialist.profile_picture_url | default(url_for('static', filename='images/profile_pics/default_avatar.png')) }}" 
+                    <img src="{{ specialist.profile_picture_url | default(url_for('static', path='images/profile_pics/default_avatar.png')) }}" 
                          alt="Photo of {{ specialist.first_name }} {{ specialist.last_name }}">
                 </div>
                 <div class="specialist-name">Dr. {{ specialist.first_name }} {{ specialist.last_name }}</div>
                 <div class="specialist-title">{{ specialist.specialization_name | default('Nutrition Specialist') }}</div>
                 {% if specialist.short_bio %}<p class="specialist-bio">{{ specialist.short_bio }}</p>{% endif %}
-                <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=specialist.user_id) }}" class="appointment-button button">
+                <a href="{{ url_for('schedule_with_doc', doctor_id=specialist.user_id) }}" class="appointment-button button">
                     <i class="far fa-calendar-check"></i> Schedule Appointment
                 </a>
             </div>
@@ -369,7 +369,7 @@
     {% endif %}
 
     <div class="back-button-container">
-        <a href="{{ url_for('nutrition_bp.list_diet_plans') }}" class="button"><i class="fas fa-arrow-left"></i> Back to All Diet Plans</a>
+        <a href="{{ url_for('list_diet_plans') }}" class="button"><i class="fas fa-arrow-left"></i> Back to All Diet Plans</a>
     </div>
 </div>
 {% endblock %}

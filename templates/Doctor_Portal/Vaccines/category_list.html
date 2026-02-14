@@ -53,10 +53,10 @@
     <div class="col">
         <div class="card h-100 category-card">
             {% if category.image_filename %}
-                <img src="{{ url_for('static', filename='uploads/vaccine_category_images/' + category.image_filename) }}" 
+                <img src="{{ url_for('static', path='uploads/vaccine_category_images/' + category.image_filename) }}" 
                      class="card-img-top category-image" alt="{{ category.category_name }}"> {# Use category_name #}
             {% else %}
-                <img src="{{ url_for('static', filename='images/placeholder_vaccine_cat.png') }}"
+                <img src="{{ url_for('static', path='images/placeholder_vaccine_cat.png') }}"
                      class="card-img-top category-image" alt="Placeholder">
             {% endif %}
             <div class="card-body">

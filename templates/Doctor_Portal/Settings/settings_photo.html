@@ -7,12 +7,12 @@
     <div class="col-md-4 text-center mb-3">
         <h5>Current Photo</h5>
         {% if doctor_info.profile_photo_url %}
-            <img src="{{ url_for('static', filename=doctor_info.profile_photo_url) }}" alt="Current Profile Photo" class="img-thumbnail mb-2">
+            <img src="{{ url_for('static', path=doctor_info.profile_photo_url) }}" alt="Current Profile Photo" class="img-thumbnail mb-2">
             <form method="POST" action="{{ url_for('settings.delete_photo_action') }}" onsubmit="return confirm('Are you sure you want to remove your profile photo?');">
                 <button type="submit" class="button button-danger button-small">Remove Photo</button>
             </form>
         {% else %}
-            <img src="{{ url_for('static', filename='images/default_avatar.png') }}" alt="Default Profile Photo" class="img-thumbnail mb-2">
+            <img src="{{ url_for('static', path='images/default_avatar.png') }}" alt="Default Profile Photo" class="img-thumbnail mb-2">
             <p class="text-muted">No profile photo uploaded.</p>
         {% endif %}
     </div>

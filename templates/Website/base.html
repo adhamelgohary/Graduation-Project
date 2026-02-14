@@ -1,124 +1,176 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark"> {# Default theme, JS will override based on localStorage #}
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>{% block title %}Pro Health Center{% endblock %}</title>
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='Website/base.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='Website/base.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+  <link rel="icon" href="{{ url_for('static', path='favicon.ico') }}" type="image/x-icon">
 
   {# Block for base_with_bot.html to add its CSS, or for direct children to add theirs #}
   {% block base_with_bot_head_extra %}
-    {% block head_extra %}{% endblock %}
+  {% block head_extra %}{% endblock %}
   {% endblock %}
 </head>
+
 <body>
   <nav class="navbar">
-    <a href="{{ url_for('home.index') | default('/') }}" class="nav-logo">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <a href="{{ url_for('home') }}" class="nav-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
       </svg>
       <h1>{% block nav_brand %}Pro Health Center{% endblock %}</h1>
     </a>
 
     <div class="nav-links">
-      <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
-      
+      {# Active check: request.url.path == '/' for exact match #}
+      <a href="{{ url_for('home') }}" class="{{ 'active' if request.url.path == '/' else '' }}">Home</a>
+
       <div class="dropdown" id="departments-dropdown-container">
         <button type="button" id="departments-toggle-btn"
-           class="dropbtn {{ 'active' if request.endpoint.startswith('department.') or request.endpoint == 'vaccines_bp.vaccine_landing' or request.endpoint.startswith('nutrition_bp.') else '' }}">
-           Departments <i class="fas fa-caret-down"></i>
+          class="dropbtn {{ 'active' if request.url.path.startswith('/department') or request.url.path.startswith('/vaccines') or request.url.path.startswith('/nutrition') else '' }}">
+          Departments <i class="fas fa-caret-down"></i>
         </button>
         <div class="dropdown-content" id="departments-menu-content">
-          <a href="{{ url_for('department.list_departments') }}">Medical Departments</a>
-          <a href="{{ url_for('nutrition_bp.nutrition_landing_page') }}">Dietetics & Nutrition</a>
-          <a href="{{ url_for('vaccines_bp.vaccine_landing') }}">Immunization Center</a>
+          <a href="{{ url_for('list_departments') }}">Medical Departments</a>
+          <a href="{{ url_for('nutrition_landing') }}">Dietetics & Nutrition</a>
+          <a href="{{ url_for('vaccine_landing') }}">Immunization Center</a>
           <hr style="margin: 4px 0; border-color: var(--border-color); opacity: 0.5;">
-          <a href="{{ url_for('department.list_departments') }}">View All Departments</a>
+          <a href="{{ url_for('list_departments') }}">View All Departments</a>
         </div>
       </div>
 
-      <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
+      <a href="{{ url_for('list_doctors') }}"
+        class="{{ 'active' if request.url.path.startswith('/doctor') else '' }}">Find a Doctor</a>
 
       {% if current_user.is_authenticated %}
-         <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
-         <a href="{{ url_for('patient_messaging.list_my_chats') }}" class="{{ 'active' if request.blueprint == 'patient_messaging' else '' }}">Messages</a>
-         {% if current_user.user_type == 'doctor' %}
-            <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
-         {% elif current_user.user_type == 'admin' %}
-             <a href="{{ url_for('admin_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.dashboard' else '' }}">Admin Panel</a>
-         {% else %}
-             <a href="{{ url_for('patient_profile.my_account_dashboard') }}" class="{{ 'active' if request.endpoint.startswith('patient_profile.') or request.endpoint.startswith('patient_medical_info.') else '' }}">My Account</a>
-          {% endif %}
-         <a href="{{ url_for('login.logout_route') }}">Logout</a>
+      {# These modules are not yet active in FastAPI. Using placeholders. #}
+      <a href="#" class="">My Appointments</a>
+      {# <a href="{{ url_for('view_my_appointments') }}"
+        class="{{ 'active' if request.url.path.startswith('/appointments') else '' }}">My Appointments</a> #}
+
+      <a href="#" class="">Messages</a>
+      {# <a href="{{ url_for('patient_messaging.list_my_chats') }}"
+        class="{{ 'active' if request.blueprint == 'patient_messaging' else '' }}">Messages</a> #}
+
+      {% if current_user.user_type == 'doctor' %}
+      <a href="/doctor/dashboard" class="{{ 'active' if request.url.path.startswith('/doctor') else '' }}">Dashboard</a>
+      {% elif current_user.user_type == 'admin' %}
+      <a href="/admin/dashboard" class="{{ 'active' if request.url.path.startswith('/admin') else '' }}">Admin Panel</a>
       {% else %}
-         <a href="{{ url_for('login.login_route', next=request.path) }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a>
-         <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a>
+      <a href="/patient/profile/" class="{{ 'active' if request.url.path.startswith('/patient') else '' }}">My
+        Account</a>
+      {% endif %}
+
+      <a href="{{ url_for('logout_route') }}">Logout</a>
+      {% else %}
+      <a href="{{ url_for('login_route') }}"
+        class="{{ 'active' if request.url.path == '/auth/login' else '' }}">Login</a>
+
+      <a href="{{ url_for('register_route') }}"
+        class="{{ 'active' if request.url.path == '/auth/register' else '' }}">Register</a>
       {% endif %}
     </div>
 
-    <div class="navbar-actions-group"> 
-        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode" title="Toggle Theme">
-            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-        </button>
-        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
+    <div class="navbar-actions-group">
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark/light mode" title="Toggle Theme">
+        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
+      <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
     </div>
   </nav>
 
   <div class="mobile-menu" id="mobile-menu">
-      <a href="{{ url_for('home.index') | default('/') }}" class="{{ 'active' if request.endpoint == 'home.index' else '' }}">Home</a>
-      
-      <a href="{{ url_for('department.list_departments') }}" class="dropdown-mobile-header {{ 'active' if request.endpoint == 'department.list_departments' else '' }}">Departments (All)</a>
-      <a href="{{ url_for('department.list_departments') }}" class="dropdown-mobile-item {{ 'active' if request.endpoint == 'department.list_departments' else '' }}">– Medical Departments</a>
-      <a href="{{ url_for('nutrition_bp.nutrition_landing_page') }}" class="dropdown-mobile-item {{ 'active' if request.endpoint.startswith('nutrition_bp.') else '' }}">– Dietetics & Nutrition</a>
-      <a href="{{ url_for('vaccines_bp.vaccine_landing') }}" class="dropdown-mobile-item {{ 'active' if request.endpoint == 'vaccines_bp.vaccine_landing' else '' }}">– Immunization Center</a>
-      
-      <a href="{{ url_for('doctor.list_doctors') }}" class="{{ 'active' if request.endpoint.startswith('doctor.') else '' }}">Find a Doctor</a>
-      <a href="#">Services</a>
-      <a href="#">Contact</a>
-      {% if current_user.is_authenticated %}
-          <hr>
-          <a href="{{ url_for('appointment.view_my_appointments') }}" class="{{ 'active' if request.endpoint.startswith('appointment.') else '' }}">My Appointments</a>
-          <a href="{{ url_for('patient_messaging.list_my_chats') }}" class="{{ 'active' if request.blueprint == 'patient_messaging' else '' }}">Messages</a>
-           {% if current_user.user_type == 'doctor' %}
-              <a href="{{ url_for('doctor_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'doctor_main.dashboard' else '' }}">Dashboard</a>
-           {% elif current_user.user_type == 'admin' %}
-               <a href="{{ url_for('admin_main.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin_main.dashboard' else '' }}">Admin Panel</a>
-           {% else %}
-              <a href="{{ url_for('patient_profile.my_account_dashboard') }}" class="{{ 'active' if request.endpoint.startswith('patient_profile.') or request.endpoint.startswith('patient_medical_info.') else '' }}">My Account</a>
-           {% endif %}
-          <a href="{{ url_for('login.logout_route') }}">Logout</a>
-      {% else %}
-          <hr>
-          <a href="{{ url_for('login.login_route', next=request.path) }}" class="{{ 'active' if request.endpoint == 'login.login_route' else '' }}">Login</a>
-          <a href="{{ url_for('register.register_route') }}" class="{{ 'active' if request.endpoint == 'register.register_route' else '' }}">Register</a>
-      {% endif %}
+    <a href="{{ url_for('home') }}" class="{{ 'active' if request.url.path == '/' else '' }}">Home</a>
+
+    <a href="{{ url_for('list_departments') }}"
+      class="dropdown-mobile-header {{ 'active' if request.url.path.startswith('/department') else '' }}">Departments
+      (All)</a>
+    <a href="{{ url_for('list_departments') }}"
+      class="dropdown-mobile-item {{ 'active' if request.url.path.startswith('/department') else '' }}">– Medical
+      Departments</a>
+    <a href="{{ url_for('nutrition_landing') }}"
+      class="dropdown-mobile-item {{ 'active' if request.url.path.startswith('/nutrition') else '' }}">– Dietetics &
+      Nutrition</a>
+    <a href="{{ url_for('vaccine_landing') }}"
+      class="dropdown-mobile-item {{ 'active' if request.url.path.startswith('/vaccines') else '' }}">– Immunization
+      Center</a>
+
+    <a href="{{ url_for('list_doctors') }}"
+      class="{{ 'active' if request.url.path.startswith('/doctor') else '' }}">Find a Doctor</a>
+    <a href="#">Services</a>
+    <a href="#">Contact</a>
+    {% if current_user.is_authenticated %}
+    <hr>
+    <a href="#" class="">My Appointments</a>
+    {# <a href="{{ url_for('view_my_appointments') }}"
+      class="{{ 'active' if request.url.path.startswith('/appointments') else '' }}">My Appointments</a> #}
+
+    <a href="#" class="">Messages</a>
+    {# <a href="{{ url_for('patient_messaging.list_my_chats') }}"
+      class="{{ 'active' if request.blueprint == 'patient_messaging' else '' }}">Messages</a> #}
+
+    {% if current_user.user_type == 'doctor' %}
+    <a href="#">Dashboard</a>
+    {% elif current_user.user_type == 'admin' %}
+    <a href="#">Admin Panel</a>
+    {% else %}
+    <a href="#">My Account</a>
+    {% endif %}
+    <a href="#">Logout</a>
+    {% else %}
+    <hr>
+    <a href="#">Login</a>
+    <a href="#">Register</a>
+    {% endif %}
   </div>
 
   <main class="main-container">
     {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="flash-messages-container">
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category | status_badge }}" role="alert">
-              {{ message }}
-              <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';" aria-label="Close">×</button>
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
+    {% if messages %}
+    <div class="flash-messages-container">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category | status_badge }}" role="alert">
+        {{ message }}
+        <button type="button" class="close-alert" onclick="this.parentElement.style.display='none';"
+          aria-label="Close">×</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
     {% endwith %}
 
     {# This block will be filled by base_with_bot.html's content block, #}
     {# OR directly by child templates that don't use the bot. #}
     {% block base_with_bot_content %}
-        {% block content %}{% endblock %}
+    {% block content %}{% endblock %}
     {% endblock %}
   </main>
 
@@ -133,11 +185,11 @@
   {% endblock %}
 
   {# New block for elements like the bot to be added at the end of the body by inheriting templates #}
-  {% block body_end_elements %}{% endblock %} 
+  {% block body_end_elements %}{% endblock %}
 
   <script>
     // Theme toggle functionality
-    (function() {
+    (function () {
       const themeToggle = document.getElementById('theme-toggle');
       const htmlElement = document.documentElement;
       const savedTheme = localStorage.getItem('theme');
@@ -155,67 +207,68 @@
     })();
 
     // Mobile menu functionality
-    (function() {
+    (function () {
       const mobileMenuBtn = document.getElementById('mobile-menu-btn');
       const mobileMenu = document.getElementById('mobile-menu');
-      if(mobileMenuBtn && mobileMenu) {
-          mobileMenuBtn.addEventListener('click', (event) => {
-            mobileMenu.classList.toggle('active');
-            event.stopPropagation();
-          });
-          document.addEventListener('click', (event) => {
-            if (mobileMenu.classList.contains('active') && !mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
-               mobileMenu.classList.remove('active');
-            }
-          });
-          mobileMenu.addEventListener('click', (event) => {
-            if (event.target.tagName === 'A') { mobileMenu.classList.remove('active'); }
-          });
+      if (mobileMenuBtn && mobileMenu) {
+        mobileMenuBtn.addEventListener('click', (event) => {
+          mobileMenu.classList.toggle('active');
+          event.stopPropagation();
+        });
+        document.addEventListener('click', (event) => {
+          if (mobileMenu.classList.contains('active') && !mobileMenu.contains(event.target) && !mobileMenuBtn.contains(event.target)) {
+            mobileMenu.classList.remove('active');
+          }
+        });
+        mobileMenu.addEventListener('click', (event) => {
+          if (event.target.tagName === 'A') { mobileMenu.classList.remove('active'); }
+        });
       }
     })();
 
     // Function for smooth scrolling
     function scrollToSection(sectionId) {
-        const section = document.getElementById(sectionId);
-        if (section) {
-            const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 70; 
-            const sectionTop = section.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-            window.scrollTo({ top: sectionTop, behavior: 'smooth' });
-        }
+      const section = document.getElementById(sectionId);
+      if (section) {
+        const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 70;
+        const sectionTop = section.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+        window.scrollTo({ top: sectionTop, behavior: 'smooth' });
+      }
     }
 
     // Desktop Dropdown Menu Functionality (Click-Only)
-    document.addEventListener('DOMContentLoaded', function() {
-        const dropdownContainer = document.getElementById('departments-dropdown-container');
-        const toggleButton = document.getElementById('departments-toggle-btn');
-        const menuContent = document.getElementById('departments-menu-content');
+    document.addEventListener('DOMContentLoaded', function () {
+      const dropdownContainer = document.getElementById('departments-dropdown-container');
+      const toggleButton = document.getElementById('departments-toggle-btn');
+      const menuContent = document.getElementById('departments-menu-content');
 
-        if (toggleButton && menuContent && dropdownContainer) {
-            toggleButton.addEventListener('click', function(event) {
-                event.stopPropagation(); 
-                const isOpen = menuContent.classList.toggle('is-open');
-                toggleButton.classList.toggle('menu-is-open', isOpen);
-            });
-            document.addEventListener('click', function(event) {
-                if (!dropdownContainer.contains(event.target) && menuContent.classList.contains('is-open')) {
-                    menuContent.classList.remove('is-open');
-                    if (toggleButton) toggleButton.classList.remove('menu-is-open');
-                }
-            });
-            menuContent.addEventListener('click', function(event) {
-                if (event.target.tagName === 'A') {
-                    menuContent.classList.remove('is-open');
-                     if (toggleButton) toggleButton.classList.remove('menu-is-open');
-                }
-            });
-        }
+      if (toggleButton && menuContent && dropdownContainer) {
+        toggleButton.addEventListener('click', function (event) {
+          event.stopPropagation();
+          const isOpen = menuContent.classList.toggle('is-open');
+          toggleButton.classList.toggle('menu-is-open', isOpen);
+        });
+        document.addEventListener('click', function (event) {
+          if (!dropdownContainer.contains(event.target) && menuContent.classList.contains('is-open')) {
+            menuContent.classList.remove('is-open');
+            if (toggleButton) toggleButton.classList.remove('menu-is-open');
+          }
+        });
+        menuContent.addEventListener('click', function (event) {
+          if (event.target.tagName === 'A') {
+            menuContent.classList.remove('is-open');
+            if (toggleButton) toggleButton.classList.remove('menu-is-open');
+          }
+        });
+      }
     });
   </script>
 
   {# This block is now for scripts from base_with_bot.html OR directly from child templates #}
   {% block base_with_bot_scripts %}
-      {# Child templates that extend base.html directly will use this original scripts block #}
-      {% block scripts %}{% endblock %}
+  {# Child templates that extend base.html directly will use this original scripts block #}
+  {% block scripts %}{% endblock %}
   {% endblock %}
 </body>
+
 </html>

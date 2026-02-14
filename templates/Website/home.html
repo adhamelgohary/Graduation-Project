@@ -3,169 +3,173 @@
 {% block title %}Home - Pro Health Center{% endblock %}
 
 {% block head_extra %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='Website/home.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='Website/home.css') }}">
 {% endblock %}
 
 {% block content %}
 
-  {# About Us Section #}
-  <section id="about-us" class="about-us">
-    <div class="about-us-text">
-      <h1>WELCOME TO OUR <span>HealthCare</span> WORLD</h1>
-      <p>
-        The healthcare system plays a vital role in disease awareness and preventive care, ensuring individuals stay informed about common health risks and early symptoms.
-        By promoting education on various conditions, it empowers people to take proactive steps toward their well-being.
-        Additionally, tailored nutrition plans based on individual health needs, lifestyle, and medical conditions help optimize overall health, manage diseases, and enhance recovery.
-        A well-structured approach to healthcare combines awareness, prevention, and personalized nutrition to support a healthier community.
-      </p>
-    </div>
-    <div class="about-us-image">
-      <img src="{{ url_for('static', filename='images/home.jpg') }}" alt="Healthcare">
-    </div>
-  </section>
+{# About Us Section #}
+<section id="about-us" class="about-us">
+  <div class="about-us-text">
+    <h1>WELCOME TO OUR <span>HealthCare</span> WORLD</h1>
+    <p>
+      The healthcare system plays a vital role in disease awareness and preventive care, ensuring individuals stay
+      informed about common health risks and early symptoms.
+      By promoting education on various conditions, it empowers people to take proactive steps toward their well-being.
+      Additionally, tailored nutrition plans based on individual health needs, lifestyle, and medical conditions help
+      optimize overall health, manage diseases, and enhance recovery.
+      A well-structured approach to healthcare combines awareness, prevention, and personalized nutrition to support a
+      healthier community.
+    </p>
+  </div>
+  <div class="about-us-image">
+    <img src="{{ url_for('static', path='images/home.jpg') }}" alt="Healthcare">
+  </div>
+</section>
 
-  {# Our Departments Section (Formerly Categories) #}
-  <section id="categories" class="categories"> {# Kept id="categories" for CSS/JS continuity, can be changed if CSS/JS is updated #}
-    <h2 class="section-title">Our Departments</h2> {# MODIFIED TITLE #}
-    <div class="carousel-container">
-      <button class="prev-btn"><i class="fas fa-chevron-left"></i></button>
-      <div class="categories-section">
+{# Our Departments Section (Formerly Categories) #}
+<section id="categories" class="categories"> {# Kept id="categories" for CSS/JS continuity, can be changed if CSS/JS is
+  updated #}
+  <h2 class="section-title">Our Departments</h2> {# MODIFIED TITLE #}
+  <div class="carousel-container">
+    <button class="prev-btn"><i class="fas fa-chevron-left"></i></button>
+    <div class="categories-section">
 
-        {# --- STATIC CARDS START --- #}
+      {# --- STATIC CARDS START --- #}
 
-        {# Card 1: Disease or Medical Departments #}
-        <div class="container-card">
-          <img src="{{ url_for('static', filename='images/Medical.jpg') }}" alt="Medical Departments">
-          {# Suggestion: Use a more specific image if available, e.g., 'images/medical_departments_category.jpg' #}
-          <div class="card-content">
-            <h3>Medical Departments</h3>
-            <p>Explore our specialized medical departments addressing a wide range of diseases and health conditions.</p>
-            {# This link now points to a general listing page for departments.
-               Adjust if you have a more specific page for this category. #}
-            <a href="{{ url_for('department.list_departments') }}" class="learn-more">Learn More</a>
-          </div>
+      {# Card 1: Disease or Medical Departments #}
+      <div class="container-card">
+        <img src="{{ url_for('static', path='images/Medical.jpg') }}" alt="Medical Departments">
+        {# Suggestion: Use a more specific image if available, e.g., 'images/medical_departments_category.jpg' #}
+        <div class="card-content">
+          <h3>Medical Departments</h3>
+          <p>Explore our specialized medical departments addressing a wide range of diseases and health conditions.</p>
+          {# This link now points to a general listing page for departments.
+          Adjust if you have a more specific page for this category. #}
+          <a href="{{ url_for('list_departments') }}" class="learn-more">Learn More</a>
         </div>
-
-        {# Card 2: Nutrition Department #}
-        <div class="container-card">
-          <img src="{{ url_for('static', filename='images/Nuitrtion.jpg') }}" alt="Nutrition Department">
-          {# Suggestion: Use a more specific image if available, e.g., 'images/nutrition_department_category.jpg' #}
-          <div class="card-content">
-            <h3>Dietetics & Nutrition</h3>
-            <p>Discover personalized nutrition plans and guidance from our expert dietitians for optimal health.</p>
-            {# This link now points to a general listing page for departments.
-               Adjust if you have a specific page for Nutrition. #}
-            <a href="{{ url_for('nutrition_bp.nutrition_landing_page') }}" class="learn-more">Learn More</a>
-          </div>
-        </div>
-
-        {# Card 3: Vaccines Department #}
-        <div class="container-card">
-          <img src="{{ url_for('static', filename='images/Vaccination.jpg') }}" alt="Vaccines Department">
-          {# Suggestion: Use a more specific image if available, e.g., 'images/vaccines_department_category.jpg' #}
-          <div class="card-content">
-            <h3>Immunization Center</h3>
-            <p>Stay protected with our comprehensive vaccination services for all ages and needs.</p>
-            {# This link now points to a general listing page for departments.
-               Adjust if you have a specific page for Vaccines. #}
-            <a href="{{ url_for('vaccines_bp.vaccine_landing') }}" class="learn-more">Learn More</a>
-          </div>
-        </div>
-        {# --- STATIC CARDS END --- #}
-
       </div>
-      <button class="next-btn"><i class="fas fa-chevron-right"></i></button>
+
+      {# Card 2: Nutrition Department #}
+      <div class="container-card">
+        <img src="{{ url_for('static', path='images/Nuitrtion.jpg') }}" alt="Nutrition Department">
+        {# Suggestion: Use a more specific image if available, e.g., 'images/nutrition_department_category.jpg' #}
+        <div class="card-content">
+          <h3>Dietetics & Nutrition</h3>
+          <p>Discover personalized nutrition plans and guidance from our expert dietitians for optimal health.</p>
+          {# This link now points to a general listing page for departments.
+          Adjust if you have a specific page for Nutrition. #}
+          <a href="{{ url_for('nutrition_landing') }}" class="learn-more">Learn More</a>
+        </div>
+      </div>
+
+      {# Card 3: Vaccines Department #}
+      <div class="container-card">
+        <img src="{{ url_for('static', path='images/Vaccination.jpg') }}" alt="Vaccines Department">
+        {# Suggestion: Use a more specific image if available, e.g., 'images/vaccines_department_category.jpg' #}
+        <div class="card-content">
+          <h3>Immunization Center</h3>
+          <p>Stay protected with our comprehensive vaccination services for all ages and needs.</p>
+          {# This link now points to a general listing page for departments.
+          Adjust if you have a specific page for Vaccines. #}
+          <a href="{{ url_for('vaccine_landing') }}" class="learn-more">Learn More</a>
+        </div>
+      </div>
+      {# --- STATIC CARDS END --- #}
+
     </div>
-  </section>
+    <button class="next-btn"><i class="fas fa-chevron-right"></i></button>
+  </div>
+</section>
 
 {% endblock %}
 
 
 {% block footer %}
-  {# Inherit footer from base template using super() or define specific footer #}
-  {{ super() }}
+{# Inherit footer from base template using super() or define specific footer #}
+{{ super() }}
 {% endblock %}
 
 
 {% block scripts %}
-  {# Keep carousel JavaScript - it should work with the static cards #}
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const prevBtn = document.querySelector('.prev-btn');
-      const nextBtn = document.querySelector('.next-btn');
-      const categoriesSection = document.querySelector('.categories-section');
-      const cards = document.querySelectorAll('.container-card');
+{# Keep carousel JavaScript - it should work with the static cards #}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
+    const categoriesSection = document.querySelector('.categories-section');
+    const cards = document.querySelectorAll('.container-card');
 
-      if (!prevBtn || !nextBtn || !categoriesSection || cards.length === 0) {
-         console.warn("Carousel elements not found or no cards present, skipping carousel setup.");
-         if(prevBtn) prevBtn.style.display = 'none';
-         if(nextBtn) nextBtn.style.display = 'none';
-         return;
+    if (!prevBtn || !nextBtn || !categoriesSection || cards.length === 0) {
+      console.warn("Carousel elements not found or no cards present, skipping carousel setup.");
+      if (prevBtn) prevBtn.style.display = 'none';
+      if (nextBtn) nextBtn.style.display = 'none';
+      return;
+    }
+
+    let currentIndex = 0;
+    let cardStyle = window.getComputedStyle(cards[0]);
+    let gap = parseFloat(window.getComputedStyle(categoriesSection).getPropertyValue('gap')) || 30;
+    let cardWidth = cards[0].offsetWidth + gap;
+    const carouselContainer = document.querySelector('.carousel-container');
+    let visibleCards = 1;
+
+    function calculateVisibleCards() {
+      if (cards.length === 0 || !carouselContainer || !cards[0]) return 1;
+      gap = parseFloat(window.getComputedStyle(categoriesSection).getPropertyValue('gap')) || 30;
+      // Ensure cardWidth is calculated based on the first card if it exists
+      if (cards[0]) {
+        cardWidth = cards[0].offsetWidth + gap;
+      } else {
+        // Fallback if no cards, though the initial check should prevent this
+        cardWidth = 300 + gap; // Arbitrary fallback
+      }
+      visibleCards = Math.max(1, Math.floor(carouselContainer.offsetWidth / cardWidth));
+    }
+
+    function updateCarousel() {
+      if (cards.length === 0) return;
+      calculateVisibleCards();
+
+      const maxIndex = Math.max(0, cards.length - visibleCards);
+      if (currentIndex > maxIndex) {
+        currentIndex = maxIndex;
       }
 
-      let currentIndex = 0;
-      let cardStyle = window.getComputedStyle(cards[0]);
-      let gap = parseFloat(window.getComputedStyle(categoriesSection).getPropertyValue('gap')) || 30;
-      let cardWidth = cards[0].offsetWidth + gap;
-      const carouselContainer = document.querySelector('.carousel-container');
-      let visibleCards = 1;
+      let newTransform = -(currentIndex * cardWidth);
+      categoriesSection.style.transform = `translateX(${newTransform}px)`;
 
-      function calculateVisibleCards() {
-          if(cards.length === 0 || !carouselContainer || !cards[0]) return 1;
-          gap = parseFloat(window.getComputedStyle(categoriesSection).getPropertyValue('gap')) || 30;
-          // Ensure cardWidth is calculated based on the first card if it exists
-          if(cards[0]) {
-            cardWidth = cards[0].offsetWidth + gap;
-          } else {
-            // Fallback if no cards, though the initial check should prevent this
-            cardWidth = 300 + gap; // Arbitrary fallback
-          }
-          visibleCards = Math.max(1, Math.floor(carouselContainer.offsetWidth / cardWidth));
+      prevBtn.disabled = currentIndex === 0;
+      prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
+      prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
+
+      nextBtn.disabled = currentIndex >= maxIndex || cards.length <= visibleCards;
+      nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
+      nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
+
+      const shouldShowButtons = cards.length > visibleCards;
+      prevBtn.style.display = shouldShowButtons ? 'flex' : 'none';
+      nextBtn.style.display = shouldShowButtons ? 'flex' : 'none';
+    }
+
+    prevBtn.addEventListener('click', function () {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateCarousel();
       }
-
-      function updateCarousel() {
-          if(cards.length === 0) return;
-          calculateVisibleCards();
-
-          const maxIndex = Math.max(0, cards.length - visibleCards);
-          if (currentIndex > maxIndex) {
-              currentIndex = maxIndex;
-          }
-
-          let newTransform = -(currentIndex * cardWidth);
-          categoriesSection.style.transform = `translateX(${newTransform}px)`;
-
-          prevBtn.disabled = currentIndex === 0;
-          prevBtn.style.opacity = prevBtn.disabled ? '0.5' : '1';
-          prevBtn.style.cursor = prevBtn.disabled ? 'not-allowed' : 'pointer';
-
-          nextBtn.disabled = currentIndex >= maxIndex || cards.length <= visibleCards;
-          nextBtn.style.opacity = nextBtn.disabled ? '0.5' : '1';
-          nextBtn.style.cursor = nextBtn.disabled ? 'not-allowed' : 'pointer';
-
-           const shouldShowButtons = cards.length > visibleCards;
-           prevBtn.style.display = shouldShowButtons ? 'flex' : 'none';
-           nextBtn.style.display = shouldShowButtons ? 'flex' : 'none';
-      }
-
-      prevBtn.addEventListener('click', function() {
-          if (currentIndex > 0) {
-              currentIndex--;
-              updateCarousel();
-          }
-      });
-
-      nextBtn.addEventListener('click', function() {
-          calculateVisibleCards();
-          const maxIndex = Math.max(0, cards.length - visibleCards);
-          if (currentIndex < maxIndex) {
-              currentIndex++;
-              updateCarousel();
-          }
-      });
-
-      window.addEventListener('resize', updateCarousel);
-      updateCarousel(); // Initial setup
     });
-  </script>
+
+    nextBtn.addEventListener('click', function () {
+      calculateVisibleCards();
+      const maxIndex = Math.max(0, cards.length - visibleCards);
+      if (currentIndex < maxIndex) {
+        currentIndex++;
+        updateCarousel();
+      }
+    });
+
+    window.addEventListener('resize', updateCarousel);
+    updateCarousel(); // Initial setup
+  });
+</script>
 {% endblock %}

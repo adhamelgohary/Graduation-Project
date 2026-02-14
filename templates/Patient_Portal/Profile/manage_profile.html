@@ -2,7 +2,7 @@
 {% block title %}My Profile{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Patient_Portal/profile.css') }}"> {# Optional specific CSS #}
+    <link rel="stylesheet" href="{{ url_for('static', path='Patient_Portal/profile.css') }}"> {# Optional specific CSS #}
 {% endblock %}
 
 {% block content %}
@@ -19,7 +19,7 @@
         <section class="profile-section">
             <h4>Profile Picture</h4>
             <div class="profile-picture-area">
-                <img src="{{ url_for('static', filename=profile_data.profile_picture) if profile_data and profile_data.profile_picture else url_for('static', filename='images/default_avatar.png') }}" alt="Profile Picture" class="current-profile-pic">
+                <img src="{{ url_for('static', path=profile_data.profile_picture) if profile_data and profile_data.profile_picture else url_for('static', path='images/default_avatar.png') }}" alt="Profile Picture" class="current-profile-pic">
                 <form action="{{ url_for('patient_profile.upload_photo') }}" method="POST" enctype="multipart/form-data" class="upload-form">
                     <label for="profile_picture">Update Picture:</label>
                     <input type="file" id="profile_picture" name="profile_picture" accept="image/*" required>

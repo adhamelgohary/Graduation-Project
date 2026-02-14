@@ -6,10 +6,10 @@
     <title>{% block title %}Doctor Portal{% endblock %} - HealthApp</title>
 
     {# Link Doctor Portal Base CSS - Ensure this path is correct #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='Doctor_Portal/base.css') }}">
 
     {# Favicon #}
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', path='favicon.ico') }}" type="image/x-icon">
 
     {# Font Awesome for Icons #}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">

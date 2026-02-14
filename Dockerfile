@@ -18,5 +18,9 @@ COPY . /app
 # Expose port
 EXPOSE 8000
 
-# Run uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Copy start script
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Run start script
+CMD ["bash", "/app/start.sh"]

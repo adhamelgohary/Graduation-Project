@@ -3,7 +3,7 @@
 {% block title %}{{ view_title | default("My Appointments") }}{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='Website/appointments.css') }}">
 
     <style>
         /* ... your existing styles ... */
@@ -132,7 +132,7 @@
 <div class="main-container">
     <div class="page-header">
         <h1>{{ view_title | default("My Appointments") }}</h1>
-        <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=0) if not doctor else url_for('appointment.schedule_with_doc', doctor_id=doctor.user_id) }}" class="button button-primary button-small"> {# Default to a generic schedule page or last doctor #}
+        <a href="{{ url_for('schedule_with_doc', doctor_id=0) if not doctor else url_for('schedule_with_doc', doctor_id=doctor.user_id) }}" class="button button-primary button-small"> {# Default to a generic schedule page or last doctor #}
              <i class="fas fa-calendar-plus fa-fw"></i> Schedule New Appointment
          </a>
     </div>
@@ -171,10 +171,10 @@
                              {% endif %}
                               {# Reason is not typically shown in list view, but can be added if appt dict has it #}
                              <div class="card-actions">
-                                <a href="{{ url_for('appointment.view_appointment_detail', appointment_id=appt.appointment_id) }}" class="button button-small button-outline">View Details</a>
+                                <a href="{{ url_for('view_appointment_detail', appointment_id=appt.appointment_id) }}" class="button button-small button-outline">View Details</a>
                                 {% if appt.status in ['scheduled', 'confirmed'] and current_user.user_type == 'patient' %}
-                                    <a href="{{ url_for('appointment.reschedule_appointment_start', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-secondary">Reschedule</a>
-                                    <form action="{{ url_for('appointment.cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
+                                    <a href="{{ url_for('reschedule_appointment_start', appointment_id=appt.appointment_id) }}" class="button button-small button-outline button-secondary">Reschedule</a>
+                                    <form action="{{ url_for('cancel_appointment', appointment_id=appt.appointment_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
                                         <button type="submit" class="button button-small button-danger button-outline">Cancel</button>
                                     </form>
                                 {% elif appt.status in ['scheduled', 'confirmed'] and current_user.user_type == 'doctor' %}
@@ -217,7 +217,7 @@
                                 <td>{{ appt.appointment_type_name | default('N/A') | title }}</td> {# <<< CHANGED HERE #}
                                 <td><span class="status-badge status-{{ appt.status_badge_class }}">{{ appt.status | title }}</span></td>
                                 <td class="action-buttons">
-                                    <a href="{{ url_for('appointment.view_appointment_detail', appointment_id=appt.appointment_id) }}" class="button button-small button-outline">View Details</a>
+                                    <a href="{{ url_for('view_appointment_detail', appointment_id=appt.appointment_id) }}" class="button button-small button-outline">View Details</a>
                                 </td>
                             </tr>
                             {% endfor %}

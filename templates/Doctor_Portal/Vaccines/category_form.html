@@ -49,7 +49,7 @@
                 <input type="file" class="form-control" id="image_file" name="image_file" accept="image/png, image/jpeg, image/gif, image/webp"> {# Added webp #}
                 {% if category and category.image_filename %}
                     <small class="form-text text-muted">Current image: {{ category.image_filename }}. Uploading a new file will replace it.</small>
-                    <img src="{{ url_for('static', filename='uploads/vaccine_category_images/' + category.image_filename) }}" alt="Current Image" class="current-image-preview mt-2">
+                    <img src="{{ url_for('static', path='uploads/vaccine_category_images/' + category.image_filename) }}" alt="Current Image" class="current-image-preview mt-2">
                 {% else %}
                     <small class="form-text text-muted">Optional. Allowed types: PNG, JPG, JPEG, GIF, WEBP.</small>
                 {% endif %}

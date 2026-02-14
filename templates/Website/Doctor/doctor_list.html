@@ -1,0 +1,248 @@
+{# templates/Website/doctor_list.html #}
+{% extends "Website/base.html" %}
+
+{% block title %}Find a Doctor - Pro Health Center{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='Website/doctor_list.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='Website/components.css') }}">
+<style>
+    /* For better visual feedback on disabled select */
+    select:disabled {
+        background-color: var(--input-bg-disabled, #e9ecef) !important;
+        /* Use theme variable */
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    [data-theme="dark"] select:disabled {
+        background-color: var(--input-bg-disabled, rgba(255, 255, 255, 0.05)) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<script>
+    const USER_IS_LOGGED_IN = {{ is_logged_in | tojson }};
+</script>
+
+<div class="container doctor-list-page">
+    <h1 class="page-title">Find Your Doctor</h1>
+
+    <form method="GET" action="{{ url_for('list_doctors') }}" class="filter-form">
+        <div class="filter-controls">
+            {# 1. Doctor Name Search #}
+            <div class="filter-group">
+                <label for="search_name">Doctor Name</label>
+                <input type="text" id="search_name" name="search_name" placeholder="Search by name..."
+                    value="{{ selected_name | default('') }}" class="form-control"> {# Added form-control class #}
+            </div>
+
+            {# 2. Department Dropdown #}
+            <div class="filter-group">
+                <label for="department_id">Department</label>
+                <select id="department_id" name="department_id" class="form-select"> {# Added form-select class #}
+                    <option value="">All Departments</option>
+                    {% for dept in departments %}
+                    <option value="{{ dept.department_id }}" {% if dept.department_id==selected_dept_id %}selected{%
+                        endif %}>{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {# 3. Specialization Dropdown (Dynamically Populated) #}
+            <div class="filter-group">
+                <label for="specialization_id">Specialization</label>
+                <select id="specialization_id" name="specialization_id" class="form-select" {% if not selected_dept_id
+                    %}disabled{% endif %}>
+                    <option value="">{% if selected_dept_id %}All Specializations in Department{% else %}Select
+                        Department First{% endif %}</option>
+                    {# This part will be populated by JS or on initial load if department is pre-selected #}
+                    {% if selected_dept_id and specializations_dropdown_data %}
+                    {% for spec in specializations_dropdown_data %}
+                    <option value="{{ spec.specialization_id }}" {% if spec.specialization_id==selected_spec_id
+                        %}selected{% endif %}>{{ spec.name }}</option>
+                    {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+
+            {# 4. Accepting New Patients #}
+            <div class="filter-group">
+                <label for="accepting_new">Accepting New Patients</label>
+                <select id="accepting_new" name="accepting_new" class="form-select"> {# Added form-select class #}
+                    <option value="" {% if selected_accepting_new=='' %}selected{% endif %}>Any</option>
+                    <option value="1" {% if selected_accepting_new=='1' %}selected{% endif %}>Yes</option>
+                    <option value="0" {% if selected_accepting_new=='0' %}selected{% endif %}>No</option>
+                </select>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button type="submit" class="button btn-filter">Apply Filters</button> {# Changed class to use base.css
+            button #}
+            <a href="{{ url_for('list_doctors') }}" class="button btn-clear">Clear Filters</a> {# Changed class #}
+        </div>
+    </form>
+
+    {# Doctor List Display (Structure remains, classes might use components.css) #}
+    <div class="doctor-list-container">
+        {% if doctors %}
+        <div class="doctor-grid">
+            {% for doctor in doctors %}
+            <div class="doctor-card-item">
+                <div class="doctor-card-image">
+                    <img src="{{ url_for('static', path=doctor.profile_picture_processed_url) }}"
+                        alt="Photo of Dr. {{ doctor.first_name }} {{ doctor.last_name }}">
+                </div>
+                <div class="doctor-card-content">
+                    <h3>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h3>
+                    <p class="specialty">{{ doctor.specialization_name | default('Specialist') }}</p>
+                    <p class="department">{{ doctor.department_name | default('') }}</p>
+                    {% if doctor.accepting_new_patients is not none %}
+                    <p class="accepting-status">
+                        New Patients:
+                        {% if doctor.accepting_new_patients %}
+                        <span class="status-badge status-success">Yes</span>
+                        {% else %}
+                        <span class="status-badge status-danger">No</span>
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="doctor-card-action">
+                    <a href="{{ url_for('view_doctor_profile', doctor_id=doctor.user_id) }}" class="button btn-details">
+                        {# Use .button #}
+                        View Details
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-results">
+            <p>No doctors found matching your criteria.</p>
+            <p><a href="{{ url_for('list_doctors') }}">Clear filters</a> to view all doctors.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Login/Register Prompt Modal (Structure remains) #}
+{# ... (modal HTML as before) ... #}
+<div class="modal-overlay" id="login-register-modal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal('login-register-modal')">×</button>
+        <h2>Action Required</h2>
+        <p>Please log in or create an account to schedule an appointment.</p>
+        <div class="modal-actions">
+            <a href="#" class="button btn-modal btn-login">Login</a> {# Use .button #}
+            <a href="#" class="button btn-modal btn-register">Register</a> {# Use .button #}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{# Modal JavaScript Logic (Keep as is from previous version) #}
+<script>
+    // ... (modal JS from previous version) ...
+    document.addEventListener('DOMContentLoaded', function () {
+        const scheduleButtons = document.querySelectorAll('.schedule-prompt-btn'); // Ensure this class exists if used
+        const modal = document.getElementById('login-register-modal');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const isLoggedIn = (typeof USER_IS_LOGGED_IN !== 'undefined' && USER_IS_LOGGED_IN);
+
+        if (modal && modalOverlay) { // Check if modal elements exist before adding listeners
+            scheduleButtons.forEach(button => {
+                button.addEventListener('click', function (event) {
+                    if (isLoggedIn) {
+                        // Proceed to schedule (this might be on doctor_profile, not list)
+                        window.location.href = this.getAttribute('data-schedule-url');
+                        event.preventDefault();
+                    } else {
+                        event.preventDefault();
+                        openModal('login-register-modal');
+                    }
+                });
+            });
+
+            window.openModal = function (modalId) {
+                const modalToOpen = document.getElementById(modalId);
+                if (modalToOpen) { modalToOpen.classList.add('active'); }
+            }
+            window.closeModal = function (modalId) {
+                const modalToClose = document.getElementById(modalId);
+                if (modalToClose) { modalToClose.classList.remove('active'); }
+            }
+            modalOverlay.addEventListener('click', function (event) {
+                if (event.target === modalOverlay) { closeModal('login-register-modal'); }
+            });
+        } else {
+            console.warn("Login/Register modal elements not found on this page.");
+        }
+
+        // --- JavaScript for Cascading Dropdowns ---
+        const departmentSelect = document.getElementById('department_id');
+        const specializationSelect = document.getElementById('specialization_id');
+        // Store the initially selected specialization ID (if any, from server-side render)
+        const initialSelectedSpecId = "{{ selected_spec_id | default('', true) }}";
+
+        if (departmentSelect && specializationSelect) {
+            departmentSelect.addEventListener('change', function () {
+                const departmentId = this.value;
+                // Clear current specialization options (except the placeholder)
+                specializationSelect.innerHTML = '<option value="">Fetching...</option>';
+                specializationSelect.disabled = true;
+
+                if (departmentId) {
+                    fetch(`{{ url_for('get_specializations_for_department_ajax', department_id=0) }}`.replace('/0', '/' + departmentId))
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok: ' + response.statusText);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            specializationSelect.innerHTML = '<option value="">All Specializations in Department</option>'; // Reset placeholder
+                            data.forEach(spec => {
+                                const option = document.createElement('option');
+                                option.value = spec.id;
+                                option.textContent = spec.name;
+                                // If this spec was initially selected (from page load with filters applied), select it
+                                if (spec.id.toString() === initialSelectedSpecId && departmentId === "{{ selected_dept_id | default('', true) }}") {
+                                    option.selected = true;
+                                }
+                                specializationSelect.appendChild(option);
+                            });
+                            specializationSelect.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching specializations:', error);
+                            specializationSelect.innerHTML = '<option value="">Error loading specializations</option>';
+                            specializationSelect.disabled = true; // Keep disabled on error
+                        });
+                } else {
+                    // No department selected, or "All Departments"
+                    specializationSelect.innerHTML = '<option value="">Select Department First</option>';
+                    specializationSelect.disabled = true;
+                    // Optionally, you could fetch ALL specializations here if that's desired
+                    // when "All Departments" is selected, but it might make the list very long.
+                    // For now, it requires a department.
+                }
+            });
+
+            // Trigger change on page load if a department is already selected
+            // to populate specializations and re-select the chosen specialization.
+            if (departmentSelect.value) {
+                // Create and dispatch a 'change' event
+                const event = new Event('change');
+                departmentSelect.dispatchEvent(event);
+            } else {
+                // If no department selected initially, ensure specialization is disabled
+                specializationSelect.disabled = true;
+                specializationSelect.innerHTML = '<option value="">Select Department First</option>';
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,535 @@
+{# templates/Website/Departments/disease_detail.html #}
+{% extends "Website/base.html" %}
+
+{% block title %}{{ condition.condition_name | default('Condition Information') }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet"
+    href="{{ url_for('static', path=condition.specific_css | default('Website/Conditions/generic_disease.css')) }}">
+<style>
+    /* Styles remain the same as previous version */
+    .content-container ul,
+    .card-body ul {
+        list-style: disc;
+        padding-left: 25px;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .content-container ul li,
+    .card-body ul li {
+        margin-bottom: 0.4rem;
+        line-height: 1.5;
+    }
+
+    .emergency-signs ul {
+        color: var(--emergency-text);
+    }
+
+    .emergency-signs ul li::before {
+        color: var(--emergency-text);
+    }
+
+    .pre-wrap {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+
+    .urgency-low {
+        color: var(--color-success, #198754);
+    }
+
+    .urgency-medium {
+        color: #fd7e14;
+    }
+
+    .urgency-high {
+        color: var(--color-danger, #dc3545);
+    }
+
+    .urgency-emergency {
+        color: var(--color-danger-dark, #842029);
+        font-weight: bold;
+        background-color: var(--color-danger-light, #f8d7da);
+        padding: 0.1em 0.4em;
+        border-radius: var(--border-radius-sm, 0.2rem);
+        border: 1px solid var(--color-danger, #f5c2c7);
+        display: inline-block;
+    }
+
+    .no-text-provided {
+        color: var(--color-text-muted, #6c757d);
+        font-style: italic;
+        margin-top: 0.5rem;
+    }
+
+    .quick-facts-list dd.urgency-low,
+    .quick-facts-list dd.urgency-medium,
+    .quick-facts-list dd.urgency-high,
+    .quick-facts-list dd.urgency-emergency {
+        font-weight: bold;
+    }
+
+    .card-header h4,
+    .card-header h5 {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+    }
+
+    .read-more-btn[data-has-more="true"] {
+        display: inline-block !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="disease-container">
+    <div class="header">
+        <h1>{{ condition.name | default('Condition Details') }}</h1>
+        {# ADDED Specialization display under the main heading if available #}
+        {% if condition.specialization_name %}
+        <p class="text-muted fs-5">
+            <i class="fas fa-tags fa-fw"></i> Relevant Specialization: <strong>{{ condition.specialization_name
+                }}</strong>
+        </p>
+        {% elif condition.department_name %}
+        <p class="text-muted fs-5">
+            <i class="fas fa-hospital-alt fa-fw"></i> Relevant Department: <strong>{{ condition.department_name
+                }}</strong>
+        </p>
+        {% endif %}
+    </div>
+
+    <div class="top-content">
+        <div class="centered-gif">
+            <img src="{{ condition.image_url | default(url_for('static', path='images/conditions/disease_placeholder.png')) }}"
+                alt="{{ condition.name | default('Condition') }}">
+        </div>
+        <div class="overview-container">
+            <h2><i class="fas fa-info-circle"></i> Overview</h2>
+            {% if condition.description and condition.description != condition.overview %}
+            <p class="description-emphasis">{{ condition.description | safe }}</p>
+            <hr>
+            {% endif %}
+            <div class="content-container">
+                <div class="overview-full-text pre-wrap">
+                    {{ condition.overview | default('<span class="no-text-provided">No overview available.</span>' |
+                    safe) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="card quick-facts-card">
+            <h3><i class="fas fa-list-check"></i> Quick Facts</h3>
+            <dl class="quick-facts-list">
+                {% if condition.condition_type %}<dt><i class="fas fa-tag fa-fw"></i>Type:</dt>
+                <dd>{{ condition.condition_type | title }}</dd>{% endif %}
+                {% if condition.urgency_level %}<dt><i class="fas fa-exclamation-circle fa-fw"></i>Urgency:</dt>
+                <dd class="urgency-{{ condition.urgency_level | lower |replace(' ', '-') }}">{{ condition.urgency_level
+                    | title }}</dd>{% endif %}
+                {% if condition.typical_duration %}<dt><i class="far fa-clock fa-fw"></i>Duration:</dt>
+                <dd>{{ condition.typical_duration | escape }}</dd>{% endif %}
+                {% if condition.icd_code %}<dt><i class="fas fa-barcode fa-fw"></i>ICD-10:</dt>
+                <dd>{{ condition.icd_code | escape }}</dd>{% endif %}
+
+                {# MODIFIED: Display condition's specific specialization if available, else general specialist_type #}
+                {% if condition.specialization_name %}
+                <dt><i class="fas fa-user-md fa-fw"></i>Specialization:</dt>
+                <dd>{{ condition.specialization_name | escape }}</dd>
+                {% elif condition.specialist_type %}
+                <dt><i class="fas fa-user-md fa-fw"></i>Specialist (General):</dt>
+                <dd>{{ condition.specialist_type | escape }}</dd>
+                {% endif %}
+
+                {% if condition.self_treatable is not none %}<dt><i
+                        class="fas fa-notes-medical fa-fw"></i>Self-Treatable:</dt>
+                <dd>{{ condition.self_treatable_display }}</dd>{% endif %}
+                {% if condition.department_name and not condition.specialization_name %} {# Show department if no
+                specific specialization is listed for the condition #}
+                <dt><i class="fas fa-hospital-alt fa-fw"></i>Department:</dt>
+                <dd>{{ condition.department_name | escape }}</dd>
+                {% endif %}
+            </dl>
+        </div>
+
+        {% if condition.regular_symptoms_list or condition.emergency_symptoms_list %}
+        <div class="card">
+            <h3><i class="fas fa-head-side-cough"></i> {{ condition.name | default('Condition') }} Symptoms</h3>
+            <div class="content-container">
+                <div class="regular-symptoms-content">
+                    {% if condition.regular_symptoms_list %}
+                    <ul>{% for symptom in condition.regular_symptoms_list %}<li>{{ symptom | escape }}</li>{% endfor %}
+                    </ul>
+                    {% else %}<p class="no-text-provided">No regular symptoms specified.</p>{% endif %}
+                </div>
+                {% if condition.emergency_symptoms_list %}
+                <div class="emergency-symptoms-details" style="display: none;">
+                    <div class="emergency-signs">
+                        <h4><span class="sos-emoji">🆘</span> Emergency Symptoms</h4>
+                        <ul>{% for symptom in condition.emergency_symptoms_list %}<li>{{ symptom | escape }}</li>{%
+                            endfor %}</ul>
+                    </div>
+                </div>
+                <button class="read-more-btn symptoms-read-more" data-target-snippet=".regular-symptoms-content"
+                    data-target-full=".emergency-symptoms-details" aria-expanded="false" data-has-more="true">View
+                    Emergency Symptoms <span class="arrow">▼</span></button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if condition.causes_text or condition.causes_list %}
+        <div class="card">
+            <h3><i class="fas fa-question-circle"></i> Causes</h3>
+            <div class="content-container">
+                {% if condition.causes_has_more %}
+                <div class="content-snippet causes-snippet pre-wrap">{{ condition.causes_snippet | default("" | safe) }}
+                </div>
+                <div class="content-full causes-full" style="display: none;">
+                    {% if condition.causes_list %}
+                    <ul>{% for item in condition.causes_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                    {% elif condition.causes_full %}
+                    <p class="pre-wrap">{{ condition.causes_full | safe }}</p>
+                    {% else %}
+                    <p class="no-text-provided">No causes specified.</p>
+                    {% endif %}
+                </div>
+                <button class="read-more-btn" data-target-snippet=".causes-snippet" data-target-full=".causes-full"
+                    aria-expanded="false" data-has-more="true">Read more <span class="arrow">▼</span></button>
+                {% else %}
+                {% if condition.causes_list %}
+                <ul>{% for item in condition.causes_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                {% elif condition.causes_full %}
+                <p class="pre-wrap">{{ condition.causes_full | safe }}</p>
+                {% else %}
+                <p class="no-text-provided">No causes specified.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+
+        {% if condition.risk_factors_text or condition.risk_factors_list %}
+        <div class="card">
+            <h3><i class="fas fa-biohazard"></i> Risk Factors</h3>
+            <div class="content-container">
+                {% if condition.risk_factors_has_more %}
+                <div class="content-snippet risk_factors-snippet pre-wrap">{{ condition.risk_factors_snippet |
+                    default("" | safe) }}</div>
+                <div class="content-full risk_factors-full" style="display: none;">
+                    {% if condition.risk_factors_list %}
+                    <ul>{% for item in condition.risk_factors_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                    {% elif condition.risk_factors_full %}
+                    <p class="pre-wrap">{{ condition.risk_factors_full | safe }}</p>
+                    {% else %}
+                    <p class="no-text-provided">No risk factors specified.</p>
+                    {% endif %}
+                </div>
+                <button class="read-more-btn" data-target-snippet=".risk_factors-snippet"
+                    data-target-full=".risk_factors-full" aria-expanded="false" data-has-more="true">Read more <span
+                        class="arrow">▼</span></button>
+                {% else %}
+                {% if condition.risk_factors_list %}
+                <ul>{% for item in condition.risk_factors_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                {% elif condition.risk_factors_full %}
+                <p class="pre-wrap">{{ condition.risk_factors_full | safe }}</p>
+                {% else %}
+                <p class="no-text-provided">No risk factors specified.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if condition.complications_text or condition.complications_list %}
+        <div class="card">
+            <h3><i class="fas fa-exclamation-triangle"></i> Potential Complications</h3>
+            <div class="content-container">
+                {% if condition.complications_has_more %}
+                <div class="content-snippet complications-snippet pre-wrap">{{ condition.complications_snippet |
+                    default("" | safe) }}</div>
+                <div class="content-full complications-full" style="display: none;">
+                    {% if condition.complications_list %}
+                    <ul>{% for item in condition.complications_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                    {% elif condition.complications_full %}
+                    <p class="pre-wrap">{{ condition.complications_full | safe }}</p>
+                    {% else %}
+                    <p class="no-text-provided">No complications specified.</p>
+                    {% endif %}
+                </div>
+                <button class="read-more-btn" data-target-snippet=".complications-snippet"
+                    data-target-full=".complications-full" aria-expanded="false" data-has-more="true">Read more <span
+                        class="arrow">▼</span></button>
+                {% else %}
+                {% if condition.complications_list %}
+                <ul>{% for item in condition.complications_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                {% elif condition.complications_full %}
+                <p class="pre-wrap">{{ condition.complications_full | safe }}</p>
+                {% else %}
+                <p class="no-text-provided">No complications specified.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if (condition.diagnosis_details or condition.diagnosis_list) or (condition.testing_details or
+        condition.testing_list) %}
+        <div class="card">
+            <h3><i class="fas fa-stethoscope"></i> Diagnosis & Testing</h3>
+
+            {% if condition.diagnosis_details or condition.diagnosis_list %}
+            <h4>Diagnosis:</h4>
+            <div class="content-container">
+                {% if condition.diagnosis_has_more %}
+                <div class="content-snippet diagnosis-snippet pre-wrap">{{ condition.diagnosis_snippet | default("" |
+                    safe) }}</div>
+                <div class="content-full diagnosis-full" style="display:none;">
+                    {% if condition.diagnosis_list %}
+                    <ul>{% for item in condition.diagnosis_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                    {% elif condition.diagnosis_full %}
+                    <p class="pre-wrap">{{ condition.diagnosis_full | safe }}</p>
+                    {% else %}
+                    <p class="no-text-provided">No diagnosis details specified.</p>
+                    {% endif %}
+                </div>
+                <button class="read-more-btn" data-target-snippet=".diagnosis-snippet"
+                    data-target-full=".diagnosis-full" aria-expanded="false" data-has-more="true">Read more <span
+                        class="arrow">▼</span></button>
+                {% else %}
+                {% if condition.diagnosis_list %}
+                <ul>{% for item in condition.diagnosis_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                {% elif condition.diagnosis_full %}
+                <p class="pre-wrap">{{ condition.diagnosis_full | safe }}</p>
+                {% else %}
+                <p class="no-text-provided">No diagnosis details specified.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% if (condition.diagnosis_details or condition.diagnosis_list) and (condition.testing_details or
+            condition.testing_list) %}
+            <hr class="section-divider">{% endif %}
+            {% endif %}
+
+            {% if condition.testing_details or condition.testing_list %}
+            <h4>Common Tests:</h4>
+            <div class="content-container">
+                {% if condition.testing_has_more %}
+                <div class="content-snippet testing-snippet pre-wrap">{{ condition.testing_snippet | default("" | safe)
+                    }}</div>
+                <div class="content-full testing-full" style="display:none;">
+                    {% if condition.testing_list %}
+                    <ul>{% for item in condition.testing_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                    {% elif condition.testing_full %}
+                    <p class="pre-wrap">{{ condition.testing_full | safe }}</p>
+                    {% else %}
+                    <p class="no-text-provided">No testing details specified.</p>
+                    {% endif %}
+                </div>
+                <button class="read-more-btn" data-target-snippet=".testing-snippet" data-target-full=".testing-full"
+                    aria-expanded="false" data-has-more="true">Read more <span class="arrow">▼</span></button>
+                {% else %}
+                {% if condition.testing_list %}
+                <ul>{% for item in condition.testing_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                {% elif condition.testing_full %}
+                <p class="pre-wrap">{{ condition.testing_full | safe }}</p>
+                {% else %}
+                <p class="no-text-provided">No testing details specified.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if condition.treatment_protocols_text or condition.treatment_protocols_list %}
+        <div class="card">
+            <h3><i class="fas fa-pills"></i> Treatment Approaches</h3>
+            <div class="content-container">
+                {% if condition.treatment_protocols_has_more %}
+                <div class="content-snippet treatment_protocols-snippet pre-wrap">{{
+                    condition.treatment_protocols_snippet | default("" | safe) }}</div>
+                <div class="content-full treatment_protocols-full" style="display: none;">
+                    {% if condition.treatment_protocols_list %}
+                    <ul>{% for item in condition.treatment_protocols_list %}<li>{{ item | escape }}</li>{% endfor %}
+                    </ul>
+                    {% elif condition.treatment_protocols_full %}
+                    <p class="pre-wrap">{{ condition.treatment_protocols_full | safe }}</p>
+                    {% else %}
+                    <p class="no-text-provided">No treatment approaches specified.</p>
+                    {% endif %}
+                </div>
+                <button class="read-more-btn" data-target-snippet=".treatment_protocols-snippet"
+                    data-target-full=".treatment_protocols-full" aria-expanded="false" data-has-more="true">Read more
+                    <span class="arrow">▼</span></button>
+                {% else %}
+                {% if condition.treatment_protocols_list %}
+                <ul>{% for item in condition.treatment_protocols_list %}<li>{{ item | escape }}</li>{% endfor %}</ul>
+                {% elif condition.treatment_protocols_full %}
+                <p class="pre-wrap">{{ condition.treatment_protocols_full | safe }}</p>
+                {% else %}
+                <p class="no-text-provided">No treatment approaches specified.</p>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if condition.educational_content %}
+        <div class="card educational-content-card">
+            <h3><i class="fas fa-book-open"></i> Further Information & Resources</h3>
+            <div class="content-container">
+                <div class="content-snippet education-snippet pre-wrap">{{ condition.education_snippet | default('<span
+                        class="no-text-provided">No educational content specified.</span>' | safe) }}</div>
+                <div class="content-full education-full pre-wrap" style="display:none;">{{ condition.education_full |
+                    default(condition.educational_content, true) | default('<span class="no-text-provided">No
+                        educational content specified.</span>' | safe) }}</div>
+                {% if condition.education_has_more %}
+                <button class="read-more-btn" data-target-snippet=".education-snippet"
+                    data-target-full=".education-full" aria-expanded="false" data-has-more="true">Read more <span
+                        class="arrow">▼</span></button>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+    {# MODIFIED: Doctors Section Title reflects specialization if doctors are filtered by it #}
+    <div class="doctors-section">
+        <h2>
+            <i class="fas fa-user-md"></i>
+            {% if condition.specialization_id and doctors %}
+            Specialists for {{ condition.specialization_name }}
+            {% elif condition.department_id and doctors %}
+            Doctors in {{ condition.department_name }}
+            {% else %}
+            Find a Specialist
+            {% endif %}
+        </h2>
+        {% if doctors %}
+        <div class="doctors-grid">
+            {% for doctor in doctors %}
+            <div class="doctor-card">
+                <div class="doctor-avatar">
+                    <img src="{{ doctor.profile_picture_url | default(url_for('static', path='images/profile_pics/default_avatar.png')) }}"
+                        alt="Dr. {{ doctor.first_name }} {{ doctor.last_name }}" class="doctor-profile-pic">
+                </div>
+                <div class="doctor-details">
+                    <div class="doctor-name">Dr. {{ doctor.first_name }} {{ doctor.last_name }}</div>
+                    <div class="doctor-specialty">{{ doctor.specialization_name | default('Specialist') }}</div>
+                    {% if doctor.short_bio %}<p class="doctor-short-bio text-muted">{{ doctor.short_bio }}</p>{% endif
+                    %}
+                    <a href="{{ url_for('schedule_with_doc', doctor_id=doctor.user_id) if doctor.user_id else '#' }}"
+                        class="appointment-button">Schedule Appointment</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted text-center mt-3">
+            {% if condition.specialization_name %}
+            No specialists currently listed for <strong>{{ condition.specialization_name }}</strong> related to this
+            condition.
+            {% elif condition.department_name %}
+            No doctors currently listed in the <strong>{{ condition.department_name }}</strong> department related to
+            this condition.
+            {% else %}
+            No specific specialists listed for this condition at the moment.
+            {% endif %}
+        </p>
+        {% endif %}
+    </div>
+
+    {% if condition.associated_tracker %}
+    <div class="card tracker-promo-card mt-4">
+        <div class="card-body text-center">
+            <h4 class="card-title"><i class="fas fa-notes-medical"></i> Manage Your Condition</h4>
+            <p>Use our <strong>{{ condition.associated_tracker.display_name }}</strong> to help monitor your symptoms
+                and progress.</p>
+
+            {% if current_user.is_authenticated and current_user.user_type == 'patient' %}
+            {# Tracker routes not active yet #}
+            <a href="#" class="button button-primary">
+                <i class="fas fa-arrow-right"></i> Go to {{ condition.associated_tracker.display_name }} (Coming Soon)
+            </a>
+            {% elif current_user.is_authenticated %}
+            <button class="button button-secondary" disabled title="Trackers are for patient use.">
+                <i class="fas fa-lock"></i> {{ condition.associated_tracker.display_name }} (Patients Only)
+            </button>
+            {% else %}
+            <p class="text-muted mb-2">
+                <i class="fas fa-info-circle"></i> You need to be logged in as a patient to use this tracker.
+            </p>
+            <a href="#" class="button button-outline">
+                <i class="fas fa-sign-in-alt"></i> Login to Use Tracker
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const readMoreButtons = document.querySelectorAll('.read-more-btn');
+        readMoreButtons.forEach(button => {
+            const container = button.closest('.content-container'); if (!container) return;
+            const hasMore = button.dataset.hasMore === 'true'; const isSymptomsButton = button.classList.contains('symptoms-read-more');
+            const snippetSelector = button.dataset.targetSnippet; const fullSelector = button.dataset.targetFull;
+            const snippetElement = container.querySelector(snippetSelector); const fullElement = container.querySelector(fullSelector);
+
+            if ((!hasMore && !isSymptomsButton) || !snippetElement || !fullElement) {
+                if (!isSymptomsButton || !fullElement) {
+                    button.style.display = 'none';
+                }
+                if (isSymptomsButton) {
+                    if (snippetElement) snippetElement.style.display = 'block';
+                    if (fullElement) fullElement.style.display = 'none';
+                }
+
+                const emergencyHasContent = isSymptomsButton && fullElement && fullElement.textContent.trim();
+                if (isSymptomsButton && emergencyHasContent && !hasMore) {
+                    button.style.display = 'inline-block';
+                    button.dataset.hasMore = 'true';
+                    if (snippetElement) snippetElement.style.display = 'block';
+                    fullElement.style.display = 'none';
+                    button.setAttribute('aria-expanded', 'false');
+                    button.innerHTML = 'View Emergency Symptoms <span class="arrow">▼</span>';
+                } else if (!hasMore && isSymptomsButton) {
+                    button.style.display = 'none';
+                }
+
+                if (button.style.display === 'none') return;
+            }
+
+            if (snippetElement) snippetElement.style.display = 'block';
+            if (fullElement) fullElement.style.display = 'none';
+            button.setAttribute('aria-expanded', 'false');
+            button.innerHTML = isSymptomsButton ? 'View Emergency Symptoms <span class="arrow">▼</span>' : 'Read more <span class="arrow">▼</span>';
+
+            button.addEventListener('click', function () {
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                if (isSymptomsButton) {
+                    if (fullElement) fullElement.style.display = isExpanded ? 'none' : 'block';
+                    if (snippetElement) snippetElement.style.display = 'block';
+                    this.innerHTML = isExpanded ? 'View Emergency Symptoms <span class="arrow">▼</span>' : 'Hide Emergency Symptoms <span class="arrow">▲</span>';
+                } else {
+                    if (snippetElement) snippetElement.style.display = isExpanded ? 'block' : 'none';
+                    if (fullElement) fullElement.style.display = isExpanded ? 'none' : 'block';
+                    this.innerHTML = isExpanded ? 'Read more <span class="arrow">▼</span>' : 'Read less <span class="arrow">▲</span>';
+                }
+                this.setAttribute('aria-expanded', String(!isExpanded));
+                this.classList.toggle('expanded', !isExpanded);
+            });
+        });
+    });
+</script>
+{% endblock %}

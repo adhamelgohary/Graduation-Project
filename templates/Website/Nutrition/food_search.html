@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsDiv.innerHTML = '';
         loaderDiv.style.display = 'block';
 
-        fetch(`{{ url_for('nutrition_bp.api_search_food_library') }}?q=${encodeURIComponent(query)}`)
+        fetch(`{{ url_for('api_search_food_library') }}?q=${encodeURIComponent(query)}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);

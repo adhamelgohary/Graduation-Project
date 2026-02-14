@@ -2,7 +2,7 @@
 {% block title %}My Messages{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/messaging.css') }}"> {# Add custom CSS if needed #}
+    <link rel="stylesheet" href="{{ url_for('static', path='Doctor_Portal/messaging.css') }}"> {# Add custom CSS if needed #}
     <style>
         .chat-item { border-bottom: 1px solid #eee; padding: 1rem 0.5rem; }
         .chat-item:last-child { border-bottom: none; }

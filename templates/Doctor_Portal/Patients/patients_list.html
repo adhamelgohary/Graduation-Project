@@ -5,9 +5,9 @@
 {% block head_extra %}
     {{ super() if super }}
     {# Link to your main Doctor Portal CSS - ensure it includes patient_list.css styles or link patient_list.css directly #}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/doctor_portal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/doctor_portal.css') }}">
     {# If patient_list.css is separate and not imported into doctor_portal.css: #}
-    {# <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/patients_list.css') }}"> #}
+    {# <link rel="stylesheet" href="{{ url_for('static', path='Doctor_Portal/patients_list.css') }}"> #}
     {# Font Awesome is assumed to be in base.html #}
 {% endblock %}
 

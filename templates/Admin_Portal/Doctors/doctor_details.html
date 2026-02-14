@@ -46,7 +46,7 @@
                 {# --- MODIFIED IMAGE SOURCE --- #}
                 {# Assumes doctor.profile_photo_url stores only the filename, and files are in 'static/uploads/profile_pics/' #}
                 {# doctor.profile_photo_url ALREADY CONTAINS "uploads/profile_pics/filename.ext" #}
-<img src="{{ url_for('static', filename=doctor.profile_photo_url) if doctor.profile_photo_url else url_for('static', filename='Admin_Portal/images/default_doctor_avatar.png') }}"
+<img src="{{ url_for('static', path=doctor.profile_photo_url) if doctor.profile_photo_url else url_for('static', path='Admin_Portal/images/default_doctor_avatar.png') }}"
      alt="Profile Picture" class="img-thumbnail rounded-circle mb-2"
      style="width: 150px; height: 150px; object-fit: cover;">
                 <h5>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h5>
@@ -131,7 +131,7 @@
                             {% elif doc.file_name.lower().endswith(('.doc', '.docx')) %}<i class="fas fa-file-word text-primary doc-icon"></i>
                             {% elif doc.file_name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}<i class="fas fa-file-image text-success doc-icon"></i>
                             {% else %}<i class="fas fa-file-alt text-secondary doc-icon"></i>{% endif %}
-                            <a href="{{ url_for('static', filename=docs_relative_path_base + '/' + doc.file_path) }}" target="_blank">
+                            <a href="{{ url_for('static', path=docs_relative_path_base + '/' + doc.file_path) }}" target="_blank">
                                 {{ doc.file_name }}
                             </a>
                             <span class="badge bg-light text-dark ms-2">{{ doc.document_type|replace('_', ' ')|capitalize }}</span>

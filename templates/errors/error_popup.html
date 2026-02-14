@@ -1,0 +1,96 @@
+{% extends "Website/base.html" %}
+
+{% block title %}Error {{ error_code }}{% endblock %}
+
+{% block content %}
+<div class="error-overlay" id="error-overlay">
+    <div class="error-popup">
+        <div class="error-icon">
+            {% if error_code == 404 %}
+            <i class="fas fa-search-minus"></i>
+            {% else %}
+            <i class="fas fa-exclamation-triangle"></i>
+            {% endif %}
+        </div>
+        <h2>Error {{ error_code }}</h2>
+        <p>{{ error_message }}</p>
+        <div class="error-actions">
+            <button onclick="window.history.back()" class="btn btn-secondary">Go Back</button>
+            <a href="{{ url_for('home') }}" class="btn btn-primary">Go Home</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .error-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify_content: center;
+        align-items: center;
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .error-popup {
+        background: var(--card-bg, #fff);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        animation: slideIn 0.3s ease-out;
+        color: var(--text-color, #333);
+    }
+
+    .error-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--danger-color, #dc3545);
+    }
+
+    .error-popup h2 {
+        margin-bottom: 0.5rem;
+        font-size: 1.5rem;
+    }
+
+    .error-popup p {
+        margin-bottom: 1.5rem;
+        color: var(--text-muted, #6c757d);
+    }
+
+    .error-actions {
+        display: flex;
+        gap: 1rem;
+        justify_content: center;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

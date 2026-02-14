@@ -2,7 +2,7 @@
 {% block title %}Chat: {{ chat.patient_first_name }} {{ chat.patient_last_name }}{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/messaging.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='Doctor_Portal/messaging.css') }}">
     <style>
         .chat-container { max-height: 60vh; overflow-y: auto; border: 1px solid #eee; padding: 1rem; margin-bottom: 1rem; background-color: #f8f9fa; }
         .message-bubble { margin-bottom: 1rem; display: flex; }

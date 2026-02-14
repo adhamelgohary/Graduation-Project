@@ -6,7 +6,7 @@
 {% block head_extra %}
     <meta name="csrf-token" content="{{ csrf_token() if csrf_token else '' }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/disease_catalog.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='Doctor_Portal/disease_catalog.css') }}">
     <style>
         .detail-section { margin-bottom: var(--spacing-lg, 1.5rem); }
         .detail-label { font-weight: 600; color: var(--color-secondary, #6c757d); font-size: 0.9em; margin-bottom: 0.1rem; display: block;}

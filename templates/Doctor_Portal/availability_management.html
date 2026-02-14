@@ -4,7 +4,7 @@
 
 {% block head_extra %}
     {{ super() if super }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='Doctor_Portal/base.css') }}">
     <style>
         /* Keep general section styling, or move to external CSS */
         .availability-section-content { /* Content within each tab pane */

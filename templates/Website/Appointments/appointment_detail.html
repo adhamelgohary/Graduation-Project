@@ -3,7 +3,7 @@
 {% block title %}Appointment Details{% endblock %}
 
 {% block head_extra %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='Website/appointments.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='Website/appointments.css') }}">
     <style>
         .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem 1.5rem; margin-bottom: 1rem; }
         .detail-item strong { display: block; color: var(--text-secondary); font-size: 0.9em; margin-bottom: 0.2rem; }
@@ -17,7 +17,7 @@
 <div class="main-container">
     <div class="page-header">
         <h1>Appointment Details</h1>
-         <a href="{{ url_for('appointment.view_my_appointments') }}" class="button button-outline button-secondary button-small">
+         <a href="{{ url_for('view_my_appointments') }}" class="button button-outline button-secondary button-small">
              <i class="fas fa-arrow-left fa-fw"></i> Back to My Appointments
          </a>
     </div>
@@ -78,17 +78,17 @@
             <div class="form-actions mt-4 pt-3 border-top">
                  {% if appointment.status in ['scheduled', 'confirmed'] %}
                     {% if current_user.user_type == 'patient' %}
-                     <a href="{{ url_for('appointment.reschedule_appointment_start', appointment_id=appointment.appointment_id) }}" class="button button-secondary">Reschedule</a>
+                     <a href="{{ url_for('reschedule_appointment_start', appointment_id=appointment.appointment_id) }}" class="button button-secondary">Reschedule</a>
                     {% endif %}
-                    <form action="{{ url_for('appointment.cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
+                    <form action="{{ url_for('cancel_appointment', appointment_id=appointment.appointment_id) }}" method="POST" class="d-inline ms-2" onsubmit="return confirm('Are you sure you want to cancel this appointment?')">
                          <button type="submit" class="button button-danger button-outline">Cancel Appointment</button>
                     </form>
                  {% elif appointment.status == 'rescheduled' and current_user.user_type == 'patient' %}
                       <p class="text-muted fst-italic">This appointment was marked for rescheduling. Please book a new time.</p>
-                      <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=appointment.doctor_id) }}" class="button button-primary">Schedule Replacement</a>
+                      <a href="{{ url_for('schedule_with_doc', doctor_id=appointment.doctor_id) }}" class="button button-primary">Schedule Replacement</a>
                  {% elif appointment.status == 'completed' %}
                        <p class="text-muted fst-italic">This appointment has been completed.</p>
-                       <a href="{{ url_for('appointment.schedule_with_doc', doctor_id=appointment.doctor_id) }}" class="button button-secondary">Book Follow-up</a>
+                       <a href="{{ url_for('schedule_with_doc', doctor_id=appointment.doctor_id) }}" class="button button-secondary">Book Follow-up</a>
                  {% else %}
                       <p class="text-muted fst-italic">This appointment cannot be modified (Status: {{ appointment.status | title }}).</p>
                  {% endif %}

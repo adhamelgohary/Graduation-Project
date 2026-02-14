@@ -78,7 +78,7 @@
 <div class="appointment-form-container">
     <div class="page-header">
         <h1>{{ page_title | default("Schedule Appointment") }}</h1>
-        <a href="{{ url_for('doctor.list_doctors') }}" class="button button-outline button-secondary button-small">
+        <a href="{{ url_for('list_doctors') }}" class="button button-outline button-secondary button-small">
             <i class="fas fa-arrow-left fa-fw"></i> Back to Doctors
         </a>
     </div>
@@ -110,14 +110,14 @@
             {% if doctor %}
             <div class="doctor-info-card">
                 {# *** UPDATED IMAGE SRC HERE *** #}
-                <img src="{{ doctor.profile_photo_display_url | default(url_for('static', filename='images/profile_pics/default_avatar.png')) }}" alt="Dr. {{ doctor.first_name }} {{ doctor.last_name }}">
+                <img src="{{ doctor.profile_photo_display_url | default(url_for('static', path='images/profile_pics/default_avatar.png')) }}" alt="Dr. {{ doctor.first_name }} {{ doctor.last_name }}">
                 <div>
                     <h4>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h4>
                     <p>{{ doctor.specialization_name | default('Doctor') }}{% if doctor.department_name %} | {{ doctor.department_name }}{% endif %}</p>
                 </div>
             </div>
 
-            <form id="schedule-form" action="{{ url_for('appointment.schedule_appointment_datetime', doctor_id=doctor.user_id) }}" method="POST">
+            <form id="schedule-form" action="{{ url_for('schedule_appointment_datetime', doctor_id=doctor.user_id) }}" method="POST">
                 <input type="hidden" name="doctor_id" value="{{ doctor.user_id }}">
                 {% if is_reschedule and original_appointment_id %}
                     <input type="hidden" name="original_appointment_id" value="{{ original_appointment_id }}">

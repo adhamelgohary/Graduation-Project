@@ -9,7 +9,7 @@
     {{ super() }}
     {# Main Doctor Portal CSS is inherited from Doctor_Portal/base.html #}
     {# Link to settings.css if its styles are general enough to be reused here #}
-    {# <link rel="stylesheet" href="{{ url_for('static', filename='Doctor_Portal/settings.css') }}"> #}
+    {# <link rel="stylesheet" href="{{ url_for('static', path='Doctor_Portal/settings.css') }}"> #}
     <style>
         /* --- Patient Profile Layout Specific Styles --- */
         .patient-profile-container {

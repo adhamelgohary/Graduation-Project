@@ -132,7 +132,7 @@
                 <td>
                     <div class="name-column">
                         {% if doctor.profile_photo_url %}
-                            <img src="{{ url_for('static', filename=doctor.profile_photo_url) }}" alt="" class="avatar-sm">
+                            <img src="{{ url_for('static', path=doctor.profile_photo_url) }}" alt="" class="avatar-sm">
                         {% else %}
                             <span class="avatar-initials-sm">
                                 {{ doctor.first_name[0]|upper if doctor.first_name else 'D' }}{{ doctor.last_name[0]|upper if doctor.last_name else '' }}

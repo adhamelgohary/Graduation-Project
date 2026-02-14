@@ -2,7 +2,7 @@
 {% extends "Website/base.html" %}
 
 {% block base_with_bot_head_extra %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='Website/nutrition_bot_styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='Website/nutrition_bot_styles.css') }}">
   <style>
     /* Add styles for bot option buttons */
     .bot-options-container {
@@ -187,7 +187,7 @@
           if(inputArea) inputArea.classList.add('expecting-choice'); // Indicate processing
 
           try {
-              const response = await fetch("{{ url_for('nutrition_bp.api_bot_chat') }}", { // Use existing chat endpoint
+              const response = await fetch("{{ url_for('api_bot_chat') }}", { // Use existing chat endpoint
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ payload: payload, state: currentConversationState }) // Send payload and current state
@@ -283,7 +283,7 @@
           }
           foodResultsDisplay.innerHTML = '<div class="message bot-message">Searching...</div>';
           try {
-              const response = await fetch(`{{ url_for('nutrition_bp.api_search_food_library') }}?q=${encodeURIComponent(query)}`);
+              const response = await fetch(`{{ url_for('api_search_food_library') }}?q=${encodeURIComponent(query)}`);
               if (!response.ok) throw new Error(`Server error: ${response.statusText || response.status}`);
               const data = await response.json();
 

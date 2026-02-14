@@ -3,7 +3,7 @@
 {% block title %}Nutrition - Healthy Inside Fresh Outside{% endblock %}
 
 {% block head_extra %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='Website/nutrition.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='Website/nutrition.css') }}">
   {# BMR specific styles are now IN nutrition.css, so the inline style block is removed #}
 {% endblock %}
 
@@ -18,7 +18,7 @@
     <div class="container">
         <div class="hero-content">
             <div class="hero-image">
-                <img src="{{ url_for('static', filename='images/5036deb7-bc1b-4c02-9d8b-913919468cb3.jpeg') }}" alt="Woman eating healthy food">
+                <img src="{{ url_for('static', path='images/5036deb7-bc1b-4c02-9d8b-913919468cb3.jpeg') }}" alt="Woman eating healthy food">
                 <div class="circle-overlay">
                     <div class="subtitle">Nutrition</div>
                     <h1>Healthy Inside Fresh Outside</h1>
@@ -41,25 +41,25 @@
                         <h3>BMR Calculator</h3>
                         <p>Discover your Basal Metabolic Rate to understand how many calories your body needs at rest. It will help you to determine your exact energy requirements.</p>
                         {# Updated link to the new BMR calculator page #}
-                        <a href="{{ url_for('nutrition_bp.bmr_calculator_page') }}" class="view-more-btn">Calculate Now</a>
+                        <a href="{{ url_for('bmr_calculator_page') }}" class="view-more-btn">Calculate Now</a>
                     </div>
                     
                     <div class="card">
                         <h3>Diet Plans</h3>
                         <p>Explore our customized diet plans designed by nutrition experts to meet your unique health goals, whether it's weight loss, muscle gain, or managing health conditions.</p>
-                        <a href="{{ url_for('nutrition_bp.list_diet_plans') }}" class="view-more-btn">View More</a>
+                        <a href="{{ url_for('list_diet_plans') }}" class="view-more-btn">View More</a>
                     </div>
                     
                     <div class="card">
                         <h3>Food Search</h3>
                         <p>Access our comprehensive database of thousands of foods to learn about their nutritional values, health benefits, and how they can fit into your personalized diet plan.</p>
-                        <a href="{{ url_for('nutrition_bp.food_search_page') }}" class="view-more-btn">Search Foods</a>
+                        <a href="{{ url_for('food_search_page') }}" class="view-more-btn">Search Foods</a>
                     </div>
                 </div>
             </div>
 
             <div class="column">
-                <img src="{{ url_for('static', filename='images/The Smoothie Journey Begins Now.jpeg') }}" alt="Woman with green smoothie">
+                <img src="{{ url_for('static', path='images/The Smoothie Journey Begins Now.jpeg') }}" alt="Woman with green smoothie">
             </div>
         </div>
     </div>
@@ -70,7 +70,7 @@
     <div class="container">
         <div class="two-column">
             <div class="column">
-                <img src="{{ url_for('static', filename='images/Enjoy a healthy breakfast full of colors and flavors_.jpeg') }}" alt="Woman cooking healthy food">
+                <img src="{{ url_for('static', path='images/Enjoy a healthy breakfast full of colors and flavors_.jpeg') }}" alt="Woman cooking healthy food">
             </div>
             <div class="column">
                 <h2 class="section-title">We care your health and fitness</h2>

@@ -3,7 +3,7 @@
 {% block title %}{{ page_title }} - Vaccination Info{% endblock %}
 
 {% block head_extra %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='Website/vaccine-cond.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', path='Website/vaccine-cond.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -23,7 +23,7 @@
                     {% set detail_img_path = 'uploads/vaccine_images/' + data.vaccine_image_filename %}
                 {% endif %} #}
             {% endif %}
-            <img src="{{ url_for('static', filename=detail_img_path) }}" alt="{{ page_title }} Illustration">
+            <img src="{{ url_for('static', path=detail_img_path) }}" alt="{{ page_title }} Illustration">
         </div>
 
         <div class="overview-container">
@@ -98,7 +98,7 @@
                             {% for vac_item in data.vaccines_in_category_list %}
                                 <li>
                                     {# UPDATED LINK: Point to vaccine_detail_page with vac_item.vaccine_id #}
-                                    <a href="{{ url_for('vaccines_bp.vaccine_detail_page', vaccine_id=vac_item.vaccine_id) }}">{{ vac_item.vaccine_name }}</a>
+                                    <a href="{{ url_for('vaccine_detail', vaccine_id=vac_item.vaccine_id) }}">{{ vac_item.vaccine_name }}</a>
                                     {% if vac_item.abbreviation %}({{ vac_item.abbreviation }}){% endif %}
                                     <p class="item-description-small">Protects against: {{ vac_item.diseases_prevented }}</p>
                                 </li>
