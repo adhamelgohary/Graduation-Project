@@ -1,0 +1,63 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 9081
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - endpoint: http://loki:3100/loki/api/v1/push
+    external_labels:
+      service: health_guide
+
+scrape_configs:
+  - job_name: app_logs
+    static_configs:
+      - labels:
+          service: health_guide
+          component: app
+        targets:
+          - localhost
+        __path__: /var/log/app/*.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>[\d\-T:Z]+) (?P<level>\w+) (?P<logger>[\w.]+) - (?P<message>.*)$'
+      - labels:
+          level:
+          logger:
+
+  - job_name: activity
+    static_configs:
+      - labels:
+          service: health_guide
+          component: activity
+        targets:
+          - localhost
+        __path__: /var/log/app/activity.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp:
+            user_id:
+            action:
+      - labels:
+          user_id:
+          action:
+
+  - job_name: security
+    static_configs:
+      - labels:
+          service: health_guide
+          component: security
+        targets:
+          - localhost
+        __path__: /var/log/app/security.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp:
+            event_type:
+            user_id:
+      - labels:
+          event_type:
+          user_id:

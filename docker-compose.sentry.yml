@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  sentry_postgres:
+    image: postgres:16-alpine
+    container_name: sentry_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sentry
+      POSTGRES_USER: sentry
+      POSTGRES_PASSWORD: sentrypassword
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - sentry_pgdata:/var/lib/postgresql/data
+    networks:
+      - sentry_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "sentry"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sentry_redis:
+    image: redis:7-alpine
+    container_name: sentry_redis
+    restart: unless-stopped
+    volumes:
+      - sentry_redis_data:/data
+    networks:
+      - sentry_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sentry:
+    image: sentry:9.33.1
+    container_name: sentry_sentry
+    restart: unless-stopped
+    depends_on:
+      sentry_postgres:
+        condition: service_healthy
+      sentry_redis:
+        condition: service_healthy
+    environment:
+      SENTRY_SECRET_KEY: ${SENTRY_SECRET_KEY:-change-this-secret-key-in-production-deployment}
+      SENTRY_DB_HOST: sentry_postgres
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentrypassword
+      SENTRY_DB_NAME: sentry
+      SENTRY_REDIS_HOST: sentry_redis
+      SENTRY_SYSTEM_REDIS_URL: redis://sentry_redis:6379/0
+      SENTRY_FILESYSTEM_BLOBSTORE: local
+      SENTRY_EVENT_RETENTION_DAYS: 90
+      SENTRY_EMAIL_HOST: ${SENTRY_SMTP_HOST:-}
+      SENTRY_EMAIL_PORT: ${SENTRY_SMTP_PORT:-587}
+      SENTRY_EMAIL_USER: ${SENTRY_SMTP_USER:-}
+      SENTRY_EMAIL_PASSWORD: ${SENTRY_SMTP_PASSWORD:-}
+      SENTRY_EMAIL_USE_TLS: "true"
+      SENTRY_SERVER_EMAIL: noreply@example.com
+    volumes:
+      - sentry_data:/var/lib/sentry
+    ports:
+      - "${SENTRY_PORT:-9000}:9000"
+    networks:
+      - sentry_network
+
+  sentry_cron:
+    image: sentry:9.33.1
+    container_name: sentry_cron
+    restart: unless-stopped
+    depends_on:
+      - sentry_postgres
+      - sentry_redis
+    command: sentry run cron
+    environment:
+      SENTRY_SECRET_KEY: ${SENTRY_SECRET_KEY:-change-this-secret-key-in-production-deployment}
+      SENTRY_DB_HOST: sentry_postgres
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentrypassword
+      SENTRY_DB_NAME: sentry
+      SENTRY_REDIS_HOST: sentry_redis
+      SENTRY_SYSTEM_REDIS_URL: redis://sentry_redis:6379/0
+    networks:
+      - sentry_network
+
+  sentry_worker:
+    image: sentry:9.33.1
+    container_name: sentry_worker
+    restart: unless-stopped
+    depends_on:
+      - sentry_postgres
+      - sentry_redis
+    command: sentry run worker
+    environment:
+      SENTRY_SECRET_KEY: ${SENTRY_SECRET_KEY:-change-this-secret-key-in-production-deployment}
+      SENTRY_DB_HOST: sentry_postgres
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentrypassword
+      SENTRY_DB_NAME: sentry
+      SENTRY_REDIS_HOST: sentry_redis
+      SENTRY_SYSTEM_REDIS_URL: redis://sentry_redis:6379/0
+    networks:
+      - sentry_network
+
+volumes:
+  sentry_pgdata:
+  sentry_redis_data:
+  sentry_data:
+
+networks:
+  sentry_network:
+    driver: bridge

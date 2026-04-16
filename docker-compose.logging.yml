@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  loki:
+    image: grafana/loki:3.2.1
+    container_name: health_guide_loki
+    restart: unless-stopped
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - loki_data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - logging_network
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    container_name: health_guide_promtail
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log/app
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - logging_network
+
+  grafana:
+    image: grafana/grafana:11.5.1
+    container_name: health_guide_grafana
+    restart: unless-stopped
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - loki
+    networks:
+      - logging_network
+
+volumes:
+  loki_data:
+  grafana_data:
+
+networks:
+  logging_network:
+    driver: bridge

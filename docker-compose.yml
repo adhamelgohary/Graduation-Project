@@ -6,39 +6,50 @@ services:
     container_name: health_guide_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: Health_Guide
-      MYSQL_USER: healthguide
-      MYSQL_PASSWORD: healthguide123
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-Health_Guide}
+      MYSQL_USER: ${MYSQL_USER:-healthguide}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-healthguide123}
     volumes:
       - db_data:/var/lib/mysql
       - ./Health_Guide.sql:/docker-entrypoint-initdb.d/1.sql
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - health_guide_network
 
   web:
     build: .
     container_name: health_guide_web
     restart: unless-stopped
-    environment:
-      MYSQL_HOST: db
-      MYSQL_DATABASE: Health_Guide
-      MYSQL_USER: healthguide
-      MYSQL_PASSWORD: healthguide123
-      FLASK_SECRET_KEY: your-secret-key-change-in-production
-      FLASK_RUN_PORT: 54321
-    volumes:
-      - ./static:/app/static
-    ports:
-      - "54321:54321"
     depends_on:
       db:
         condition: service_healthy
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-Health_Guide}
+      MYSQL_USER: ${MYSQL_USER:-healthguide}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-healthguide123}
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-change-this-in-production}
+      FLASK_RUN_PORT: ${FLASK_RUN_PORT:-54321}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./static:/app/static
+      - ./logs:/app/logs
+    ports:
+      - "${FLASK_RUN_PORT:-54321}:${FLASK_RUN_PORT:-54321}"
     networks:
       - health_guide_network
 
