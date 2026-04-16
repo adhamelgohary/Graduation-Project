@@ -1,66 +1,52 @@
-version: '3.8'
-
 services:
-  sentry_postgres:
+  postgres:
     image: postgres:16-alpine
-    container_name: sentry_postgres
+    container_name: glitchtip_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: sentry
-      POSTGRES_USER: sentry
-      POSTGRES_PASSWORD: sentrypassword
+      POSTGRES_DB: glitchtip
+      POSTGRES_USER: glitchtip
+      POSTGRES_PASSWORD: glitchtippass
     volumes:
-      - sentry_pgdata:/var/lib/postgresql/data
+      - glitchtip_pgdata:/var/lib/postgresql/data
     networks:
-      - sentry_network
+      - glitchtip_network
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "sentry"]
+      test: ["CMD", "pg_isready", "-U", "glitchtip"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  sentry_redis:
+  redis:
     image: redis:7-alpine
-    container_name: sentry_redis
+    container_name: glitchtip_redis
     restart: unless-stopped
-    volumes:
-      - sentry_redis_data:/data
     networks:
-      - sentry_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - glitchtip_network
 
-  sentry:
-    image: getsentry/self-hosted:25.4.0
-    container_name: sentry_sentry
+  glitchtip:
+    image: glitchtip/glitchtip:6
+    container_name: glitchtip
     restart: unless-stopped
     depends_on:
-      sentry_postgres:
-        condition: service_healthy
-      sentry_redis:
+      postgres:
         condition: service_healthy
     environment:
-      SENTRY_SECRET_KEY: ${SENTRY_SECRET_KEY:-change-this-secret-key-in-production}
-      SENTRY_POSTGRES_HOST: sentry_postgres
-      SENTRY_DB_USER: sentry
-      SENTRY_DB_PASSWORD: sentrypassword
-      SENTRY_DB_NAME: sentry
-      SENTRY_REDIS_HOST: sentry_redis
+      DATABASE_URL: postgres://glitchtip:glitchtippass@postgres:5432/glitchtip
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY:-change-this-secret-key-in-production}
+      SERVER_ROLE: all_in_one
     volumes:
-      - sentry_data:/var/lib/sentry
+      - glitchtip_data:/app/data
     ports:
-      - "${SENTRY_PORT:-9000}:9000"
+      - "${GLITCHTIP_PORT:-9000}:8000"
     networks:
-      - sentry_network
+      - glitchtip_network
 
 volumes:
-  sentry_pgdata:
-  sentry_redis_data:
-  sentry_data:
+  glitchtip_pgdata:
+  glitchtip_data:
 
 networks:
-  sentry_network:
+  glitchtip_network:
     driver: bridge
