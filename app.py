@@ -126,6 +126,11 @@ def after_request_logging(response):
     return response
 
 
+@app.errorhandler(404)
+def handle_not_found(e):
+    return {"error": "Not Found"}, 404
+
+
 @app.errorhandler(Exception)
 def handle_exception(e):
     app.logger.exception(f"Unhandled exception: {e}")
@@ -135,12 +140,18 @@ def handle_exception(e):
         ip_address=request.environ.get("REMOTE_ADDR"),
         details={"error": str(e), "path": request.path},
     )
-    return render_template("errors/500.html"), 500
+    return {"error": "Internal Server Error"}, 500
 
 
 @app.route("/health")
 def health_check():
     return "OK", 200
+
+
+@app.route("/api/0/organizations/health-guide/heartbeat_check/<uuid>")
+@app.route("/api/0/organizations/health-guide/heartbeat_check/<uuid>/")
+def heartbeat_check(uuid):
+    return {"status": "ok", "uuid": uuid}, 200
 
 
 if __name__ == "__main__":
@@ -153,10 +164,11 @@ if __name__ == "__main__":
             sentry_sdk.init(
                 dsn=sentry_dsn,
                 integrations=[FlaskIntegration()],
-                traces_sample_rate=0.1,
-                environment=os.environ.get("ENVIRONMENT", "production"),
+                traces_sample_rate=0.01,
+                environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
+                auto_session_tracking=False,
             )
-            app.logger.info("Sentry initialized")
+            app.logger.info(f"Sentry initialized: {sentry_dsn}")
         except ImportError:
             app.logger.warning("Sentry SDK not installed")
 

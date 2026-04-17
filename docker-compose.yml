@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - health_guide_network
+      - app_network
 
   web:
     build: .
@@ -35,7 +35,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-healthguide123}
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-change-this-in-production}
       FLASK_RUN_PORT: ${FLASK_RUN_PORT:-54321}
-      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_DSN: ${SENTRY_DSN:-http://d84b341b957c434e9cbfb93e6a702e93@glitchtip:8000/1}
       SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
@@ -43,12 +43,65 @@ services:
       - ./logs:/app/logs
     ports:
       - "${FLASK_RUN_PORT:-54321}:${FLASK_RUN_PORT:-54321}"
+    extra_hosts:
+      - "localhost:host-gateway"
     networks:
-      - health_guide_network
+      - app_network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: glitchtip_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: glitchtip
+      POSTGRES_USER: glitchtip
+      POSTGRES_PASSWORD: glitchtippass
+    volumes:
+      - glitchtip_pgdata:/var/lib/postgresql/data
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "glitchtip"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: glitchtip_redis
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  glitchtip:
+    image: glitchtip/glitchtip:6
+    container_name: glitchtip
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://glitchtip:glitchtippass@postgres:5432/glitchtip
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY:-change-this-secret-key-in-production}
+      SERVER_ROLE: all_in_one
+      GLITCHTIP_OPEN_SIGNUP: "true"
+      EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
+      ACCOUNT_EMAIL_VERIFICATION: none
+      ALLOWED_HOSTS: "*"
+    volumes:
+      - glitchtip_data:/app/data
+    ports:
+      - "${GLITCHTIP_PORT:-9000}:8000"
+    networks:
+      - app_network
 
 volumes:
   db_data:
+  glitchtip_pgdata:
+  glitchtip_data:
 
 networks:
-  health_guide_network:
-    driver: bridge
+  app_network:
+    name: app_network
+    external: true
